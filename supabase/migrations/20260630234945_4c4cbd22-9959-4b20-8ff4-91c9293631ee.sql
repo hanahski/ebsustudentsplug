@@ -1,0 +1,7 @@
+DROP SCHEMA public CASCADE;
+CREATE SCHEMA public;
+GRANT USAGE, CREATE ON SCHEMA public TO sandbox_exec, postgres, anon, authenticated, service_role;
+GRANT ALL ON SCHEMA public TO postgres;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO sandbox_exec;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO sandbox_exec;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO sandbox_exec;
