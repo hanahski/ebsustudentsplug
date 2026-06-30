@@ -20,7 +20,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      _agent_exec_sql: { Args: { sql: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
