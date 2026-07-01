@@ -5,7 +5,7 @@ import brandLogo from "@/assets/brand-logo.png";
  */
 export function BrandLoader({ label = "StudentsPlug" }: { label?: string }) {
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-6 bg-background">
+    <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-background">
       <div className="relative flex items-center justify-center">
         <span
           aria-hidden
@@ -27,7 +27,7 @@ export function BrandLoader({ label = "StudentsPlug" }: { label?: string }) {
         />
       </div>
 
-      <div className="sp-blob-text text-2xl font-extrabold tracking-wide" aria-label={label}>
+      <div className="sp-blob-text text-2xl font-extrabold tracking-wide -mt-4" aria-label={label}>
         {label}
       </div>
 
