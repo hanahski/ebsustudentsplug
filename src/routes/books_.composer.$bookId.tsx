@@ -650,8 +650,18 @@ function ComposerEditorPage() {
               onClick={() => setTemplatesOpen(true)}
             >
               <Palette className="w-3.5 h-3.5 mr-1" /> Templates
-
             </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="w-full mt-1 text-xs"
+              onClick={generateAiCover}
+              disabled={aiCoverBusy}
+            >
+              {aiCoverBusy ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 mr-1" />}
+              AI cover
+            </Button>
+
             <input
               ref={coverInput}
               type="file"
