@@ -104,6 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "icon", type: "image/png", href: brandLogoUrl },
       { rel: "apple-touch-icon", href: brandLogoUrl },
+      { rel: "preload", as: "image", href: brandLogoUrl, fetchpriority: "high" },
       { rel: "preconnect", href: "https://toklqndkqjglcxhaeagb.supabase.co", crossOrigin: "anonymous" },
       { rel: "dns-prefetch", href: "https://toklqndkqjglcxhaeagb.supabase.co" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
