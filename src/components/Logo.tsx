@@ -9,8 +9,7 @@ export function Logo({ size = 44 }: { size?: number }) {
       height={size}
       loading="eager"
       decoding="async"
-      // @ts-expect-error fetchpriority is a valid HTML attr
-      fetchpriority="high"
+      fetchPriority="high"
       className="object-contain shrink-0"
       style={{ width: size, height: size }}
     />
