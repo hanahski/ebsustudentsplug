@@ -213,8 +213,30 @@ export function PostCard({ post, locked, prefetchNextVideoUrl }: { post: FeedPos
   // General + news posts get a larger, magazine-style layout
   const isFeatured = post.post_type === "general" || post.post_type === "news";
 
+  // When this card scrolls near the viewport, warm the SW cache for the next video.
+  const cardRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!prefetchNextVideoUrl) return;
+    const el = cardRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            prefetchVideo(prefetchNextVideoUrl);
+            io.disconnect();
+            break;
+          }
+        }
+      },
+      { rootMargin: "600px 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [prefetchNextVideoUrl]);
+
   return (
-    <article className={`relative bg-card rounded-2xl shadow-card border hover:shadow-glow transition-shadow ${isFeatured ? "p-5 md:p-6" : "p-4"} ${post.is_official ? "ring-2 ring-primary/40 bg-gradient-to-br from-primary/5 to-transparent" : ""}`}>
+    <article ref={cardRef} className={`relative bg-card rounded-2xl shadow-card border hover:shadow-glow transition-shadow ${isFeatured ? "p-5 md:p-6" : "p-4"} ${post.is_official ? "ring-2 ring-primary/40 bg-gradient-to-br from-primary/5 to-transparent" : ""}`}>
       {post.is_official && (
         <div className="absolute -top-3 right-3 z-10 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground text-[10px] font-bold shadow-glow">
           <ShieldCheck className="w-3 h-3" /> OFFICIAL
