@@ -125,6 +125,9 @@ function ComposerEditorPage() {
   const [exporting, setExporting] = useState(false);
   const [applyingTpl, setApplyingTpl] = useState<string | null>(null);
   const aiAssistFn = useServerFn(bookAiAssist);
+  const aiCoverFn = useServerFn(bookAiCover);
+  const [aiCoverBusy, setAiCoverBusy] = useState(false);
+
 
 
 
