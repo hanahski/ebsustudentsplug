@@ -1960,6 +1960,7 @@ export type Database = {
           library_book_id: string | null
           price_credits: number
           published_at: string | null
+          share_token: string | null
           status: string
           subtitle: string | null
           title: string
@@ -1975,6 +1976,7 @@ export type Database = {
           library_book_id?: string | null
           price_credits?: number
           published_at?: string | null
+          share_token?: string | null
           status?: string
           subtitle?: string | null
           title?: string
@@ -1990,6 +1992,7 @@ export type Database = {
           library_book_id?: string | null
           price_credits?: number
           published_at?: string | null
+          share_token?: string | null
           status?: string
           subtitle?: string | null
           title?: string
@@ -2139,6 +2142,7 @@ export type Database = {
         Args: { _member_ids: string[]; _name: string }
         Returns: string
       }
+      get_book_by_share_token: { Args: { _token: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

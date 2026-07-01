@@ -32,6 +32,7 @@ import { Route as ChatRouteImport } from './routes/chat'
 import { Route as BookshelfRouteImport } from './routes/bookshelf'
 import { Route as BooksRouteImport } from './routes/books'
 import { Route as ApplyBadgeRouteImport } from './routes/apply-badge'
+import { Route as AdminLoginRouteImport } from './routes/admin-login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
@@ -83,6 +84,7 @@ import { Route as ApiBootprintRouteImport } from './routes/api/bootprint'
 import { Route as BooksComposerIndexRouteImport } from './routes/books_.composer.index'
 import { Route as ToolsAiSlugRouteImport } from './routes/tools.ai.$slug'
 import { Route as BooksReadIdRouteImport } from './routes/books_.read.$id'
+import { Route as BooksPreviewTokenRouteImport } from './routes/books_.preview.$token'
 import { Route as BooksComposerBookIdRouteImport } from './routes/books_.composer.$bookId'
 import { Route as ApiPublicVoiceCloneRouteImport } from './routes/api/public/voice-clone'
 import { Route as ApiPublicVocalSplitV2RouteImport } from './routes/api/public/vocal-split-v2'
@@ -211,6 +213,11 @@ const BooksRoute = BooksRouteImport.update({
 const ApplyBadgeRoute = ApplyBadgeRouteImport.update({
   id: '/apply-badge',
   path: '/apply-badge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin-login',
+  path: '/admin-login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -468,6 +475,11 @@ const BooksReadIdRoute = BooksReadIdRouteImport.update({
   path: '/books/read/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BooksPreviewTokenRoute = BooksPreviewTokenRouteImport.update({
+  id: '/books_/preview/$token',
+  path: '/books/preview/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BooksComposerBookIdRoute = BooksComposerBookIdRouteImport.update({
   id: '/$bookId',
   path: '/$bookId',
@@ -551,6 +563,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
+  '/admin-login': typeof AdminLoginRoute
   '/apply-badge': typeof ApplyBadgeRoute
   '/books': typeof BooksRoute
   '/bookshelf': typeof BookshelfRoute
@@ -625,6 +638,7 @@ export interface FileRoutesByFullPath {
   '/api/public/vocal-split-v2': typeof ApiPublicVocalSplitV2Route
   '/api/public/voice-clone': typeof ApiPublicVoiceCloneRoute
   '/books/composer/$bookId': typeof BooksComposerBookIdRoute
+  '/books/preview/$token': typeof BooksPreviewTokenRoute
   '/books/read/$id': typeof BooksReadIdRoute
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books/composer/': typeof BooksComposerIndexRoute
@@ -641,6 +655,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
+  '/admin-login': typeof AdminLoginRoute
   '/apply-badge': typeof ApplyBadgeRoute
   '/books': typeof BooksRoute
   '/bookshelf': typeof BookshelfRoute
@@ -713,6 +728,7 @@ export interface FileRoutesByTo {
   '/api/public/vocal-split-v2': typeof ApiPublicVocalSplitV2Route
   '/api/public/voice-clone': typeof ApiPublicVoiceCloneRoute
   '/books/composer/$bookId': typeof BooksComposerBookIdRoute
+  '/books/preview/$token': typeof BooksPreviewTokenRoute
   '/books/read/$id': typeof BooksReadIdRoute
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books/composer': typeof BooksComposerIndexRoute
@@ -730,6 +746,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
+  '/admin-login': typeof AdminLoginRoute
   '/apply-badge': typeof ApplyBadgeRoute
   '/books': typeof BooksRoute
   '/bookshelf': typeof BookshelfRoute
@@ -804,6 +821,7 @@ export interface FileRoutesById {
   '/api/public/vocal-split-v2': typeof ApiPublicVocalSplitV2Route
   '/api/public/voice-clone': typeof ApiPublicVoiceCloneRoute
   '/books_/composer/$bookId': typeof BooksComposerBookIdRoute
+  '/books_/preview/$token': typeof BooksPreviewTokenRoute
   '/books_/read/$id': typeof BooksReadIdRoute
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books_/composer/': typeof BooksComposerIndexRoute
@@ -822,6 +840,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/admin'
+    | '/admin-login'
     | '/apply-badge'
     | '/books'
     | '/bookshelf'
@@ -896,6 +915,7 @@ export interface FileRouteTypes {
     | '/api/public/vocal-split-v2'
     | '/api/public/voice-clone'
     | '/books/composer/$bookId'
+    | '/books/preview/$token'
     | '/books/read/$id'
     | '/tools/ai/$slug'
     | '/books/composer/'
@@ -912,6 +932,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/admin'
+    | '/admin-login'
     | '/apply-badge'
     | '/books'
     | '/bookshelf'
@@ -984,6 +1005,7 @@ export interface FileRouteTypes {
     | '/api/public/vocal-split-v2'
     | '/api/public/voice-clone'
     | '/books/composer/$bookId'
+    | '/books/preview/$token'
     | '/books/read/$id'
     | '/tools/ai/$slug'
     | '/books/composer'
@@ -1000,6 +1022,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/admin'
+    | '/admin-login'
     | '/apply-badge'
     | '/books'
     | '/bookshelf'
@@ -1074,6 +1097,7 @@ export interface FileRouteTypes {
     | '/api/public/vocal-split-v2'
     | '/api/public/voice-clone'
     | '/books_/composer/$bookId'
+    | '/books_/preview/$token'
     | '/books_/read/$id'
     | '/tools/ai/$slug'
     | '/books_/composer/'
@@ -1091,6 +1115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRoute
+  AdminLoginRoute: typeof AdminLoginRoute
   ApplyBadgeRoute: typeof ApplyBadgeRoute
   BooksRoute: typeof BooksRoute
   BookshelfRoute: typeof BookshelfRoute
@@ -1141,6 +1166,7 @@ export interface RootRouteChildren {
   ApiPublicVocalSplitRoute: typeof ApiPublicVocalSplitRoute
   ApiPublicVocalSplitV2Route: typeof ApiPublicVocalSplitV2Route
   ApiPublicVoiceCloneRoute: typeof ApiPublicVoiceCloneRoute
+  BooksPreviewTokenRoute: typeof BooksPreviewTokenRoute
   BooksReadIdRoute: typeof BooksReadIdRoute
   ApiPublicHooksAdminAiPulseRoute: typeof ApiPublicHooksAdminAiPulseRoute
   ApiPublicHooksAutoEbsuNewsRoute: typeof ApiPublicHooksAutoEbsuNewsRoute
@@ -1313,6 +1339,13 @@ declare module '@tanstack/react-router' {
       path: '/apply-badge'
       fullPath: '/apply-badge'
       preLoaderRoute: typeof ApplyBadgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-login': {
+      id: '/admin-login'
+      path: '/admin-login'
+      fullPath: '/admin-login'
+      preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -1672,6 +1705,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BooksReadIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/books_/preview/$token': {
+      id: '/books_/preview/$token'
+      path: '/books/preview/$token'
+      fullPath: '/books/preview/$token'
+      preLoaderRoute: typeof BooksPreviewTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/books_/composer/$bookId': {
       id: '/books_/composer/$bookId'
       path: '/$bookId'
@@ -1873,6 +1913,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AdminRoute: AdminRoute,
+  AdminLoginRoute: AdminLoginRoute,
   ApplyBadgeRoute: ApplyBadgeRoute,
   BooksRoute: BooksRoute,
   BookshelfRoute: BookshelfRoute,
@@ -1923,6 +1964,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicVocalSplitRoute: ApiPublicVocalSplitRoute,
   ApiPublicVocalSplitV2Route: ApiPublicVocalSplitV2Route,
   ApiPublicVoiceCloneRoute: ApiPublicVoiceCloneRoute,
+  BooksPreviewTokenRoute: BooksPreviewTokenRoute,
   BooksReadIdRoute: BooksReadIdRoute,
   ApiPublicHooksAdminAiPulseRoute: ApiPublicHooksAdminAiPulseRoute,
   ApiPublicHooksAutoEbsuNewsRoute: ApiPublicHooksAutoEbsuNewsRoute,

@@ -18,9 +18,15 @@ import {
   Check,
   Send,
   ExternalLink,
+  GripVertical,
+  Search,
+  Link2,
+  Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 import { BookCover } from "@/components/BookCover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+
 
 export const Route = createFileRoute("/books_/composer/$bookId")({ component: ComposerEditorPage });
 
@@ -35,7 +41,15 @@ type Book = {
   status: string;
   price_credits: number;
   library_book_id: string | null;
+  share_token: string | null;
 };
+
+function stripHtml(html: string): string {
+  if (typeof window === "undefined") return html.replace(/<[^>]+>/g, " ");
+  const d = document.createElement("div");
+  d.innerHTML = html;
+  return d.innerText || d.textContent || "";
+}
 
 function ComposerEditorPage() {
   const { bookId } = Route.useParams();
@@ -44,6 +58,13 @@ function ComposerEditorPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [saving, setSaving] = useState(false);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [findOpen, setFindOpen] = useState(false);
+  const [findTerm, setFindTerm] = useState("");
+  const [replaceTerm, setReplaceTerm] = useState("");
+  const [shareOpen, setShareOpen] = useState(false);
+  const [creatingShare, setCreatingShare] = useState(false);
+
 
   const { data: book, isLoading: bookLoading } = useQuery<Book | null>({
     queryKey: ["composer-book", bookId],
@@ -203,7 +224,100 @@ function ComposerEditorPage() {
     },
   });
 
-  // ---------- Cover upload ----------
+  // ---------- Drag-reorder chapters ----------
+  const reorderChapters = useMutation({
+    mutationFn: async (ordered: Chapter[]) => {
+      // Persist new idx values in a single round-trip per chapter.
+      const updates = ordered.map((c, i) =>
+        supabase.from("user_book_chapters").update({ idx: i }).eq("id", c.id),
+      );
+      const results = await Promise.all(updates);
+      const err = results.find((r) => r.error)?.error;
+      if (err) throw err;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["composer-chapters", bookId] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const handleDrop = (targetId: string) => {
+    if (!dragId || !chapters || dragId === targetId) return;
+    const src = chapters.findIndex((c) => c.id === dragId);
+    const dst = chapters.findIndex((c) => c.id === targetId);
+    if (src < 0 || dst < 0) return;
+    const next = [...chapters];
+    const [moved] = next.splice(src, 1);
+    next.splice(dst, 0, moved);
+    qc.setQueryData<Chapter[]>(["composer-chapters", bookId], next.map((c, i) => ({ ...c, idx: i })));
+    reorderChapters.mutate(next);
+    setDragId(null);
+  };
+
+  // ---------- Word count + reading time (active chapter) ----------
+  const wordStats = useMemo(() => {
+    const text = stripHtml(chBuf.content).trim();
+    const words = text ? text.split(/\s+/).length : 0;
+    const minutes = Math.max(1, Math.round(words / 220));
+    return { words, minutes };
+  }, [chBuf.content]);
+
+  // ---------- Find & replace across ALL chapters ----------
+  const runReplace = async () => {
+    if (!findTerm || !chapters) return;
+    const re = new RegExp(findTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+    let touched = 0;
+    for (const c of chapters) {
+      if (!re.test(c.content)) { re.lastIndex = 0; continue; }
+      re.lastIndex = 0;
+      const nextContent = c.content.replace(re, replaceTerm);
+      const { error } = await supabase
+        .from("user_book_chapters")
+        .update({ content: nextContent })
+        .eq("id", c.id);
+      if (error) { toast.error(error.message); return; }
+      touched += 1;
+      if (c.id === activeId) setChBuf((b) => ({ ...b, content: nextContent }));
+    }
+    qc.invalidateQueries({ queryKey: ["composer-chapters", bookId] });
+    toast.success(touched ? `Replaced in ${touched} chapter${touched === 1 ? "" : "s"}` : "No matches");
+    setFindOpen(false);
+  };
+
+  // ---------- Collaborator share link ----------
+  const previewUrl = book?.share_token
+    ? (typeof window !== "undefined" ? window.location.origin : "") + `/books/preview/${book.share_token}`
+    : "";
+  const ensureShareToken = async () => {
+    if (!book) return;
+    if (book.share_token) { setShareOpen(true); return; }
+    setCreatingShare(true);
+    const token = (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : Math.random().toString(36).slice(2)).replace(/-/g, "");
+    const { error } = await supabase
+      .from("user_books")
+      .update({ share_token: token } as any)
+      .eq("id", bookId);
+    setCreatingShare(false);
+    if (error) { toast.error(error.message); return; }
+    qc.invalidateQueries({ queryKey: ["composer-book", bookId] });
+    setShareOpen(true);
+  };
+  const revokeShare = async () => {
+    if (!book?.share_token) return;
+    const { error } = await supabase
+      .from("user_books")
+      .update({ share_token: null } as any)
+      .eq("id", bookId);
+    if (error) { toast.error(error.message); return; }
+    qc.invalidateQueries({ queryKey: ["composer-book", bookId] });
+    toast.success("Share link revoked");
+    setShareOpen(false);
+  };
+  const copyShare = async () => {
+    if (!previewUrl) return;
+    try { await navigator.clipboard.writeText(previewUrl); toast.success("Link copied"); }
+    catch { toast.error("Copy failed"); }
+  };
+
+
   const coverInput = useRef<HTMLInputElement | null>(null);
   const onPickCover = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -302,7 +416,14 @@ function ComposerEditorPage() {
               </>
             ) : null}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Button size="sm" variant="outline" onClick={() => setFindOpen(true)} title="Find & replace (all chapters)">
+              <Search className="w-4 h-4 mr-1" /> Find
+            </Button>
+            <Button size="sm" variant="outline" onClick={ensureShareToken} disabled={creatingShare} title="Share a read-only preview link">
+              {creatingShare ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Link2 className="w-4 h-4 mr-1" />}
+              Share draft
+            </Button>
             {book.status === "published" && book.library_book_id && (
               <Button size="sm" variant="outline" asChild>
                 <Link to="/books/read/$id" params={{ id: book.library_book_id }}>
@@ -325,6 +446,7 @@ function ComposerEditorPage() {
             </Button>
           </div>
         </div>
+
 
         {/* Book meta */}
         <div className="bg-card border rounded-2xl p-4 grid grid-cols-1 md:grid-cols-[140px_1fr] gap-4">
@@ -401,19 +523,33 @@ function ComposerEditorPage() {
               </Button>
             </div>
             {(chapters ?? []).map((c, i) => (
-              <button
+              <div
                 key={c.id}
-                onClick={() => setActiveId(c.id)}
-                className={`w-full text-left px-2 py-1.5 rounded-lg text-sm flex items-center gap-2 ${activeId === c.id ? "bg-primary/15 text-primary font-semibold" : "hover:bg-muted"}`}
+                draggable
+                onDragStart={() => setDragId(c.id)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={() => handleDrop(c.id)}
+                onDragEnd={() => setDragId(null)}
+                className={`group flex items-center gap-1 rounded-lg pr-1 ${dragId === c.id ? "opacity-40" : ""}`}
               >
-                <span className="text-xs text-muted-foreground w-5">{i + 1}.</span>
-                <span className="flex-1 truncate">{c.title || "Untitled"}</span>
-              </button>
+                <span className="cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-muted-foreground pl-1" title="Drag to reorder">
+                  <GripVertical className="w-3.5 h-3.5" />
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setActiveId(c.id)}
+                  className={`flex-1 text-left px-1 py-1.5 rounded-lg text-sm flex items-center gap-2 ${activeId === c.id ? "bg-primary/15 text-primary font-semibold" : "hover:bg-muted"}`}
+                >
+                  <span className="text-xs text-muted-foreground w-5">{i + 1}.</span>
+                  <span className="flex-1 truncate">{c.title || "Untitled"}</span>
+                </button>
+              </div>
             ))}
             {(chapters?.length ?? 0) === 0 && (
               <p className="text-xs text-muted-foreground p-2">No chapters yet.</p>
             )}
           </aside>
+
 
           <section className="space-y-3">
             {active ? (
@@ -441,7 +577,13 @@ function ComposerEditorPage() {
                   onChange={(html) => setChBuf((b) => ({ ...b, content: html }))}
                   placeholder="Start writing your chapter…"
                 />
+                <div className="text-xs text-muted-foreground flex items-center justify-end gap-3 px-1">
+                  <span><b>{wordStats.words.toLocaleString()}</b> words</span>
+                  <span>·</span>
+                  <span>~{wordStats.minutes} min read</span>
+                </div>
               </>
+
             ) : (
               <div className="bg-card border rounded-2xl p-12 text-center text-muted-foreground">
                 <BookOpen className="w-10 h-10 mx-auto mb-2 opacity-40" />
@@ -453,6 +595,51 @@ function ComposerEditorPage() {
           </section>
         </div>
       </div>
+
+      {/* Find & replace across all chapters */}
+      <Dialog open={findOpen} onOpenChange={setFindOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Find & replace</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <label className="text-xs font-semibold">Find</label>
+              <Input value={findTerm} onChange={(e) => setFindTerm(e.target.value)} placeholder="Text to find (case-insensitive)" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-semibold">Replace with</label>
+              <Input value={replaceTerm} onChange={(e) => setReplaceTerm(e.target.value)} placeholder="Replacement (leave empty to delete matches)" />
+            </div>
+            <p className="text-xs text-muted-foreground">Runs across every chapter in this book. Cannot be undone.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setFindOpen(false)}>Cancel</Button>
+            <Button onClick={runReplace} disabled={!findTerm}>Replace all</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Share draft link */}
+      <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Share draft preview</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">Anyone with this link can read the current draft (no sign-in). Revoke anytime.</p>
+            <div className="flex gap-2">
+              <Input readOnly value={previewUrl} className="font-mono text-xs" />
+              <Button size="icon" variant="outline" onClick={copyShare} title="Copy link"><Copy className="w-4 h-4" /></Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="destructive" onClick={revokeShare}>Revoke link</Button>
+            <Button onClick={() => setShareOpen(false)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
+
 }
