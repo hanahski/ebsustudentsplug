@@ -72,23 +72,25 @@ function DashboardPage() {
     <AppShell>
       <div className="max-w-3xl mx-auto space-y-6">
         <section className="bg-gradient-to-br from-primary via-primary/90 to-emerald-500 text-primary-foreground rounded-3xl p-6 shadow-glow relative overflow-hidden">
-          <div className="absolute -top-6 -right-6 opacity-90 pointer-events-none">
-            <CreditCoin size={140} spin />
-          </div>
-          <div className="flex items-center gap-2 text-sm opacity-90">
-            <CreditCoin size={18} /> Your credits
-          </div>
-          <div className="text-5xl sm:text-6xl font-extrabold font-display mt-2 tracking-tight">
-            {(profile.credits ?? 0).toLocaleString()}
-          </div>
-          <div className="text-sm opacity-90 mt-1">≈ ₦{nairaValue.toLocaleString()} · 1 credit = ₦{CREDIT_TO_NAIRA}</div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button asChild variant="secondary" size="sm">
-              <Link to="/earn-credits"><TrendingUp className="w-4 h-4 mr-1" />Earn more</Link>
-            </Button>
-            <Button size="sm" variant="secondary" onClick={() => setBuyOpen(true)}>
-              <ShoppingCart className="w-4 h-4 mr-1" />Buy credits
-            </Button>
+          <div className="grid grid-cols-[1fr_auto] items-center gap-4">
+            <div>
+              <div className="text-sm opacity-90">Your credits</div>
+              <div className="text-5xl sm:text-6xl font-extrabold font-display mt-2 tracking-tight">
+                {(profile.credits ?? 0).toLocaleString()}
+              </div>
+              <div className="text-sm opacity-90 mt-1">≈ ₦{nairaValue.toLocaleString()} · 1 credit = ₦{CREDIT_TO_NAIRA}</div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button asChild variant="secondary" size="sm">
+                  <Link to="/earn-credits"><TrendingUp className="w-4 h-4 mr-1" />Earn more</Link>
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => setBuyOpen(true)}>
+                  <ShoppingCart className="w-4 h-4 mr-1" />Buy credits
+                </Button>
+              </div>
+            </div>
+            <div className="shrink-0 flex items-center justify-center pr-1 sm:pr-3">
+              <CreditCoin size={124} spin className="drop-shadow-2xl" />
+            </div>
           </div>
         </section>
 
