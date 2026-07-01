@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Coins, TrendingUp, Banknote, ShoppingCart, Landmark, ArrowRight } from "lucide-react";
+import { CreditCoin } from "@/components/CreditCoin";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
@@ -70,9 +71,12 @@ function DashboardPage() {
   return (
     <AppShell>
       <div className="max-w-3xl mx-auto space-y-6">
-        <section className="bg-gradient-to-br from-primary via-primary/90 to-emerald-500 text-primary-foreground rounded-3xl p-6 shadow-glow">
+        <section className="bg-gradient-to-br from-primary via-primary/90 to-emerald-500 text-primary-foreground rounded-3xl p-6 shadow-glow relative overflow-hidden">
+          <div className="absolute -top-6 -right-6 opacity-90 pointer-events-none">
+            <CreditCoin size={140} spin />
+          </div>
           <div className="flex items-center gap-2 text-sm opacity-90">
-            <Coins className="w-4 h-4" /> Your credits
+            <CreditCoin size={18} /> Your credits
           </div>
           <div className="text-5xl sm:text-6xl font-extrabold font-display mt-2 tracking-tight">
             {(profile.credits ?? 0).toLocaleString()}
@@ -164,7 +168,7 @@ function DashboardPage() {
                 onClick={() => toast.info("Payment integration coming soon — contact support to top up.")}>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-emerald-500 text-white flex items-center justify-center">
-                    <Coins className="w-5 h-5" />
+                    <CreditCoin size={26} />
                   </div>
                   <div className="text-left">
                     <div className="font-bold">{amt.toLocaleString()} credits</div>
