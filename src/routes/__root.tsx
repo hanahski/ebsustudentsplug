@@ -140,6 +140,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <AppBridgeMount />
+          <VideoSWRegister />
           <AuthStatusBanner />
           <RouteLoadingIndicator />
           <RouteTransitionLoader />
