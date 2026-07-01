@@ -122,35 +122,13 @@ function ToolCard({ t }: { t: Tool }) {
   );
 }
 
-/** Horizontal scrolling strip — every tool visible as a row of compact cards. */
+/** Vertical list — every tool stacked as full-width rows. */
 function HorizontalToolStrip({ tools }: { tools: Tool[] }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const scrollBy = (dir: 1 | -1) => {
-    const el = ref.current;
-    if (!el) return;
-    el.scrollBy({ left: dir * Math.max(260, Math.floor(el.clientWidth * 0.8)), behavior: "smooth" });
-  };
   return (
-    <div className="relative -mx-1">
-      <div
-        ref={ref}
-        className="flex gap-3 overflow-x-auto scroll-smooth pb-2 px-1 snap-x"
-        style={{ scrollbarWidth: "none" }}
-      >
-        {tools.map((t) => (
-          <div key={t.to} className="snap-start shrink-0 w-[260px] sm:w-[280px]">
-            <ToolCard t={t} />
-          </div>
-        ))}
-      </div>
-      <div className="hidden sm:flex justify-end gap-2 mt-2 px-1">
-        <button onClick={() => scrollBy(-1)} aria-label="Previous" className="w-8 h-8 rounded-full bg-card border shadow-card flex items-center justify-center hover:bg-accent transition">
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-        <button onClick={() => scrollBy(1)} aria-label="Next" className="w-8 h-8 rounded-full bg-card border shadow-card flex items-center justify-center hover:bg-accent transition">
-          <ChevronRight className="w-4 h-4" />
-        </button>
-      </div>
+    <div className="flex flex-col gap-3">
+      {tools.map((t) => (
+        <ToolCard key={t.to} t={t} />
+      ))}
     </div>
   );
 }
