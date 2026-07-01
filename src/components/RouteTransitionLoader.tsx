@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
-import brandLogo from "@/assets/brand-logo.png";
+import animatedLogo from "@/assets/brand-logo-animated.webp.asset.json";
 
 /**
  * Full-screen branded animated logo shown during route transitions.
@@ -47,7 +47,7 @@ export function RouteTransitionLoader() {
 
   if (!visible) return null;
 
-  const src = brandLogo;
+  const src = animatedLogo.url;
   const bg = isDark ? "#000" : "#fff";
 
   return (
@@ -57,37 +57,15 @@ export function RouteTransitionLoader() {
       aria-hidden
     >
       <div className="relative flex items-center justify-center">
-        {/* soft brand glow */}
-        <div
-          className="absolute inset-0 rounded-full blur-2xl opacity-60"
-          style={{
-            background:
-              "radial-gradient(circle, hsl(var(--primary)/0.35) 0%, transparent 70%)",
-          }}
-        />
-        {/* spinning conic ring */}
-        <div
-          className="absolute rounded-full"
-          style={{
-            width: 168,
-            height: 168,
-            background:
-              "conic-gradient(from 0deg, hsl(var(--primary)) 0%, transparent 35%, transparent 65%, hsl(var(--primary)) 100%)",
-            WebkitMask:
-              "radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px))",
-            mask: "radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px))",
-            animation: "spLoaderSpin 1.6s linear infinite",
-            opacity: 0.85,
-          }}
-        />
         <img
           src={src}
           alt=""
           className="object-contain relative"
-          style={{ width: 128, height: 128 }}
+          style={{ width: 160, height: 160 }}
           draggable={false}
         />
       </div>
+
       <div className="-mt-4 sp-blob-text font-display font-bold text-xl tracking-tight" aria-label="StudentsPlug">
         StudentsPlug
       </div>

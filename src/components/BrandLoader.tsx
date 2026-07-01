@@ -1,29 +1,19 @@
-import brandLogo from "@/assets/brand-logo.png";
+import animatedLogo from "@/assets/brand-logo-animated.webp.asset.json";
 
 /**
- * Branded loading screen — centered logo + animated blob-gradient wordmark.
+ * Branded loading screen — centered animated logo + blob-gradient wordmark.
  */
 export function BrandLoader({ label = "StudentsPlug" }: { label?: string }) {
   return (
     <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-background">
       <div className="relative flex items-center justify-center">
-        <span
-          aria-hidden
-          className="absolute inset-0 -m-3 rounded-full"
-          style={{
-            background:
-              "conic-gradient(from 0deg, hsl(var(--primary)/0.0), hsl(var(--primary)/0.6), hsl(var(--primary)/0.0))",
-            animation: "brandSpin 1.4s linear infinite",
-            filter: "blur(8px)",
-          }}
-        />
         <img
-          src={brandLogo}
+          src={animatedLogo.url}
           alt=""
-          width={96}
-          height={96}
+          width={128}
+          height={128}
           className="relative object-contain"
-          style={{ width: 96, height: 96, animation: "brandPulse 1.6s ease-in-out infinite" }}
+          style={{ width: 128, height: 128 }}
         />
       </div>
 
@@ -32,11 +22,6 @@ export function BrandLoader({ label = "StudentsPlug" }: { label?: string }) {
       </div>
 
       <style>{`
-        @keyframes brandSpin { to { transform: rotate(360deg); } }
-        @keyframes brandPulse {
-          0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 hsl(var(--primary)/0.0)); }
-          50% { transform: scale(1.08); filter: drop-shadow(0 8px 18px hsl(var(--primary)/0.45)); }
-        }
         .sp-blob-text {
           background-image:
             radial-gradient(circle at 20% 40%, #3b82f6 0%, transparent 40%),
