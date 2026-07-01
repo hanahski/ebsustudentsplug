@@ -15,7 +15,7 @@ import { ContentRemovalToasts } from "./ContentRemovalToasts";
 import { HideSeekListener } from "./HideSeekListener";
 import { playNewMessageTone } from "@/lib/sounds";
 import { playOrNotify } from "@/lib/web-notify";
-import { ReportDialog } from "./ReportDialog";
+
 import { getIsAdminUser } from "@/lib/admin-role";
 
 function useActiveChatThreadId() {
