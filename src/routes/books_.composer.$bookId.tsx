@@ -737,12 +737,34 @@ function ComposerEditorPage() {
                   onChange={(html) => setChBuf((b) => ({ ...b, content: html }))}
                   placeholder="Start writing your chapter…"
                 />
-                <div className="text-xs text-muted-foreground flex items-center justify-end gap-3 px-1">
-                  <span><b>{wordStats.words.toLocaleString()}</b> words</span>
-                  <span>·</span>
-                  <span>~{wordStats.minutes} min read</span>
+                <div className="flex items-center justify-between gap-2 flex-wrap px-1">
+                  <div className="flex items-center gap-1 flex-wrap">
+                    <span className="text-xs font-semibold text-muted-foreground mr-1 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-primary" /> AI:
+                    </span>
+                    {(["continue","rewrite","expand","shorten","grammar"] as const).map((m) => (
+                      <Button
+                        key={m}
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-2 text-xs capitalize"
+                        disabled={aiBusy}
+                        onClick={() => runAi(m)}
+                        title={`AI ${m}`}
+                      >
+                        {aiBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wand2 className="w-3 h-3 mr-1" />}
+                        {m}
+                      </Button>
+                    ))}
+                  </div>
+                  <div className="text-xs text-muted-foreground flex items-center gap-3">
+                    <span><b>{wordStats.words.toLocaleString()}</b> words</span>
+                    <span>·</span>
+                    <span>~{wordStats.minutes} min read</span>
+                  </div>
                 </div>
               </>
+
 
             ) : (
               <div className="bg-card border rounded-2xl p-12 text-center text-muted-foreground">
