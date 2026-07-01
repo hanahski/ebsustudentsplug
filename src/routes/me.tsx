@@ -150,7 +150,21 @@ function MePage() {
   const uploadCoverVideo = async (file: File) => {
     if (!profile) return;
     if (!file.type.startsWith("video/")) { toast.error("Pick a video file"); return; }
-    if (file.size > 25 * 1024 * 1024) { toast.error("Cover video must be under 25MB"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Cover video must be under 5MB"); return; }
+    // Enforce ≤10s duration
+    try {
+      const durationOk = await new Promise<boolean>((resolve) => {
+        const v = document.createElement("video");
+        v.preload = "metadata";
+        v.onloadedmetadata = () => {
+          URL.revokeObjectURL(v.src);
+          resolve(!Number.isFinite(v.duration) || v.duration <= 10.5);
+        };
+        v.onerror = () => resolve(true);
+        v.src = URL.createObjectURL(file);
+      });
+      if (!durationOk) { toast.error("Cover video must be 10 seconds or shorter"); return; }
+    } catch {}
     setCoverVideoUploading(true);
     try {
       const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
