@@ -119,6 +119,14 @@ function ComposerEditorPage() {
   const [replaceTerm, setReplaceTerm] = useState("");
   const [shareOpen, setShareOpen] = useState(false);
   const [creatingShare, setCreatingShare] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [applyingTpl, setApplyingTpl] = useState<string | null>(null);
+  const aiAssistFn = useServerFn(bookAiAssist);
+
+
 
 
   const { data: book, isLoading: bookLoading } = useQuery<Book | null>({
