@@ -7,6 +7,17 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: man
 body { touch-action: manipulation; overscroll-behavior-y: contain; }
 input, select, textarea { font-size: 16px; } /* iOS won't zoom inputs >=16px */
 
+/* Hide Lovable badge */
+#lovable-badge,
+[id^="lovable-badge"],
+a[href*="lovable.dev"][target="_blank"],
+a[href*="lovable.app"][target="_blank"][class*="badge"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
