@@ -303,7 +303,7 @@ function ReadBookPage() {
                   )}
                 </div>
                 {userBookId ? (
-                  <div className="p-6 md:p-10 max-w-3xl mx-auto">
+                  <div className="p-4 md:p-8 max-w-3xl lg:max-w-5xl mx-auto">
                     {(userChapters ?? []).length === 0 ? (
                       <p className="text-center text-muted-foreground text-sm">No chapters yet.</p>
                     ) : (
