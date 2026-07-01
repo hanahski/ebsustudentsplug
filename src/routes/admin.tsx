@@ -522,17 +522,21 @@ function AdminBanners() {
     await supabase.from("banner_slides").delete().eq("id", id);
     refetch();
   };
-  const move = async (idx: number, dir: -1 | 1) => {
-    const list = (data ?? []) as any[];
-    const j = idx + dir;
-    if (j < 0 || j >= list.length) return;
-    const a = list[idx], b = list[j];
-    await Promise.all([
-      supabase.from("banner_slides").update({ sort_order: b.sort_order }).eq("id", a.id),
-      supabase.from("banner_slides").update({ sort_order: a.sort_order }).eq("id", b.id),
-    ]);
+  const reorder = async (fromIdx: number, toIdx: number) => {
+    const list = [...((data ?? []) as any[])];
+    if (fromIdx === toIdx || fromIdx < 0 || toIdx < 0 || fromIdx >= list.length || toIdx >= list.length) return;
+    const [moved] = list.splice(fromIdx, 1);
+    list.splice(toIdx, 0, moved);
+    // Rewrite sort_order sequentially
+    await Promise.all(
+      list.map((row: any, i: number) =>
+        supabase.from("banner_slides").update({ sort_order: i }).eq("id", row.id),
+      ),
+    );
     refetch();
   };
+  const dragFrom = useRef<number | null>(null);
+
 
   return (
     <div className="space-y-4">
