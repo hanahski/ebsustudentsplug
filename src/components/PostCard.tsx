@@ -51,7 +51,7 @@ export type FeedPost = {
   } | null;
 };
 
-export function PostCard({ post, locked }: { post: FeedPost; locked?: boolean }) {
+export function PostCard({ post, locked, prefetchNextVideoUrl }: { post: FeedPost; locked?: boolean; prefetchNextVideoUrl?: string | null }) {
   const online = isOnline(post.author?.show_online, post.author?.last_seen_at);
   const { user } = useAuth();
   const nav = useNavigate();
