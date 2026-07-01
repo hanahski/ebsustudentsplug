@@ -12,18 +12,9 @@ const MIN_VISIBLE_MS = 400;
 export function RouteTransitionLoader() {
   const isLoading = useRouterState({ select: (s) => s.isLoading });
   const [visible, setVisible] = useState(false);
-  const [isDark, setIsDark] = useState(false);
   const startedAt = useRef<number | null>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    if (typeof document === "undefined") return;
-    const update = () => setIsDark(document.documentElement.classList.contains("dark"));
-    update();
-    const obs = new MutationObserver(update);
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => obs.disconnect();
-  }, []);
 
   useEffect(() => {
     if (isLoading) {
