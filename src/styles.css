@@ -612,3 +612,21 @@ html.in-app .route-loader-dot { display: none !important; }
   animation: spCoinSpin 6s linear infinite;
   transform-style: preserve-3d;
 }
+
+/* Book reader — 3D page flip */
+.book-page-stage { perspective: 1600px; }
+.book-page { transform-origin: left center; backface-visibility: hidden; will-change: transform, opacity; }
+@keyframes bookFlipNext {
+  0%   { transform: rotateY(0deg); opacity: 1; }
+  40%  { transform: rotateY(-70deg); opacity: 0.6; }
+  60%  { transform: rotateY(70deg); opacity: 0.6; }
+  100% { transform: rotateY(0deg); opacity: 1; }
+}
+@keyframes bookFlipPrev {
+  0%   { transform: rotateY(0deg); opacity: 1; }
+  40%  { transform: rotateY(70deg); opacity: 0.6; }
+  60%  { transform: rotateY(-70deg); opacity: 0.6; }
+  100% { transform: rotateY(0deg); opacity: 1; }
+}
+.book-page-flip-next { animation: bookFlipNext 0.52s cubic-bezier(0.4, 0.0, 0.2, 1); }
+.book-page-flip-prev { animation: bookFlipPrev 0.52s cubic-bezier(0.4, 0.0, 0.2, 1); }

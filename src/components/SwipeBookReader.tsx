@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import pageFlipAsset from "@/assets/page-flip.mp3.asset.json";
 
 type Chapter = { id: string; idx: number; title: string; content: string | null };
 
@@ -70,32 +71,31 @@ export function SwipeBookReader({
     if (pages.length) localStorage.setItem(storageKey, String(page));
   }, [page, pages.length, storageKey]);
 
-  // Soft tick on page change.
+  // Preloaded page-flip sound (single shared HTMLAudioElement).
+  const flipAudioRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    const a = new Audio(pageFlipAsset.url);
+    a.preload = "auto";
+    a.volume = 0.55;
+    flipAudioRef.current = a;
+    return () => { a.pause(); flipAudioRef.current = null; };
+  }, []);
   const turnSound = () => {
-    try {
-      const Ctor = (window.AudioContext || (window as any).webkitAudioContext) as
-        | typeof AudioContext
-        | undefined;
-      if (!Ctor) return;
-      const a = new Ctor();
-      const o = a.createOscillator();
-      const g = a.createGain();
-      o.type = "triangle";
-      o.frequency.setValueAtTime(520, a.currentTime);
-      o.frequency.exponentialRampToValueAtTime(200, a.currentTime + 0.08);
-      g.gain.setValueAtTime(0.06, a.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + 0.12);
-      o.connect(g).connect(a.destination);
-      o.start();
-      o.stop(a.currentTime + 0.13);
-      setTimeout(() => a.close().catch(() => {}), 250);
-    } catch {}
+    const a = flipAudioRef.current;
+    if (!a) return;
+    try { a.currentTime = 0; a.play().catch(() => {}); } catch {}
   };
 
+  // Flip animation state: "next" flips right→left, "prev" flips left→right.
+  const [flipDir, setFlipDir] = useState<"next" | "prev" | null>(null);
   const go = (delta: number) => {
     setPage((p) => {
       const next = Math.min(Math.max(0, p + delta), Math.max(0, pages.length - 1));
-      if (next !== p) turnSound();
+      if (next !== p) {
+        turnSound();
+        setFlipDir(delta > 0 ? "next" : "prev");
+        setTimeout(() => setFlipDir(null), 520);
+      }
       return next;
     });
   };
@@ -154,10 +154,13 @@ export function SwipeBookReader({
           const x = e.clientX - rect.left;
           go(x < rect.width / 2 ? -1 : 1);
         }}
-        className="px-6 py-6 select-none cursor-pointer overflow-hidden"
+        className="px-6 py-6 select-none cursor-pointer overflow-hidden book-page-stage"
         style={{ height: "70vh" }}
       >
-        <article className="prose prose-sm md:prose-base dark:prose-invert max-w-none">
+        <article
+          key={page}
+          className={`prose prose-sm md:prose-base dark:prose-invert max-w-none book-page ${flipDir === "next" ? "book-page-flip-next" : flipDir === "prev" ? "book-page-flip-prev" : ""}`}
+        >
           {currentBlocks.map((i) => (
             <div key={i} dangerouslySetInnerHTML={{ __html: blocks[i].html }} />
           ))}

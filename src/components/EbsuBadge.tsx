@@ -17,7 +17,7 @@ export function EbsuBadge({ size = 28 }: { size?: number }) {
         width={size}
         height={size}
         className="w-full h-full object-cover"
-        loading="lazy"
+       
       />
     </span>
   );

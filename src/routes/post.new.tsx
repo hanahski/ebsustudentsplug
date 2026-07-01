@@ -413,12 +413,37 @@ function NewPostPage() {
                       type="file"
                       accept="image/*,video/*,audio/*"
                       className="sr-only"
-                      onChange={(e) => setMediaFile(e.target.files?.[0] ?? null)}
+                      onChange={async (e) => {
+                        const f = e.target.files?.[0] ?? null;
+                        if (!f) return;
+                        // Enforce 5MB + 10s cap on videos.
+                        if (f.type.startsWith("video/")) {
+                          if (f.size > 5 * 1024 * 1024) {
+                            toast.error("Video too large — max 5 MB. Trim or compress it first.");
+                            e.target.value = "";
+                            return;
+                          }
+                          const dur = await new Promise<number>((res) => {
+                            const v = document.createElement("video");
+                            v.preload = "metadata";
+                            v.onloadedmetadata = () => res(v.duration || 0);
+                            v.onerror = () => res(0);
+                            v.src = URL.createObjectURL(f);
+                          });
+                          if (dur > 10.5) {
+                            toast.error(`Video too long (${dur.toFixed(1)}s) — max 10 seconds.`);
+                            e.target.value = "";
+                            return;
+                          }
+                        }
+                        setMediaFile(f);
+                      }}
                     />
                     <div className="cursor-pointer rounded-xl border-2 border-dashed border-border hover:border-primary/60 hover:bg-primary/5 transition p-6 text-center">
+                      <p className="sr-only">Video uploads are limited to 5 MB and 10 seconds.</p>
                       <Upload className="w-6 h-6 mx-auto text-muted-foreground" />
                       <p className="mt-2 text-sm font-semibold">Tap to upload</p>
-                      <p className="text-[11px] text-muted-foreground">Image, video, or audio — full quality</p>
+                      <p className="text-[11px] text-muted-foreground">Image, audio — full quality. Video: max 5 MB &amp; 10 s.</p>
                     </div>
                   </label>
                 ) : (

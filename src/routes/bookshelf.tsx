@@ -76,7 +76,7 @@ function BookshelfPage() {
                 <Link to="/books/read/$id" params={{ id: b.id }} className="block">
                   <div className="aspect-[2/3] bg-muted overflow-hidden">
                     {b.cover_url ? (
-                      <img src={b.cover_url} alt={b.title} loading="lazy" className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                      <img src={b.cover_url} alt={b.title} className="w-full h-full object-cover hover:scale-105 transition-transform" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                         <BookOpen className="w-10 h-10 opacity-40" />

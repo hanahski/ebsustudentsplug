@@ -185,7 +185,7 @@ function CoursesPage() {
                   <img
                     src={c.cover_url}
                     alt={c.title}
-                    loading="lazy"
+                   
                     className="w-full h-full object-cover"
                   />
                 ) : (

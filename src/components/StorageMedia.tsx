@@ -12,7 +12,7 @@ type Props = {
   as?: "img" | "video";
 };
 
-export function StorageMedia({ url, alt, className, loading = "lazy", as }: Props) {
+export function StorageMedia({ url, alt, className, loading = "eager", as }: Props) {
   const [resolved, setResolved] = useState<string | null>(null);
   useEffect(() => {
     let alive = true;

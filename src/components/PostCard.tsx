@@ -265,7 +265,7 @@ export function PostCard({ post, locked }: { post: FeedPost; locked?: boolean })
                 <img
                   src={post.image_url}
                   alt={post.title}
-                  loading="lazy"
+                 
                   className={`mt-2 mb-2 w-full object-cover rounded-xl border ${isFeatured ? "aspect-[16/9] md:aspect-[2/1]" : "aspect-[16/10]"}`}
                 />
               )}
