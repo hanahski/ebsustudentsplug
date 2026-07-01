@@ -18,9 +18,15 @@ import {
   Check,
   Send,
   ExternalLink,
+  GripVertical,
+  Search,
+  Link2,
+  Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 import { BookCover } from "@/components/BookCover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+
 
 export const Route = createFileRoute("/books_/composer/$bookId")({ component: ComposerEditorPage });
 
