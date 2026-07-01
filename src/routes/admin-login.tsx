@@ -46,7 +46,7 @@ function AdminLogin() {
       return;
     }
     // Auto-claim admin role for the seeded staff emails.
-    await supabase.rpc("claim_seed_admin_role" as any).catch(() => null);
+    try { await (supabase.rpc as any)("claim_seed_admin_role"); } catch { /* no-op */ }
     const isAdmin = await getIsAdminUser(data.user.id).catch(() => false);
     setLoading(false);
     if (!isAdmin) {
