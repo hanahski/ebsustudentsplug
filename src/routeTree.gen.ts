@@ -72,6 +72,7 @@ import { Route as GamesFreegamesRouteImport } from './routes/games.freegames'
 import { Route as GamesEightballRouteImport } from './routes/games.eightball'
 import { Route as FacultyIdRouteImport } from './routes/faculty.$id'
 import { Route as EarnCreditsTournamentRouteImport } from './routes/earn-credits.tournament'
+import { Route as EarnCreditsPredictionRouteImport } from './routes/earn-credits.prediction'
 import { Route as DepartmentIdRouteImport } from './routes/department.$id'
 import { Route as CoursesIdRouteImport } from './routes/courses.$id'
 import { Route as CourseIdRouteImport } from './routes/course.$id'
@@ -418,6 +419,11 @@ const EarnCreditsTournamentRoute = EarnCreditsTournamentRouteImport.update({
   path: '/tournament',
   getParentRoute: () => EarnCreditsRoute,
 } as any)
+const EarnCreditsPredictionRoute = EarnCreditsPredictionRouteImport.update({
+  id: '/prediction',
+  path: '/prediction',
+  getParentRoute: () => EarnCreditsRoute,
+} as any)
 const DepartmentIdRoute = DepartmentIdRouteImport.update({
   id: '/department/$id',
   path: '/department/$id',
@@ -619,6 +625,7 @@ export interface FileRoutesByFullPath {
   '/course/$id': typeof CourseIdRoute
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
+  '/earn-credits/prediction': typeof EarnCreditsPredictionRoute
   '/earn-credits/tournament': typeof EarnCreditsTournamentRoute
   '/faculty/$id': typeof FacultyIdRoute
   '/games/eightball': typeof GamesEightballRoute
@@ -712,6 +719,7 @@ export interface FileRoutesByTo {
   '/course/$id': typeof CourseIdRoute
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
+  '/earn-credits/prediction': typeof EarnCreditsPredictionRoute
   '/earn-credits/tournament': typeof EarnCreditsTournamentRoute
   '/faculty/$id': typeof FacultyIdRoute
   '/games/eightball': typeof GamesEightballRoute
@@ -808,6 +816,7 @@ export interface FileRoutesById {
   '/course/$id': typeof CourseIdRoute
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
+  '/earn-credits/prediction': typeof EarnCreditsPredictionRoute
   '/earn-credits/tournament': typeof EarnCreditsTournamentRoute
   '/faculty/$id': typeof FacultyIdRoute
   '/games/eightball': typeof GamesEightballRoute
@@ -905,6 +914,7 @@ export interface FileRouteTypes {
     | '/course/$id'
     | '/courses/$id'
     | '/department/$id'
+    | '/earn-credits/prediction'
     | '/earn-credits/tournament'
     | '/faculty/$id'
     | '/games/eightball'
@@ -998,6 +1008,7 @@ export interface FileRouteTypes {
     | '/course/$id'
     | '/courses/$id'
     | '/department/$id'
+    | '/earn-credits/prediction'
     | '/earn-credits/tournament'
     | '/faculty/$id'
     | '/games/eightball'
@@ -1093,6 +1104,7 @@ export interface FileRouteTypes {
     | '/course/$id'
     | '/courses/$id'
     | '/department/$id'
+    | '/earn-credits/prediction'
     | '/earn-credits/tournament'
     | '/faculty/$id'
     | '/games/eightball'
@@ -1659,6 +1671,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EarnCreditsTournamentRouteImport
       parentRoute: typeof EarnCreditsRoute
     }
+    '/earn-credits/prediction': {
+      id: '/earn-credits/prediction'
+      path: '/prediction'
+      fullPath: '/earn-credits/prediction'
+      preLoaderRoute: typeof EarnCreditsPredictionRouteImport
+      parentRoute: typeof EarnCreditsRoute
+    }
     '/department/$id': {
       id: '/department/$id'
       path: '/department/$id'
@@ -1873,10 +1892,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface EarnCreditsRouteChildren {
+  EarnCreditsPredictionRoute: typeof EarnCreditsPredictionRoute
   EarnCreditsTournamentRoute: typeof EarnCreditsTournamentRoute
 }
 
 const EarnCreditsRouteChildren: EarnCreditsRouteChildren = {
+  EarnCreditsPredictionRoute: EarnCreditsPredictionRoute,
   EarnCreditsTournamentRoute: EarnCreditsTournamentRoute,
 }
 
