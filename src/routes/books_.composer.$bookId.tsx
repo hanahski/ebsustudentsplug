@@ -224,7 +224,100 @@ function ComposerEditorPage() {
     },
   });
 
-  // ---------- Cover upload ----------
+  // ---------- Drag-reorder chapters ----------
+  const reorderChapters = useMutation({
+    mutationFn: async (ordered: Chapter[]) => {
+      // Persist new idx values in a single round-trip per chapter.
+      const updates = ordered.map((c, i) =>
+        supabase.from("user_book_chapters").update({ idx: i }).eq("id", c.id),
+      );
+      const results = await Promise.all(updates);
+      const err = results.find((r) => r.error)?.error;
+      if (err) throw err;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["composer-chapters", bookId] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const handleDrop = (targetId: string) => {
+    if (!dragId || !chapters || dragId === targetId) return;
+    const src = chapters.findIndex((c) => c.id === dragId);
+    const dst = chapters.findIndex((c) => c.id === targetId);
+    if (src < 0 || dst < 0) return;
+    const next = [...chapters];
+    const [moved] = next.splice(src, 1);
+    next.splice(dst, 0, moved);
+    qc.setQueryData<Chapter[]>(["composer-chapters", bookId], next.map((c, i) => ({ ...c, idx: i })));
+    reorderChapters.mutate(next);
+    setDragId(null);
+  };
+
+  // ---------- Word count + reading time (active chapter) ----------
+  const wordStats = useMemo(() => {
+    const text = stripHtml(chBuf.content).trim();
+    const words = text ? text.split(/\s+/).length : 0;
+    const minutes = Math.max(1, Math.round(words / 220));
+    return { words, minutes };
+  }, [chBuf.content]);
+
+  // ---------- Find & replace across ALL chapters ----------
+  const runReplace = async () => {
+    if (!findTerm || !chapters) return;
+    const re = new RegExp(findTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+    let touched = 0;
+    for (const c of chapters) {
+      if (!re.test(c.content)) { re.lastIndex = 0; continue; }
+      re.lastIndex = 0;
+      const nextContent = c.content.replace(re, replaceTerm);
+      const { error } = await supabase
+        .from("user_book_chapters")
+        .update({ content: nextContent })
+        .eq("id", c.id);
+      if (error) { toast.error(error.message); return; }
+      touched += 1;
+      if (c.id === activeId) setChBuf((b) => ({ ...b, content: nextContent }));
+    }
+    qc.invalidateQueries({ queryKey: ["composer-chapters", bookId] });
+    toast.success(touched ? `Replaced in ${touched} chapter${touched === 1 ? "" : "s"}` : "No matches");
+    setFindOpen(false);
+  };
+
+  // ---------- Collaborator share link ----------
+  const previewUrl = book?.share_token
+    ? (typeof window !== "undefined" ? window.location.origin : "") + `/books/preview/${book.share_token}`
+    : "";
+  const ensureShareToken = async () => {
+    if (!book) return;
+    if (book.share_token) { setShareOpen(true); return; }
+    setCreatingShare(true);
+    const token = (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : Math.random().toString(36).slice(2)).replace(/-/g, "");
+    const { error } = await supabase
+      .from("user_books")
+      .update({ share_token: token } as any)
+      .eq("id", bookId);
+    setCreatingShare(false);
+    if (error) { toast.error(error.message); return; }
+    qc.invalidateQueries({ queryKey: ["composer-book", bookId] });
+    setShareOpen(true);
+  };
+  const revokeShare = async () => {
+    if (!book?.share_token) return;
+    const { error } = await supabase
+      .from("user_books")
+      .update({ share_token: null } as any)
+      .eq("id", bookId);
+    if (error) { toast.error(error.message); return; }
+    qc.invalidateQueries({ queryKey: ["composer-book", bookId] });
+    toast.success("Share link revoked");
+    setShareOpen(false);
+  };
+  const copyShare = async () => {
+    if (!previewUrl) return;
+    try { await navigator.clipboard.writeText(previewUrl); toast.success("Link copied"); }
+    catch { toast.error("Copy failed"); }
+  };
+
+
   const coverInput = useRef<HTMLInputElement | null>(null);
   const onPickCover = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
