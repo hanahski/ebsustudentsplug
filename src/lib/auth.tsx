@@ -77,8 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           toast.error(`Couldn't set up your profile: ${insertErr.message}`);
         }
       } else {
-        // New profile created — trigger the first-time welcome experience.
-        try { localStorage.setItem("sp:welcome-pending", "1"); } catch {}
+        // New profile created — WelcomeOverlay will run its splash + bonus flow
+        // gated by profile.seen_welcome === false.
       }
       const retry = await supabase.from("profiles").select("*").eq("id", uid).maybeSingle();
       data = retry.data;
