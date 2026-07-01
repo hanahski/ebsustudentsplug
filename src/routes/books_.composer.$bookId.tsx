@@ -595,6 +595,51 @@ function ComposerEditorPage() {
           </section>
         </div>
       </div>
+
+      {/* Find & replace across all chapters */}
+      <Dialog open={findOpen} onOpenChange={setFindOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Find & replace</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <label className="text-xs font-semibold">Find</label>
+              <Input value={findTerm} onChange={(e) => setFindTerm(e.target.value)} placeholder="Text to find (case-insensitive)" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-semibold">Replace with</label>
+              <Input value={replaceTerm} onChange={(e) => setReplaceTerm(e.target.value)} placeholder="Replacement (leave empty to delete matches)" />
+            </div>
+            <p className="text-xs text-muted-foreground">Runs across every chapter in this book. Cannot be undone.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setFindOpen(false)}>Cancel</Button>
+            <Button onClick={runReplace} disabled={!findTerm}>Replace all</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Share draft link */}
+      <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Share draft preview</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">Anyone with this link can read the current draft (no sign-in). Revoke anytime.</p>
+            <div className="flex gap-2">
+              <Input readOnly value={previewUrl} className="font-mono text-xs" />
+              <Button size="icon" variant="outline" onClick={copyShare} title="Copy link"><Copy className="w-4 h-4" /></Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="destructive" onClick={revokeShare}>Revoke link</Button>
+            <Button onClick={() => setShareOpen(false)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
+
 }
