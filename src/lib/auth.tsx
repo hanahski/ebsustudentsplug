@@ -77,8 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           toast.error(`Couldn't set up your profile: ${insertErr.message}`);
         }
       } else {
-        // New profile created successfully — surface the credit bonus immediately
-        toast.success("Profile created! +50 credits bonus granted.");
+        // New profile created — WelcomeOverlay will run its splash + bonus flow
+        // gated by profile.seen_welcome === false.
       }
       const retry = await supabase.from("profiles").select("*").eq("id", uid).maybeSingle();
       data = retry.data;
