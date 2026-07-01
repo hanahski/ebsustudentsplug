@@ -613,6 +613,15 @@ function ComposerEditorPage() {
             >
               <Upload className="w-3.5 h-3.5 mr-1" /> Cover
             </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="w-full mt-1 text-xs"
+              onClick={() => setTemplatesOpen(true)}
+            >
+              <Palette className="w-3.5 h-3.5 mr-1" /> Templates
+
+            </Button>
             <input
               ref={coverInput}
               type="file"
