@@ -234,16 +234,28 @@ function SlideView({
     </div>
   );
 
+  // WhatsApp-style: on desktop, letterbox the image over a blurred copy of itself
+  // so portrait/odd-ratio uploads look right on wide 16/6 hero without hard cropping.
   const Img = (extraClass = "") => s.imageUrl ? (
-    <img
-      src={s.imageUrl}
-      alt={s.title}
-      className={`w-full h-full object-cover ${extraClass}`}
-      loading={eager ? "eager" : "lazy"}
-      fetchPriority={eager ? "high" : "auto"}
-      decoding="async"
-      draggable={false}
-    />
+    <div className={`relative w-full h-full ${extraClass}`}>
+      <img
+        src={s.imageUrl}
+        aria-hidden
+        className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-70 hidden md:block"
+        loading={eager ? "eager" : "lazy"}
+        decoding="async"
+        draggable={false}
+      />
+      <img
+        src={s.imageUrl}
+        alt={s.title}
+        className="relative w-full h-full object-cover md:object-contain"
+        loading={eager ? "eager" : "lazy"}
+        fetchPriority={eager ? "high" : "auto"}
+        decoding="async"
+        draggable={false}
+      />
+    </div>
   ) : null;
 
   let body: ReactNode;

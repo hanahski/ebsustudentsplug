@@ -154,7 +154,7 @@ export function SwipeBookReader({
           const x = e.clientX - rect.left;
           go(x < rect.width / 2 ? -1 : 1);
         }}
-        className="px-6 py-6 select-none cursor-pointer overflow-hidden book-page-stage"
+        className="px-6 py-6 md:px-10 md:py-10 select-none cursor-pointer overflow-hidden book-page-stage min-h-[70vh] md:min-h-[78vh]"
         style={{ height: "70vh" }}
       >
         <article
