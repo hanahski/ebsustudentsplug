@@ -5,6 +5,7 @@ import { AuthStatusBanner } from "@/components/AuthStatusBanner";
 import { Toaster } from "@/components/ui/sonner";
 import { NetworkStatus } from "@/components/NetworkStatus";
 import { AppBridgeMount } from "@/components/AppBridgeMount";
+import { VideoSWRegister } from "@/components/VideoSWRegister";
 import { RouteTransitionLoader } from "@/components/RouteTransitionLoader";
 import appCss from "../styles.css?url";
 import brandLogoUrl from "@/assets/brand-logo.png";
