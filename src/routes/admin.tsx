@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -522,17 +522,21 @@ function AdminBanners() {
     await supabase.from("banner_slides").delete().eq("id", id);
     refetch();
   };
-  const move = async (idx: number, dir: -1 | 1) => {
-    const list = (data ?? []) as any[];
-    const j = idx + dir;
-    if (j < 0 || j >= list.length) return;
-    const a = list[idx], b = list[j];
-    await Promise.all([
-      supabase.from("banner_slides").update({ sort_order: b.sort_order }).eq("id", a.id),
-      supabase.from("banner_slides").update({ sort_order: a.sort_order }).eq("id", b.id),
-    ]);
+  const reorder = async (fromIdx: number, toIdx: number) => {
+    const list = [...((data ?? []) as any[])];
+    if (fromIdx === toIdx || fromIdx < 0 || toIdx < 0 || fromIdx >= list.length || toIdx >= list.length) return;
+    const [moved] = list.splice(fromIdx, 1);
+    list.splice(toIdx, 0, moved);
+    // Rewrite sort_order sequentially
+    await Promise.all(
+      list.map((row: any, i: number) =>
+        supabase.from("banner_slides").update({ sort_order: i }).eq("id", row.id),
+      ),
+    );
     refetch();
   };
+  const dragFrom = useRef<number | null>(null);
+
 
   return (
     <div className="space-y-4">
@@ -641,7 +645,20 @@ function AdminBanners() {
           const clk = stats?.clicks ?? 0;
           const rate = imp > 0 ? ((clk / imp) * 100).toFixed(1) : "0.0";
           return (
-            <div key={b.id} className="bg-card border rounded-2xl p-3 flex items-center gap-3">
+            <div
+              key={b.id}
+              draggable
+              onDragStart={() => { dragFrom.current = idx; }}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                const from = dragFrom.current;
+                dragFrom.current = null;
+                if (from !== null && from !== idx) reorder(from, idx);
+              }}
+              className="bg-card border rounded-2xl p-3 flex items-center gap-3 cursor-move"
+            >
+              <div className="text-muted-foreground select-none" aria-hidden>⋮⋮</div>
               {b.image_url ? (
                 <img src={b.image_url} alt={b.title} className="w-16 h-16 object-cover rounded-xl" />
               ) : (
@@ -657,13 +674,10 @@ function AdminBanners() {
                 </p>
                 <p className="text-[11px] text-primary">{imp} impressions · {clk} clicks · {rate}% CTR</p>
               </div>
-              <div className="flex flex-col gap-1">
-                <Button size="sm" variant="ghost" className="h-6 px-2" onClick={() => move(idx, -1)} disabled={idx === 0}>↑</Button>
-                <Button size="sm" variant="ghost" className="h-6 px-2" onClick={() => move(idx, 1)} disabled={idx === (data?.length ?? 0) - 1}>↓</Button>
-              </div>
               <Button size="sm" variant="outline" onClick={() => toggle(b.id, b.is_active)}>{b.is_active ? "Hide" : "Show"}</Button>
               <Button size="sm" variant="destructive" onClick={() => del(b.id)}><Trash2 className="w-4 h-4" /></Button>
             </div>
+
           );
         })}
       </div>
