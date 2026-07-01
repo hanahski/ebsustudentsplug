@@ -88,7 +88,7 @@ export function RouteTransitionLoader() {
           draggable={false}
         />
       </div>
-      <div className="-mt-4 sp-blob-text text-xl font-extrabold tracking-wide" aria-label="StudentsPlug">
+      <div className="-mt-4 sp-blob-text font-display font-bold text-xl tracking-tight" aria-label="StudentsPlug">
         StudentsPlug
       </div>
       <style>{`
