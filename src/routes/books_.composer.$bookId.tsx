@@ -126,6 +126,7 @@ function ComposerEditorPage() {
   const [applyingTpl, setApplyingTpl] = useState<string | null>(null);
   const aiAssistFn = useServerFn(bookAiAssist);
   const aiCoverFn = useServerFn(bookAiCover);
+  const aiInlineImgFn = useServerFn(bookAiInlineImage);
   const [aiCoverBusy, setAiCoverBusy] = useState(false);
 
 
