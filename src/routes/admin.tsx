@@ -1211,3 +1211,24 @@ function AdminMarketCategories() {
     </div>
   );
 }
+
+function AdminViewSwitch() {
+  const { asUser, setAsUser } = useAdminView();
+  const nav = useNavigate();
+  return (
+    <label className="flex items-center gap-3 bg-muted/60 border rounded-2xl px-3 py-2 cursor-pointer select-none">
+      <div className="text-right">
+        <div className="text-xs font-bold leading-tight">{asUser ? "Viewing as user" : "Admin mode"}</div>
+        <div className="text-[10px] text-muted-foreground leading-tight">Toggle to switch role view</div>
+      </div>
+      <Switch
+        checked={asUser}
+        onCheckedChange={(v) => {
+          setAsUser(v);
+          if (v) nav({ to: "/" });
+        }}
+        aria-label="View as normal user"
+      />
+    </label>
+  );
+}
