@@ -437,7 +437,81 @@ function ComposerEditorPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  if (bookLoading || chLoading) {
+  // ---------- AI writing assistant ----------
+  const runAi = async (mode: "continue" | "rewrite" | "expand" | "shorten" | "grammar") => {
+    if (!active) { toast.error("Open a chapter first"); return; }
+    const plain = stripHtml(chBuf.content).trim();
+    if (!plain) { toast.error("Chapter is empty"); return; }
+    // For "continue" use only the tail so the model builds forward, not restates.
+    const passage = mode === "continue" ? plain.slice(-1200) : plain;
+    setAiBusy(true);
+    try {
+      const { output } = await aiAssistFn({ data: { mode, text: passage, context: `Book: ${book?.title ?? ""}\n${book?.description ?? ""}` } });
+      if (!output) throw new Error("Empty AI response");
+      if (mode === "continue") {
+        setChBuf((b) => ({ ...b, content: (b.content || "") + `<p>${output.replace(/\n\n+/g, "</p><p>").replace(/\n/g, "<br/>")}</p>` }));
+        toast.success("Continued");
+      } else {
+        // Replace the chapter body with the new prose (wrap paragraphs).
+        const html = output
+          .split(/\n{2,}/)
+          .map((p) => `<p>${p.replace(/\n/g, "<br/>")}</p>`)
+          .join("");
+        setChBuf((b) => ({ ...b, content: html }));
+        toast.success(`Applied · ${mode}`);
+      }
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setAiBusy(false); }
+  };
+
+  // ---------- EPUB export ----------
+  const exportEpub = async () => {
+    if (!book) return;
+    if (!chapters || chapters.length === 0) { toast.error("Add at least one chapter"); return; }
+    setExporting(true);
+    try {
+      const { data: prof } = await supabase.from("profiles").select("display_name").eq("id", book && ((): string => { return ""; })() as any).maybeSingle();
+      const author = (prof?.display_name as string | undefined) ?? "Anonymous";
+      const blob = await buildEpubBlob({
+        title: book.title,
+        author,
+        description: book.description,
+        coverUrl: book.cover_url,
+        chapters: chapters.map((c) => ({ title: c.title, html: c.content })),
+      });
+      const safe = (book.title || "book").replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+      downloadBlob(blob, `${safe}.epub`);
+      toast.success("EPUB downloaded");
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setExporting(false); }
+  };
+
+  // ---------- Cover template apply ----------
+  const applyCoverTemplate = async (tpl: typeof COVER_TEMPLATES[number]) => {
+    if (!book) return;
+    setApplyingTpl(tpl.id);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) throw new Error("Sign in");
+      const { data: prof } = await supabase.from("profiles").select("display_name").eq("id", u.user.id).maybeSingle();
+      const author = (prof?.display_name as string | undefined) ?? "";
+      const blob = await renderTemplateCover(tpl, book.title, author);
+      const file = new File([blob], `template-${tpl.id}.jpg`, { type: "image/jpeg" });
+      const path = `${u.user.id}/covers/${bookId}-${Date.now()}-tpl-${tpl.id}.jpg`;
+      const { error } = await supabase.storage.from("book-covers").upload(path, file, { upsert: false });
+      if (error) throw error;
+      const { data: signed, error: se } = await supabase.storage.from("book-covers").createSignedUrl(path, 60 * 60 * 24 * 365);
+      if (se || !signed?.signedUrl) throw new Error(se?.message ?? "sign url failed");
+      const { error: ue } = await supabase.from("user_books").update({ cover_url: signed.signedUrl }).eq("id", bookId);
+      if (ue) throw ue;
+      qc.invalidateQueries({ queryKey: ["composer-book", bookId] });
+      toast.success(`Cover set · ${tpl.label}`);
+      setTemplatesOpen(false);
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setApplyingTpl(null); }
+  };
+
+
     return (
       <AppShell>
         <p className="text-center py-16 text-muted-foreground">
