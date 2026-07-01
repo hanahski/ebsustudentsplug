@@ -58,6 +58,7 @@ import { Route as ToolsDictionaryRouteImport } from './routes/tools.dictionary'
 import { Route as ToolsCalculatorRouteImport } from './routes/tools.calculator'
 import { Route as ToolsAudioConvertRouteImport } from './routes/tools.audio-convert'
 import { Route as TicketsIdRouteImport } from './routes/tickets.$id'
+import { Route as TasksAmountRouteImport } from './routes/tasks.$amount'
 import { Route as ProfileIdRouteImport } from './routes/profile.$id'
 import { Route as PostNewRouteImport } from './routes/post.new'
 import { Route as PostIdRouteImport } from './routes/post.$id'
@@ -348,6 +349,11 @@ const TicketsIdRoute = TicketsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => TicketsRoute,
+} as any)
+const TasksAmountRoute = TasksAmountRouteImport.update({
+  id: '/tasks/$amount',
+  path: '/tasks/$amount',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileIdRoute = ProfileIdRouteImport.update({
   id: '/profile/$id',
@@ -640,6 +646,7 @@ export interface FileRoutesByFullPath {
   '/post/$id': typeof PostIdRoute
   '/post/new': typeof PostNewRoute
   '/profile/$id': typeof ProfileIdRoute
+  '/tasks/$amount': typeof TasksAmountRoute
   '/tickets/$id': typeof TicketsIdRoute
   '/tools/audio-convert': typeof ToolsAudioConvertRoute
   '/tools/calculator': typeof ToolsCalculatorRoute
@@ -734,6 +741,7 @@ export interface FileRoutesByTo {
   '/post/$id': typeof PostIdRoute
   '/post/new': typeof PostNewRoute
   '/profile/$id': typeof ProfileIdRoute
+  '/tasks/$amount': typeof TasksAmountRoute
   '/tickets/$id': typeof TicketsIdRoute
   '/tools/audio-convert': typeof ToolsAudioConvertRoute
   '/tools/calculator': typeof ToolsCalculatorRoute
@@ -831,6 +839,7 @@ export interface FileRoutesById {
   '/post/$id': typeof PostIdRoute
   '/post/new': typeof PostNewRoute
   '/profile/$id': typeof ProfileIdRoute
+  '/tasks/$amount': typeof TasksAmountRoute
   '/tickets/$id': typeof TicketsIdRoute
   '/tools/audio-convert': typeof ToolsAudioConvertRoute
   '/tools/calculator': typeof ToolsCalculatorRoute
@@ -929,6 +938,7 @@ export interface FileRouteTypes {
     | '/post/$id'
     | '/post/new'
     | '/profile/$id'
+    | '/tasks/$amount'
     | '/tickets/$id'
     | '/tools/audio-convert'
     | '/tools/calculator'
@@ -1023,6 +1033,7 @@ export interface FileRouteTypes {
     | '/post/$id'
     | '/post/new'
     | '/profile/$id'
+    | '/tasks/$amount'
     | '/tickets/$id'
     | '/tools/audio-convert'
     | '/tools/calculator'
@@ -1119,6 +1130,7 @@ export interface FileRouteTypes {
     | '/post/$id'
     | '/post/new'
     | '/profile/$id'
+    | '/tasks/$amount'
     | '/tickets/$id'
     | '/tools/audio-convert'
     | '/tools/calculator'
@@ -1208,6 +1220,7 @@ export interface RootRouteChildren {
   PostIdRoute: typeof PostIdRoute
   PostNewRoute: typeof PostNewRoute
   ProfileIdRoute: typeof ProfileIdRoute
+  TasksAmountRoute: typeof TasksAmountRoute
   BlogIndexRoute: typeof BlogIndexRoute
   CoursesIndexRoute: typeof CoursesIndexRoute
   NotesIndexRoute: typeof NotesIndexRoute
@@ -1572,6 +1585,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/tickets/$id'
       preLoaderRoute: typeof TicketsIdRouteImport
       parentRoute: typeof TicketsRoute
+    }
+    '/tasks/$amount': {
+      id: '/tasks/$amount'
+      path: '/tasks/$amount'
+      fullPath: '/tasks/$amount'
+      preLoaderRoute: typeof TasksAmountRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/profile/$id': {
       id: '/profile/$id'
@@ -2050,6 +2070,7 @@ const rootRouteChildren: RootRouteChildren = {
   PostIdRoute: PostIdRoute,
   PostNewRoute: PostNewRoute,
   ProfileIdRoute: ProfileIdRoute,
+  TasksAmountRoute: TasksAmountRoute,
   BlogIndexRoute: BlogIndexRoute,
   CoursesIndexRoute: CoursesIndexRoute,
   NotesIndexRoute: NotesIndexRoute,
