@@ -1,9 +1,9 @@
-import brandLogo from "@/assets/brand-logo.png.asset.json";
+import brandLogo from "@/assets/brand-logo.png";
 
 export function Logo({ size = 32 }: { size?: number }) {
   return (
     <img
-      src={brandLogo.url}
+      src={brandLogo}
       alt="StudentsPlug"
       width={size}
       height={size}

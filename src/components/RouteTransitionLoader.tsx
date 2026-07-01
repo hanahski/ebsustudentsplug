@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
-import loaderDark from "@/assets/loader-dark.gif.asset.json";
-import loaderLight from "@/assets/loader-light.gif.asset.json";
+import brandLogo from "@/assets/brand-logo.png";
 
 /**
  * Full-screen branded animated logo shown during route transitions.
@@ -48,7 +47,7 @@ export function RouteTransitionLoader() {
 
   if (!visible) return null;
 
-  const src = isDark ? loaderDark.url : loaderLight.url;
+  const src = brandLogo;
   const bg = isDark ? "#000" : "#fff";
 
   return (
