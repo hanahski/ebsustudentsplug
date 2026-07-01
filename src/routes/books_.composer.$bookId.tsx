@@ -523,19 +523,33 @@ function ComposerEditorPage() {
               </Button>
             </div>
             {(chapters ?? []).map((c, i) => (
-              <button
+              <div
                 key={c.id}
-                onClick={() => setActiveId(c.id)}
-                className={`w-full text-left px-2 py-1.5 rounded-lg text-sm flex items-center gap-2 ${activeId === c.id ? "bg-primary/15 text-primary font-semibold" : "hover:bg-muted"}`}
+                draggable
+                onDragStart={() => setDragId(c.id)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={() => handleDrop(c.id)}
+                onDragEnd={() => setDragId(null)}
+                className={`group flex items-center gap-1 rounded-lg pr-1 ${dragId === c.id ? "opacity-40" : ""}`}
               >
-                <span className="text-xs text-muted-foreground w-5">{i + 1}.</span>
-                <span className="flex-1 truncate">{c.title || "Untitled"}</span>
-              </button>
+                <span className="cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-muted-foreground pl-1" title="Drag to reorder">
+                  <GripVertical className="w-3.5 h-3.5" />
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setActiveId(c.id)}
+                  className={`flex-1 text-left px-1 py-1.5 rounded-lg text-sm flex items-center gap-2 ${activeId === c.id ? "bg-primary/15 text-primary font-semibold" : "hover:bg-muted"}`}
+                >
+                  <span className="text-xs text-muted-foreground w-5">{i + 1}.</span>
+                  <span className="flex-1 truncate">{c.title || "Untitled"}</span>
+                </button>
+              </div>
             ))}
             {(chapters?.length ?? 0) === 0 && (
               <p className="text-xs text-muted-foreground p-2">No chapters yet.</p>
             )}
           </aside>
+
 
           <section className="space-y-3">
             {active ? (
