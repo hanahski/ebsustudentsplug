@@ -329,7 +329,19 @@ function Home() {
             <div className="space-y-6">
               {!!filtered.length && (
                 <div className="space-y-4">
-                  {filtered.map((p) => <PostCard key={p.id} post={p} locked={!user} />)}
+                  {filtered.map((p, i) => (
+                    <PostCard
+                      key={p.id}
+                      post={p}
+                      locked={!user}
+                      prefetchNextVideoUrl={
+                        // Warm the SW cache for the next 1-2 upcoming videos.
+                        (filtered[i + 1]?.media_type === "video" && filtered[i + 1]?.media_url) ||
+                        (filtered[i + 2]?.media_type === "video" && filtered[i + 2]?.media_url) ||
+                        undefined
+                      }
+                    />
+                  ))}
                   {canLoadMore && type === "all" && (
                     <button
                       onClick={() => setFeedLimit((n) => n + 20)}
