@@ -281,10 +281,10 @@ export function PostCard({ post, locked }: { post: FeedPost; locked?: boolean })
             {(post.media_url || post.link_url) && !locked && (
               <div className="mt-3 space-y-3" onClick={(e) => e.stopPropagation()}>
                 {post.media_url && (
-                  <MediaPlayer url={post.media_url} type={post.media_type} title={post.title} avatarKey={post.author?.avatar_key} />
+                  <MediaPlayer url={post.media_url} type={post.media_type} title={post.title} avatarKey={post.author?.avatar_key} postId={post.id} />
                 )}
                 {post.link_url && (
-                  <MediaPlayer url={post.link_url} type="video" title={post.title} avatarKey={post.author?.avatar_key} />
+                  <MediaPlayer url={post.link_url} type="video" title={post.title} avatarKey={post.author?.avatar_key} postId={post.id} />
                 )}
               </div>
             )}

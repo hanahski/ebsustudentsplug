@@ -43,6 +43,7 @@ import { Route as NotesIndexRouteImport } from './routes/notes.index'
 import { Route as MarketIndexRouteImport } from './routes/market.index'
 import { Route as CoursesIndexRouteImport } from './routes/courses.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
+import { Route as WatchIdRouteImport } from './routes/watch.$id'
 import { Route as ToolsYoutubeRouteImport } from './routes/tools.youtube'
 import { Route as ToolsVoiceCloneRouteImport } from './routes/tools.voice-clone'
 import { Route as ToolsVocalSplitRouteImport } from './routes/tools.vocal-split'
@@ -277,6 +278,11 @@ const CoursesIndexRoute = CoursesIndexRouteImport.update({
 const BlogIndexRoute = BlogIndexRouteImport.update({
   id: '/blog/',
   path: '/blog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WatchIdRoute = WatchIdRouteImport.update({
+  id: '/watch/$id',
+  path: '/watch/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ToolsYoutubeRoute = ToolsYoutubeRouteImport.update({
@@ -691,6 +697,7 @@ export interface FileRoutesByFullPath {
   '/tools/vocal-split': typeof ToolsVocalSplitRoute
   '/tools/voice-clone': typeof ToolsVoiceCloneRoute
   '/tools/youtube': typeof ToolsYoutubeRoute
+  '/watch/$id': typeof WatchIdRoute
   '/blog/': typeof BlogIndexRoute
   '/courses/': typeof CoursesIndexRoute
   '/market/': typeof MarketIndexRoute
@@ -790,6 +797,7 @@ export interface FileRoutesByTo {
   '/tools/vocal-split': typeof ToolsVocalSplitRoute
   '/tools/voice-clone': typeof ToolsVoiceCloneRoute
   '/tools/youtube': typeof ToolsYoutubeRoute
+  '/watch/$id': typeof WatchIdRoute
   '/blog': typeof BlogIndexRoute
   '/courses': typeof CoursesIndexRoute
   '/market': typeof MarketIndexRoute
@@ -892,6 +900,7 @@ export interface FileRoutesById {
   '/tools/vocal-split': typeof ToolsVocalSplitRoute
   '/tools/voice-clone': typeof ToolsVoiceCloneRoute
   '/tools/youtube': typeof ToolsYoutubeRoute
+  '/watch/$id': typeof WatchIdRoute
   '/blog/': typeof BlogIndexRoute
   '/courses/': typeof CoursesIndexRoute
   '/market/': typeof MarketIndexRoute
@@ -995,6 +1004,7 @@ export interface FileRouteTypes {
     | '/tools/vocal-split'
     | '/tools/voice-clone'
     | '/tools/youtube'
+    | '/watch/$id'
     | '/blog/'
     | '/courses/'
     | '/market/'
@@ -1094,6 +1104,7 @@ export interface FileRouteTypes {
     | '/tools/vocal-split'
     | '/tools/voice-clone'
     | '/tools/youtube'
+    | '/watch/$id'
     | '/blog'
     | '/courses'
     | '/market'
@@ -1195,6 +1206,7 @@ export interface FileRouteTypes {
     | '/tools/vocal-split'
     | '/tools/voice-clone'
     | '/tools/youtube'
+    | '/watch/$id'
     | '/blog/'
     | '/courses/'
     | '/market/'
@@ -1270,6 +1282,7 @@ export interface RootRouteChildren {
   PostNewRoute: typeof PostNewRoute
   ProfileIdRoute: typeof ProfileIdRoute
   TasksAmountRoute: typeof TasksAmountRoute
+  WatchIdRoute: typeof WatchIdRoute
   BlogIndexRoute: typeof BlogIndexRoute
   CoursesIndexRoute: typeof CoursesIndexRoute
   NotesIndexRoute: typeof NotesIndexRoute
@@ -1528,6 +1541,13 @@ declare module '@tanstack/react-router' {
       path: '/blog'
       fullPath: '/blog/'
       preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/watch/$id': {
+      id: '/watch/$id'
+      path: '/watch/$id'
+      fullPath: '/watch/$id'
+      preLoaderRoute: typeof WatchIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tools/youtube': {
@@ -2163,6 +2183,7 @@ const rootRouteChildren: RootRouteChildren = {
   PostNewRoute: PostNewRoute,
   ProfileIdRoute: ProfileIdRoute,
   TasksAmountRoute: TasksAmountRoute,
+  WatchIdRoute: WatchIdRoute,
   BlogIndexRoute: BlogIndexRoute,
   CoursesIndexRoute: CoursesIndexRoute,
   NotesIndexRoute: NotesIndexRoute,
