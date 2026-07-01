@@ -1,30 +1,43 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Coins, PartyPopper, X } from "lucide-react";
 import { AvatarDisplay } from "./AvatarDisplay";
+import { BrandLoader } from "./BrandLoader";
 import { playWelcomeCelebrationChime } from "@/lib/sounds";
 
 /**
- * Once-only celebration shown to a new member after their first sign-in.
+ * First-time member experience:
+ *   1. Extended branded splash (~3.5s) so the logo lingers.
+ *   2. Navigates to /me (profile page).
+ *   3. Reveals the welcome + credit bonus celebration.
  * Gated by profile.seen_welcome (boolean) — set to true on dismiss so it never shows again.
  */
 export function WelcomeOverlay() {
   const { profile, refreshProfile } = useAuth();
+  const nav = useNavigate();
   const [closing, setClosing] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [phase, setPhase] = useState<"splash" | "dialog">("splash");
   const show = !!profile && profile.seen_welcome === false;
 
   useEffect(() => {
-    if (show) {
+    if (!show) { setMounted(false); setPhase("splash"); return; }
+    // 1) Linger on the branded splash so first-time users get a proper intro.
+    const splashMs = 3500;
+    const splashTimer = setTimeout(async () => {
+      // 2) Land them on their profile before the celebration pops.
+      await nav({ to: "/me" }).catch(() => {});
+      setPhase("dialog");
       playWelcomeCelebrationChime();
-      // small delay so layout is calm
-      const t = setTimeout(() => setMounted(true), 250);
-      return () => clearTimeout(t);
-    }
-    setMounted(false);
-  }, [show]);
+      // 3) Let layout settle, then fade the celebration in.
+      setTimeout(() => setMounted(true), 200);
+    }, splashMs);
+    return () => clearTimeout(splashTimer);
+  }, [show, nav]);
+
 
   const dismiss = async () => {
     if (closing) return;
