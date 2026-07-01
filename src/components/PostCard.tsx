@@ -10,6 +10,7 @@ import { RankBadge } from "./RankBadge";
 import { Comments } from "./Comments";
 import { EbsuBadge } from "./EbsuBadge";
 import { MediaPlayer } from "./MediaPlayer";
+import { prefetchVideo } from "@/lib/video-sw";
 import { SaveButton } from "./SaveButton";
 import { SpecialBadges } from "./SpecialBadges";
 import { AdminCrownBadge, useIsAdminUser } from "./AdminCrownBadge";
