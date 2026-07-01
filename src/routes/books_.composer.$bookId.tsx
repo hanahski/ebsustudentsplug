@@ -41,7 +41,15 @@ type Book = {
   status: string;
   price_credits: number;
   library_book_id: string | null;
+  share_token: string | null;
 };
+
+function stripHtml(html: string): string {
+  if (typeof window === "undefined") return html.replace(/<[^>]+>/g, " ");
+  const d = document.createElement("div");
+  d.innerHTML = html;
+  return d.innerText || d.textContent || "";
+}
 
 function ComposerEditorPage() {
   const { bookId } = Route.useParams();
@@ -50,6 +58,13 @@ function ComposerEditorPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [saving, setSaving] = useState(false);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [findOpen, setFindOpen] = useState(false);
+  const [findTerm, setFindTerm] = useState("");
+  const [replaceTerm, setReplaceTerm] = useState("");
+  const [shareOpen, setShareOpen] = useState(false);
+  const [creatingShare, setCreatingShare] = useState(false);
+
 
   const { data: book, isLoading: bookLoading } = useQuery<Book | null>({
     queryKey: ["composer-book", bookId],
