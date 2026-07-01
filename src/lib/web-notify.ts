@@ -45,8 +45,8 @@ export function notifyIncomingMessage(opts: {
     const n = new Notification(opts.title, {
       body: opts.body.slice(0, 140),
       tag: TAG_PREFIX + (opts.threadId ?? "global"),
-      icon: "/__l5e/assets-v1/57d8a869-4dec-403e-a4ed-ea8f590c7a68/brand-logo.png",
-      badge: "/__l5e/assets-v1/57d8a869-4dec-403e-a4ed-ea8f590c7a68/brand-logo.png",
+      icon: brandLogoUrl,
+      badge: brandLogoUrl,
       silent: false,
     });
     n.onclick = () => {
