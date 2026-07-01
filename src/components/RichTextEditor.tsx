@@ -79,9 +79,19 @@ export function RichTextEditor({ value, onChange, placeholder, minHeight = 420 }
   };
 
   return (
-    <div className="border rounded-2xl overflow-hidden bg-background">
-      {/* Toolbar sits inside the editor (NOT sticky) so it never floats over the writing surface. */}
-      <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/40">
+    <div className="border rounded-2xl overflow-hidden bg-background flex flex-col">
+      {/* Writing surface first — nothing floats over the top text. */}
+      <div
+        ref={ref}
+        contentEditable
+        suppressContentEditableWarning
+        onInput={handleInput}
+        data-placeholder={placeholder}
+        className="prose prose-sm dark:prose-invert max-w-none p-5 outline-none [&[data-placeholder]:empty::before]:content-[attr(data-placeholder)] [&[data-placeholder]:empty::before]:text-muted-foreground"
+        style={{ minHeight }}
+      />
+      {/* Toolbar pinned to the BOTTOM so bold / H1 / H2 never cover the first lines the writer just typed. */}
+      <div className="sticky bottom-0 z-10 flex flex-wrap items-center gap-1 p-2 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
         <Button type="button" size="icon" variant="ghost" onClick={() => exec("bold")} title="Bold"><Bold className="w-4 h-4" /></Button>
         <Button type="button" size="icon" variant="ghost" onClick={() => exec("italic")} title="Italic"><Italic className="w-4 h-4" /></Button>
         <Button type="button" size="icon" variant="ghost" onClick={() => exec("formatBlock", "<h1>")} title="Heading 1"><Heading1 className="w-4 h-4" /></Button>
@@ -96,15 +106,7 @@ export function RichTextEditor({ value, onChange, placeholder, minHeight = 420 }
         <Button type="button" size="icon" variant="ghost" onClick={() => exec("redo")} title="Redo"><Redo className="w-4 h-4" /></Button>
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
       </div>
-      <div
-        ref={ref}
-        contentEditable
-        suppressContentEditableWarning
-        onInput={handleInput}
-        data-placeholder={placeholder}
-        className="prose prose-sm dark:prose-invert max-w-none p-5 pt-6 outline-none [&[data-placeholder]:empty::before]:content-[attr(data-placeholder)] [&[data-placeholder]:empty::before]:text-muted-foreground"
-        style={{ minHeight }}
-      />
     </div>
   );
 }
+
