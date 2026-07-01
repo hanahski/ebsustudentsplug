@@ -17,6 +17,7 @@ import {
   QrCode,
   Coins,
   RefreshCw,
+  PenLine,
 } from "lucide-react";
 import { EbsuBadge } from "@/components/EbsuBadge";
 import { StorageMedia } from "@/components/StorageMedia";
@@ -45,6 +46,13 @@ const KINDS = [
     icon: BookOpen,
     cta: "I want to sell my Book",
     tone: "from-emerald-500 to-teal-500",
+  },
+  {
+    key: "composer",
+    label: "Book Composer",
+    icon: PenLine,
+    cta: "I want to write a Book",
+    tone: "from-violet-500 to-purple-600",
   },
 ] as const;
 
@@ -175,6 +183,10 @@ function MarketPage() {
                     <Link to="/books" className="text-xs underline opacity-90 mt-1 block">
                       Browse books
                     </Link>
+                  ) : key === "composer" ? (
+                    <Link to="/books/composer" className="text-xs underline opacity-90 mt-1 block">
+                      Open composer
+                    </Link>
                   ) : (
                     <button
                       onClick={() => setKind(key)}
@@ -191,6 +203,8 @@ function MarketPage() {
                   >
                     {isTicket ? (
                       <Link to="/tickets">{cta}</Link>
+                    ) : key === "composer" ? (
+                      <Link to="/books/composer">{cta}</Link>
                     ) : (
                       <Link to="/market/new" search={{ kind: key } as any}>
                         {cta}
