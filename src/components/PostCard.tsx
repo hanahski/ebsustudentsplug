@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Eye, Heart, FileText, Lock, MessageCircle, Pencil, Repeat2, Trash2, ShieldCheck } from "lucide-react";
 import { ReportDialog } from "./ReportDialog";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
