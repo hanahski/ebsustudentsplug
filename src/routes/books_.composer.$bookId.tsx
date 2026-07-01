@@ -32,7 +32,7 @@ import { toast } from "sonner";
 import { BookCover } from "@/components/BookCover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useServerFn } from "@tanstack/react-start";
-import { bookAiAssist, bookAiCover } from "@/lib/book-ai.functions";
+import { bookAiAssist, bookAiCover, bookAiInlineImage } from "@/lib/book-ai.functions";
 import { buildEpubBlob, downloadBlob } from "@/lib/epub-export";
 
 const COVER_TEMPLATES: {
@@ -126,6 +126,7 @@ function ComposerEditorPage() {
   const [applyingTpl, setApplyingTpl] = useState<string | null>(null);
   const aiAssistFn = useServerFn(bookAiAssist);
   const aiCoverFn = useServerFn(bookAiCover);
+  const aiInlineImgFn = useServerFn(bookAiInlineImage);
   const [aiCoverBusy, setAiCoverBusy] = useState(false);
 
 
@@ -494,6 +495,31 @@ function ComposerEditorPage() {
     finally { setAiBusy(false); }
   };
 
+  const insertAiSceneImage = async () => {
+    if (!active) { toast.error("Open a chapter first"); return; }
+    const prompt = window.prompt("Describe the scene to illustrate:", "");
+    if (!prompt || !prompt.trim()) return;
+    setAiBusy(true);
+    try {
+      const { dataUrl } = await aiInlineImgFn({ data: { prompt: prompt.trim() } });
+      // Upload to book-covers bucket so it survives export and page reload
+      const b64 = dataUrl.split(",")[1] ?? "";
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const path = `${book?.id ?? "chapter"}/scene-${Date.now()}.png`;
+      const up = await supabase.storage.from("book-covers").upload(path, new Blob([bytes], { type: "image/png" }), { upsert: false, contentType: "image/png" });
+      if (up.error) throw up.error;
+      const { data: pub } = supabase.storage.from("book-covers").getPublicUrl(path);
+      const url = pub.publicUrl;
+      setChBuf((b) => ({ ...b, content: (b.content || "") + `<p><img src="${url}" alt="${prompt.replace(/"/g, "&quot;")}" style="max-width:100%;height:auto;border-radius:8px;" /></p>` }));
+      toast.success("Scene added");
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setAiBusy(false); }
+  };
+
+
+
   // ---------- EPUB export ----------
   const exportEpub = async () => {
     if (!book) return;
@@ -796,6 +822,16 @@ function ComposerEditorPage() {
                         {m}
                       </Button>
                     ))}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2 text-xs"
+                      disabled={aiBusy}
+                      onClick={insertAiSceneImage}
+                      title="Generate a scene illustration"
+                    >
+                      <Sparkles className="w-3 h-3 mr-1" /> Scene image
+                    </Button>
                   </div>
                   <div className="text-xs text-muted-foreground flex items-center gap-3">
                     <span><b>{wordStats.words.toLocaleString()}</b> words</span>
