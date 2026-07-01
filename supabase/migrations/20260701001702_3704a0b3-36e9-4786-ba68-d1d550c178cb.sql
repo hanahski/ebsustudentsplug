@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public._agent_exec_sql(text) FROM PUBLIC, anon, authenticated;
