@@ -17,6 +17,7 @@ import { playNewMessageTone } from "@/lib/sounds";
 import { playOrNotify } from "@/lib/web-notify";
 
 import { getIsAdminUser } from "@/lib/admin-role";
+import { useAdminView } from "@/hooks/use-admin-view";
 
 function useActiveChatThreadId() {
   const router = useRouter();
@@ -200,12 +201,24 @@ export function AppShell({ children }: { children: ReactNode }) {
     enabled: !!user,
     queryFn: async () => getIsAdminUser(user!.id),
   });
+  const { asUser: viewAsUser, setAsUser: setViewAsUser } = useAdminView();
+  const showAdminUi = isAdmin && !viewAsUser;
   return (
     <div className="min-h-screen flex flex-col">
       <WelcomeOverlay />
       <ReferralCelebration />
       <ContentRemovalToasts />
       <HideSeekListener userId={user?.id} />
+      {isAdmin && viewAsUser && (
+        <button
+          type="button"
+          onClick={() => { setViewAsUser(false); router.navigate({ to: "/admin" }); }}
+          className="fixed bottom-20 md:bottom-6 right-4 z-50 inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-amber-500 text-white text-xs font-bold shadow-glow hover:bg-amber-600 transition"
+          title="You're browsing as a normal user"
+        >
+          <Shield className="w-3.5 h-3.5" /> Return to Admin
+        </button>
+      )}
       {/* Pull-to-refresh indicator (mobile) */}
       {(pullY > 0 || refreshing) && (
         <div
@@ -235,7 +248,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
             <Link to="/tools" className="px-3 py-1.5 rounded-md hover:bg-muted">Tools</Link>
             <Link to="/games" className="px-3 py-1.5 rounded-md hover:bg-muted">Games</Link>
-            {isAdmin && <Link to="/admin" className="px-3 py-1.5 rounded-md hover:bg-muted text-primary font-semibold flex items-center gap-1"><Shield className="w-3.5 h-3.5" />Admin</Link>}
+            {showAdminUi && <Link to="/admin" className="px-3 py-1.5 rounded-md hover:bg-muted text-primary font-semibold flex items-center gap-1"><Shield className="w-3.5 h-3.5" />Admin</Link>}
           </nav>
           <div className="hidden md:flex flex-1 max-w-md mx-2">
             <SiteSearch />
