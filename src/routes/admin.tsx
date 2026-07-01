@@ -591,16 +591,16 @@ function AdminBanners() {
         </div>
         <Input placeholder="…or paste image URL" value={imageUrl} onChange={(e) => { setImageUrl(e.target.value); setImagePath(""); setPreviewRatio(null); }} />
 
-        {imageUrl && (
-          <div className="rounded-xl overflow-hidden border bg-muted">
-            <div className="aspect-[16/7] w-full relative">
-              <img src={imageUrl} alt="preview" className="absolute inset-0 w-full h-full object-cover" />
-            </div>
-            <p className="text-[11px] text-muted-foreground p-2">
-              Preview at home carousel size{previewRatio ? ` · source ${previewRatio.toFixed(2)}:1` : ""}
-            </p>
-          </div>
-        )}
+        <BannerLivePreview
+          title={title || "Your banner title"}
+          subtitle={subtitle}
+          imageUrl={imageUrl}
+          ctaLabel={ctaLabel}
+          layout={layout}
+          accent={accent}
+          variant={variant}
+          previewRatio={previewRatio}
+        />
 
         <div className="space-y-2 pt-2 border-t">
           <label className="block text-sm font-medium">Where should tapping this banner take people?</label>
