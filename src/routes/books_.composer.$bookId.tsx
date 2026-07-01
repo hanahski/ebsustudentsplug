@@ -32,7 +32,7 @@ import { toast } from "sonner";
 import { BookCover } from "@/components/BookCover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useServerFn } from "@tanstack/react-start";
-import { bookAiAssist, bookAiCover } from "@/lib/book-ai.functions";
+import { bookAiAssist, bookAiCover, bookAiInlineImage } from "@/lib/book-ai.functions";
 import { buildEpubBlob, downloadBlob } from "@/lib/epub-export";
 
 const COVER_TEMPLATES: {
