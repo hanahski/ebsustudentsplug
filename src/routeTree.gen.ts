@@ -83,6 +83,7 @@ import { Route as ApiBootprintRouteImport } from './routes/api/bootprint'
 import { Route as BooksComposerIndexRouteImport } from './routes/books_.composer.index'
 import { Route as ToolsAiSlugRouteImport } from './routes/tools.ai.$slug'
 import { Route as BooksReadIdRouteImport } from './routes/books_.read.$id'
+import { Route as BooksPreviewTokenRouteImport } from './routes/books_.preview.$token'
 import { Route as BooksComposerBookIdRouteImport } from './routes/books_.composer.$bookId'
 import { Route as ApiPublicVoiceCloneRouteImport } from './routes/api/public/voice-clone'
 import { Route as ApiPublicVocalSplitV2RouteImport } from './routes/api/public/vocal-split-v2'
@@ -468,6 +469,11 @@ const BooksReadIdRoute = BooksReadIdRouteImport.update({
   path: '/books/read/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BooksPreviewTokenRoute = BooksPreviewTokenRouteImport.update({
+  id: '/books_/preview/$token',
+  path: '/books/preview/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BooksComposerBookIdRoute = BooksComposerBookIdRouteImport.update({
   id: '/$bookId',
   path: '/$bookId',
@@ -625,6 +631,7 @@ export interface FileRoutesByFullPath {
   '/api/public/vocal-split-v2': typeof ApiPublicVocalSplitV2Route
   '/api/public/voice-clone': typeof ApiPublicVoiceCloneRoute
   '/books/composer/$bookId': typeof BooksComposerBookIdRoute
+  '/books/preview/$token': typeof BooksPreviewTokenRoute
   '/books/read/$id': typeof BooksReadIdRoute
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books/composer/': typeof BooksComposerIndexRoute
@@ -713,6 +720,7 @@ export interface FileRoutesByTo {
   '/api/public/vocal-split-v2': typeof ApiPublicVocalSplitV2Route
   '/api/public/voice-clone': typeof ApiPublicVoiceCloneRoute
   '/books/composer/$bookId': typeof BooksComposerBookIdRoute
+  '/books/preview/$token': typeof BooksPreviewTokenRoute
   '/books/read/$id': typeof BooksReadIdRoute
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books/composer': typeof BooksComposerIndexRoute
@@ -804,6 +812,7 @@ export interface FileRoutesById {
   '/api/public/vocal-split-v2': typeof ApiPublicVocalSplitV2Route
   '/api/public/voice-clone': typeof ApiPublicVoiceCloneRoute
   '/books_/composer/$bookId': typeof BooksComposerBookIdRoute
+  '/books_/preview/$token': typeof BooksPreviewTokenRoute
   '/books_/read/$id': typeof BooksReadIdRoute
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books_/composer/': typeof BooksComposerIndexRoute
@@ -896,6 +905,7 @@ export interface FileRouteTypes {
     | '/api/public/vocal-split-v2'
     | '/api/public/voice-clone'
     | '/books/composer/$bookId'
+    | '/books/preview/$token'
     | '/books/read/$id'
     | '/tools/ai/$slug'
     | '/books/composer/'
@@ -984,6 +994,7 @@ export interface FileRouteTypes {
     | '/api/public/vocal-split-v2'
     | '/api/public/voice-clone'
     | '/books/composer/$bookId'
+    | '/books/preview/$token'
     | '/books/read/$id'
     | '/tools/ai/$slug'
     | '/books/composer'
@@ -1074,6 +1085,7 @@ export interface FileRouteTypes {
     | '/api/public/vocal-split-v2'
     | '/api/public/voice-clone'
     | '/books_/composer/$bookId'
+    | '/books_/preview/$token'
     | '/books_/read/$id'
     | '/tools/ai/$slug'
     | '/books_/composer/'
@@ -1141,6 +1153,7 @@ export interface RootRouteChildren {
   ApiPublicVocalSplitRoute: typeof ApiPublicVocalSplitRoute
   ApiPublicVocalSplitV2Route: typeof ApiPublicVocalSplitV2Route
   ApiPublicVoiceCloneRoute: typeof ApiPublicVoiceCloneRoute
+  BooksPreviewTokenRoute: typeof BooksPreviewTokenRoute
   BooksReadIdRoute: typeof BooksReadIdRoute
   ApiPublicHooksAdminAiPulseRoute: typeof ApiPublicHooksAdminAiPulseRoute
   ApiPublicHooksAutoEbsuNewsRoute: typeof ApiPublicHooksAutoEbsuNewsRoute
@@ -1672,6 +1685,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BooksReadIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/books_/preview/$token': {
+      id: '/books_/preview/$token'
+      path: '/books/preview/$token'
+      fullPath: '/books/preview/$token'
+      preLoaderRoute: typeof BooksPreviewTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/books_/composer/$bookId': {
       id: '/books_/composer/$bookId'
       path: '/$bookId'
@@ -1923,6 +1943,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicVocalSplitRoute: ApiPublicVocalSplitRoute,
   ApiPublicVocalSplitV2Route: ApiPublicVocalSplitV2Route,
   ApiPublicVoiceCloneRoute: ApiPublicVoiceCloneRoute,
+  BooksPreviewTokenRoute: BooksPreviewTokenRoute,
   BooksReadIdRoute: BooksReadIdRoute,
   ApiPublicHooksAdminAiPulseRoute: ApiPublicHooksAdminAiPulseRoute,
   ApiPublicHooksAutoEbsuNewsRoute: ApiPublicHooksAutoEbsuNewsRoute,
