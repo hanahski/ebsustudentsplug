@@ -455,7 +455,7 @@ export function MediaPlayer({ url: rawUrl, type, title, avatarKey, postId }: Pro
       };
       return (
         <div className="space-y-2">
-          <LazyVideo videoRef={videoRef} url={url} trim={trim} />
+          <LazyVideo videoRef={videoRef} url={url} trim={trim} postId={postId} />
           <div className="flex items-center gap-4">
             <button
               type="button"
