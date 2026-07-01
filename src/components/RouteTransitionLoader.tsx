@@ -47,7 +47,7 @@ export function RouteTransitionLoader() {
 
   if (!visible) return null;
 
-  const src = isDark ? loaderDark.url : loaderLight.url;
+  const src = brandLogo;
   const bg = isDark ? "#000" : "#fff";
 
   return (
