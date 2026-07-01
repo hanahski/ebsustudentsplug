@@ -306,22 +306,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
         </div>
       </footer>
-      {/* Floating Report button — anywhere on the app, fires straight to admins. Hidden on chat to avoid blocking composer. Auto-hides while scrolling, returns after 10s of stillness. */}
-      {router.state.location.pathname !== "/chat" && (
-        <div
-          className={`fixed bottom-20 md:bottom-6 right-3 z-40 transition-all duration-300 ease-out ${reportHidden ? "opacity-0 translate-y-4 pointer-events-none" : "opacity-100 translate-y-0"}`}
-        >
-          <ReportDialog
-            target={{ kind: "general" }}
-            trigger={
-              <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold bg-destructive/90 text-destructive-foreground shadow-glow hover:bg-destructive">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-                Report
-              </span>
-            }
-          />
-        </div>
-      )}
+
+
 
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t bg-background/95 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-1 grid grid-cols-7 text-[10px]">
