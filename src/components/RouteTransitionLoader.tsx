@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
-import brandLogo from "@/assets/brand-logo.png";
+import animatedLogo from "@/assets/brand-logo-animated.webp.asset.json";
 
 /**
  * Full-screen branded animated logo shown during route transitions.
