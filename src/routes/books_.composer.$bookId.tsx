@@ -512,7 +512,9 @@ function ComposerEditorPage() {
   };
 
 
+  if (bookLoading || chLoading) {
     return (
+
       <AppShell>
         <p className="text-center py-16 text-muted-foreground">
           <Loader2 className="w-5 h-5 inline animate-spin" /> Loading…
