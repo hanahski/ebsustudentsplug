@@ -84,13 +84,13 @@ const OTHER_TOOLS = new Set([
 function ToolCard({ t }: { t: Tool }) {
   const inner = (
     <>
-      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent flex items-center justify-center shrink-0">
-        <t.icon className="w-6 h-6 text-primary" />
+      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-accent flex items-center justify-center shrink-0">
+        <t.icon className="w-5 h-5 text-primary" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="font-bold font-display truncate">{t.label}</h3>
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+          <h3 className="font-bold font-display text-sm truncate">{t.label}</h3>
+          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
             t.soon ? "bg-amber-500/20 text-amber-600 dark:text-amber-400"
             : t.cost === 0 ? "bg-success/20 text-success"
             : "bg-muted text-muted-foreground"
@@ -98,7 +98,7 @@ function ToolCard({ t }: { t: Tool }) {
             {t.soon ? "SOON" : t.cost === 0 ? "FREE" : `-${t.cost}`}
           </span>
         </div>
-        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{t.desc}</p>
+        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{t.desc}</p>
       </div>
     </>
   );
@@ -106,7 +106,7 @@ function ToolCard({ t }: { t: Tool }) {
     return (
       <div
         aria-disabled="true"
-        className="bg-card border rounded-2xl p-5 shadow-card flex items-start gap-4 opacity-60 cursor-not-allowed h-full"
+        className="bg-card border rounded-2xl p-3 shadow-card flex items-start gap-3 opacity-60 cursor-not-allowed h-full"
       >
         {inner}
       </div>
@@ -115,50 +115,39 @@ function ToolCard({ t }: { t: Tool }) {
   return (
     <Link
       to={t.to}
-      className="group bg-card border rounded-2xl p-5 shadow-card hover:shadow-glow hover:-translate-y-0.5 transition flex items-start gap-4 h-full"
+      className="group bg-card border rounded-2xl p-3 shadow-card hover:shadow-glow hover:-translate-y-0.5 transition flex items-start gap-3 h-full"
     >
       {inner}
     </Link>
   );
 }
 
-function SwipeCarousel({ tools }: { tools: Tool[] }) {
+/** Horizontal scrolling strip — every tool visible as a row of compact cards. */
+function HorizontalToolStrip({ tools }: { tools: Tool[] }) {
   const ref = useRef<HTMLDivElement>(null);
   const scrollBy = (dir: 1 | -1) => {
     const el = ref.current;
     if (!el) return;
-    const amount = Math.max(280, Math.floor(el.clientWidth * 0.9));
-    el.scrollBy({ left: dir * amount, behavior: "smooth" });
+    el.scrollBy({ left: dir * Math.max(260, Math.floor(el.clientWidth * 0.8)), behavior: "smooth" });
   };
   return (
-    <div className="relative">
+    <div className="relative -mx-1">
       <div
         ref={ref}
-        className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 -mx-1 px-1"
+        className="flex gap-3 overflow-x-auto scroll-smooth pb-2 px-1 snap-x"
         style={{ scrollbarWidth: "none" }}
       >
         {tools.map((t) => (
-          <div
-            key={t.to}
-            className="snap-start shrink-0 w-[85%] sm:w-[48%]"
-          >
+          <div key={t.to} className="snap-start shrink-0 w-[260px] sm:w-[280px]">
             <ToolCard t={t} />
           </div>
         ))}
       </div>
-      <div className="flex justify-end gap-2 mt-3">
-        <button
-          onClick={() => scrollBy(-1)}
-          aria-label="Previous"
-          className="w-9 h-9 rounded-full bg-card border shadow-card flex items-center justify-center hover:bg-accent transition"
-        >
+      <div className="hidden sm:flex justify-end gap-2 mt-2 px-1">
+        <button onClick={() => scrollBy(-1)} aria-label="Previous" className="w-8 h-8 rounded-full bg-card border shadow-card flex items-center justify-center hover:bg-accent transition">
           <ChevronLeft className="w-4 h-4" />
         </button>
-        <button
-          onClick={() => scrollBy(1)}
-          aria-label="Next"
-          className="w-9 h-9 rounded-full bg-card border shadow-card flex items-center justify-center hover:bg-accent transition"
-        >
+        <button onClick={() => scrollBy(1)} aria-label="Next" className="w-8 h-8 rounded-full bg-card border shadow-card flex items-center justify-center hover:bg-accent transition">
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
@@ -198,7 +187,8 @@ function ToolsHub() {
           </button>
         ))}
       </div>
-      <SwipeCarousel tools={listWithPrices} />
+      <HorizontalToolStrip tools={listWithPrices} />
+
       {aiTools && aiTools.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
