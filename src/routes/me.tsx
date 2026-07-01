@@ -342,26 +342,6 @@ function MePage() {
           </div>
         </section>
 
-        {!profile.is_verified && (
-          <section className="border-2 border-primary/40 bg-gradient-to-br from-primary/10 via-accent/10 to-background rounded-3xl shadow-glow p-5 sm:p-6">
-            <div className="flex items-start gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-primary/20 flex items-center justify-center shrink-0">
-                <ShieldAlert className="w-6 h-6 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h2 className="font-bold font-display text-lg">Verify you're an EBSU student</h2>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Verified students can post content, download files, and unlock everything.
-                  Unverified accounts are read-only.
-                </p>
-                <Button onClick={() => setVerifyOpen(true)} className="mt-3" size="sm">
-                  <ShieldCheck className="w-4 h-4 mr-1.5" />Verify with JAMB reg number
-                </Button>
-              </div>
-            </div>
-          </section>
-        )}
-
         {completionPct < 100 && (
           <section className="bg-card border rounded-3xl shadow-card p-5 sm:p-6">
             <div className="flex items-center justify-between mb-2">
@@ -382,118 +362,31 @@ function MePage() {
           </section>
         )}
 
-        {!isAdmin && (
-        <section className="bg-card border rounded-3xl shadow-card p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-bold font-display text-lg flex items-center gap-2"><Gift className="w-5 h-5 text-primary" />Refer & Earn</h2>
-            <span className="text-sm inline-flex items-center gap-1 font-semibold text-primary"><Coins className="w-4 h-4" />{profile.credits} credits</span>
-          </div>
-          <Button asChild variant="outline" className="w-full">
-            <Link to="/get-credits"><Coins className="w-4 h-4 mr-1.5" />Get more credits</Link>
-          </Button>
-          <p className="text-sm text-muted-foreground">Share your code. You get <b>100 credits</b> for each friend who joins, and they get <b>50 credits</b> too.</p>
-
-          <div>
-            <Label>Your code</Label>
-            <div className="flex gap-2 mt-1">
-              <Input readOnly value={myProfile?.referral_code ?? "—"} className="font-mono font-bold tracking-widest text-center" />
-              <Button variant="outline" onClick={copyCode}><Copy className="w-4 h-4" /></Button>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">{refStats?.count ?? 0} friends invited so far.</p>
-          </div>
-          <div>
-            <Label>Got an invite code?</Label>
-            <div className="flex gap-2 mt-1">
-              <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="ENTER CODE" className="font-mono" maxLength={32} />
-              <Button onClick={redeem}>Redeem</Button>
-            </div>
-          </div>
-        </section>
-        )}
-
         {isAdmin && (
-          <section className="bg-card border rounded-3xl shadow-card p-6 flex items-center justify-between gap-4 bg-gradient-to-br from-amber-500/10 to-yellow-500/5">
+          <section className="bg-card border rounded-3xl shadow-card p-4 flex items-center justify-between gap-4 bg-gradient-to-br from-amber-500/10 to-yellow-500/5">
             <div>
-              <h2 className="font-bold font-display text-lg flex items-center gap-2">
-                <Coins className="w-5 h-5 text-amber-500" /> Credits
-              </h2>
-              <p className="text-sm text-muted-foreground">Admin accounts have unlimited credits.</p>
+              <h2 className="font-bold font-display flex items-center gap-2"><Coins className="w-5 h-5 text-amber-500" /> Admin — unlimited credits</h2>
+              <Link to="/admin" className="text-xs text-primary inline-flex items-center gap-1 mt-1"><Shield className="w-3 h-3" /> Open Admin Panel</Link>
             </div>
-            <div className="text-4xl font-bold text-amber-500 leading-none" title="Unlimited">∞</div>
+            <div className="text-4xl font-bold text-amber-500 leading-none">∞</div>
           </section>
         )}
 
-        <section className="bg-card border rounded-3xl shadow-card p-6 space-y-4">
-          <h2 className="font-bold font-display text-lg">Redeem Coupon</h2>
-          <p className="text-sm text-muted-foreground">Enter a special access code to unlock features or bonuses.</p>
-          <div className="flex gap-2">
-            <Input value={couponCode} onChange={(e) => setCouponCode(e.target.value)} placeholder="Enter code (e.g. youandgarri)" className="font-mono" maxLength={32} />
-            <Button onClick={redeemCoupon}>Redeem</Button>
-          </div>
-          {isAdmin && (
-            <Link to="/admin" className="flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold py-2.5 shadow-card hover:opacity-90 transition">
-              <Shield className="w-4 h-4" /> Open Admin Panel
-            </Link>
-          )}
+        <section className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <ProfileTile to="/me/edit" label="Edit Profile" desc="Name, department, bio" icon={UserCog} gradient="from-sky-500 to-blue-600" />
+          <ProfileTile to="/me/avatar" label="Avatar" desc="Pick or upload" icon={Camera} gradient="from-pink-500 to-rose-600" />
+          <ProfileTile to="/apply-badge" label="Special Badge" desc="Apply for a badge" icon={Award} gradient="from-amber-500 to-orange-600" />
+          <ProfileTile onClick={() => setVerifyOpen(true)} label="Get Verified" desc={profile.is_verified ? "You're verified ✓" : "Verify as a student"} icon={ShieldCheck} gradient="from-emerald-500 to-teal-600" />
+          <ProfileTile to="/me/security" label="Password & Security" desc="Password, 2FA, alerts" icon={KeyRound} gradient="from-violet-500 to-fuchsia-600" />
+          <ProfileTile to="/dashboard" label="Dashboard" desc="Credits, payouts" icon={LayoutDashboard} gradient="from-indigo-500 to-purple-600" />
+          <ProfileTile to="/settings" label="Settings" desc="Preferences & privacy" icon={SettingsIcon} gradient="from-slate-500 to-slate-700" />
         </section>
 
-        <section className="bg-card border rounded-3xl shadow-card p-6 space-y-4">
-          <h2 className="font-bold font-display text-lg">Edit profile</h2>
-          <div>
-            <Label>Your photo or avatar</Label>
-            <div className="flex items-center gap-3 mt-2 mb-3">
-              <img src={avatarDataUri(avatar)} alt="" style={{ width: 64, height: 64 }} className="block w-16 h-16 rounded-full border-2 border-primary object-cover aspect-square shrink-0" />
-              <div className="flex flex-col gap-1.5">
-                <input ref={photoInputRef} type="file" accept="image/*" className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f); e.target.value = ""; }} />
-                <Button type="button" size="sm" variant="outline" onClick={() => photoInputRef.current?.click()} disabled={photoUploading}>
-                  <Camera className="w-4 h-4 mr-1.5" />{photoUploading ? "Uploading…" : "Upload photo"}
-                </Button>
-                <p className="text-xs text-muted-foreground">Or pick an avatar below</p>
-              </div>
-            </div>
-            <div className="flex gap-3 flex-wrap mt-2">
-              {AVATAR_KEYS.map((k) => (
-                <button key={k} type="button" onClick={() => setAvatar(k)}
-                  className={`p-1 rounded-full border-2 transition ${avatar === k ? "border-primary shadow-glow" : "border-transparent hover:border-muted"}`}>
-                  <img src={avatarDataUri(k)} alt={AVATARS[k].label} className="w-12 h-12 rounded-full" />
-                </button>
-              ))}
-            </div>
-          </div>
-          <div><Label>Display name</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
-          <div>
-            <Label>Department</Label>
-            <Select value={dept} onValueChange={setDept}>
-              <SelectTrigger><SelectValue placeholder="Select your department" /></SelectTrigger>
-              <SelectContent>{depts?.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Academic level</Label>
-            <Select value={level} onValueChange={setLevel}>
-              <SelectTrigger><SelectValue placeholder="Select your level" /></SelectTrigger>
-              <SelectContent>{ACADEMIC_LEVELS.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div><Label>Bio</Label><Textarea rows={3} value={bio} onChange={(e) => setBio(e.target.value)} /></div>
-          <div className="flex items-center justify-between">
-            <div><Label>Show online indicator</Label><p className="text-xs text-muted-foreground">Others see a green dot when you're active.</p></div>
-            <Switch checked={showOnline} onCheckedChange={setShowOnline} />
-          </div>
-          <div className="flex gap-2 pt-2">
-            <Button onClick={save}>Save changes</Button>
-            <Button variant="outline" onClick={() => { signOut(); nav({ to: "/" }); }}><LogOut className="w-4 h-4 mr-1" />Sign out</Button>
-          </div>
-
-          <div className="pt-6 mt-2 border-t space-y-3">
-            <div>
-              <h3 className="font-semibold">Password & security</h3>
-              <p className="text-xs text-muted-foreground">Change your password or recover access if you forgot it.</p>
-            </div>
-            <ChangePasswordBlock email={user?.email ?? ""} />
-          </div>
-        </section>
+        <div className="flex justify-center pt-2">
+          <Button variant="outline" onClick={() => { signOut(); nav({ to: "/" }); }}>
+            <LogOut className="w-4 h-4 mr-1" />Sign out
+          </Button>
+        </div>
       </div>
       <AvatarLightbox avatarKey={profile.avatar_key} photoUrl={(profile as any).picture_url} open={photoOpen} onClose={() => setPhotoOpen(false)} />
       <VerifyStudentDialog open={verifyOpen} onOpenChange={setVerifyOpen} />
@@ -501,69 +394,22 @@ function MePage() {
   );
 }
 
-function ChangePasswordBlock({ email }: { email: string }) {
-  const nav = useNavigate();
-  const [pw, setPw] = useState("");
-  const [pw2, setPw2] = useState("");
-  const [logoutEverywhere, setLogoutEverywhere] = useState(false);
-  const [busy, setBusy] = useState(false);
-
-  const change = async () => {
-    if (pw.length < 6) return toast.error("Password must be at least 6 characters");
-    if (pw !== pw2) return toast.error("Passwords don't match");
-    setBusy(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ password: pw });
-      if (error) throw error;
-      toast.success("Password updated");
-      if (logoutEverywhere) {
-        await supabase.auth.signOut({ scope: "others" }).catch(() => {});
-        toast.message("Signed out of all other devices");
-      }
-      setPw(""); setPw2("");
-    } catch (err: any) {
-      toast.error(err.message || "Could not update password");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const forgot = async () => {
-    if (!email) return toast.error("No email on this account");
-    setBusy(true);
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
-      if (error) throw error;
-      toast.success("Code sent to your email");
-      await nav({ to: "/verify-otp", search: { email, redirect: "/me", mode: "recovery" } });
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div className="space-y-3 rounded-xl border p-3 bg-accent/10">
-      <div>
-        <Label>New password</Label>
-        <Input type="password" minLength={6} value={pw} onChange={(e) => setPw(e.target.value)} placeholder="At least 6 characters" />
+function ProfileTile({ to, onClick, label, desc, icon: Icon, gradient }: {
+  to?: string; onClick?: () => void; label: string; desc: string; icon: any; gradient: string;
+}) {
+  const inner = (
+    <>
+      <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${gradient} text-white flex items-center justify-center shadow`}>
+        <Icon className="w-5 h-5" />
       </div>
-      <div>
-        <Label>Confirm new password</Label>
-        <Input type="password" minLength={6} value={pw2} onChange={(e) => setPw2(e.target.value)} />
+      <div className="mt-3">
+        <div className="font-semibold text-sm leading-tight">{label}</div>
+        <div className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{desc}</div>
       </div>
-      <div className="flex items-start justify-between gap-3 rounded-lg border p-2">
-        <div>
-          <Label className="font-medium text-sm">Log out everywhere else</Label>
-          <p className="text-xs text-muted-foreground">Sign out all other devices.</p>
-        </div>
-        <Switch checked={logoutEverywhere} onCheckedChange={setLogoutEverywhere} />
-      </div>
-      <div className="flex gap-2 pt-1">
-        <Button onClick={change} disabled={busy}>{busy ? "Saving…" : "Save password"}</Button>
-        <Button variant="outline" onClick={forgot} disabled={busy}>Forgot password</Button>
-      </div>
-    </div>
+    </>
   );
+  const cls = "bg-card border rounded-2xl p-3.5 shadow-card text-left transition hover:-translate-y-0.5 hover:shadow-lg";
+  if (to) return <Link to={to} className={cls}>{inner}</Link>;
+  return <button type="button" onClick={onClick} className={cls}>{inner}</button>;
 }
+
