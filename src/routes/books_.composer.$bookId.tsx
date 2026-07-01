@@ -577,7 +577,13 @@ function ComposerEditorPage() {
                   onChange={(html) => setChBuf((b) => ({ ...b, content: html }))}
                   placeholder="Start writing your chapter…"
                 />
+                <div className="text-xs text-muted-foreground flex items-center justify-end gap-3 px-1">
+                  <span><b>{wordStats.words.toLocaleString()}</b> words</span>
+                  <span>·</span>
+                  <span>~{wordStats.minutes} min read</span>
+                </div>
               </>
+
             ) : (
               <div className="bg-card border rounded-2xl p-12 text-center text-muted-foreground">
                 <BookOpen className="w-10 h-10 mx-auto mb-2 opacity-40" />
