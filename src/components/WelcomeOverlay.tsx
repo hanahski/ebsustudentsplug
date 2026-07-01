@@ -62,6 +62,8 @@ export function WelcomeOverlay() {
   );
 
   if (!show) return null;
+  if (phase === "splash") return <BrandLoader label="StudentsPlug" />;
+
 
   return (
     <div
