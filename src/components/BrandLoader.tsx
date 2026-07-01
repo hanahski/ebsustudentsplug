@@ -1,5 +1,4 @@
-import brandLogoAsset from "@/assets/brand-logo.png.asset.json";
-const brandLogo = brandLogoAsset.url;
+import brandLogo from "@/assets/brand-logo.png";
 
 /**
  * Branded loading screen — animated logo + brand wordmark.
