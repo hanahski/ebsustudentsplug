@@ -822,6 +822,16 @@ function ComposerEditorPage() {
                         {m}
                       </Button>
                     ))}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2 text-xs"
+                      disabled={aiBusy}
+                      onClick={insertAiSceneImage}
+                      title="Generate a scene illustration"
+                    >
+                      <Sparkles className="w-3 h-3 mr-1" /> Scene image
+                    </Button>
                   </div>
                   <div className="text-xs text-muted-foreground flex items-center gap-3">
                     <span><b>{wordStats.words.toLocaleString()}</b> words</span>
