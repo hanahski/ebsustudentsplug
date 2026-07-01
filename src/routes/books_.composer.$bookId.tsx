@@ -821,7 +821,87 @@ function ComposerEditorPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Publish preview */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Publish preview</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto pr-2 space-y-6">
+            <div className="flex gap-4">
+              <div className="w-24 aspect-[2/3] rounded-lg overflow-hidden bg-muted shrink-0">
+                <BookCover title={book.title} src={book.cover_url} className="h-full w-full" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-xl font-bold leading-tight">{book.title || "Untitled"}</h2>
+                {book.subtitle && <p className="text-sm text-muted-foreground italic">{book.subtitle}</p>}
+                {book.description && <p className="text-sm mt-2 line-clamp-4">{book.description}</p>}
+                <p className="text-xs text-muted-foreground mt-2">
+                  {(chapters?.length ?? 0)} chapters · {book.price_credits > 0 ? `${book.price_credits} credits` : "Free"}
+                </p>
+              </div>
+            </div>
+            <div className="space-y-6">
+              {(chapters ?? []).map((c, i) => (
+                <article key={c.id} className="prose prose-sm dark:prose-invert max-w-none border-t pt-4">
+                  <h3 className="text-lg font-semibold">{i + 1}. {c.title || "Untitled"}</h3>
+                  <div dangerouslySetInnerHTML={{ __html: c.id === activeId ? chBuf.content : c.content }} />
+                </article>
+              ))}
+              {(chapters?.length ?? 0) === 0 && (
+                <p className="text-sm text-muted-foreground">No chapters yet — add one before publishing.</p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setPreviewOpen(false)}>Close</Button>
+            <Button
+              disabled={publish.isPending || (chapters?.length ?? 0) === 0}
+              onClick={() => { setPreviewOpen(false); publish.mutate(); }}
+              className="bg-gradient-to-r from-primary to-emerald-500 text-primary-foreground"
+            >
+              {publish.isPending ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Send className="w-4 h-4 mr-1" />}
+              {book.status === "published" ? "Re-publish" : "Publish now"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cover templates */}
+      <Dialog open={templatesOpen} onOpenChange={setTemplatesOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Pick a cover template</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {COVER_TEMPLATES.map((tpl) => (
+              <button
+                key={tpl.id}
+                type="button"
+                onClick={() => applyCoverTemplate(tpl)}
+                disabled={applyingTpl !== null}
+                className="group relative aspect-[2/3] rounded-xl overflow-hidden ring-1 ring-border hover:ring-primary transition-all disabled:opacity-60"
+                style={{ background: tpl.bg }}
+              >
+                <div className="absolute inset-0 flex items-center justify-center p-3 text-center" style={{ color: tpl.color, fontFamily: tpl.font }}>
+                  <span className="text-sm font-bold leading-tight line-clamp-4">{book.title || "Untitled"}</span>
+                </div>
+                <div className="absolute bottom-2 left-2 right-2 text-[10px] font-semibold uppercase tracking-wider opacity-80" style={{ color: tpl.color }}>
+                  {tpl.label}
+                </div>
+                {applyingTpl === tpl.id && (
+                  <div className="absolute inset-0 bg-black/50 grid place-items-center">
+                    <Loader2 className="w-6 h-6 animate-spin text-white" />
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppShell>
+
   );
 
 }
