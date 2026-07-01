@@ -22,10 +22,65 @@ import {
   Search,
   Link2,
   Copy,
+  Sparkles,
+  Wand2,
+  Download,
+  Eye,
+  Palette,
 } from "lucide-react";
 import { toast } from "sonner";
 import { BookCover } from "@/components/BookCover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useServerFn } from "@tanstack/react-start";
+import { bookAiAssist } from "@/lib/book-ai.functions";
+import { buildEpubBlob, downloadBlob } from "@/lib/epub-export";
+
+const COVER_TEMPLATES: {
+  id: string;
+  label: string;
+  bg: string;
+  color: string;
+  font: string;
+}[] = [
+  { id: "midnight", label: "Midnight", bg: "linear-gradient(135deg,#0f172a,#1e293b 60%,#334155)", color: "#f8fafc", font: "'Playfair Display', Georgia, serif" },
+  { id: "ember", label: "Ember", bg: "linear-gradient(160deg,#7c2d12,#b91c1c 55%,#f59e0b)", color: "#fff7ed", font: "'Playfair Display', Georgia, serif" },
+  { id: "mint", label: "Mint", bg: "linear-gradient(180deg,#064e3b,#059669 60%,#a7f3d0)", color: "#ecfdf5", font: "'Inter', system-ui, sans-serif" },
+  { id: "royal", label: "Royal", bg: "linear-gradient(135deg,#312e81,#7c3aed 60%,#f0abfc)", color: "#f5f3ff", font: "'Playfair Display', Georgia, serif" },
+  { id: "paper", label: "Paper", bg: "linear-gradient(180deg,#fef3c7,#fde68a 60%,#f59e0b)", color: "#1c1917", font: "'Playfair Display', Georgia, serif" },
+  { id: "noir", label: "Noir", bg: "linear-gradient(180deg,#0a0a0a,#171717 70%,#404040)", color: "#fafafa", font: "'Inter', system-ui, sans-serif" },
+];
+
+async function renderTemplateCover(tpl: typeof COVER_TEMPLATES[number], title: string, author: string): Promise<Blob> {
+  const w = 800, h = 1200;
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d")!;
+  // Parse the gradient stops manually to keep the same look on canvas.
+  const stops = tpl.bg.match(/#[0-9a-fA-F]{6}/g) ?? ["#111827", "#374151"];
+  const grad = ctx.createLinearGradient(0, 0, w * 0.6, h);
+  stops.forEach((s, i) => grad.addColorStop(i / Math.max(1, stops.length - 1), s));
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, w, h);
+  // Subtle frame
+  ctx.strokeStyle = tpl.color + "33"; ctx.lineWidth = 4;
+  ctx.strokeRect(36, 36, w - 72, h - 72);
+  ctx.fillStyle = tpl.color;
+  ctx.textAlign = "center";
+  ctx.font = `700 76px ${tpl.font}`;
+  // Word-wrap title
+  const words = (title || "Untitled").split(/\s+/);
+  const lines: string[] = []; let line = "";
+  for (const w0 of words) {
+    const test = line ? line + " " + w0 : w0;
+    if (ctx.measureText(test).width > w - 160 && line) { lines.push(line); line = w0; } else line = test;
+  }
+  if (line) lines.push(line);
+  const startY = h / 2 - (lines.length - 1) * 44;
+  lines.forEach((ln, i) => ctx.fillText(ln, w / 2, startY + i * 88));
+  ctx.font = `400 32px ${tpl.font}`;
+  ctx.fillText((author || "").toUpperCase(), w / 2, h - 120);
+  return await new Promise<Blob>((res) => canvas.toBlob((b) => res(b!), "image/jpeg", 0.9));
+}
+
 
 
 export const Route = createFileRoute("/books_/composer/$bookId")({ component: ComposerEditorPage });
