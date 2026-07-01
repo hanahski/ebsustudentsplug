@@ -2,6 +2,8 @@
 // Used when sound playback is blocked (iOS autoplay policy) or the tab is
 // hidden — keeps users notified even without audio.
 
+import brandLogoUrl from "@/assets/brand-logo.png";
+
 const TAG_PREFIX = "sp-dm-";
 
 export function notificationsSupported(): boolean {
