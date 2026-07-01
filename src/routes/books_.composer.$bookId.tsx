@@ -567,6 +567,14 @@ function ComposerEditorPage() {
               {creatingShare ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Link2 className="w-4 h-4 mr-1" />}
               Share draft
             </Button>
+            <Button size="sm" variant="outline" onClick={exportEpub} disabled={exporting} title="Download as EPUB">
+              {exporting ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Download className="w-4 h-4 mr-1" />}
+              EPUB
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setPreviewOpen(true)} title="Preview before publishing">
+              <Eye className="w-4 h-4 mr-1" /> Preview
+            </Button>
+
             {book.status === "published" && book.library_book_id && (
               <Button size="sm" variant="outline" asChild>
                 <Link to="/books/read/$id" params={{ id: book.library_book_id }}>
