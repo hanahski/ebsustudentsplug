@@ -32,7 +32,7 @@ import { toast } from "sonner";
 import { BookCover } from "@/components/BookCover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useServerFn } from "@tanstack/react-start";
-import { bookAiAssist } from "@/lib/book-ai.functions";
+import { bookAiAssist, bookAiCover } from "@/lib/book-ai.functions";
 import { buildEpubBlob, downloadBlob } from "@/lib/epub-export";
 
 const COVER_TEMPLATES: {
@@ -125,6 +125,9 @@ function ComposerEditorPage() {
   const [exporting, setExporting] = useState(false);
   const [applyingTpl, setApplyingTpl] = useState<string | null>(null);
   const aiAssistFn = useServerFn(bookAiAssist);
+  const aiCoverFn = useServerFn(bookAiCover);
+  const [aiCoverBusy, setAiCoverBusy] = useState(false);
+
 
 
 
@@ -417,7 +420,34 @@ function ComposerEditorPage() {
     toast.success("Cover updated");
   };
 
-  // ---------- Publish ----------
+  const generateAiCover = async () => {
+    if (!book) return;
+    if (!book.title?.trim()) { toast.error("Give the book a title first"); return; }
+    setAiCoverBusy(true);
+    try {
+      const { dataUrl } = await aiCoverFn({ data: { title: book.title, description: book.description ?? "" } });
+      // dataUrl is a data: URI — convert to Blob and upload.
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) throw new Error("Sign in");
+      const ext = (blob.type.split("/")[1] || "png").replace("jpeg", "jpg");
+      const path = `${u.user.id}/covers/${bookId}-ai-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("book-covers").upload(path, blob, { upsert: false, contentType: blob.type });
+      if (error) throw error;
+      const { data: signed, error: se } = await supabase.storage.from("book-covers").createSignedUrl(path, 60 * 60 * 24 * 365);
+      if (se || !signed?.signedUrl) throw new Error(se?.message ?? "Could not sign cover URL");
+      const { error: ue } = await supabase.from("user_books").update({ cover_url: signed.signedUrl }).eq("id", bookId);
+      if (ue) throw ue;
+      qc.invalidateQueries({ queryKey: ["composer-book", bookId] });
+      toast.success("AI cover generated");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Cover generation failed");
+    } finally {
+      setAiCoverBusy(false);
+    }
+  };
+
   const publish = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.rpc("publish_user_book", { _book_id: bookId });
@@ -620,8 +650,18 @@ function ComposerEditorPage() {
               onClick={() => setTemplatesOpen(true)}
             >
               <Palette className="w-3.5 h-3.5 mr-1" /> Templates
-
             </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="w-full mt-1 text-xs"
+              onClick={generateAiCover}
+              disabled={aiCoverBusy}
+            >
+              {aiCoverBusy ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 mr-1" />}
+              AI cover
+            </Button>
+
             <input
               ref={coverInput}
               type="file"

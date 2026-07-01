@@ -394,9 +394,11 @@ export function ToolEditor() {
                   placeholder={`/path?param={country}`}
                   className="font-mono text-xs"
                 />
+                <TestApiButton toolKey={activeKey} action={a} host={host || active.defaultHost} path={paths[a] ?? ""} apiKey={apiKey} />
               </div>
             ))}
           </div>
+
         </div>
 
         <div>
@@ -605,4 +607,42 @@ function HealthPanel({ onPick }: { onPick: (key: string) => void }) {
     </div>
   );
 }
+
+function TestApiButton({ toolKey, action, host, path, apiKey }: { toolKey: string; action: string; host: string; path: string; apiKey: string }) {
+  const [busy, setBusy] = useState(false);
+  const run = async () => {
+    const effectivePath = path.trim() || "/";
+    // Substitute obvious placeholders with harmless sample values so the ping doesn't 400.
+    const url = `https://${host}${effectivePath}`
+      .replace(/\{country\}/g, "US")
+      .replace(/\{countryId\}/g, "1")
+      .replace(/\{number\}/g, "1")
+      .replace(/\{phone\}/g, "10000000")
+      .replace(/\{page\}/g, "1");
+    setBusy(true);
+    const started = performance.now();
+    try {
+      const r = await fetch(url, {
+        method: "GET",
+        headers: {
+          "x-rapidapi-host": host,
+          ...(apiKey ? { "x-rapidapi-key": apiKey } : {}),
+        },
+      });
+      const ms = Math.round(performance.now() - started);
+      if (r.ok) toast.success(`${toolKey}·${action}: ${r.status} in ${ms}ms`);
+      else toast.error(`${toolKey}·${action}: HTTP ${r.status} in ${ms}ms`);
+    } catch (e) {
+      toast.error(`${toolKey}·${action}: ${e instanceof Error ? e.message : "network error"}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Button size="sm" variant="ghost" className="h-8 px-2 text-[11px]" onClick={run} disabled={busy || !host}>
+      {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : "Test"}
+    </Button>
+  );
+}
+
 

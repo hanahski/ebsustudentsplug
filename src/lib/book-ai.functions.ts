@@ -1,6 +1,42 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+export const bookAiCover = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => {
+    const d = input as { title?: string; description?: string; style?: string };
+    const title = String(d.title ?? "").slice(0, 200).trim();
+    if (!title) throw new Error("title required");
+    return {
+      title,
+      description: String(d.description ?? "").slice(0, 600),
+      style: String(d.style ?? "cinematic, moody, book-cover art"),
+    };
+  })
+  .handler(async ({ data }) => {
+    const apiKey = process.env.LOVABLE_API_KEY;
+    if (!apiKey) throw new Error("AI is not configured");
+    const prompt = `Professional book cover art. Title: "${data.title}". ${data.description ? `Story: ${data.description}. ` : ""}Style: ${data.style}. Vertical 2:3 poster composition, dramatic lighting, no lettering, no watermark, no text.`;
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-image-preview",
+        modalities: ["image", "text"],
+        messages: [{ role: "user", content: prompt }],
+      }),
+    });
+    if (res.status === 429) throw new Error("AI is busy — try again in a moment.");
+    if (res.status === 402) throw new Error("AI credits exhausted.");
+    if (!res.ok) throw new Error(`AI error ${res.status}`);
+    const json = await res.json();
+    const images: Array<{ image_url?: { url?: string } }> = json?.choices?.[0]?.message?.images ?? [];
+    const url = images[0]?.image_url?.url;
+    if (!url) throw new Error("No image returned");
+    return { dataUrl: url };
+  });
+
+
 type Mode = "continue" | "rewrite" | "expand" | "shorten" | "grammar";
 
 const PROMPTS: Record<Mode, string> = {
