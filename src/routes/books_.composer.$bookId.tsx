@@ -416,7 +416,14 @@ function ComposerEditorPage() {
               </>
             ) : null}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Button size="sm" variant="outline" onClick={() => setFindOpen(true)} title="Find & replace (all chapters)">
+              <Search className="w-4 h-4 mr-1" /> Find
+            </Button>
+            <Button size="sm" variant="outline" onClick={ensureShareToken} disabled={creatingShare} title="Share a read-only preview link">
+              {creatingShare ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Link2 className="w-4 h-4 mr-1" />}
+              Share draft
+            </Button>
             {book.status === "published" && book.library_book_id && (
               <Button size="sm" variant="outline" asChild>
                 <Link to="/books/read/$id" params={{ id: book.library_book_id }}>
@@ -439,6 +446,7 @@ function ComposerEditorPage() {
             </Button>
           </div>
         </div>
+
 
         {/* Book meta */}
         <div className="bg-card border rounded-2xl p-4 grid grid-cols-1 md:grid-cols-[140px_1fr] gap-4">
