@@ -1167,40 +1167,6 @@ function AdminVerifications() {
           {r.verified && r.profile?.is_verified && (
             <Button size="sm" variant="destructive" onClick={() => revoke(r.user_id)}>
               <Ban className="w-3.5 h-3.5 mr-1" /> Revoke
-
-  return (
-    <div className="space-y-2">
-      {(data ?? []).length === 0 && (
-        <p className="text-sm text-muted-foreground p-6 text-center">No verified students yet.</p>
-      )}
-      {(data ?? []).map((r: any) => (
-        <div key={r.id} className="bg-card border rounded-2xl p-3 flex items-center justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-primary" />
-              <Link
-                to="/profile/$id"
-                params={{ id: r.user_id }}
-                className="font-semibold hover:text-primary line-clamp-1"
-              >
-                {r.profile?.display_name ?? r.user_id.slice(0, 8)}
-              </Link>
-              {r.profile?.is_verified ? (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">Active</span>
-              ) : (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">Revoked</span>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground line-clamp-1">
-              <span className="font-mono">{r.jamb_reg_number}</span>
-              {r.response?.session ? <> · {r.response.session}</> : null}
-              {r.profile?.email ? <> · {r.profile.email}</> : null}
-            </p>
-            <p className="text-[11px] text-muted-foreground">{new Date(r.created_at).toLocaleString()}</p>
-          </div>
-          {r.profile?.is_verified && (
-            <Button size="sm" variant="destructive" onClick={() => revoke(r.user_id)}>
-              <Ban className="w-3.5 h-3.5 mr-1" /> Revoke
             </Button>
           )}
         </div>
