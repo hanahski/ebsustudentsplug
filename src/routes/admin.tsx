@@ -1051,15 +1051,19 @@ function AdminCatalogue() {
 
 function AdminVerifications() {
   const qc = useQueryClient();
+  const [filter, setFilter] = useState<"all" | "verified" | "failed">("all");
+  const [q, setQ] = useState("");
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-verifications"],
+    queryKey: ["admin-verifications", filter],
     queryFn: async () => {
-      const { data: rows } = await supabase
+      let query = supabase
         .from("student_verifications" as any)
         .select("id,user_id,jamb_reg_number,verified,response,created_at")
-        .eq("verified", true)
         .order("created_at", { ascending: false })
-        .limit(200);
+        .limit(500);
+      if (filter === "verified") query = query.eq("verified", true);
+      if (filter === "failed") query = query.eq("verified", false);
+      const { data: rows } = await query;
       const ids = Array.from(new Set((rows ?? []).map((r: any) => r.user_id)));
       if (!ids.length) return [];
       const { data: profs } = await supabase
@@ -1083,7 +1087,86 @@ function AdminVerifications() {
     }
   };
 
+  const exportCsv = () => {
+    const rows = (data ?? []) as any[];
+    const header = "created_at,jamb_reg_number,session,verified,user_id,display_name,email\n";
+    const body = rows.map((r) => [
+      r.created_at, r.jamb_reg_number, r.response?.session ?? "",
+      r.verified ? "yes" : "no", r.user_id,
+      (r.profile?.display_name ?? "").replaceAll(",", " "),
+      r.profile?.email ?? "",
+    ].join(",")).join("\n");
+    const blob = new Blob([header + body], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `jamb-verifications-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  };
+
+  const filtered = (data ?? []).filter((r: any) => {
+    if (!q.trim()) return true;
+    const needle = q.trim().toLowerCase();
+    return (r.jamb_reg_number ?? "").toLowerCase().includes(needle)
+      || (r.profile?.display_name ?? "").toLowerCase().includes(needle)
+      || (r.profile?.email ?? "").toLowerCase().includes(needle);
+  });
+
+  const verifiedCount = (data ?? []).filter((r: any) => r.verified).length;
+  const failedCount = (data ?? []).filter((r: any) => !r.verified).length;
+
   if (isLoading) return <p className="text-sm text-muted-foreground p-6 text-center">Loading verifications…</p>;
+
+  return (
+    <div className="space-y-3">
+      <div className="bg-card border rounded-2xl p-3 flex flex-wrap items-center gap-2">
+        <div className="text-xs text-muted-foreground mr-1">
+          <span className="font-semibold text-foreground">{verifiedCount}</span> verified ·{" "}
+          <span className="font-semibold text-foreground">{failedCount}</span> failed
+        </div>
+        {(["all", "verified", "failed"] as const).map((k) => (
+          <button key={k} onClick={() => setFilter(k)}
+            className={`px-2.5 py-1 rounded-full text-xs font-semibold capitalize transition ${filter === k ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"}`}>
+            {k}
+          </button>
+        ))}
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search JAMB, name, email…" className="h-8 flex-1 min-w-[180px]" />
+        <Button size="sm" variant="outline" onClick={exportCsv}>Export CSV</Button>
+      </div>
+
+      {filtered.length === 0 && (
+        <p className="text-sm text-muted-foreground p-6 text-center">No records.</p>
+      )}
+      {filtered.map((r: any) => (
+        <div key={r.id} className="bg-card border rounded-2xl p-3 flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <GraduationCap className="w-4 h-4 text-primary" />
+              <Link
+                to="/profile/$id"
+                params={{ id: r.user_id }}
+                className="font-semibold hover:text-primary line-clamp-1"
+              >
+                {r.profile?.display_name ?? r.user_id.slice(0, 8)}
+              </Link>
+              {r.verified ? (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">Verified</span>
+              ) : (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300">Failed</span>
+              )}
+              {r.verified && !r.profile?.is_verified && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">Badge revoked</span>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground line-clamp-1">
+              <span className="font-mono">{r.jamb_reg_number}</span>
+              {r.response?.session ? <> · {r.response.session}</> : null}
+              {r.profile?.email ? <> · {r.profile.email}</> : null}
+            </p>
+            <p className="text-[11px] text-muted-foreground">{new Date(r.created_at).toLocaleString()}</p>
+          </div>
+          {r.verified && r.profile?.is_verified && (
+            <Button size="sm" variant="destructive" onClick={() => revoke(r.user_id)}>
+              <Ban className="w-3.5 h-3.5 mr-1" /> Revoke
 
   return (
     <div className="space-y-2">
