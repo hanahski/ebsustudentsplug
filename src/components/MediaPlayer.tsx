@@ -322,6 +322,8 @@ type Props = {
   title?: string;
   /** Author avatar — drives the rich audio visualizer. */
   avatarKey?: string;
+  /** Post id for the "Fullscreen feed" TikTok-style viewer. */
+  postId?: string;
 };
 
 function parseAnim(url: string): string | null {
