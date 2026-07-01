@@ -1,6 +1,6 @@
 import brandLogo from "@/assets/brand-logo.png";
 
-export function Logo({ size = 32 }: { size?: number }) {
+export function Logo({ size = 44 }: { size?: number }) {
   return (
     <img
       src={brandLogo}
