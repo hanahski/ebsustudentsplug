@@ -1,5 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { Switch } from "@/components/ui/switch";
+import { useAdminView } from "@/hooks/use-admin-view";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -70,8 +72,13 @@ function AdminPanel() {
     <AppShell>
       <div className="space-y-5">
         <div className="bg-card border rounded-3xl p-5 shadow-card">
-          <h1 className="text-2xl font-bold font-display flex items-center gap-2"><Shield className="w-6 h-6 text-primary" />Admin Panel</h1>
-          <p className="text-sm text-muted-foreground">Full control of users, content, badges, and banners.</p>
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div>
+              <h1 className="text-2xl font-bold font-display flex items-center gap-2"><Shield className="w-6 h-6 text-primary" />Admin Panel</h1>
+              <p className="text-sm text-muted-foreground">Full control of users, content, badges, and banners.</p>
+            </div>
+            <AdminViewSwitch />
+          </div>
           <div className="mt-4 flex gap-2 flex-wrap">
             {tabs.map(({ k, label, icon: Icon }) => (
               <button key={k} onClick={() => setTab(k)}
@@ -1202,5 +1209,26 @@ function AdminMarketCategories() {
         </ul>
       </div>
     </div>
+  );
+}
+
+function AdminViewSwitch() {
+  const { asUser, setAsUser } = useAdminView();
+  const nav = useNavigate();
+  return (
+    <label className="flex items-center gap-3 bg-muted/60 border rounded-2xl px-3 py-2 cursor-pointer select-none">
+      <div className="text-right">
+        <div className="text-xs font-bold leading-tight">{asUser ? "Viewing as user" : "Admin mode"}</div>
+        <div className="text-[10px] text-muted-foreground leading-tight">Toggle to switch role view</div>
+      </div>
+      <Switch
+        checked={asUser}
+        onCheckedChange={(v) => {
+          setAsUser(v);
+          if (v) nav({ to: "/" });
+        }}
+        aria-label="View as normal user"
+      />
+    </label>
   );
 }
