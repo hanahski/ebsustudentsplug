@@ -423,6 +423,94 @@ const LAYOUT_OPTIONS: { v: BannerLayout; label: string }[] = [
   { v: "text-only", label: "Text only" },
 ];
 
+function BannerLivePreview({ title, subtitle, imageUrl, ctaLabel, layout, accent, variant, previewRatio }: {
+  title: string; subtitle: string; imageUrl: string; ctaLabel: string;
+  layout: BannerLayout; accent: string; variant: BannerVariant; previewRatio: number | null;
+}) {
+  const isLight = variant === "light" || (variant === "auto" && (layout === "image-bg" || layout === "split"));
+  const textCls = isLight ? "text-white" : "text-slate-900";
+  const subCls = isLight ? "text-white/85" : "text-slate-700";
+  const bgCls = isLight ? "" : "bg-white";
+  const shadow = isLight ? "drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]" : "";
+
+  const Cta = ctaLabel ? (
+    <span
+      className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
+      style={{ background: accent, color: "#fff" }}
+    >{ctaLabel}</span>
+  ) : null;
+
+  const Text = (
+    <div className={`flex-1 min-w-0 space-y-1 ${textCls}`}>
+      <div className={`font-bold text-base leading-tight line-clamp-2 ${shadow}`}>{title}</div>
+      {subtitle && <div className={`text-xs line-clamp-2 ${subCls} ${shadow}`}>{subtitle}</div>}
+      {Cta && <div className="pt-1">{Cta}</div>}
+    </div>
+  );
+
+  const Img = imageUrl ? (
+    <img src={imageUrl} alt="" className="w-full h-full object-cover" />
+  ) : (
+    <div className="w-full h-full flex items-center justify-center text-xs text-white/70" style={{ background: accent }}>Image</div>
+  );
+
+  let body: React.ReactNode = null;
+  if (layout === "image-bg") {
+    body = (
+      <div className="absolute inset-0">
+        {imageUrl ? <img src={imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" /> : <div className="absolute inset-0" style={{ background: accent }} />}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+        <div className="absolute inset-0 p-3 flex flex-col justify-end">{Text}</div>
+      </div>
+    );
+  } else if (layout === "image-top") {
+    body = (
+      <div className={`absolute inset-0 flex flex-col ${bgCls}`}>
+        <div className="h-2/3 relative overflow-hidden">{Img}</div>
+        <div className="p-3">{Text}</div>
+      </div>
+    );
+  } else if (layout === "image-left") {
+    body = (
+      <div className={`absolute inset-0 flex ${bgCls}`}>
+        <div className="w-1/2 relative overflow-hidden">{Img}</div>
+        <div className="w-1/2 p-3 flex items-center">{Text}</div>
+      </div>
+    );
+  } else if (layout === "image-right") {
+    body = (
+      <div className={`absolute inset-0 flex ${bgCls}`}>
+        <div className="flex-1 p-3 flex items-center">{Text}</div>
+        <div className="w-1/2 relative overflow-hidden">{Img}</div>
+      </div>
+    );
+  } else if (layout === "split") {
+    body = (
+      <div className="absolute inset-0">
+        <div className="absolute inset-0" style={{ background: `linear-gradient(115deg, ${accent} 0%, ${accent} 55%, transparent 55%)` }} />
+        {imageUrl && <img src={imageUrl} alt="" className="absolute inset-y-0 right-0 w-1/2 h-full object-cover" />}
+        <div className="absolute inset-0 p-3 flex items-center"><div className="w-3/5">{Text}</div></div>
+      </div>
+    );
+  } else {
+    body = (
+      <div className="absolute inset-0 p-4 flex items-center" style={{ background: `linear-gradient(135deg, ${accent}22, ${accent}05)` }}>
+        <div className={bgCls === "" ? "text-slate-900" : ""}>{Text}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl overflow-hidden border bg-muted">
+      <div className="aspect-[16/7] w-full relative">{body}</div>
+      <p className="text-[11px] text-muted-foreground p-2">
+        Live preview · home carousel size{previewRatio ? ` · source ${previewRatio.toFixed(2)}:1` : ""}
+      </p>
+    </div>
+  );
+}
+
+
 function AdminBanners() {
   const { data, refetch } = useQuery({
     queryKey: ["admin-banners"],
@@ -591,16 +679,16 @@ function AdminBanners() {
         </div>
         <Input placeholder="…or paste image URL" value={imageUrl} onChange={(e) => { setImageUrl(e.target.value); setImagePath(""); setPreviewRatio(null); }} />
 
-        {imageUrl && (
-          <div className="rounded-xl overflow-hidden border bg-muted">
-            <div className="aspect-[16/7] w-full relative">
-              <img src={imageUrl} alt="preview" className="absolute inset-0 w-full h-full object-cover" />
-            </div>
-            <p className="text-[11px] text-muted-foreground p-2">
-              Preview at home carousel size{previewRatio ? ` · source ${previewRatio.toFixed(2)}:1` : ""}
-            </p>
-          </div>
-        )}
+        <BannerLivePreview
+          title={title || "Your banner title"}
+          subtitle={subtitle}
+          imageUrl={imageUrl}
+          ctaLabel={ctaLabel}
+          layout={layout}
+          accent={accent}
+          variant={variant}
+          previewRatio={previewRatio}
+        />
 
         <div className="space-y-2 pt-2 border-t">
           <label className="block text-sm font-medium">Where should tapping this banner take people?</label>
