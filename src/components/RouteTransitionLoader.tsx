@@ -88,20 +88,37 @@ export function RouteTransitionLoader() {
           draggable={false}
         />
       </div>
-      <div className="mt-6 flex items-center gap-1.5">
-        <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-muted-foreground">
-          StudentsPlug
-        </span>
-        <span className="sp-dot" />
-        <span className="sp-dot" style={{ animationDelay: "0.15s" }} />
-        <span className="sp-dot" style={{ animationDelay: "0.3s" }} />
+      <div className="mt-6 sp-blob-text text-xl font-extrabold tracking-wide" aria-label="StudentsPlug">
+        StudentsPlug
       </div>
       <style>{`
         @keyframes spLoaderFade { from { opacity: 0 } to { opacity: 1 } }
         @keyframes spLoaderSpin { to { transform: rotate(360deg) } }
-        @keyframes spLoaderDot { 0%,80%,100% { opacity: .25; transform: translateY(0) } 40% { opacity: 1; transform: translateY(-2px) } }
-        .sp-dot { width: 4px; height: 4px; border-radius: 9999px; background: hsl(var(--primary)); display: inline-block; animation: spLoaderDot 1s ease-in-out infinite; }
+        .sp-blob-text {
+          background-image:
+            radial-gradient(circle at 20% 40%, #3b82f6 0%, transparent 40%),
+            radial-gradient(circle at 70% 30%, #eab308 0%, transparent 40%),
+            radial-gradient(circle at 40% 70%, #22c55e 0%, transparent 40%),
+            radial-gradient(circle at 80% 80%, #ef4444 0%, transparent 40%),
+            radial-gradient(circle at 55% 50%, #a855f7 0%, transparent 45%),
+            linear-gradient(90deg, #3b82f6, #eab308, #22c55e, #ef4444, #a855f7, #3b82f6);
+          background-size: 220% 220%, 220% 220%, 220% 220%, 220% 220%, 220% 220%, 400% 100%;
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          -webkit-text-fill-color: transparent;
+          animation: spBlobMove 6s ease-in-out infinite, spHueShift 8s linear infinite;
+        }
+        @keyframes spBlobMove {
+          0%   { background-position: 0% 0%, 100% 0%, 50% 100%, 0% 100%, 50% 50%, 0% 50%; }
+          25%  { background-position: 60% 20%, 40% 80%, 20% 40%, 80% 60%, 30% 70%, 40% 50%; }
+          50%  { background-position: 100% 100%, 0% 100%, 100% 0%, 0% 0%, 70% 30%, 80% 50%; }
+          75%  { background-position: 30% 80%, 70% 20%, 80% 60%, 20% 40%, 40% 60%, 60% 50%; }
+          100% { background-position: 0% 0%, 100% 0%, 50% 100%, 0% 100%, 50% 50%, 100% 50%; }
+        }
+        @keyframes spHueShift { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
       `}</style>
+
     </div>
   );
 }
