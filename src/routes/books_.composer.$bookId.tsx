@@ -516,6 +516,9 @@ function ComposerEditorPage() {
       toast.success("Scene added");
     } catch (e) { toast.error((e as Error).message); }
     finally { setAiBusy(false); }
+  };
+
+
 
   // ---------- EPUB export ----------
   const exportEpub = async () => {
