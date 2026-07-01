@@ -27,6 +27,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as GetCreditsRouteImport } from './routes/get-credits'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as FacultiesRouteImport } from './routes/faculties'
+import { Route as EarnCreditsRouteImport } from './routes/earn-credits'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ChatRouteImport } from './routes/chat'
@@ -189,6 +190,11 @@ const GamesRoute = GamesRouteImport.update({
 const FacultiesRoute = FacultiesRouteImport.update({
   id: '/faculties',
   path: '/faculties',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EarnCreditsRoute = EarnCreditsRouteImport.update({
+  id: '/earn-credits',
+  path: '/earn-credits',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -576,6 +582,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
+  '/earn-credits': typeof EarnCreditsRoute
   '/faculties': typeof FacultiesRoute
   '/games': typeof GamesRouteWithChildren
   '/get-credits': typeof GetCreditsRoute
@@ -669,6 +676,7 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
+  '/earn-credits': typeof EarnCreditsRoute
   '/faculties': typeof FacultiesRoute
   '/games': typeof GamesRouteWithChildren
   '/get-credits': typeof GetCreditsRoute
@@ -761,6 +769,7 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
+  '/earn-credits': typeof EarnCreditsRoute
   '/faculties': typeof FacultiesRoute
   '/games': typeof GamesRouteWithChildren
   '/get-credits': typeof GetCreditsRoute
@@ -856,6 +865,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/contact'
     | '/dashboard'
+    | '/earn-credits'
     | '/faculties'
     | '/games'
     | '/get-credits'
@@ -949,6 +959,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/contact'
     | '/dashboard'
+    | '/earn-credits'
     | '/faculties'
     | '/games'
     | '/get-credits'
@@ -1040,6 +1051,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/contact'
     | '/dashboard'
+    | '/earn-credits'
     | '/faculties'
     | '/games'
     | '/get-credits'
@@ -1134,6 +1146,7 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   ContactRoute: typeof ContactRoute
   DashboardRoute: typeof DashboardRoute
+  EarnCreditsRoute: typeof EarnCreditsRoute
   FacultiesRoute: typeof FacultiesRoute
   GamesRoute: typeof GamesRouteWithChildren
   GetCreditsRoute: typeof GetCreditsRoute
@@ -1317,6 +1330,13 @@ declare module '@tanstack/react-router' {
       path: '/faculties'
       fullPath: '/faculties'
       preLoaderRoute: typeof FacultiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/earn-credits': {
+      id: '/earn-credits'
+      path: '/earn-credits'
+      fullPath: '/earn-credits'
+      preLoaderRoute: typeof EarnCreditsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -1940,6 +1960,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   ContactRoute: ContactRoute,
   DashboardRoute: DashboardRoute,
+  EarnCreditsRoute: EarnCreditsRoute,
   FacultiesRoute: FacultiesRoute,
   GamesRoute: GamesRouteWithChildren,
   GetCreditsRoute: GetCreditsRoute,
