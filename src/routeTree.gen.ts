@@ -27,6 +27,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as GetCreditsRouteImport } from './routes/get-credits'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as FacultiesRouteImport } from './routes/faculties'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as BookshelfRouteImport } from './routes/bookshelf'
@@ -188,6 +189,11 @@ const GamesRoute = GamesRouteImport.update({
 const FacultiesRoute = FacultiesRouteImport.update({
   id: '/faculties',
   path: '/faculties',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -569,6 +575,7 @@ export interface FileRoutesByFullPath {
   '/bookshelf': typeof BookshelfRoute
   '/chat': typeof ChatRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRoute
   '/faculties': typeof FacultiesRoute
   '/games': typeof GamesRouteWithChildren
   '/get-credits': typeof GetCreditsRoute
@@ -661,6 +668,7 @@ export interface FileRoutesByTo {
   '/bookshelf': typeof BookshelfRoute
   '/chat': typeof ChatRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRoute
   '/faculties': typeof FacultiesRoute
   '/games': typeof GamesRouteWithChildren
   '/get-credits': typeof GetCreditsRoute
@@ -752,6 +760,7 @@ export interface FileRoutesById {
   '/bookshelf': typeof BookshelfRoute
   '/chat': typeof ChatRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRoute
   '/faculties': typeof FacultiesRoute
   '/games': typeof GamesRouteWithChildren
   '/get-credits': typeof GetCreditsRoute
@@ -846,6 +855,7 @@ export interface FileRouteTypes {
     | '/bookshelf'
     | '/chat'
     | '/contact'
+    | '/dashboard'
     | '/faculties'
     | '/games'
     | '/get-credits'
@@ -938,6 +948,7 @@ export interface FileRouteTypes {
     | '/bookshelf'
     | '/chat'
     | '/contact'
+    | '/dashboard'
     | '/faculties'
     | '/games'
     | '/get-credits'
@@ -1028,6 +1039,7 @@ export interface FileRouteTypes {
     | '/bookshelf'
     | '/chat'
     | '/contact'
+    | '/dashboard'
     | '/faculties'
     | '/games'
     | '/get-credits'
@@ -1121,6 +1133,7 @@ export interface RootRouteChildren {
   BookshelfRoute: typeof BookshelfRoute
   ChatRoute: typeof ChatRoute
   ContactRoute: typeof ContactRoute
+  DashboardRoute: typeof DashboardRoute
   FacultiesRoute: typeof FacultiesRoute
   GamesRoute: typeof GamesRouteWithChildren
   GetCreditsRoute: typeof GetCreditsRoute
@@ -1304,6 +1317,13 @@ declare module '@tanstack/react-router' {
       path: '/faculties'
       fullPath: '/faculties'
       preLoaderRoute: typeof FacultiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -1919,6 +1939,7 @@ const rootRouteChildren: RootRouteChildren = {
   BookshelfRoute: BookshelfRoute,
   ChatRoute: ChatRoute,
   ContactRoute: ContactRoute,
+  DashboardRoute: DashboardRoute,
   FacultiesRoute: FacultiesRoute,
   GamesRoute: GamesRouteWithChildren,
   GetCreditsRoute: GetCreditsRoute,
