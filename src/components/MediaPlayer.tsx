@@ -402,7 +402,7 @@ function isNativeFile(url: string) {
   return /\.(mp4|webm|mov|mkv|avi|mp3|wav|m4a|ogg|aac|flac)(\?|$)/i.test(url);
 }
 
-export function MediaPlayer({ url: rawUrl, type, title, avatarKey }: Props) {
+export function MediaPlayer({ url: rawUrl, type, title, avatarKey, postId }: Props) {
   const resolved = useResolvedUrl(rawUrl);
   const url = resolved ?? rawUrl;
   const kind = detectType(url, type);
