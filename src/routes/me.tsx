@@ -334,9 +334,17 @@ function MePage() {
                 <span className="font-semibold">Progress to {nextLevelLabel(prog.tier, prog.step)}</span>
                 <span className="text-muted-foreground">{prog.postsInStep}/10 posts</span>
               </div>
-              <div className="h-3 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-hero rank-grow" style={{ width: `${prog.pct}%` }} />
+              <div className="relative h-3 rank-track rounded-full overflow-hidden">
+                <div className="h-full rank-fill rounded-full" style={{ width: `${prog.pct}%` }} />
+                <span
+                  className="absolute -top-1 h-5 w-5 -translate-x-1/2 rounded-full bg-background border-2 border-primary shadow-md flex items-center justify-center text-[10px] font-bold text-primary transition-all duration-700"
+                  style={{ left: `${prog.pct}%` }}
+                  aria-hidden
+                >
+                  {prog.pct}%
+                </span>
               </div>
+
               <p className="text-xs text-primary mt-2 italic">{encouragement(profile.approved_post_count)}</p>
             </div>
           </div>
