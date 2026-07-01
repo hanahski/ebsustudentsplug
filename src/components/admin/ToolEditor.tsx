@@ -394,9 +394,11 @@ export function ToolEditor() {
                   placeholder={`/path?param={country}`}
                   className="font-mono text-xs"
                 />
+                <TestApiButton toolKey={activeKey} action={a} host={host || active.defaultHost} path={paths[a] ?? ""} apiKey={apiKey} />
               </div>
             ))}
           </div>
+
         </div>
 
         <div>
