@@ -470,8 +470,12 @@ function ComposerEditorPage() {
     if (!chapters || chapters.length === 0) { toast.error("Add at least one chapter"); return; }
     setExporting(true);
     try {
-      const { data: prof } = await supabase.from("profiles").select("display_name").eq("id", book && ((): string => { return ""; })() as any).maybeSingle();
+      const { data: u } = await supabase.auth.getUser();
+      const { data: prof } = u.user
+        ? await supabase.from("profiles").select("display_name").eq("id", u.user.id).maybeSingle()
+        : { data: null as { display_name?: string } | null };
       const author = (prof?.display_name as string | undefined) ?? "Anonymous";
+
       const blob = await buildEpubBlob({
         title: book.title,
         author,
