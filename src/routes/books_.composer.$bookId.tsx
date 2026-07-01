@@ -22,10 +22,65 @@ import {
   Search,
   Link2,
   Copy,
+  Sparkles,
+  Wand2,
+  Download,
+  Eye,
+  Palette,
 } from "lucide-react";
 import { toast } from "sonner";
 import { BookCover } from "@/components/BookCover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useServerFn } from "@tanstack/react-start";
+import { bookAiAssist } from "@/lib/book-ai.functions";
+import { buildEpubBlob, downloadBlob } from "@/lib/epub-export";
+
+const COVER_TEMPLATES: {
+  id: string;
+  label: string;
+  bg: string;
+  color: string;
+  font: string;
+}[] = [
+  { id: "midnight", label: "Midnight", bg: "linear-gradient(135deg,#0f172a,#1e293b 60%,#334155)", color: "#f8fafc", font: "'Playfair Display', Georgia, serif" },
+  { id: "ember", label: "Ember", bg: "linear-gradient(160deg,#7c2d12,#b91c1c 55%,#f59e0b)", color: "#fff7ed", font: "'Playfair Display', Georgia, serif" },
+  { id: "mint", label: "Mint", bg: "linear-gradient(180deg,#064e3b,#059669 60%,#a7f3d0)", color: "#ecfdf5", font: "'Inter', system-ui, sans-serif" },
+  { id: "royal", label: "Royal", bg: "linear-gradient(135deg,#312e81,#7c3aed 60%,#f0abfc)", color: "#f5f3ff", font: "'Playfair Display', Georgia, serif" },
+  { id: "paper", label: "Paper", bg: "linear-gradient(180deg,#fef3c7,#fde68a 60%,#f59e0b)", color: "#1c1917", font: "'Playfair Display', Georgia, serif" },
+  { id: "noir", label: "Noir", bg: "linear-gradient(180deg,#0a0a0a,#171717 70%,#404040)", color: "#fafafa", font: "'Inter', system-ui, sans-serif" },
+];
+
+async function renderTemplateCover(tpl: typeof COVER_TEMPLATES[number], title: string, author: string): Promise<Blob> {
+  const w = 800, h = 1200;
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d")!;
+  // Parse the gradient stops manually to keep the same look on canvas.
+  const stops = tpl.bg.match(/#[0-9a-fA-F]{6}/g) ?? ["#111827", "#374151"];
+  const grad = ctx.createLinearGradient(0, 0, w * 0.6, h);
+  stops.forEach((s, i) => grad.addColorStop(i / Math.max(1, stops.length - 1), s));
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, w, h);
+  // Subtle frame
+  ctx.strokeStyle = tpl.color + "33"; ctx.lineWidth = 4;
+  ctx.strokeRect(36, 36, w - 72, h - 72);
+  ctx.fillStyle = tpl.color;
+  ctx.textAlign = "center";
+  ctx.font = `700 76px ${tpl.font}`;
+  // Word-wrap title
+  const words = (title || "Untitled").split(/\s+/);
+  const lines: string[] = []; let line = "";
+  for (const w0 of words) {
+    const test = line ? line + " " + w0 : w0;
+    if (ctx.measureText(test).width > w - 160 && line) { lines.push(line); line = w0; } else line = test;
+  }
+  if (line) lines.push(line);
+  const startY = h / 2 - (lines.length - 1) * 44;
+  lines.forEach((ln, i) => ctx.fillText(ln, w / 2, startY + i * 88));
+  ctx.font = `400 32px ${tpl.font}`;
+  ctx.fillText((author || "").toUpperCase(), w / 2, h - 120);
+  return await new Promise<Blob>((res) => canvas.toBlob((b) => res(b!), "image/jpeg", 0.9));
+}
+
 
 
 export const Route = createFileRoute("/books_/composer/$bookId")({ component: ComposerEditorPage });
@@ -64,6 +119,14 @@ function ComposerEditorPage() {
   const [replaceTerm, setReplaceTerm] = useState("");
   const [shareOpen, setShareOpen] = useState(false);
   const [creatingShare, setCreatingShare] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [applyingTpl, setApplyingTpl] = useState<string | null>(null);
+  const aiAssistFn = useServerFn(bookAiAssist);
+
+
 
 
   const { data: book, isLoading: bookLoading } = useQuery<Book | null>({
@@ -374,8 +437,88 @@ function ComposerEditorPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // ---------- AI writing assistant ----------
+  const runAi = async (mode: "continue" | "rewrite" | "expand" | "shorten" | "grammar") => {
+    if (!active) { toast.error("Open a chapter first"); return; }
+    const plain = stripHtml(chBuf.content).trim();
+    if (!plain) { toast.error("Chapter is empty"); return; }
+    // For "continue" use only the tail so the model builds forward, not restates.
+    const passage = mode === "continue" ? plain.slice(-1200) : plain;
+    setAiBusy(true);
+    try {
+      const { output } = await aiAssistFn({ data: { mode, text: passage, context: `Book: ${book?.title ?? ""}\n${book?.description ?? ""}` } });
+      if (!output) throw new Error("Empty AI response");
+      if (mode === "continue") {
+        setChBuf((b) => ({ ...b, content: (b.content || "") + `<p>${output.replace(/\n\n+/g, "</p><p>").replace(/\n/g, "<br/>")}</p>` }));
+        toast.success("Continued");
+      } else {
+        // Replace the chapter body with the new prose (wrap paragraphs).
+        const html = output
+          .split(/\n{2,}/)
+          .map((p) => `<p>${p.replace(/\n/g, "<br/>")}</p>`)
+          .join("");
+        setChBuf((b) => ({ ...b, content: html }));
+        toast.success(`Applied · ${mode}`);
+      }
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setAiBusy(false); }
+  };
+
+  // ---------- EPUB export ----------
+  const exportEpub = async () => {
+    if (!book) return;
+    if (!chapters || chapters.length === 0) { toast.error("Add at least one chapter"); return; }
+    setExporting(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      const { data: prof } = u.user
+        ? await supabase.from("profiles").select("display_name").eq("id", u.user.id).maybeSingle()
+        : { data: null as { display_name?: string } | null };
+      const author = (prof?.display_name as string | undefined) ?? "Anonymous";
+
+      const blob = await buildEpubBlob({
+        title: book.title,
+        author,
+        description: book.description,
+        coverUrl: book.cover_url,
+        chapters: chapters.map((c) => ({ title: c.title, html: c.content })),
+      });
+      const safe = (book.title || "book").replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+      downloadBlob(blob, `${safe}.epub`);
+      toast.success("EPUB downloaded");
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setExporting(false); }
+  };
+
+  // ---------- Cover template apply ----------
+  const applyCoverTemplate = async (tpl: typeof COVER_TEMPLATES[number]) => {
+    if (!book) return;
+    setApplyingTpl(tpl.id);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) throw new Error("Sign in");
+      const { data: prof } = await supabase.from("profiles").select("display_name").eq("id", u.user.id).maybeSingle();
+      const author = (prof?.display_name as string | undefined) ?? "";
+      const blob = await renderTemplateCover(tpl, book.title, author);
+      const file = new File([blob], `template-${tpl.id}.jpg`, { type: "image/jpeg" });
+      const path = `${u.user.id}/covers/${bookId}-${Date.now()}-tpl-${tpl.id}.jpg`;
+      const { error } = await supabase.storage.from("book-covers").upload(path, file, { upsert: false });
+      if (error) throw error;
+      const { data: signed, error: se } = await supabase.storage.from("book-covers").createSignedUrl(path, 60 * 60 * 24 * 365);
+      if (se || !signed?.signedUrl) throw new Error(se?.message ?? "sign url failed");
+      const { error: ue } = await supabase.from("user_books").update({ cover_url: signed.signedUrl }).eq("id", bookId);
+      if (ue) throw ue;
+      qc.invalidateQueries({ queryKey: ["composer-book", bookId] });
+      toast.success(`Cover set · ${tpl.label}`);
+      setTemplatesOpen(false);
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setApplyingTpl(null); }
+  };
+
+
   if (bookLoading || chLoading) {
     return (
+
       <AppShell>
         <p className="text-center py-16 text-muted-foreground">
           <Loader2 className="w-5 h-5 inline animate-spin" /> Loading…
@@ -424,6 +567,14 @@ function ComposerEditorPage() {
               {creatingShare ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Link2 className="w-4 h-4 mr-1" />}
               Share draft
             </Button>
+            <Button size="sm" variant="outline" onClick={exportEpub} disabled={exporting} title="Download as EPUB">
+              {exporting ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Download className="w-4 h-4 mr-1" />}
+              EPUB
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setPreviewOpen(true)} title="Preview before publishing">
+              <Eye className="w-4 h-4 mr-1" /> Preview
+            </Button>
+
             {book.status === "published" && book.library_book_id && (
               <Button size="sm" variant="outline" asChild>
                 <Link to="/books/read/$id" params={{ id: book.library_book_id }}>
@@ -461,6 +612,15 @@ function ComposerEditorPage() {
               onClick={() => coverInput.current?.click()}
             >
               <Upload className="w-3.5 h-3.5 mr-1" /> Cover
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="w-full mt-1 text-xs"
+              onClick={() => setTemplatesOpen(true)}
+            >
+              <Palette className="w-3.5 h-3.5 mr-1" /> Templates
+
             </Button>
             <input
               ref={coverInput}
@@ -577,12 +737,34 @@ function ComposerEditorPage() {
                   onChange={(html) => setChBuf((b) => ({ ...b, content: html }))}
                   placeholder="Start writing your chapter…"
                 />
-                <div className="text-xs text-muted-foreground flex items-center justify-end gap-3 px-1">
-                  <span><b>{wordStats.words.toLocaleString()}</b> words</span>
-                  <span>·</span>
-                  <span>~{wordStats.minutes} min read</span>
+                <div className="flex items-center justify-between gap-2 flex-wrap px-1">
+                  <div className="flex items-center gap-1 flex-wrap">
+                    <span className="text-xs font-semibold text-muted-foreground mr-1 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-primary" /> AI:
+                    </span>
+                    {(["continue","rewrite","expand","shorten","grammar"] as const).map((m) => (
+                      <Button
+                        key={m}
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-2 text-xs capitalize"
+                        disabled={aiBusy}
+                        onClick={() => runAi(m)}
+                        title={`AI ${m}`}
+                      >
+                        {aiBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wand2 className="w-3 h-3 mr-1" />}
+                        {m}
+                      </Button>
+                    ))}
+                  </div>
+                  <div className="text-xs text-muted-foreground flex items-center gap-3">
+                    <span><b>{wordStats.words.toLocaleString()}</b> words</span>
+                    <span>·</span>
+                    <span>~{wordStats.minutes} min read</span>
+                  </div>
                 </div>
               </>
+
 
             ) : (
               <div className="bg-card border rounded-2xl p-12 text-center text-muted-foreground">
@@ -639,7 +821,87 @@ function ComposerEditorPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Publish preview */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Publish preview</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto pr-2 space-y-6">
+            <div className="flex gap-4">
+              <div className="w-24 aspect-[2/3] rounded-lg overflow-hidden bg-muted shrink-0">
+                <BookCover title={book.title} src={book.cover_url} className="h-full w-full" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-xl font-bold leading-tight">{book.title || "Untitled"}</h2>
+                {book.subtitle && <p className="text-sm text-muted-foreground italic">{book.subtitle}</p>}
+                {book.description && <p className="text-sm mt-2 line-clamp-4">{book.description}</p>}
+                <p className="text-xs text-muted-foreground mt-2">
+                  {(chapters?.length ?? 0)} chapters · {book.price_credits > 0 ? `${book.price_credits} credits` : "Free"}
+                </p>
+              </div>
+            </div>
+            <div className="space-y-6">
+              {(chapters ?? []).map((c, i) => (
+                <article key={c.id} className="prose prose-sm dark:prose-invert max-w-none border-t pt-4">
+                  <h3 className="text-lg font-semibold">{i + 1}. {c.title || "Untitled"}</h3>
+                  <div dangerouslySetInnerHTML={{ __html: c.id === activeId ? chBuf.content : c.content }} />
+                </article>
+              ))}
+              {(chapters?.length ?? 0) === 0 && (
+                <p className="text-sm text-muted-foreground">No chapters yet — add one before publishing.</p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setPreviewOpen(false)}>Close</Button>
+            <Button
+              disabled={publish.isPending || (chapters?.length ?? 0) === 0}
+              onClick={() => { setPreviewOpen(false); publish.mutate(); }}
+              className="bg-gradient-to-r from-primary to-emerald-500 text-primary-foreground"
+            >
+              {publish.isPending ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Send className="w-4 h-4 mr-1" />}
+              {book.status === "published" ? "Re-publish" : "Publish now"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cover templates */}
+      <Dialog open={templatesOpen} onOpenChange={setTemplatesOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Pick a cover template</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {COVER_TEMPLATES.map((tpl) => (
+              <button
+                key={tpl.id}
+                type="button"
+                onClick={() => applyCoverTemplate(tpl)}
+                disabled={applyingTpl !== null}
+                className="group relative aspect-[2/3] rounded-xl overflow-hidden ring-1 ring-border hover:ring-primary transition-all disabled:opacity-60"
+                style={{ background: tpl.bg }}
+              >
+                <div className="absolute inset-0 flex items-center justify-center p-3 text-center" style={{ color: tpl.color, fontFamily: tpl.font }}>
+                  <span className="text-sm font-bold leading-tight line-clamp-4">{book.title || "Untitled"}</span>
+                </div>
+                <div className="absolute bottom-2 left-2 right-2 text-[10px] font-semibold uppercase tracking-wider opacity-80" style={{ color: tpl.color }}>
+                  {tpl.label}
+                </div>
+                {applyingTpl === tpl.id && (
+                  <div className="absolute inset-0 bg-black/50 grid place-items-center">
+                    <Loader2 className="w-6 h-6 animate-spin text-white" />
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppShell>
+
   );
 
 }
