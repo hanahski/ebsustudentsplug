@@ -7,6 +7,7 @@ import { NetworkStatus } from "@/components/NetworkStatus";
 import { AppBridgeMount } from "@/components/AppBridgeMount";
 import { RouteTransitionLoader } from "@/components/RouteTransitionLoader";
 import appCss from "../styles.css?url";
+import brandLogoUrl from "@/assets/brand-logo.png";
 
 function NotFoundComponent() {
   return (
