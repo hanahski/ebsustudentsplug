@@ -280,7 +280,7 @@ function Home() {
                   <Link key={n.id} to="/market/$id" params={{ id: n.id }} className="w-36 shrink-0 group">
                     <div className="aspect-[2/3] rounded-xl overflow-hidden border bg-muted">
                       {img ? (
-                        <img src={img} alt={n.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <img src={img} alt={n.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent flex items-center justify-center text-4xl">📚</div>
                       )}
@@ -355,7 +355,7 @@ function Home() {
                               src={n.id.startsWith("pdf-page-") ? pastQuestionCover : coverFor(n.course?.code)}
                               alt={n.course?.code ?? "Past question"}
                               className={`w-full h-full object-cover ${!user ? "blur-[2px] scale-105" : ""}`}
-                              loading="lazy"
+                             
                               width={1024}
                               height={640}
                             />

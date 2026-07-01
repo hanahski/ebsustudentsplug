@@ -1,8 +1,11 @@
 // Trim-only video editor: pick start + end times before posting.
 // No re-encoding — we just store `#t=start,end` on the media URL and the
 // player honours it. Lightweight, instant, works on mobile.
+//
+// Realtime preview: as you drag the handles, playback loops within the
+// current [start,end] window instantly — no need to press "Preview" first.
 import { useEffect, useRef, useState } from "react";
-import { Scissors, Play, RotateCcw } from "lucide-react";
+import { Scissors, Play, Pause, RotateCcw } from "lucide-react";
 import { formatTime, type TimeRange } from "@/lib/trim";
 
 export function VideoTrimmer({
@@ -16,8 +19,9 @@ export function VideoTrimmer({
   const [duration, setDuration] = useState(0);
   const [start, setStart] = useState(0);
   const [end, setEnd] = useState(0);
+  const [playing, setPlaying] = useState(false);
 
-  // When the video loads, default the trim to the full clip.
+  // Load metadata → default to full clip.
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
@@ -38,15 +42,43 @@ export function VideoTrimmer({
     onChange(trimmed ? { start, end } : null);
   }, [start, end, duration, onChange]);
 
-  const previewTrim = () => {
+  // Realtime loop: keep playback clamped to [start,end] and seek instantly
+  // when the user drags either handle past the current position.
+  useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
-    el.currentTime = start;
-    el.play();
-    const stop = () => {
-      if (el.currentTime >= end) { el.pause(); el.removeEventListener("timeupdate", stop); }
+    const onTime = () => {
+      if (end > 0 && el.currentTime >= end - 0.02) {
+        el.currentTime = start;
+      } else if (el.currentTime < start - 0.05) {
+        el.currentTime = start;
+      }
     };
-    el.addEventListener("timeupdate", stop);
+    el.addEventListener("timeupdate", onTime);
+    return () => el.removeEventListener("timeupdate", onTime);
+  }, [start, end]);
+
+  // If the user drags a handle across the playhead, snap the video to
+  // the nearest edge of the new window so the preview stays in-range.
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el || duration <= 0) return;
+    if (el.currentTime < start || el.currentTime > end) {
+      el.currentTime = start;
+    }
+  }, [start, end, duration]);
+
+  const toggle = () => {
+    const el = videoRef.current;
+    if (!el) return;
+    if (el.paused) {
+      if (el.currentTime < start || el.currentTime >= end) el.currentTime = start;
+      el.play().catch(() => {});
+      setPlaying(true);
+    } else {
+      el.pause();
+      setPlaying(false);
+    }
   };
 
   const reset = () => { setStart(0); setEnd(duration); };
@@ -63,11 +95,11 @@ export function VideoTrimmer({
         <div className="flex gap-1.5">
           <button
             type="button"
-            onClick={previewTrim}
+            onClick={toggle}
             disabled={!duration}
             className="text-[11px] inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/15 text-primary hover:bg-primary/25 disabled:opacity-50"
           >
-            <Play className="w-3 h-3" /> Preview
+            {playing ? <><Pause className="w-3 h-3" /> Pause</> : <><Play className="w-3 h-3" /> Play</>}
           </button>
           <button
             type="button"
@@ -83,10 +115,13 @@ export function VideoTrimmer({
       <video
         ref={videoRef}
         src={src}
-        controls
         playsInline
+        loop={false}
         preload="metadata"
-        className="w-full rounded-lg bg-black max-h-72 object-contain"
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onClick={toggle}
+        className="w-full rounded-lg bg-black max-h-72 object-contain cursor-pointer"
       />
 
       {/* Dual-thumb visual timeline */}

@@ -273,7 +273,7 @@ function MarketPage() {
                     <img
                       src={t.photo_url}
                       alt={t.title}
-                      loading="lazy"
+                     
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -331,7 +331,7 @@ function MarketPage() {
                       <img
                         src={b.cover_url}
                         alt={b.title}
-                        loading="lazy"
+                       
                         className="w-full h-full object-cover"
                       />
                     ) : (

@@ -178,7 +178,7 @@ function ProfilePage() {
                         ) : isAudio ? (
                           <div className="w-full h-full flex items-center justify-center text-3xl bg-gradient-to-br from-primary/20 to-accent/40">🎵</div>
                         ) : (
-                          <img src={url} alt={p.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                          <img src={url} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                         )}
                       </RLink>
                     );

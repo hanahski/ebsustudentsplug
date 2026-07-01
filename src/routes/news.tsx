@@ -201,7 +201,7 @@ function EbsuFeed({ articles, loading }: { articles: any[]; loading: boolean }) 
         >
           {a.image_url && (
             <div className="aspect-[16/9] overflow-hidden bg-muted">
-              <img src={a.image_url} alt="" loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+              <img src={a.image_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
             </div>
           )}
           <div className="p-4 flex flex-col flex-1">
@@ -297,7 +297,7 @@ function OtherNewsFeed(props: {
                   <img
                     src={a.image}
                     alt=""
-                    loading="lazy"
+                   
                     className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                     onError={(e) => {
                       (e.currentTarget.parentElement as HTMLElement).style.display = "none";

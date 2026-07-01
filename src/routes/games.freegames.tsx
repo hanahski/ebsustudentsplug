@@ -98,7 +98,7 @@ function FreeGamesPage() {
                 <img
                   src={g.thumbnail}
                   alt={g.title}
-                  loading="lazy"
+                 
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                 />
               </div>
