@@ -27,7 +27,7 @@ export function BrandLoader({ label = "StudentsPlug" }: { label?: string }) {
         />
       </div>
 
-      <div className="sp-blob-text text-2xl font-extrabold tracking-wide" aria-label={label}>
+      <div className="sp-blob-text text-2xl font-extrabold tracking-wide -mt-4" aria-label={label}>
         {label}
       </div>
 
