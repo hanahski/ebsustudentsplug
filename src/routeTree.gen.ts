@@ -66,6 +66,7 @@ import { Route as PostIdRouteImport } from './routes/post.$id'
 import { Route as NotesIdRouteImport } from './routes/notes.$id'
 import { Route as NewsSlugRouteImport } from './routes/news_.$slug'
 import { Route as MeEditRouteImport } from './routes/me.edit'
+import { Route as MeAvatarRouteImport } from './routes/me.avatar'
 import { Route as MarketNewRouteImport } from './routes/market.new'
 import { Route as MarketIdRouteImport } from './routes/market.$id'
 import { Route as GuidesEbsuFeesRouteImport } from './routes/guides.ebsu-fees'
@@ -392,6 +393,11 @@ const MeEditRoute = MeEditRouteImport.update({
   path: '/edit',
   getParentRoute: () => MeRoute,
 } as any)
+const MeAvatarRoute = MeAvatarRouteImport.update({
+  id: '/avatar',
+  path: '/avatar',
+  getParentRoute: () => MeRoute,
+} as any)
 const MarketNewRoute = MarketNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -654,6 +660,7 @@ export interface FileRoutesByFullPath {
   '/guides/ebsu-fees': typeof GuidesEbsuFeesRoute
   '/market/$id': typeof MarketIdRoute
   '/market/new': typeof MarketNewRoute
+  '/me/avatar': typeof MeAvatarRoute
   '/me/edit': typeof MeEditRoute
   '/news/$slug': typeof NewsSlugRoute
   '/notes/$id': typeof NotesIdRoute
@@ -751,6 +758,7 @@ export interface FileRoutesByTo {
   '/guides/ebsu-fees': typeof GuidesEbsuFeesRoute
   '/market/$id': typeof MarketIdRoute
   '/market/new': typeof MarketNewRoute
+  '/me/avatar': typeof MeAvatarRoute
   '/me/edit': typeof MeEditRoute
   '/news/$slug': typeof NewsSlugRoute
   '/notes/$id': typeof NotesIdRoute
@@ -851,6 +859,7 @@ export interface FileRoutesById {
   '/guides/ebsu-fees': typeof GuidesEbsuFeesRoute
   '/market/$id': typeof MarketIdRoute
   '/market/new': typeof MarketNewRoute
+  '/me/avatar': typeof MeAvatarRoute
   '/me/edit': typeof MeEditRoute
   '/news_/$slug': typeof NewsSlugRoute
   '/notes/$id': typeof NotesIdRoute
@@ -952,6 +961,7 @@ export interface FileRouteTypes {
     | '/guides/ebsu-fees'
     | '/market/$id'
     | '/market/new'
+    | '/me/avatar'
     | '/me/edit'
     | '/news/$slug'
     | '/notes/$id'
@@ -1049,6 +1059,7 @@ export interface FileRouteTypes {
     | '/guides/ebsu-fees'
     | '/market/$id'
     | '/market/new'
+    | '/me/avatar'
     | '/me/edit'
     | '/news/$slug'
     | '/notes/$id'
@@ -1148,6 +1159,7 @@ export interface FileRouteTypes {
     | '/guides/ebsu-fees'
     | '/market/$id'
     | '/market/new'
+    | '/me/avatar'
     | '/me/edit'
     | '/news_/$slug'
     | '/notes/$id'
@@ -1667,6 +1679,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeEditRouteImport
       parentRoute: typeof MeRoute
     }
+    '/me/avatar': {
+      id: '/me/avatar'
+      path: '/avatar'
+      fullPath: '/me/avatar'
+      preLoaderRoute: typeof MeAvatarRouteImport
+      parentRoute: typeof MeRoute
+    }
     '/market/new': {
       id: '/market/new'
       path: '/new'
@@ -1996,10 +2015,12 @@ const MarketRouteWithChildren =
   MarketRoute._addFileChildren(MarketRouteChildren)
 
 interface MeRouteChildren {
+  MeAvatarRoute: typeof MeAvatarRoute
   MeEditRoute: typeof MeEditRoute
 }
 
 const MeRouteChildren: MeRouteChildren = {
+  MeAvatarRoute: MeAvatarRoute,
   MeEditRoute: MeEditRoute,
 }
 
