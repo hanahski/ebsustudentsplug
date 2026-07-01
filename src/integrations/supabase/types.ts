@@ -1290,6 +1290,7 @@ export type Database = {
           is_verified: boolean
           last_seen_at: string | null
           location_updated_at: string | null
+          payout_account: Json | null
           picture_url: string | null
           rank_step: number
           rank_tier: Database["public"]["Enums"]["rank_tier"]
@@ -1324,6 +1325,7 @@ export type Database = {
           is_verified?: boolean
           last_seen_at?: string | null
           location_updated_at?: string | null
+          payout_account?: Json | null
           picture_url?: string | null
           rank_step?: number
           rank_tier?: Database["public"]["Enums"]["rank_tier"]
@@ -1358,6 +1360,7 @@ export type Database = {
           is_verified?: boolean
           last_seen_at?: string | null
           location_updated_at?: string | null
+          payout_account?: Json | null
           picture_url?: string | null
           rank_step?: number
           rank_tier?: Database["public"]["Enums"]["rank_tier"]

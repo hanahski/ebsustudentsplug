@@ -14,6 +14,7 @@ import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as TicketsRouteImport } from './routes/tickets'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -27,6 +28,8 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as GetCreditsRouteImport } from './routes/get-credits'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as FacultiesRouteImport } from './routes/faculties'
+import { Route as EarnCreditsRouteImport } from './routes/earn-credits'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as BookshelfRouteImport } from './routes/bookshelf'
@@ -56,11 +59,15 @@ import { Route as ToolsDictionaryRouteImport } from './routes/tools.dictionary'
 import { Route as ToolsCalculatorRouteImport } from './routes/tools.calculator'
 import { Route as ToolsAudioConvertRouteImport } from './routes/tools.audio-convert'
 import { Route as TicketsIdRouteImport } from './routes/tickets.$id'
+import { Route as TasksAmountRouteImport } from './routes/tasks.$amount'
 import { Route as ProfileIdRouteImport } from './routes/profile.$id'
 import { Route as PostNewRouteImport } from './routes/post.new'
 import { Route as PostIdRouteImport } from './routes/post.$id'
 import { Route as NotesIdRouteImport } from './routes/notes.$id'
 import { Route as NewsSlugRouteImport } from './routes/news_.$slug'
+import { Route as MeSecurityRouteImport } from './routes/me.security'
+import { Route as MeEditRouteImport } from './routes/me.edit'
+import { Route as MeAvatarRouteImport } from './routes/me.avatar'
 import { Route as MarketNewRouteImport } from './routes/market.new'
 import { Route as MarketIdRouteImport } from './routes/market.$id'
 import { Route as GuidesEbsuFeesRouteImport } from './routes/guides.ebsu-fees'
@@ -69,6 +76,8 @@ import { Route as GamesPuzzleRouteImport } from './routes/games.puzzle'
 import { Route as GamesFreegamesRouteImport } from './routes/games.freegames'
 import { Route as GamesEightballRouteImport } from './routes/games.eightball'
 import { Route as FacultyIdRouteImport } from './routes/faculty.$id'
+import { Route as EarnCreditsTournamentRouteImport } from './routes/earn-credits.tournament'
+import { Route as EarnCreditsPredictionRouteImport } from './routes/earn-credits.prediction'
 import { Route as DepartmentIdRouteImport } from './routes/department.$id'
 import { Route as CoursesIdRouteImport } from './routes/courses.$id'
 import { Route as CourseIdRouteImport } from './routes/course.$id'
@@ -123,6 +132,11 @@ const TermsRoute = TermsRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchRoute = SearchRouteImport.update({
@@ -188,6 +202,16 @@ const GamesRoute = GamesRouteImport.update({
 const FacultiesRoute = FacultiesRouteImport.update({
   id: '/faculties',
   path: '/faculties',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EarnCreditsRoute = EarnCreditsRouteImport.update({
+  id: '/earn-credits',
+  path: '/earn-credits',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -335,6 +359,11 @@ const TicketsIdRoute = TicketsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => TicketsRoute,
 } as any)
+const TasksAmountRoute = TasksAmountRouteImport.update({
+  id: '/tasks/$amount',
+  path: '/tasks/$amount',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileIdRoute = ProfileIdRouteImport.update({
   id: '/profile/$id',
   path: '/profile/$id',
@@ -359,6 +388,21 @@ const NewsSlugRoute = NewsSlugRouteImport.update({
   id: '/news_/$slug',
   path: '/news/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const MeSecurityRoute = MeSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => MeRoute,
+} as any)
+const MeEditRoute = MeEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => MeRoute,
+} as any)
+const MeAvatarRoute = MeAvatarRouteImport.update({
+  id: '/avatar',
+  path: '/avatar',
+  getParentRoute: () => MeRoute,
 } as any)
 const MarketNewRoute = MarketNewRouteImport.update({
   id: '/new',
@@ -399,6 +443,16 @@ const FacultyIdRoute = FacultyIdRouteImport.update({
   id: '/faculty/$id',
   path: '/faculty/$id',
   getParentRoute: () => rootRouteImport,
+} as any)
+const EarnCreditsTournamentRoute = EarnCreditsTournamentRouteImport.update({
+  id: '/tournament',
+  path: '/tournament',
+  getParentRoute: () => EarnCreditsRoute,
+} as any)
+const EarnCreditsPredictionRoute = EarnCreditsPredictionRouteImport.update({
+  id: '/prediction',
+  path: '/prediction',
+  getParentRoute: () => EarnCreditsRoute,
 } as any)
 const DepartmentIdRoute = DepartmentIdRouteImport.update({
   id: '/department/$id',
@@ -569,12 +623,14 @@ export interface FileRoutesByFullPath {
   '/bookshelf': typeof BookshelfRoute
   '/chat': typeof ChatRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRoute
+  '/earn-credits': typeof EarnCreditsRouteWithChildren
   '/faculties': typeof FacultiesRoute
   '/games': typeof GamesRouteWithChildren
   '/get-credits': typeof GetCreditsRoute
   '/login': typeof LoginRoute
   '/market': typeof MarketRouteWithChildren
-  '/me': typeof MeRoute
+  '/me': typeof MeRouteWithChildren
   '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
   '/redeem': typeof RedeemRoute
@@ -582,6 +638,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/tickets': typeof TicketsRouteWithChildren
@@ -599,6 +656,8 @@ export interface FileRoutesByFullPath {
   '/course/$id': typeof CourseIdRoute
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
+  '/earn-credits/prediction': typeof EarnCreditsPredictionRoute
+  '/earn-credits/tournament': typeof EarnCreditsTournamentRoute
   '/faculty/$id': typeof FacultyIdRoute
   '/games/eightball': typeof GamesEightballRoute
   '/games/freegames': typeof GamesFreegamesRoute
@@ -607,11 +666,15 @@ export interface FileRoutesByFullPath {
   '/guides/ebsu-fees': typeof GuidesEbsuFeesRoute
   '/market/$id': typeof MarketIdRoute
   '/market/new': typeof MarketNewRoute
+  '/me/avatar': typeof MeAvatarRoute
+  '/me/edit': typeof MeEditRoute
+  '/me/security': typeof MeSecurityRoute
   '/news/$slug': typeof NewsSlugRoute
   '/notes/$id': typeof NotesIdRoute
   '/post/$id': typeof PostIdRoute
   '/post/new': typeof PostNewRoute
   '/profile/$id': typeof ProfileIdRoute
+  '/tasks/$amount': typeof TasksAmountRoute
   '/tickets/$id': typeof TicketsIdRoute
   '/tools/audio-convert': typeof ToolsAudioConvertRoute
   '/tools/calculator': typeof ToolsCalculatorRoute
@@ -661,11 +724,13 @@ export interface FileRoutesByTo {
   '/bookshelf': typeof BookshelfRoute
   '/chat': typeof ChatRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRoute
+  '/earn-credits': typeof EarnCreditsRouteWithChildren
   '/faculties': typeof FacultiesRoute
   '/games': typeof GamesRouteWithChildren
   '/get-credits': typeof GetCreditsRoute
   '/login': typeof LoginRoute
-  '/me': typeof MeRoute
+  '/me': typeof MeRouteWithChildren
   '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
   '/redeem': typeof RedeemRoute
@@ -673,6 +738,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/tickets': typeof TicketsRouteWithChildren
@@ -689,6 +755,8 @@ export interface FileRoutesByTo {
   '/course/$id': typeof CourseIdRoute
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
+  '/earn-credits/prediction': typeof EarnCreditsPredictionRoute
+  '/earn-credits/tournament': typeof EarnCreditsTournamentRoute
   '/faculty/$id': typeof FacultyIdRoute
   '/games/eightball': typeof GamesEightballRoute
   '/games/freegames': typeof GamesFreegamesRoute
@@ -697,11 +765,15 @@ export interface FileRoutesByTo {
   '/guides/ebsu-fees': typeof GuidesEbsuFeesRoute
   '/market/$id': typeof MarketIdRoute
   '/market/new': typeof MarketNewRoute
+  '/me/avatar': typeof MeAvatarRoute
+  '/me/edit': typeof MeEditRoute
+  '/me/security': typeof MeSecurityRoute
   '/news/$slug': typeof NewsSlugRoute
   '/notes/$id': typeof NotesIdRoute
   '/post/$id': typeof PostIdRoute
   '/post/new': typeof PostNewRoute
   '/profile/$id': typeof ProfileIdRoute
+  '/tasks/$amount': typeof TasksAmountRoute
   '/tickets/$id': typeof TicketsIdRoute
   '/tools/audio-convert': typeof ToolsAudioConvertRoute
   '/tools/calculator': typeof ToolsCalculatorRoute
@@ -752,12 +824,14 @@ export interface FileRoutesById {
   '/bookshelf': typeof BookshelfRoute
   '/chat': typeof ChatRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRoute
+  '/earn-credits': typeof EarnCreditsRouteWithChildren
   '/faculties': typeof FacultiesRoute
   '/games': typeof GamesRouteWithChildren
   '/get-credits': typeof GetCreditsRoute
   '/login': typeof LoginRoute
   '/market': typeof MarketRouteWithChildren
-  '/me': typeof MeRoute
+  '/me': typeof MeRouteWithChildren
   '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
   '/redeem': typeof RedeemRoute
@@ -765,6 +839,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/tickets': typeof TicketsRouteWithChildren
@@ -782,6 +857,8 @@ export interface FileRoutesById {
   '/course/$id': typeof CourseIdRoute
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
+  '/earn-credits/prediction': typeof EarnCreditsPredictionRoute
+  '/earn-credits/tournament': typeof EarnCreditsTournamentRoute
   '/faculty/$id': typeof FacultyIdRoute
   '/games/eightball': typeof GamesEightballRoute
   '/games/freegames': typeof GamesFreegamesRoute
@@ -790,11 +867,15 @@ export interface FileRoutesById {
   '/guides/ebsu-fees': typeof GuidesEbsuFeesRoute
   '/market/$id': typeof MarketIdRoute
   '/market/new': typeof MarketNewRoute
+  '/me/avatar': typeof MeAvatarRoute
+  '/me/edit': typeof MeEditRoute
+  '/me/security': typeof MeSecurityRoute
   '/news_/$slug': typeof NewsSlugRoute
   '/notes/$id': typeof NotesIdRoute
   '/post/$id': typeof PostIdRoute
   '/post/new': typeof PostNewRoute
   '/profile/$id': typeof ProfileIdRoute
+  '/tasks/$amount': typeof TasksAmountRoute
   '/tickets/$id': typeof TicketsIdRoute
   '/tools/audio-convert': typeof ToolsAudioConvertRoute
   '/tools/calculator': typeof ToolsCalculatorRoute
@@ -846,6 +927,8 @@ export interface FileRouteTypes {
     | '/bookshelf'
     | '/chat'
     | '/contact'
+    | '/dashboard'
+    | '/earn-credits'
     | '/faculties'
     | '/games'
     | '/get-credits'
@@ -859,6 +942,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/saved'
     | '/search'
+    | '/settings'
     | '/sitemap.xml'
     | '/terms'
     | '/tickets'
@@ -876,6 +960,8 @@ export interface FileRouteTypes {
     | '/course/$id'
     | '/courses/$id'
     | '/department/$id'
+    | '/earn-credits/prediction'
+    | '/earn-credits/tournament'
     | '/faculty/$id'
     | '/games/eightball'
     | '/games/freegames'
@@ -884,11 +970,15 @@ export interface FileRouteTypes {
     | '/guides/ebsu-fees'
     | '/market/$id'
     | '/market/new'
+    | '/me/avatar'
+    | '/me/edit'
+    | '/me/security'
     | '/news/$slug'
     | '/notes/$id'
     | '/post/$id'
     | '/post/new'
     | '/profile/$id'
+    | '/tasks/$amount'
     | '/tickets/$id'
     | '/tools/audio-convert'
     | '/tools/calculator'
@@ -938,6 +1028,8 @@ export interface FileRouteTypes {
     | '/bookshelf'
     | '/chat'
     | '/contact'
+    | '/dashboard'
+    | '/earn-credits'
     | '/faculties'
     | '/games'
     | '/get-credits'
@@ -950,6 +1042,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/saved'
     | '/search'
+    | '/settings'
     | '/sitemap.xml'
     | '/terms'
     | '/tickets'
@@ -966,6 +1059,8 @@ export interface FileRouteTypes {
     | '/course/$id'
     | '/courses/$id'
     | '/department/$id'
+    | '/earn-credits/prediction'
+    | '/earn-credits/tournament'
     | '/faculty/$id'
     | '/games/eightball'
     | '/games/freegames'
@@ -974,11 +1069,15 @@ export interface FileRouteTypes {
     | '/guides/ebsu-fees'
     | '/market/$id'
     | '/market/new'
+    | '/me/avatar'
+    | '/me/edit'
+    | '/me/security'
     | '/news/$slug'
     | '/notes/$id'
     | '/post/$id'
     | '/post/new'
     | '/profile/$id'
+    | '/tasks/$amount'
     | '/tickets/$id'
     | '/tools/audio-convert'
     | '/tools/calculator'
@@ -1028,6 +1127,8 @@ export interface FileRouteTypes {
     | '/bookshelf'
     | '/chat'
     | '/contact'
+    | '/dashboard'
+    | '/earn-credits'
     | '/faculties'
     | '/games'
     | '/get-credits'
@@ -1041,6 +1142,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/saved'
     | '/search'
+    | '/settings'
     | '/sitemap.xml'
     | '/terms'
     | '/tickets'
@@ -1058,6 +1160,8 @@ export interface FileRouteTypes {
     | '/course/$id'
     | '/courses/$id'
     | '/department/$id'
+    | '/earn-credits/prediction'
+    | '/earn-credits/tournament'
     | '/faculty/$id'
     | '/games/eightball'
     | '/games/freegames'
@@ -1066,11 +1170,15 @@ export interface FileRouteTypes {
     | '/guides/ebsu-fees'
     | '/market/$id'
     | '/market/new'
+    | '/me/avatar'
+    | '/me/edit'
+    | '/me/security'
     | '/news_/$slug'
     | '/notes/$id'
     | '/post/$id'
     | '/post/new'
     | '/profile/$id'
+    | '/tasks/$amount'
     | '/tickets/$id'
     | '/tools/audio-convert'
     | '/tools/calculator'
@@ -1121,12 +1229,14 @@ export interface RootRouteChildren {
   BookshelfRoute: typeof BookshelfRoute
   ChatRoute: typeof ChatRoute
   ContactRoute: typeof ContactRoute
+  DashboardRoute: typeof DashboardRoute
+  EarnCreditsRoute: typeof EarnCreditsRouteWithChildren
   FacultiesRoute: typeof FacultiesRoute
   GamesRoute: typeof GamesRouteWithChildren
   GetCreditsRoute: typeof GetCreditsRoute
   LoginRoute: typeof LoginRoute
   MarketRoute: typeof MarketRouteWithChildren
-  MeRoute: typeof MeRoute
+  MeRoute: typeof MeRouteWithChildren
   NewsRoute: typeof NewsRoute
   PrivacyRoute: typeof PrivacyRoute
   RedeemRoute: typeof RedeemRoute
@@ -1134,6 +1244,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SavedRoute: typeof SavedRoute
   SearchRoute: typeof SearchRoute
+  SettingsRoute: typeof SettingsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   TicketsRoute: typeof TicketsRouteWithChildren
@@ -1158,6 +1269,7 @@ export interface RootRouteChildren {
   PostIdRoute: typeof PostIdRoute
   PostNewRoute: typeof PostNewRoute
   ProfileIdRoute: typeof ProfileIdRoute
+  TasksAmountRoute: typeof TasksAmountRoute
   BlogIndexRoute: typeof BlogIndexRoute
   CoursesIndexRoute: typeof CoursesIndexRoute
   NotesIndexRoute: typeof NotesIndexRoute
@@ -1213,6 +1325,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search': {
@@ -1304,6 +1423,20 @@ declare module '@tanstack/react-router' {
       path: '/faculties'
       fullPath: '/faculties'
       preLoaderRoute: typeof FacultiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/earn-credits': {
+      id: '/earn-credits'
+      path: '/earn-credits'
+      fullPath: '/earn-credits'
+      preLoaderRoute: typeof EarnCreditsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -1509,6 +1642,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TicketsIdRouteImport
       parentRoute: typeof TicketsRoute
     }
+    '/tasks/$amount': {
+      id: '/tasks/$amount'
+      path: '/tasks/$amount'
+      fullPath: '/tasks/$amount'
+      preLoaderRoute: typeof TasksAmountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile/$id': {
       id: '/profile/$id'
       path: '/profile/$id'
@@ -1543,6 +1683,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/news/$slug'
       preLoaderRoute: typeof NewsSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/me/security': {
+      id: '/me/security'
+      path: '/security'
+      fullPath: '/me/security'
+      preLoaderRoute: typeof MeSecurityRouteImport
+      parentRoute: typeof MeRoute
+    }
+    '/me/edit': {
+      id: '/me/edit'
+      path: '/edit'
+      fullPath: '/me/edit'
+      preLoaderRoute: typeof MeEditRouteImport
+      parentRoute: typeof MeRoute
+    }
+    '/me/avatar': {
+      id: '/me/avatar'
+      path: '/avatar'
+      fullPath: '/me/avatar'
+      preLoaderRoute: typeof MeAvatarRouteImport
+      parentRoute: typeof MeRoute
     }
     '/market/new': {
       id: '/market/new'
@@ -1599,6 +1760,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/faculty/$id'
       preLoaderRoute: typeof FacultyIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/earn-credits/tournament': {
+      id: '/earn-credits/tournament'
+      path: '/tournament'
+      fullPath: '/earn-credits/tournament'
+      preLoaderRoute: typeof EarnCreditsTournamentRouteImport
+      parentRoute: typeof EarnCreditsRoute
+    }
+    '/earn-credits/prediction': {
+      id: '/earn-credits/prediction'
+      path: '/prediction'
+      fullPath: '/earn-credits/prediction'
+      preLoaderRoute: typeof EarnCreditsPredictionRouteImport
+      parentRoute: typeof EarnCreditsRoute
     }
     '/department/$id': {
       id: '/department/$id'
@@ -1813,6 +1988,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface EarnCreditsRouteChildren {
+  EarnCreditsPredictionRoute: typeof EarnCreditsPredictionRoute
+  EarnCreditsTournamentRoute: typeof EarnCreditsTournamentRoute
+}
+
+const EarnCreditsRouteChildren: EarnCreditsRouteChildren = {
+  EarnCreditsPredictionRoute: EarnCreditsPredictionRoute,
+  EarnCreditsTournamentRoute: EarnCreditsTournamentRoute,
+}
+
+const EarnCreditsRouteWithChildren = EarnCreditsRoute._addFileChildren(
+  EarnCreditsRouteChildren,
+)
+
 interface GamesRouteChildren {
   GamesEightballRoute: typeof GamesEightballRoute
   GamesFreegamesRoute: typeof GamesFreegamesRoute
@@ -1843,6 +2032,20 @@ const MarketRouteChildren: MarketRouteChildren = {
 
 const MarketRouteWithChildren =
   MarketRoute._addFileChildren(MarketRouteChildren)
+
+interface MeRouteChildren {
+  MeAvatarRoute: typeof MeAvatarRoute
+  MeEditRoute: typeof MeEditRoute
+  MeSecurityRoute: typeof MeSecurityRoute
+}
+
+const MeRouteChildren: MeRouteChildren = {
+  MeAvatarRoute: MeAvatarRoute,
+  MeEditRoute: MeEditRoute,
+  MeSecurityRoute: MeSecurityRoute,
+}
+
+const MeRouteWithChildren = MeRoute._addFileChildren(MeRouteChildren)
 
 interface TicketsRouteChildren {
   TicketsIdRoute: typeof TicketsIdRoute
@@ -1919,12 +2122,14 @@ const rootRouteChildren: RootRouteChildren = {
   BookshelfRoute: BookshelfRoute,
   ChatRoute: ChatRoute,
   ContactRoute: ContactRoute,
+  DashboardRoute: DashboardRoute,
+  EarnCreditsRoute: EarnCreditsRouteWithChildren,
   FacultiesRoute: FacultiesRoute,
   GamesRoute: GamesRouteWithChildren,
   GetCreditsRoute: GetCreditsRoute,
   LoginRoute: LoginRoute,
   MarketRoute: MarketRouteWithChildren,
-  MeRoute: MeRoute,
+  MeRoute: MeRouteWithChildren,
   NewsRoute: NewsRoute,
   PrivacyRoute: PrivacyRoute,
   RedeemRoute: RedeemRoute,
@@ -1932,6 +2137,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SavedRoute: SavedRoute,
   SearchRoute: SearchRoute,
+  SettingsRoute: SettingsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   TicketsRoute: TicketsRouteWithChildren,
@@ -1956,6 +2162,7 @@ const rootRouteChildren: RootRouteChildren = {
   PostIdRoute: PostIdRoute,
   PostNewRoute: PostNewRoute,
   ProfileIdRoute: ProfileIdRoute,
+  TasksAmountRoute: TasksAmountRoute,
   BlogIndexRoute: BlogIndexRoute,
   CoursesIndexRoute: CoursesIndexRoute,
   NotesIndexRoute: NotesIndexRoute,
