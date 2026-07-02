@@ -39,29 +39,53 @@ function TicketsPage() {
   return (
     <AppShell>
       <div className="space-y-5">
-        <div className="bg-gradient-to-br from-fuchsia-500 to-rose-500 text-white rounded-3xl p-6 shadow-card">
-          <div className="flex items-start justify-between gap-3 flex-wrap">
-            <div>
-              <h1 className="text-2xl font-bold font-display flex items-center gap-2"><Ticket className="w-7 h-7" />Ticket Marketplace</h1>
-              <p className="text-sm opacity-90 mt-1">Buy & sell event tickets. Only Star + Authentication badge users can sell.</p>
+        {/* Hero — matches Market Plug */}
+        <div className="relative overflow-hidden bg-card border rounded-3xl p-6 shadow-card">
+          <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full bg-fuchsia-500/10 blur-3xl" />
+          <div className="absolute -bottom-24 -left-16 w-64 h-64 rounded-full bg-rose-500/10 blur-3xl" />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-fuchsia-400/40 to-transparent" />
+
+          <div className="relative flex items-start justify-between gap-4 flex-wrap">
+            <div className="min-w-0">
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-300 text-[11px] font-semibold uppercase tracking-wider">
+                <Ticket className="w-3.5 h-3.5" />
+                Ticket Marketplace
+              </div>
+              <h1 className="mt-2 text-2xl md:text-3xl font-bold font-display leading-tight">
+                Every campus event,{" "}
+                <span className="bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-500 bg-clip-text text-transparent">
+                  one tap away
+                </span>
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1 max-w-lg">
+                Buy verified tickets or sell yours — only Star + Authentication
+                badge holders can list, so buyers always know what's real.
+              </p>
             </div>
-            <Button asChild variant="secondary" size="sm">
+            <Button asChild size="sm" className="rounded-full shadow-glow bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white hover:opacity-90">
               <Link to="/tools/qr"><QrCode className="w-4 h-4 mr-1" />Scan ticket</Link>
             </Button>
           </div>
-        </div>
 
-        <div className="flex gap-2 flex-wrap">
-          {[
-            { k: "browse", label: "Browse" },
-            { k: "upload", label: canUpload ? "I want to sell my ticket" : "I want to sell my ticket 🔒" },
-            { k: "mine", label: "My purchases" },
-          ].map(({ k, label }) => (
-            <button key={k} onClick={() => setTab(k as typeof tab)}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${tab === k ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"}`}>
-              {label}
-            </button>
-          ))}
+          <div className="relative mt-5 inline-flex flex-wrap gap-1 p-1 rounded-full bg-muted/70 backdrop-blur border border-border/60">
+            {[
+              { k: "browse", label: "Browse" },
+              { k: "upload", label: canUpload ? "Sell a ticket" : "Sell a ticket 🔒" },
+              { k: "mine", label: "My purchases" },
+            ].map(({ k, label }) => (
+              <button
+                key={k}
+                onClick={() => setTab(k as typeof tab)}
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition ${
+                  tab === k
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {tab === "browse" && <BrowseTickets />}
@@ -71,6 +95,7 @@ function TicketsPage() {
     </AppShell>
   );
 }
+
 
 function BrowseTickets() {
   const { user, profile } = useAuth();
