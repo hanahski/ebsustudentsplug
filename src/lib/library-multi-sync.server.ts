@@ -54,7 +54,7 @@ async function upsertBatch(rows: Row[]) {
 }
 
 // ---------- Project Gutenberg (public books via Gutendex) ----------
-export async function syncGutenberg(pages = 4) {
+export async function syncGutenberg(pages = 100) {
   const rows: Row[] = [];
   for (let page = 1; page <= pages; page++) {
     const res = await fetch(
@@ -101,48 +101,60 @@ export async function syncGutenberg(pages = 4) {
 }
 
 // ---------- Open Textbook Library ----------
-export async function syncOpenTextbookLibrary(limit = 200) {
-  const res = await fetch(
-    `https://open.umn.edu/opentextbooks/textbooks.json?per_page=${limit}`,
-    { headers: { Accept: "application/json" } },
-  );
-  if (!res.ok) throw new Error(`OTL HTTP ${res.status}`);
-  const json = (await res.json()) as { data: any[] };
+// The OTL API caps per_page at 10 — we paginate up to `maxPages` to pull the full catalog.
+export async function syncOpenTextbookLibrary(maxPages = 200) {
   const rows: Row[] = [];
-  for (const t of json.data ?? []) {
-    const formatsRaw = (t.formats ?? []) as Array<{ format?: string; url?: string }>;
-    const formats: Record<string, string> = {};
-    for (const f of formatsRaw) {
-      const url = f.url;
-      if (!url) continue;
-      const fmt = String(f.format ?? "").toLowerCase();
-      if (fmt.includes("pdf")) formats.pdf = url;
-      else if (fmt.includes("epub")) formats.epub = url;
-      else if (fmt.includes("mobi") || fmt.includes("kindle")) formats.kindle = url;
-      else if (fmt.includes("html") && fmt.includes("zip")) formats.html_zip = url;
-      else if (fmt.includes("pages") || fmt.includes("odt") || fmt.includes("docx")) formats.pages_zip = url;
-      else if (fmt.includes("blueprint") || fmt.includes("common cartridge")) formats.lms = url;
+  const seen = new Set<string>();
+  for (let page = 1; page <= maxPages; page++) {
+    const res = await fetch(
+      `https://open.umn.edu/opentextbooks/textbooks.json?per_page=10&page=${page}`,
+      { headers: { Accept: "application/json" } },
+    );
+    if (!res.ok) break;
+    const json = (await res.json()) as { data: any[] };
+    const batch = json.data ?? [];
+    if (batch.length === 0) break;
+    for (const t of batch) {
+      const key = `otl-${t.id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const formatsRaw = (t.formats ?? []) as Array<{ type?: string; url?: string }>;
+      const formats: Record<string, string> = {};
+      let online: string | null = null;
+      for (const f of formatsRaw) {
+        const url = f.url;
+        if (!url) continue;
+        const fmt = String(f.type ?? "").toLowerCase();
+        if (fmt === "pdf") formats.pdf = url;
+        else if (fmt === "epub" || fmt === "ebook") formats.epub = url;
+        else if (fmt === "mobi" || fmt === "kindle") formats.kindle = url;
+        else if (fmt === "online" || fmt === "html") online = online ?? url;
+        else if (fmt === "xml" || fmt === "odf" || fmt === "docx") formats.pages_zip = url;
+      }
+      const primary = formats.pdf ?? formats.epub ?? online ?? t.detail_url;
+      if (!primary) continue;
+      rows.push({
+        openlibrary_key: key,
+        title: String(t.title ?? "").slice(0, 280),
+        author: (t.contributors ?? []).map((c: any) => c.name).filter(Boolean).join(", ") || null,
+        cover_url: t.image_url ?? null,
+        category: "book",
+        read_url: primary,
+        download_url: formats.pdf ?? formats.epub ?? null,
+        source_url: t.detail_url ?? "https://open.umn.edu/opentextbooks/",
+        source: "open_textbook_library",
+        description: stripHtml(t.description)?.slice(0, 800) ?? null,
+        first_publish_year: t.copyright_year ?? null,
+        price_credits: SOURCE_PRICE.open_textbook_library,
+        download_formats: formats,
+      });
     }
-    if (!Object.keys(formats).length) continue;
-    rows.push({
-      openlibrary_key: `otl-${t.id}`,
-      title: String(t.title ?? "").slice(0, 280),
-      author: (t.contributors ?? []).map((c: any) => c.name).filter(Boolean).join(", ") || null,
-      cover_url: t.image_url ?? null,
-      category: "book",
-      read_url: formats.pdf ?? formats.epub ?? t.detail_url ?? Object.values(formats)[0],
-      download_url: formats.pdf ?? formats.epub ?? null,
-      source_url: t.detail_url ?? "https://open.umn.edu/opentextbooks/",
-      source: "open_textbook_library",
-      description: stripHtml(t.description)?.slice(0, 800) ?? null,
-      first_publish_year: t.copyright_year ?? null,
-      price_credits: SOURCE_PRICE.open_textbook_library,
-      download_formats: formats,
-    });
+    if (batch.length < 10) break;
   }
   const rowsUpserted = await upsertBatch(rows);
   return { source: "open_textbook_library", booksFound: rows.length, rowsUpserted };
 }
+
 
 // ---------- LibreTexts (LibreCommons catalog API) ----------
 // Pulls the full LibreCommons catalog (3,000+ open textbooks) with real
