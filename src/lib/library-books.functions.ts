@@ -2,16 +2,29 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 const catalogInput = z.object({
-  category: z.enum(["all", "novel", "book", "comics", "poetry"]).default("all"),
+  category: z.enum(["all", "novel", "book", "comics", "poetry", "textbook"]).default("all"),
   query: z.string().trim().max(100).default(""),
-  // Source / tag filter.
+  // Combined source / format / copy filter.
   tag: z
     .enum([
       "all",
+      // formats
       "pdf",
       "epub",
+      "kindle",
+      "html_zip",
+      "pages_zip",
+      "lms",
+      "blueprint",
+      // copy type
+      "soft",
+      "hard",
+      // pricing / origin buckets
       "free",
       "ebsu",
+      "studentsplug",
+      "others",
+      // specific sources
       "openstax",
       "gutenberg",
       "open_textbook_library",
@@ -19,10 +32,10 @@ const catalogInput = z.object({
       "bccampus",
     ])
     .default("all"),
-  limit: z.number().int().min(1).max(200).default(160),
+  limit: z.number().int().min(1).max(200).default(120),
 });
 
-const SOURCES = [
+const ALL_SOURCES = [
   "user",
   "freebookcentre",
   "openstax",
@@ -32,24 +45,27 @@ const SOURCES = [
   "bccampus",
 ];
 
+const FORMAT_TAGS = new Set(["pdf", "epub", "kindle", "html_zip", "pages_zip", "lms", "blueprint"]);
+
 export const getLibraryBooks = createServerFn({ method: "GET" })
   .inputValidator((input) => catalogInput.parse(input))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const cols =
+      "id,title,author,cover_url,category,price_credits,created_at,source,download_url,download_formats,source_url";
+
     let query = supabaseAdmin
       .from("library_books")
-      .select(
-        "id,title,author,cover_url,category,price_credits,created_at,source,download_url,download_formats,source_url",
-      )
-      .in("source", SOURCES)
+      .select(cols)
       .not("title", "is", null)
       .neq("title", "")
       .order("created_at", { ascending: false })
       .limit(data.limit);
 
+    // Category (skip when the tag is "hard" — hard-copy lives in market_listings).
     if (data.category !== "all") query = query.eq("category", data.category);
 
-    // Source-specific tags.
+    // Source scoping.
     if (
       data.tag === "openstax" ||
       data.tag === "gutenberg" ||
@@ -58,37 +74,26 @@ export const getLibraryBooks = createServerFn({ method: "GET" })
       data.tag === "bccampus"
     ) {
       query = query.eq("source", data.tag);
-    } else if (data.tag === "ebsu") query = query.eq("source", "user");
-    else if (data.tag === "free") query = query.eq("price_credits", 0);
-    else if (data.tag === "pdf") query = query.contains("download_formats", { pdf: null } as any);
-    // "epub" filter falls through — contains with jsonb below.
-    if (data.tag === "pdf")
-      query = supabaseAdmin
-        .from("library_books")
-        .select(
-          "id,title,author,cover_url,category,price_credits,created_at,source,download_url,download_formats,source_url",
-        )
-        .in("source", SOURCES)
-        .not("title", "is", null)
-        .neq("title", "")
-        .not("download_formats->>pdf", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(data.limit);
-    if (data.tag === "epub")
-      query = supabaseAdmin
-        .from("library_books")
-        .select(
-          "id,title,author,cover_url,category,price_credits,created_at,source,download_url,download_formats,source_url",
-        )
-        .in("source", SOURCES)
-        .not("title", "is", null)
-        .neq("title", "")
-        .not("download_formats->>epub", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(data.limit);
+    } else if (data.tag === "ebsu" || data.tag === "studentsplug") {
+      query = query.eq("source", "user");
+    } else if (data.tag === "others") {
+      query = query.in("source", ["freebookcentre"]);
+    } else {
+      query = query.in("source", ALL_SOURCES);
+    }
 
-    if (data.category !== "all" && (data.tag === "pdf" || data.tag === "epub")) {
-      query = query.eq("category", data.category);
+    // Format scoping (jsonb key present).
+    if (FORMAT_TAGS.has(data.tag)) {
+      query = query.not(`download_formats->>${data.tag}`, "is", null);
+    }
+
+    if (data.tag === "free") query = query.eq("price_credits", 0);
+    if (data.tag === "soft") {
+      // All library rows are soft/digital by definition — no extra filter.
+    }
+    if (data.tag === "hard") {
+      // Hard copies aren't in library_books; return empty so the UI can suggest market.
+      return [] as any[];
     }
 
     if (data.query) {
@@ -100,3 +105,34 @@ export const getLibraryBooks = createServerFn({ method: "GET" })
     if (error) throw new Error("Could not load the book catalog");
     return books ?? [];
   });
+
+// --- Auto-sync: public, self-rate-limiting (only syncs sources with < 20 books) ---
+export const ensureLibraryCatalog = createServerFn({ method: "POST" }).handler(async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const targets: Array<{ source: string; run: () => Promise<any> }> = [];
+  const multi = await import("@/lib/library-multi-sync.server");
+  const { syncOpenStax } = await import("@/lib/openstax-sync.server");
+  const jobs: Record<string, () => Promise<any>> = {
+    openstax: syncOpenStax,
+    gutenberg: multi.syncGutenberg,
+    open_textbook_library: multi.syncOpenTextbookLibrary,
+    libretexts: multi.syncLibreTexts,
+    bccampus: multi.syncBCcampus,
+  };
+  for (const [src, run] of Object.entries(jobs)) {
+    const { count } = await supabaseAdmin
+      .from("library_books")
+      .select("id", { count: "exact", head: true })
+      .eq("source", src);
+    if ((count ?? 0) < 20) targets.push({ source: src, run });
+  }
+  const results: any[] = [];
+  for (const t of targets) {
+    try {
+      results.push({ source: t.source, ...(await t.run()) });
+    } catch (e) {
+      results.push({ source: t.source, error: (e as Error).message });
+    }
+  }
+  return { ran: targets.length, results };
+});
