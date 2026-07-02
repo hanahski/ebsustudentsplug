@@ -14,9 +14,7 @@ import {
   Ticket,
   BookOpen,
   Package,
-  QrCode,
   Coins,
-  RefreshCw,
   PenLine,
 } from "lucide-react";
 import { EbsuBadge } from "@/components/EbsuBadge";
