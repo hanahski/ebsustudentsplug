@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Coins, TrendingUp, Banknote, ShoppingCart, Landmark, ArrowRight } from "lucide-react";
+import { Coins, TrendingUp, Banknote, ShoppingCart, Landmark, ArrowRight, ShieldCheck } from "lucide-react";
 import { CreditCoin } from "@/components/CreditCoin";
+import { BankAccountResolver } from "@/components/BankAccountResolver";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
@@ -27,28 +28,43 @@ function DashboardPage() {
   const [swapOpen, setSwapOpen] = useState(false);
   const [buyOpen, setBuyOpen] = useState(false);
 
-  const [bankName, setBankName] = useState("");
-  const [accountNumber, setAccountNumber] = useState("");
-  const [accountName, setAccountName] = useState("");
+  const [resolved, setResolved] = useState<
+    | { account_number: string; bank_code: string; bank_name: string; account_name: string }
+    | null
+  >(null);
   const [swapAmount, setSwapAmount] = useState(100);
 
-  const payout = (profile as any)?.payout_account as { bank_name?: string; account_number?: string; account_name?: string } | null;
+  const payout = (profile as any)?.payout_account as
+    | { bank_name?: string; bank_code?: string; account_number?: string; account_name?: string }
+    | null;
 
   useEffect(() => {
-    if (payout) {
-      setBankName(payout.bank_name ?? "");
-      setAccountNumber(payout.account_number ?? "");
-      setAccountName(payout.account_name ?? "");
+    if (payoutOpen && payout?.account_name) {
+      setResolved({
+        account_number: payout.account_number ?? "",
+        bank_code: payout.bank_code ?? "",
+        bank_name: payout.bank_name ?? "",
+        account_name: payout.account_name ?? "",
+      });
+    } else if (payoutOpen) {
+      setResolved(null);
     }
   }, [payoutOpen]);
 
   const savePayout = async () => {
     if (!profile) return;
-    if (!bankName || !accountNumber || !accountName) return toast.error("Fill all fields");
-    if (!/^\d{10}$/.test(accountNumber)) return toast.error("Account number must be 10 digits");
-    const { error } = await supabase.from("profiles").update({
-      payout_account: { bank_name: bankName, account_number: accountNumber, account_name: accountName },
-    } as any).eq("id", profile.id);
+    if (!resolved?.account_name) return toast.error("Enter a valid account number");
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        payout_account: {
+          bank_name: resolved.bank_name,
+          bank_code: resolved.bank_code,
+          account_number: resolved.account_number,
+          account_name: resolved.account_name,
+        },
+      } as any)
+      .eq("id", profile.id);
     if (error) return toast.error(error.message);
     toast.success("Payout account saved");
     setPayoutOpen(false);
