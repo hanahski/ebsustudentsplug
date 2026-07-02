@@ -86,6 +86,20 @@ function LoginPage() {
     return () => { cancelled = true; };
   }, [nav, redirect]);
 
+  const tryRedeemPendingReferral = async () => {
+    const pending = readPendingReferral();
+    if (!pending?.code) return;
+    const { error } = await supabase.rpc("redeem_referral", { _code: pending.code });
+    if (!error) {
+      toast.success(`+50 credits from ${pending.inviter_name ?? "your inviter"}!`);
+      clearPendingReferral();
+    } else {
+      // Already redeemed or self-invite — silently clear so it doesn't linger.
+      clearPendingReferral();
+      console.info("[invite] redeem_referral skipped:", error.message);
+    }
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
