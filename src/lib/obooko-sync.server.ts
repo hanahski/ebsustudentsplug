@@ -1,14 +1,17 @@
 // Obooko catalog indexer — link-out only. We store metadata + cover URL and
 // send users to obooko.com to complete their free download there.
 //
-// Rating → price mapping: obooko exposes per-book star ratings via the
-// `?rating=starsN` category filter (N in 1..5). We crawl each category once
-// per star bucket, so every row we insert already knows its rating and we
-// set `price_credits = rating` (as the user requested).
+// Pricing note: the user asked for `price_credits = book rating`. Obooko does
+// NOT expose per-book aggregate ratings publicly (the star widget on each
+// book page is an interactive "Read and Rate" input, not a displayed average,
+// and the `?rating=starsN` category filter has no observable effect). We use
+// a flat 3.0-credit price ("3-star average") for every obooko book, which
+// admins can adjust in the library editor later.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const BASE = "https://www.obooko.com";
 const UA = "StudentsPlug/1.0 (+library-sync)";
+const DEFAULT_PRICE = 3.0;
 
 const CATEGORIES: Array<{ slug: string; category: "novel" | "book" | "poetry" | "comics" }> = [
   { slug: "free-classic-books", category: "novel" },
