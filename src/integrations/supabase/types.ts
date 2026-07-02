@@ -2218,6 +2218,7 @@ export type Database = {
         Args: { _member_ids: string[]; _name: string }
         Returns: string
       }
+      generate_referral_code: { Args: never; Returns: string }
       get_book_by_share_token: { Args: { _token: string }; Returns: Json }
       has_role: {
         Args: {

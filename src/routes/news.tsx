@@ -296,11 +296,16 @@ function OtherNewsFeed(props: {
       ) : (
         <div className="grid sm:grid-cols-2 gap-4">
           {articles.map((a, i) => (
-            <a
+            <Link
               key={`${a.url}-${i}`}
-              href={a.url}
-              target="_blank"
-              rel="noopener noreferrer"
+              to="/news_/reader"
+              search={{
+                url: a.url,
+                title: a.title ?? "",
+                source: a.source ?? "",
+                image: a.image ?? "",
+                publishedAt: a.publishedAt ?? "",
+              }}
               className="group bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow hover:-translate-y-0.5 transition flex flex-col"
             >
               {a.image ? (
@@ -308,7 +313,6 @@ function OtherNewsFeed(props: {
                   <img
                     src={a.image}
                     alt=""
-                   
                     className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                     onError={(e) => {
                       (e.currentTarget.parentElement as HTMLElement).style.display = "none";
@@ -331,8 +335,9 @@ function OtherNewsFeed(props: {
                   Read story <ExternalLink className="w-3.5 h-3.5" />
                 </span>
               </div>
-            </a>
+            </Link>
           ))}
+
         </div>
       )}
     </>

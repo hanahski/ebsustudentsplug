@@ -66,6 +66,7 @@ import { Route as ProfileIdRouteImport } from './routes/profile.$id'
 import { Route as PostNewRouteImport } from './routes/post.new'
 import { Route as PostIdRouteImport } from './routes/post.$id'
 import { Route as NotesIdRouteImport } from './routes/notes.$id'
+import { Route as NewsReaderRouteImport } from './routes/news_.reader'
 import { Route as NewsSlugRouteImport } from './routes/news_.$slug'
 import { Route as MeSecurityRouteImport } from './routes/me_.security'
 import { Route as MeInvitesRouteImport } from './routes/me_.invites'
@@ -103,6 +104,7 @@ import { Route as ApiPublicVocalSplitV2RouteImport } from './routes/api/public/v
 import { Route as ApiPublicVocalSplitRouteImport } from './routes/api/public/vocal-split'
 import { Route as ApiPublicVirtualNumberRouteImport } from './routes/api/public/virtual-number'
 import { Route as ApiPublicPlugAiRouteImport } from './routes/api/public/plug-ai'
+import { Route as ApiNewsReadRouteImport } from './routes/api/news.read'
 import { Route as ApiPublicHooksSyncOpenstaxRouteImport } from './routes/api/public/hooks/sync-openstax'
 import { Route as ApiPublicHooksSyncObookoRouteImport } from './routes/api/public/hooks/sync-obooko'
 import { Route as ApiPublicHooksSyncLibrarySourcesRouteImport } from './routes/api/public/hooks/sync-library-sources'
@@ -400,6 +402,11 @@ const NotesIdRoute = NotesIdRouteImport.update({
   path: '/notes/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NewsReaderRoute = NewsReaderRouteImport.update({
+  id: '/news_/reader',
+  path: '/news/reader',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NewsSlugRoute = NewsSlugRouteImport.update({
   id: '/news_/$slug',
   path: '/news/$slug',
@@ -585,6 +592,11 @@ const ApiPublicPlugAiRoute = ApiPublicPlugAiRouteImport.update({
   path: '/api/public/plug-ai',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiNewsReadRoute = ApiNewsReadRouteImport.update({
+  id: '/read',
+  path: '/read',
+  getParentRoute: () => ApiNewsRoute,
+} as any)
 const ApiPublicHooksSyncOpenstaxRoute =
   ApiPublicHooksSyncOpenstaxRouteImport.update({
     id: '/api/public/hooks/sync-openstax',
@@ -688,7 +700,7 @@ export interface FileRoutesByFullPath {
   '/api/dictionary': typeof ApiDictionaryRoute
   '/api/eightball': typeof ApiEightballRoute
   '/api/freegames': typeof ApiFreegamesRoute
-  '/api/news': typeof ApiNewsRoute
+  '/api/news': typeof ApiNewsRouteWithChildren
   '/api/riddle': typeof ApiRiddleRoute
   '/api/youtube': typeof ApiYoutubeRoute
   '/blog/$slug': typeof BlogSlugRoute
@@ -711,6 +723,7 @@ export interface FileRoutesByFullPath {
   '/me/invites': typeof MeInvitesRoute
   '/me/security': typeof MeSecurityRoute
   '/news/$slug': typeof NewsSlugRoute
+  '/news/reader': typeof NewsReaderRoute
   '/notes/$id': typeof NotesIdRoute
   '/post/$id': typeof PostIdRoute
   '/post/new': typeof PostNewRoute
@@ -737,6 +750,7 @@ export interface FileRoutesByFullPath {
   '/courses/': typeof CoursesIndexRoute
   '/market/': typeof MarketIndexRoute
   '/notes/': typeof NotesIndexRoute
+  '/api/news/read': typeof ApiNewsReadRoute
   '/api/public/plug-ai': typeof ApiPublicPlugAiRoute
   '/api/public/virtual-number': typeof ApiPublicVirtualNumberRoute
   '/api/public/vocal-split': typeof ApiPublicVocalSplitRoute
@@ -794,7 +808,7 @@ export interface FileRoutesByTo {
   '/api/dictionary': typeof ApiDictionaryRoute
   '/api/eightball': typeof ApiEightballRoute
   '/api/freegames': typeof ApiFreegamesRoute
-  '/api/news': typeof ApiNewsRoute
+  '/api/news': typeof ApiNewsRouteWithChildren
   '/api/riddle': typeof ApiRiddleRoute
   '/api/youtube': typeof ApiYoutubeRoute
   '/blog/$slug': typeof BlogSlugRoute
@@ -816,6 +830,7 @@ export interface FileRoutesByTo {
   '/me/invites': typeof MeInvitesRoute
   '/me/security': typeof MeSecurityRoute
   '/news/$slug': typeof NewsSlugRoute
+  '/news/reader': typeof NewsReaderRoute
   '/notes/$id': typeof NotesIdRoute
   '/post/$id': typeof PostIdRoute
   '/post/new': typeof PostNewRoute
@@ -842,6 +857,7 @@ export interface FileRoutesByTo {
   '/courses': typeof CoursesIndexRoute
   '/market': typeof MarketIndexRoute
   '/notes': typeof NotesIndexRoute
+  '/api/news/read': typeof ApiNewsReadRoute
   '/api/public/plug-ai': typeof ApiPublicPlugAiRoute
   '/api/public/virtual-number': typeof ApiPublicVirtualNumberRoute
   '/api/public/vocal-split': typeof ApiPublicVocalSplitRoute
@@ -901,7 +917,7 @@ export interface FileRoutesById {
   '/api/dictionary': typeof ApiDictionaryRoute
   '/api/eightball': typeof ApiEightballRoute
   '/api/freegames': typeof ApiFreegamesRoute
-  '/api/news': typeof ApiNewsRoute
+  '/api/news': typeof ApiNewsRouteWithChildren
   '/api/riddle': typeof ApiRiddleRoute
   '/api/youtube': typeof ApiYoutubeRoute
   '/blog/$slug': typeof BlogSlugRoute
@@ -924,6 +940,7 @@ export interface FileRoutesById {
   '/me_/invites': typeof MeInvitesRoute
   '/me_/security': typeof MeSecurityRoute
   '/news_/$slug': typeof NewsSlugRoute
+  '/news_/reader': typeof NewsReaderRoute
   '/notes/$id': typeof NotesIdRoute
   '/post/$id': typeof PostIdRoute
   '/post/new': typeof PostNewRoute
@@ -950,6 +967,7 @@ export interface FileRoutesById {
   '/courses/': typeof CoursesIndexRoute
   '/market/': typeof MarketIndexRoute
   '/notes/': typeof NotesIndexRoute
+  '/api/news/read': typeof ApiNewsReadRoute
   '/api/public/plug-ai': typeof ApiPublicPlugAiRoute
   '/api/public/virtual-number': typeof ApiPublicVirtualNumberRoute
   '/api/public/vocal-split': typeof ApiPublicVocalSplitRoute
@@ -1033,6 +1051,7 @@ export interface FileRouteTypes {
     | '/me/invites'
     | '/me/security'
     | '/news/$slug'
+    | '/news/reader'
     | '/notes/$id'
     | '/post/$id'
     | '/post/new'
@@ -1059,6 +1078,7 @@ export interface FileRouteTypes {
     | '/courses/'
     | '/market/'
     | '/notes/'
+    | '/api/news/read'
     | '/api/public/plug-ai'
     | '/api/public/virtual-number'
     | '/api/public/vocal-split'
@@ -1138,6 +1158,7 @@ export interface FileRouteTypes {
     | '/me/invites'
     | '/me/security'
     | '/news/$slug'
+    | '/news/reader'
     | '/notes/$id'
     | '/post/$id'
     | '/post/new'
@@ -1164,6 +1185,7 @@ export interface FileRouteTypes {
     | '/courses'
     | '/market'
     | '/notes'
+    | '/api/news/read'
     | '/api/public/plug-ai'
     | '/api/public/virtual-number'
     | '/api/public/vocal-split'
@@ -1245,6 +1267,7 @@ export interface FileRouteTypes {
     | '/me_/invites'
     | '/me_/security'
     | '/news_/$slug'
+    | '/news_/reader'
     | '/notes/$id'
     | '/post/$id'
     | '/post/new'
@@ -1271,6 +1294,7 @@ export interface FileRouteTypes {
     | '/courses/'
     | '/market/'
     | '/notes/'
+    | '/api/news/read'
     | '/api/public/plug-ai'
     | '/api/public/virtual-number'
     | '/api/public/vocal-split'
@@ -1330,7 +1354,7 @@ export interface RootRouteChildren {
   ApiDictionaryRoute: typeof ApiDictionaryRoute
   ApiEightballRoute: typeof ApiEightballRoute
   ApiFreegamesRoute: typeof ApiFreegamesRoute
-  ApiNewsRoute: typeof ApiNewsRoute
+  ApiNewsRoute: typeof ApiNewsRouteWithChildren
   ApiRiddleRoute: typeof ApiRiddleRoute
   ApiYoutubeRoute: typeof ApiYoutubeRoute
   BlogSlugRoute: typeof BlogSlugRoute
@@ -1346,6 +1370,7 @@ export interface RootRouteChildren {
   MeInvitesRoute: typeof MeInvitesRoute
   MeSecurityRoute: typeof MeSecurityRoute
   NewsSlugRoute: typeof NewsSlugRoute
+  NewsReaderRoute: typeof NewsReaderRoute
   NotesIdRoute: typeof NotesIdRoute
   PostIdRoute: typeof PostIdRoute
   PostNewRoute: typeof PostNewRoute
@@ -1776,6 +1801,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NotesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/news_/reader': {
+      id: '/news_/reader'
+      path: '/news/reader'
+      fullPath: '/news/reader'
+      preLoaderRoute: typeof NewsReaderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/news_/$slug': {
       id: '/news_/$slug'
       path: '/news/$slug'
@@ -2035,6 +2067,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPlugAiRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/news/read': {
+      id: '/api/news/read'
+      path: '/read'
+      fullPath: '/api/news/read'
+      preLoaderRoute: typeof ApiNewsReadRouteImport
+      parentRoute: typeof ApiNewsRoute
+    }
     '/api/public/hooks/sync-openstax': {
       id: '/api/public/hooks/sync-openstax'
       path: '/api/public/hooks/sync-openstax'
@@ -2209,6 +2248,17 @@ const ToolsRouteChildren: ToolsRouteChildren = {
 
 const ToolsRouteWithChildren = ToolsRoute._addFileChildren(ToolsRouteChildren)
 
+interface ApiNewsRouteChildren {
+  ApiNewsReadRoute: typeof ApiNewsReadRoute
+}
+
+const ApiNewsRouteChildren: ApiNewsRouteChildren = {
+  ApiNewsReadRoute: ApiNewsReadRoute,
+}
+
+const ApiNewsRouteWithChildren =
+  ApiNewsRoute._addFileChildren(ApiNewsRouteChildren)
+
 interface BooksComposerRouteChildren {
   BooksComposerBookIdRoute: typeof BooksComposerBookIdRoute
   BooksComposerIndexRoute: typeof BooksComposerIndexRoute
@@ -2259,7 +2309,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDictionaryRoute: ApiDictionaryRoute,
   ApiEightballRoute: ApiEightballRoute,
   ApiFreegamesRoute: ApiFreegamesRoute,
-  ApiNewsRoute: ApiNewsRoute,
+  ApiNewsRoute: ApiNewsRouteWithChildren,
   ApiRiddleRoute: ApiRiddleRoute,
   ApiYoutubeRoute: ApiYoutubeRoute,
   BlogSlugRoute: BlogSlugRoute,
@@ -2275,6 +2325,7 @@ const rootRouteChildren: RootRouteChildren = {
   MeInvitesRoute: MeInvitesRoute,
   MeSecurityRoute: MeSecurityRoute,
   NewsSlugRoute: NewsSlugRoute,
+  NewsReaderRoute: NewsReaderRoute,
   NotesIdRoute: NotesIdRoute,
   PostIdRoute: PostIdRoute,
   PostNewRoute: PostNewRoute,
