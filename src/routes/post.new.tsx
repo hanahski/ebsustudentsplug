@@ -632,8 +632,9 @@ function NewPostPage() {
             )}
           </section>
 
-          {/* Sticky publish bar */}
-          <div className="sticky bottom-3 z-20">
+          {/* Sticky publish bar — desktop only; mobile uses the top-bar Post button */}
+          <div className="hidden sm:block sticky bottom-3 z-20">
+
             <div className="rounded-2xl border bg-card/90 backdrop-blur shadow-card p-2 flex items-center gap-2">
               <div className="hidden sm:flex flex-1 min-w-0 items-center gap-2 px-2 text-xs text-muted-foreground">
                 <Sparkles className="w-3.5 h-3.5 text-primary" />
