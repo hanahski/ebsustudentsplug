@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, ScanLine, Eye, ShieldCheck, ShieldAlert, Sparkles, Upload, Wand2, ImageIcon, X, PenLine, FileText, Link2, Image as ImageLucide, Type, BookOpen, Megaphone, ClipboardList, NotebookPen, Newspaper, Hash } from "lucide-react";
+import { Loader2, ScanLine, Eye, ShieldCheck, ShieldAlert, Sparkles, Upload, Wand2, ImageIcon, X, PenLine, FileText, Link2, Image as ImageLucide, Type, BookOpen, Megaphone, ClipboardList, NotebookPen, Newspaper, Hash, ChevronLeft, Send } from "lucide-react";
 import { MathText } from "@/components/MathText";
 import { MediaPlayer } from "@/components/MediaPlayer";
 import { extractTextFromImage } from "@/lib/ocr.functions";
