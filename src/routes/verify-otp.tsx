@@ -7,6 +7,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { toast } from "sonner";
 import { claimSeedAdminRole } from "@/lib/admin-role";
 import { claimJambNumber } from "@/lib/jamb.functions";
+import { readPendingReferral, clearPendingReferral } from "@/components/InviteFomoBanner";
 
 const SEED_ADMIN_EMAILS = new Set(["admin+qx162n@ebsuplug.app", "consequenceoct@gmail.com"]);
 const PENDING_JAMB_KEY = "studentsplug:pending-jamb";
@@ -62,6 +63,15 @@ function VerifyOtpPage() {
             console.error("[verify-otp] JAMB claim failed", e),
           );
           sessionStorage.removeItem(PENDING_JAMB_KEY);
+        }
+      } catch {}
+      // Auto-redeem invite link if the user arrived through one.
+      try {
+        const pending = readPendingReferral();
+        if (pending?.code) {
+          const { error: refErr } = await supabase.rpc("redeem_referral", { _code: pending.code });
+          if (!refErr) toast.success(`+50 credits from ${pending.inviter_name ?? "your inviter"}!`);
+          clearPendingReferral();
         }
       } catch {}
       toast.success("Email verified — welcome!");
