@@ -56,8 +56,8 @@ const SORTS = [
 ] as const;
 
 function ProductsPage() {
-  const qc = useQueryClient();
   const [q, setQ] = useState("");
+
   const [debouncedQ, setDebouncedQ] = useState("");
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(q.trim()), 220);
