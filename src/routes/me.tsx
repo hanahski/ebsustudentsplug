@@ -341,7 +341,7 @@ function MePage() {
                 className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 aria-label="Change avatar"
               >
-                <AvatarDisplay avatarKey={profile.avatar_key} size={80} online={profile.show_online} photoUrl={(profile as any).picture_url} />
+                <AvatarDisplay avatarKey={profile.avatar_key} size={80} online={profile.show_online} interactive photoUrl={(profile as any).picture_url} />
               </Link>
               <div className="flex-1 min-w-0">
                 <h1 className="text-xl sm:text-2xl font-bold font-display break-words leading-tight inline-flex items-center gap-1.5">
