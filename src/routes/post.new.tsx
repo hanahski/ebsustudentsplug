@@ -268,9 +268,34 @@ function NewPostPage() {
 
   return (
     <AppShell>
-      <div className="max-w-2xl mx-auto pb-24">
-        {/* Hero header */}
-        <header className="mb-5 rounded-3xl p-6 bg-gradient-to-br from-primary via-primary/80 to-accent text-primary-foreground shadow-card relative overflow-hidden">
+      {/* MOBILE — native-app-style sticky top bar (only on small screens) */}
+      <div className="sm:hidden sticky top-0 -mx-4 px-4 py-2.5 mb-3 z-30 bg-background/85 backdrop-blur-xl border-b flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => nav({ to: "/" })}
+          className="w-10 h-10 -ml-2 rounded-full inline-flex items-center justify-center hover:bg-muted active:scale-95 transition"
+          aria-label="Back"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <div className="flex-1 min-w-0 text-center">
+          <div className="font-bold text-sm leading-tight">New Post</div>
+          <div className="text-[10px] text-muted-foreground truncate">{title.trim() ? `“${title.trim()}”` : "Draft"}</div>
+        </div>
+        <Button
+          type="submit"
+          form="post-new-form"
+          size="sm"
+          disabled={busy || scanning || !title.trim()}
+          className="rounded-full h-9 px-4 font-bold shadow-glow"
+        >
+          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-3.5 h-3.5 mr-1" />Post</>}
+        </Button>
+      </div>
+
+      <div className="max-w-2xl mx-auto pb-32 sm:pb-24">
+        {/* DESKTOP — premium hero */}
+        <header className="hidden sm:block mb-5 rounded-3xl p-6 bg-gradient-to-br from-primary via-primary/80 to-accent text-primary-foreground shadow-card relative overflow-hidden">
           <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/10 blur-2xl" aria-hidden />
           <div className="absolute -left-6 -bottom-10 w-32 h-32 rounded-full bg-white/10 blur-2xl" aria-hidden />
           <div className="relative flex items-center gap-3">
@@ -283,6 +308,7 @@ function NewPostPage() {
             </div>
           </div>
         </header>
+
 
         {profile && !profile.is_verified && !isAdmin && (
           <div className="mb-4 border-2 border-primary/40 bg-gradient-to-br from-primary/10 via-accent/10 to-background rounded-2xl p-4 flex items-start gap-3">
