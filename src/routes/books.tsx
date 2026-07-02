@@ -151,6 +151,17 @@ function BooksPage() {
               </button>
             ))}
           </div>
+          <div className="mt-2 flex gap-2 flex-wrap">
+            {TAGS.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setTag(t.key)}
+                className={`px-3 py-1 rounded-full text-[11px] font-medium border transition ${tag === t.key ? "bg-emerald-500 text-white border-emerald-500" : "bg-background hover:bg-muted"}`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {isLoading && (
