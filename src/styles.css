@@ -659,3 +659,69 @@ html.in-app .route-loader-dot { display: none !important; }
   50%      { opacity: 0.55; }
 }
 .animate-fomo-flash { animation: fomoFlash 1.8s ease-in-out infinite; }
+
+/* ===== Avatar tap animations (5s bursts) ===== */
+@keyframes av-wave {
+  0%, 100% { transform: rotate(0deg); }
+  15% { transform: rotate(-14deg); }
+  30% { transform: rotate(14deg); }
+  45% { transform: rotate(-10deg); }
+  60% { transform: rotate(10deg); }
+  75% { transform: rotate(-6deg); }
+}
+@keyframes av-kiss {
+  0%, 100% { transform: scale(1); filter: none; }
+  40% { transform: scale(1.12) rotate(-4deg); }
+  50% { transform: scale(1.16) rotate(0deg); filter: drop-shadow(0 0 12px hsl(340 90% 60% / 0.55)); }
+  60% { transform: scale(1.12) rotate(4deg); }
+}
+@keyframes av-bounce {
+  0%, 100% { transform: translateY(0); }
+  20% { transform: translateY(-14px) scale(1.03); }
+  40% { transform: translateY(0) scale(0.97); }
+  60% { transform: translateY(-10px) scale(1.02); }
+  80% { transform: translateY(0); }
+}
+@keyframes av-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes av-wiggle {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  25% { transform: translateX(-5px) rotate(-4deg); }
+  50% { transform: translateX(5px) rotate(4deg); }
+  75% { transform: translateX(-3px) rotate(-2deg); }
+}
+@keyframes av-tilt {
+  0%, 100% { transform: rotate(0) scale(1); }
+  50% { transform: rotate(-10deg) scale(1.05); }
+}
+@keyframes av-jump {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  30% { transform: translateY(0) scaleY(0.85); }
+  55% { transform: translateY(-22px) scaleY(1.06); }
+  80% { transform: translateY(0) scaleY(0.95); }
+}
+@keyframes av-sway {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  25% { transform: translateX(-6px) rotate(-3deg); }
+  75% { transform: translateX(6px) rotate(3deg); }
+}
+@keyframes av-heart-float {
+  0% { opacity: 0; transform: translate(-50%, 0) scale(0.4); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -70px) scale(1.2); }
+}
+.av-anim-wave   { animation: av-wave   1s ease-in-out 5; transform-origin: 70% 90%; }
+.av-anim-kiss   { animation: av-kiss   1.25s ease-in-out 4; transform-origin: 50% 60%; }
+.av-anim-bounce { animation: av-bounce 1s ease-in-out 5; transform-origin: 50% 100%; }
+.av-anim-spin   { animation: av-spin   1.25s linear 4; }
+.av-anim-wiggle { animation: av-wiggle 0.7s ease-in-out 7; }
+.av-anim-tilt   { animation: av-tilt   1s ease-in-out 5; transform-origin: 50% 90%; }
+.av-anim-jump   { animation: av-jump   1s ease-out 5; transform-origin: 50% 100%; }
+.av-anim-sway   { animation: av-sway   0.9s ease-in-out 5; transform-origin: 50% 100%; }
+.av-heart {
+  position: absolute; left: 50%; top: 20%;
+  pointer-events: none;
+  animation: av-heart-float 1.4s ease-out forwards;
+}

@@ -487,6 +487,37 @@ function BookCard({
   );
 }
 
+// Silent background download — never opens a new tab. Fetches the file as a
+// blob and clicks a hidden <a download>. Falls back to a hidden iframe when
+// the fetch is blocked by CORS so the user still gets their file.
+async function silentDownload(url: string, suggestedName?: string) {
+  const t = toast.loading("Downloading…");
+  try {
+    const res = await fetch(url, { mode: "cors" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = suggestedName || url.split("/").pop()?.split("?")[0] || "download";
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 30_000);
+    toast.success("Download started", { id: t });
+  } catch {
+    // CORS or network failure — hidden iframe still triggers the download
+    // when the server sends Content-Disposition, without popping a new tab.
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    iframe.src = url;
+    document.body.appendChild(iframe);
+    setTimeout(() => iframe.remove(), 60_000);
+    toast.success("Download started", { id: t });
+  }
+}
+
 function DownloadPicker({
   formats,
   keys,
@@ -494,14 +525,11 @@ function DownloadPicker({
   formats: Record<string, string>;
   keys: readonly string[];
 }) {
-  // Single format → one-click download button (no menu needed).
   if (keys.length === 1) {
     const k = keys[0];
     return (
-      <Button size="sm" asChild className="w-full">
-        <a href={formats[k]} target="_blank" rel="noopener" download>
-          <Download className="w-3.5 h-3.5 mr-1" /> {FORMAT_META[k].label}
-        </a>
+      <Button size="sm" className="w-full" onClick={() => silentDownload(formats[k])}>
+        <Download className="w-3.5 h-3.5 mr-1" /> {FORMAT_META[k].label}
       </Button>
     );
   }
@@ -519,23 +547,23 @@ function DownloadPicker({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {keys.map((k) => (
-          <DropdownMenuItem key={k} asChild>
-            <a
-              href={formats[k]}
-              target="_blank"
-              rel="noopener"
-              download
-              className="flex items-center gap-2 cursor-pointer"
-            >
-              <span
-                className={`inline-block w-2 h-2 rounded-full ${FORMAT_META[k].tone}`}
-                aria-hidden
-              />
-              <span className="text-sm">{FORMAT_META[k].label}</span>
-            </a>
+          <DropdownMenuItem
+            key={k}
+            className="flex items-center gap-2 cursor-pointer"
+            onSelect={(e) => {
+              e.preventDefault();
+              silentDownload(formats[k]);
+            }}
+          >
+            <span
+              className={`inline-block w-2 h-2 rounded-full ${FORMAT_META[k].tone}`}
+              aria-hidden
+            />
+            <span className="text-sm">{FORMAT_META[k].label}</span>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
+
