@@ -25,7 +25,7 @@ const CATEGORIES: Array<{ slug: string; category: "novel" | "book" | "poetry" | 
   { slug: "free-health-and-self-help-books", category: "book" },
 ];
 
-const STARS = [5, 4, 3, 2, 1] as const;
+
 
 type Row = {
   openlibrary_key: string;
