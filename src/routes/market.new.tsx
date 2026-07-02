@@ -76,12 +76,14 @@ function NewListing() {
 }
 
 
-function BadgeGate({ kind, need, onBack }: { kind: Kind; need: "sure_plug" | "legit" | "star"; onBack: () => void }) {
+function BadgeGate({ kind, need, onBack }: { kind: Kind; need: "sure_plug" | "legit" | "star" | "verified"; onBack: () => void }) {
   const labels: Record<string, { title: string; msg: string }> = {
     sure_plug: { title: "Sure Plug badge required", msg: "Only trusted sellers (Sure Plug) can post products. Apply for the badge to unlock product listings." },
     legit: { title: "Legit badge required", msg: "Only Legit contributors can post news. Apply for the Legit badge to share verified news." },
     star: { title: "Star badge required", msg: "Only Star authors can compose books. Apply for the Star badge to unlock the book composer." },
+    verified: { title: "Verify your student account", msg: "Any verified student can post products. Verify your JAMB / student status to unlock listings — trusted (Sure Plug) sellers just get an extra badge on their posts." },
   };
+
   const l = labels[need];
   return (
     <AppShell>
