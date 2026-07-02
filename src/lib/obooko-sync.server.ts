@@ -1,0 +1,162 @@
+// Obooko catalog indexer — link-out only. We store metadata + cover URL and
+// send users to obooko.com to complete their free download there.
+//
+// Rating → price mapping: obooko exposes per-book star ratings via the
+// `?rating=starsN` category filter (N in 1..5). We crawl each category once
+// per star bucket, so every row we insert already knows its rating and we
+// set `price_credits = rating` (as the user requested).
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
+const BASE = "https://www.obooko.com";
+const UA = "StudentsPlug/1.0 (+library-sync)";
+
+const CATEGORIES: Array<{ slug: string; category: "novel" | "book" | "poetry" | "comics" }> = [
+  { slug: "free-classic-books", category: "novel" },
+  { slug: "free-fantasy-books", category: "novel" },
+  { slug: "free-science-fiction-books", category: "novel" },
+  { slug: "free-romance-books", category: "novel" },
+  { slug: "free-historical-fiction-books", category: "novel" },
+  { slug: "free-horror-supernatural-books", category: "novel" },
+  { slug: "crime-thriller-mystery-books", category: "novel" },
+  { slug: "free-books-for-teens", category: "novel" },
+  { slug: "free-health-and-self-help-books", category: "book" },
+];
+
+const STARS = [5, 4, 3, 2, 1] as const;
+
+type Row = {
+  openlibrary_key: string;
+  title: string;
+  author: string | null;
+  cover_url: string | null;
+  category: string;
+  read_url: string;
+  download_url: string | null;
+  source_url: string;
+  source: string;
+  description: string | null;
+  first_publish_year: number | null;
+  price_credits: number;
+  download_formats: Record<string, string>;
+};
+
+function cleanText(s: string) {
+  return s
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&quot;/gi, '"')
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function slugFromUrl(url: string) {
+  return url.replace(/^https?:\/\/[^/]+\//, "").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").slice(0, 180);
+}
+
+async function fetchHtml(url: string, timeoutMs = 20_000) {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": UA, Accept: "text/html" },
+      redirect: "follow",
+      signal: ctl.signal,
+    });
+    if (!res.ok) throw new Error(`${res.status}`);
+    return await res.text();
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+// Extract tiles from a category listing.
+function parseTiles(html: string): Array<{ href: string; title: string; author: string | null; cover: string | null }> {
+  const out: Array<{ href: string; title: string; author: string | null; cover: string | null }> = [];
+  const tileRegex = /library-book-tile[\s\S]*?<a\s+href="(https:\/\/www\.obooko\.com\/[^"]+)"[\s\S]*?<\/a>\s*<\/div>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = tileRegex.exec(html))) {
+    const block = m[0];
+    const href = m[1];
+    if (!/\/(free|category|crime)/i.test(href)) continue;
+    const imgMatch = block.match(/<img[^>]+src="(https:\/\/www\.obooko\.com\/images-cache\/[^"]+)"/i);
+    const titleMatch = block.match(/book-row-book-title[^>]*>([^<]+)</i);
+    const authorMatch = block.match(/book-row-book-author[^>]*>\s*(?:by\s*)?([^<]+)</i);
+    const title = cleanText(titleMatch?.[1] ?? "");
+    if (!title) continue;
+    out.push({
+      href,
+      title,
+      author: authorMatch ? cleanText(authorMatch[1]).replace(/^by\s+/i, "") : null,
+      cover: imgMatch?.[1] ?? null,
+    });
+  }
+  return out;
+}
+
+async function crawlBucket(
+  slug: string,
+  category: string,
+  rating: number,
+  found: Map<string, Row>,
+  maxPages: number,
+) {
+  for (let page = 1; page <= maxPages; page++) {
+    const url = `${BASE}/category/${slug}?rating=stars${rating}&page=${page}`;
+    let html: string;
+    try {
+      html = await fetchHtml(url);
+    } catch {
+      break;
+    }
+    const tiles = parseTiles(html);
+    if (tiles.length === 0) break;
+    for (const t of tiles) {
+      const key = `obooko-${slugFromUrl(t.href)}`;
+      // Prefer the highest rating we see for a given book (if it appears in
+      // more than one bucket for whatever reason).
+      const prev = found.get(key);
+      if (prev && prev.price_credits >= rating) continue;
+      found.set(key, {
+        openlibrary_key: key,
+        title: t.title.slice(0, 280),
+        author: t.author?.slice(0, 200) ?? null,
+        cover_url: t.cover,
+        category,
+        read_url: t.href,
+        download_url: null,
+        source_url: t.href,
+        source: "obooko",
+        description: null,
+        first_publish_year: null,
+        price_credits: rating,
+        download_formats: {},
+      });
+    }
+    // Obooko shows 12 tiles per page; a short page means we've hit the end.
+    if (tiles.length < 12) break;
+  }
+}
+
+export async function syncObooko(maxPagesPerBucket = 60) {
+  const found = new Map<string, Row>();
+  for (const cat of CATEGORIES) {
+    for (const stars of STARS) {
+      await crawlBucket(cat.slug, cat.category, stars, found, maxPagesPerBucket);
+    }
+  }
+  const rows = [...found.values()];
+  let rowsUpserted = 0;
+  for (let i = 0; i < rows.length; i += 200) {
+    const batch = rows.slice(i, i + 200);
+    const { error } = await supabaseAdmin
+      .from("library_books")
+      .upsert(batch, { onConflict: "openlibrary_key" });
+    if (error) throw new Error(error.message);
+    rowsUpserted += batch.length;
+  }
+  return { source: "obooko", booksFound: rows.length, rowsUpserted };
+}
