@@ -15,7 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { LogOut, Coins, Camera, Ticket, Bookmark, ShieldCheck, Library, Shield, UserCog, Award, KeyRound, LayoutDashboard, Settings as SettingsIcon } from "lucide-react";
+import { LogOut, Coins, Camera, Ticket, Bookmark, ShieldCheck, Library, Shield, UserCog, Award, KeyRound, LayoutDashboard, Settings as SettingsIcon, Megaphone } from "lucide-react";
 import { enhanceImageFile } from "@/lib/image-enhance";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AvatarLightbox } from "@/components/AvatarLightbox";
