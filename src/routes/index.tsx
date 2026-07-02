@@ -250,19 +250,26 @@ function Home() {
       <h1 className="sr-only">StudentsPlug — Ebonyi State University student knowledge hub</h1>
       <HeroCarousel />
 
-      {/* Quick-tiles strip — Instagram-stories style */}
-      <section className="mb-6 -mx-4 px-4 overflow-x-auto scrollbar-none">
-        <div className="flex gap-3 min-w-max pb-2">
-          {QUICK_TILES.map((t) => (
-            <Link key={t.to} to={t.to} className="flex flex-col items-center gap-1.5 group">
-              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${t.tone} flex items-center justify-center shadow-card group-hover:scale-105 transition-transform`}>
-                <t.icon className="w-7 h-7 text-white" />
-              </div>
-              <span className="text-[11px] font-semibold text-foreground/80">{t.label}</span>
-            </Link>
-          ))}
+      {/* Quick-tiles strip — premium hub row */}
+      <section className="mb-6 relative overflow-hidden bg-card border rounded-3xl p-4 shadow-card">
+        <div className="absolute -top-16 -right-10 w-48 h-48 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-16 -left-10 w-48 h-48 rounded-full bg-accent/10 blur-3xl pointer-events-none" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+        <div className="relative -mx-1 px-1 overflow-x-auto scrollbar-none">
+          <div className="flex gap-3 min-w-max pb-1">
+            {QUICK_TILES.map((t) => (
+              <Link key={t.to} to={t.to} className="flex flex-col items-center gap-1.5 group">
+                <div className={`relative w-16 h-16 rounded-2xl bg-gradient-to-br ${t.tone} flex items-center justify-center shadow-card ring-1 ring-white/20 overflow-hidden group-hover:scale-105 group-hover:shadow-glow transition-all`}>
+                  <div className="absolute -top-4 -right-4 w-10 h-10 rounded-full bg-white/25 blur-xl" />
+                  <t.icon className="relative w-7 h-7 text-white drop-shadow" />
+                </div>
+                <span className="text-[11px] font-semibold text-foreground/80">{t.label}</span>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
+
 
 
       {/* Novels strip */}

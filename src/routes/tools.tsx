@@ -44,29 +44,69 @@ function ToolsLayout() {
   return (
     <AppShell>
       <div className="max-w-4xl mx-auto">
-        <header className="flex items-center justify-between flex-wrap gap-3 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold font-display">Tools Plug</h1>
-            <p className="text-sm text-muted-foreground">Small utilities. Some cost credits.</p>
-          </div>
-          {user && (
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-primary/10 to-accent border">
-              <Coins className="w-4 h-4 text-primary" />
-              {isAdmin ? (
-                <span className="text-base font-bold leading-none" title="Unlimited credits (admin)">∞</span>
-              ) : (
-                <span className="text-sm font-bold">{profile?.credits ?? 0}</span>
+        {onHub && (
+          <div className="relative overflow-hidden bg-card border rounded-3xl p-6 shadow-card mb-6">
+            <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full bg-primary/10 blur-3xl" />
+            <div className="absolute -bottom-24 -left-16 w-64 h-64 rounded-full bg-accent/10 blur-3xl" />
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+
+            <div className="relative flex items-start justify-between gap-4 flex-wrap">
+              <div className="min-w-0">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-semibold uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Tools Plug
+                </div>
+                <h1 className="mt-2 text-2xl md:text-3xl font-bold font-display leading-tight">
+                  Small utilities,{" "}
+                  <span className="bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
+                    real superpowers
+                  </span>
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1 max-w-lg">
+                  Scan, convert, generate — a pocket of AI tools tuned for
+                  campus life. Some cost credits, most are free.
+                </p>
+              </div>
+              {user && (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-background/70 backdrop-blur border border-border/60 shadow-sm">
+                  <Coins className="w-4 h-4 text-primary" />
+                  {isAdmin ? (
+                    <span className="text-base font-bold leading-none" title="Unlimited credits (admin)">∞</span>
+                  ) : (
+                    <span className="text-sm font-bold">{profile?.credits ?? 0}</span>
+                  )}
+                  <span className="text-xs text-muted-foreground">credits</span>
+                </div>
               )}
-              <span className="text-xs text-muted-foreground">credits</span>
             </div>
-          )}
-        </header>
+          </div>
+        )}
+        {!onHub && (
+          <header className="flex items-center justify-between flex-wrap gap-3 mb-6">
+            <div>
+              <h1 className="text-2xl font-bold font-display">Tools Plug</h1>
+              <p className="text-sm text-muted-foreground">Small utilities. Some cost credits.</p>
+            </div>
+            {user && (
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-primary/10 to-accent border">
+                <Coins className="w-4 h-4 text-primary" />
+                {isAdmin ? (
+                  <span className="text-base font-bold leading-none" title="Unlimited credits (admin)">∞</span>
+                ) : (
+                  <span className="text-sm font-bold">{profile?.credits ?? 0}</span>
+                )}
+                <span className="text-xs text-muted-foreground">credits</span>
+              </div>
+            )}
+          </header>
+        )}
 
         {onHub ? <ToolsHub /> : <Outlet />}
       </div>
     </AppShell>
   );
 }
+
 
 const OTHER_TOOLS = new Set([
   "/tools/vocal-split",
@@ -81,19 +121,39 @@ const OTHER_TOOLS = new Set([
 ]);
 
 
+// Deterministic per-tool gradient tone so every icon well has its own personality.
+const TOOL_TONES = [
+  "from-sky-500 to-indigo-600",
+  "from-fuchsia-500 to-rose-500",
+  "from-emerald-500 to-teal-600",
+  "from-amber-500 to-orange-600",
+  "from-violet-500 to-purple-600",
+  "from-pink-500 to-rose-600",
+  "from-cyan-500 to-blue-600",
+  "from-lime-500 to-emerald-600",
+] as const;
+function toneFor(key: string) {
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0;
+  return TOOL_TONES[Math.abs(h) % TOOL_TONES.length];
+}
+
 function ToolCard({ t }: { t: Tool }) {
+  const tone = toneFor(t.to);
   const inner = (
     <>
-      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-accent flex items-center justify-center shrink-0">
-        <t.icon className="w-5 h-5 text-primary" />
+      <div className={`relative w-12 h-12 rounded-2xl bg-gradient-to-br ${tone} text-white flex items-center justify-center shrink-0 shadow-card ring-1 ring-white/20 overflow-hidden`}>
+        <div className="absolute -top-4 -right-4 w-10 h-10 rounded-full bg-white/25 blur-xl" />
+        <div className="absolute -bottom-4 -left-4 w-10 h-10 rounded-full bg-black/15 blur-xl" />
+        <t.icon className="relative w-5 h-5 drop-shadow-sm" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
           <h3 className="font-bold font-display text-sm truncate">{t.label}</h3>
-          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
             t.soon ? "bg-amber-500/20 text-amber-600 dark:text-amber-400"
-            : t.cost === 0 ? "bg-success/20 text-success"
-            : "bg-muted text-muted-foreground"
+            : t.cost === 0 ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+            : "bg-primary/10 text-primary"
           }`}>
             {t.soon ? "SOON" : t.cost === 0 ? "FREE" : `-${t.cost}`}
           </span>
@@ -102,12 +162,10 @@ function ToolCard({ t }: { t: Tool }) {
       </div>
     </>
   );
+  const base = "relative overflow-hidden bg-card border border-border/60 rounded-2xl p-3.5 shadow-card flex items-start gap-3 h-full";
   if (t.soon) {
     return (
-      <div
-        aria-disabled="true"
-        className="bg-card border rounded-2xl p-3 shadow-card flex items-start gap-3 opacity-60 cursor-not-allowed h-full"
-      >
+      <div aria-disabled="true" className={`${base} opacity-60 cursor-not-allowed`}>
         {inner}
       </div>
     );
@@ -115,12 +173,14 @@ function ToolCard({ t }: { t: Tool }) {
   return (
     <Link
       to={t.to}
-      className="group bg-card border rounded-2xl p-3 shadow-card hover:shadow-glow hover:-translate-y-0.5 transition flex items-start gap-3 h-full"
+      className={`group ${base} hover:shadow-glow hover:-translate-y-0.5 hover:border-primary/40 transition`}
     >
+      <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-br from-primary/[0.04] to-transparent" />
       {inner}
     </Link>
   );
 }
+
 
 /** Vertical list — every tool stacked as full-width rows. */
 function HorizontalToolStrip({ tools }: { tools: Tool[] }) {
