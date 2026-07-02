@@ -79,6 +79,7 @@ function LoginPage() {
     let cancelled = false;
     supabase.auth.getSession().then(async ({ data }) => {
       if (cancelled || !data.session) return;
+      await tryRedeemPendingReferral({ onlyFresh: true }).catch(() => {});
       const target = getStoredGoogleRedirect() || redirect;
       clearStoredGoogleRedirect();
       await nav({ to: target });
