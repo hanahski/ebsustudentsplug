@@ -103,14 +103,22 @@ function MarketPage() {
   const canLoadMoreListings = (listings?.length ?? 0) >= listingLimit;
 
   const { data: books, isLoading: booksLoading } = useQuery({
-    queryKey: ["market-books", debouncedQ],
+    queryKey: ["market-books", kind, debouncedQ, feedSeed],
     placeholderData: keepPreviousData,
     enabled: kind === "books" || kind === "all",
-    queryFn: () =>
-      getBooksFn({
-        data: { category: "all", query: debouncedQ, limit: kind === "all" ? 10 : 120 },
-      }),
-    staleTime: 60_000,
+    queryFn: () => {
+      // Feed shows 50 randomised popular novels; when the user filters/searches
+      // or opens the dedicated Books tab, fall back to the full catalog query.
+      if (kind === "all" && !debouncedQ) {
+        return getPopularNovelsFn({ data: { limit: 50 } });
+      }
+      return getBooksFn({
+        data: { category: "all", query: debouncedQ, limit: kind === "all" ? 50 : 120 },
+      });
+    },
+    // Don't cache the randomised set — every visit gets a new draw.
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const { data: tickets, isLoading: ticketsLoading } = useQuery({
