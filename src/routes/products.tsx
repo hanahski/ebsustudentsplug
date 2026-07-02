@@ -98,40 +98,39 @@ function ProductsPage() {
   return (
     <AppShell>
       <div className="space-y-6">
-        {/* Hero */}
+        {/* Hero — matches Market Plug */}
         <div className="relative overflow-hidden bg-card border rounded-3xl p-6 shadow-card">
-          <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-primary/10 blur-3xl" />
-          <div className="absolute -bottom-20 -left-10 w-56 h-56 rounded-full bg-accent/10 blur-3xl" />
+          <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full bg-primary/10 blur-3xl" />
+          <div className="absolute -bottom-24 -left-16 w-64 h-64 rounded-full bg-accent/10 blur-3xl" />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
 
           <div className="relative flex items-start justify-between gap-4 flex-wrap">
             <div className="min-w-0">
-              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary/80">
-                <Package className="w-3.5 h-3.5" /> Products
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-semibold uppercase tracking-wider">
+                <Package className="w-3.5 h-3.5" />
+                Products
               </div>
-              <h1 className="mt-1 text-2xl md:text-3xl font-bold font-display">
-                Everything students actually buy
+              <h1 className="mt-2 text-2xl md:text-3xl font-bold font-display leading-tight">
+                Everything students{" "}
+                <span className="bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
+                  actually buy
+                </span>
               </h1>
               <p className="text-sm text-muted-foreground mt-1 max-w-lg">
                 Phones, fashion, hostel essentials and campus services — from
                 verified StudentsPlug sellers.
               </p>
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => qc.invalidateQueries({ queryKey: ["products"] })}
-              >
-                <RefreshCw className="w-4 h-4 mr-1" />
-                Refresh
-              </Button>
-              <Button asChild size="sm">
-                <Link to="/market/new" search={{ kind: "products" } as any}>
-                  <PlusCircle className="w-4 h-4 mr-1" />
-                  Sell a product
-                </Link>
-              </Button>
-            </div>
+            <Button
+              asChild
+              size="sm"
+              className="rounded-full shadow-glow bg-gradient-to-r from-primary to-accent"
+            >
+              <Link to="/market/new" search={{ kind: "products" } as any}>
+                <PlusCircle className="w-4 h-4 mr-1" />
+                Sell a product
+              </Link>
+            </Button>
           </div>
 
           {/* Search + sort */}
@@ -142,10 +141,10 @@ function ProductsPage() {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Search products…"
-                className="pl-9"
+                className="pl-9 rounded-full bg-background/60 backdrop-blur border-border/60"
               />
             </div>
-            <div className="inline-flex items-center gap-1 rounded-full bg-muted p-1">
+            <div className="inline-flex items-center gap-1 rounded-full bg-muted/70 backdrop-blur p-1 border border-border/60">
               <SlidersHorizontal className="w-3.5 h-3.5 ml-2 text-muted-foreground" />
               {SORTS.map((s) => (
                 <button
@@ -161,7 +160,7 @@ function ProductsPage() {
                 </button>
               ))}
             </div>
-            <label className="flex items-center gap-2 text-xs px-3 py-2 rounded-full bg-muted cursor-pointer select-none">
+            <label className="flex items-center gap-2 text-xs px-3 py-2 rounded-full bg-muted/70 backdrop-blur border border-border/60 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={showSold}
@@ -180,8 +179,8 @@ function ProductsPage() {
                 onClick={() => setCat(c)}
                 className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition ${
                   cat === c
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted hover:bg-muted/80"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "bg-muted/70 hover:bg-muted"
                 }`}
               >
                 {c}
@@ -189,6 +188,8 @@ function ProductsPage() {
             ))}
           </div>
         </div>
+
+
 
         {/* Grid */}
         {isLoading && (
