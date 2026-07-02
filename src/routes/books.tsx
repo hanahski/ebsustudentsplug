@@ -5,6 +5,9 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { purchaseLibraryBook } from "@/lib/library-purchase.functions";
 import { getLibraryBooks } from "@/lib/library-books.functions";
+import { runLibrarySync } from "@/lib/library-sync.functions";
+import { useAuth } from "@/lib/auth";
+import { getIsAdminUser } from "@/lib/admin-role";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +29,7 @@ import {
   ChevronDown,
   Search,
   Sparkles,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SaveButton } from "@/components/SaveButton";
