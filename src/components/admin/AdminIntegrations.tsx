@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   Video,
   Landmark,
+  Newspaper,
 } from "lucide-react";
 
 const GROUPS = [
