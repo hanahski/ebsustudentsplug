@@ -28,6 +28,7 @@ import {
   UserPlus,
   Users,
   X,
+  Clock3,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -118,6 +119,15 @@ function ChatPage() {
         <div className="max-w-md mx-auto text-center py-16">
           <MessageCircle className="w-12 h-12 mx-auto text-primary mb-3 animate-pulse" />
           <p className="text-sm text-muted-foreground">Opening Chat Plug…</p>
+          <p className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
+            <span>DMs</span>
+            <span aria-hidden>·</span>
+            <span>Groups</span>
+            <span aria-hidden>·</span>
+            <ComingSoonLabel>Campus rooms</ComingSoonLabel>
+            <span aria-hidden>·</span>
+            <ComingSoonLabel>Nearby students</ComingSoonLabel>
+          </p>
         </div>
       </AppShell>
     );
@@ -130,6 +140,15 @@ function ChatPage() {
           <MessageCircle className="w-12 h-12 mx-auto text-primary mb-3" />
           <h1 className="text-2xl font-display font-bold">Chat Plug</h1>
           <p className="text-sm text-muted-foreground mt-2">Sign in to send and receive private messages.</p>
+          <p className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
+            <span>DMs</span>
+            <span aria-hidden>·</span>
+            <span>Groups</span>
+            <span aria-hidden>·</span>
+            <ComingSoonLabel>Campus rooms</ComingSoonLabel>
+            <span aria-hidden>·</span>
+            <ComingSoonLabel>Nearby students</ComingSoonLabel>
+          </p>
           <Button asChild className="mt-4">
             <Link to="/login" search={{ redirect: "/chat" }}>Sign in to chat</Link>
           </Button>
@@ -154,17 +173,25 @@ function ChatPage() {
               <h1 className="mt-3 text-3xl sm:text-4xl font-black font-display leading-[1.05] bg-gradient-to-br from-foreground via-primary to-emerald-500 bg-clip-text text-transparent">
                 Your circle, always on.
               </h1>
-              <p className="text-sm text-muted-foreground mt-1.5">DMs · Groups · Campus rooms · Nearby students</p>
+              <p className="text-sm text-muted-foreground mt-1.5 flex flex-wrap items-center gap-1.5">
+                <span>DMs</span>
+                <span aria-hidden>·</span>
+                <span>Groups</span>
+                <span aria-hidden>·</span>
+                <ComingSoonLabel>Campus rooms</ComingSoonLabel>
+                <span aria-hidden>·</span>
+                <ComingSoonLabel>Nearby students</ComingSoonLabel>
+              </p>
             </div>
             <div className="flex gap-1 bg-muted/70 backdrop-blur border rounded-xl p-1">
               <TabButton active={activeTab === "dms"} onClick={() => navigate({ to: "/chat", search: { tab: "dms" } })}>
                 <MessageCircle className="w-3.5 h-3.5" /> Chats
               </TabButton>
               <TabButton active={activeTab === "campus"} onClick={() => navigate({ to: "/chat", search: { tab: "campus" } })}>
-                <Globe className="w-3.5 h-3.5" /> Campus
+                <Globe className="w-3.5 h-3.5" /> Campus <ComingSoonPill />
               </TabButton>
               <TabButton active={activeTab === "nearby"} onClick={() => navigate({ to: "/chat", search: { tab: "nearby" } })}>
-                <MapPin className="w-3.5 h-3.5" /> Nearby
+                <MapPin className="w-3.5 h-3.5" /> Nearby <ComingSoonPill />
               </TabButton>
             </div>
           </div>
@@ -176,6 +203,23 @@ function ChatPage() {
         {activeTab === "nearby" && <CampusLocationView meId={user.id} mode="nearby" />}
       </div>
     </AppShell>
+  );
+}
+
+function ComingSoonLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      {children}
+      <ComingSoonPill />
+    </span>
+  );
+}
+
+function ComingSoonPill() {
+  return (
+    <span className="inline-flex items-center gap-0.5 rounded-full border border-primary/20 bg-primary/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-primary">
+      <Clock3 className="h-2.5 w-2.5" aria-hidden /> Soon
+    </span>
   );
 }
 

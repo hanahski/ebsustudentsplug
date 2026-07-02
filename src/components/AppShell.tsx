@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { AvatarDisplay } from "./AvatarDisplay";
 import { Button } from "@/components/ui/button";
-import { Home, Library, LogIn, MessageCircle, PlusCircle, RotateCw, Rss, ScanLine, Search as SearchIcon, Shield, ShoppingBag, User, X } from "lucide-react";
+import { Gamepad2, GraduationCap, Home, Library, LogIn, MessageCircle, PlusCircle, RotateCw, Rss, ScanLine, Search as SearchIcon, Shield, ShoppingBag, Sparkles, User, Wrench, X } from "lucide-react";
 import { Logo } from "./Logo";
 import { SiteSearch } from "./SiteSearch";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -137,6 +137,26 @@ function useUnreadChatCount(userId: string | undefined, activeThreadId: string |
   return count;
 }
 
+const DESKTOP_NAV = [
+  { to: "/", label: "Feed", icon: Home, key: "feed" },
+  { to: "/news", label: "News", icon: Rss, key: "news" },
+  { to: "/faculties", label: "Catalog", icon: GraduationCap, key: "catalog" },
+  { to: "/market", label: "Market", icon: ShoppingBag, key: "market" },
+  { to: "/courses", label: "Courses", icon: Library, key: "courses" },
+  { to: "/chat", label: "Chat", icon: MessageCircle, key: "chat" },
+  { to: "/tools", label: "Tools", icon: Wrench, key: "tools" },
+  { to: "/games", label: "Games", icon: Gamepad2, key: "games" },
+] as const;
+
+const MOBILE_NAV = [
+  { to: "/", label: "Feed", icon: Home, key: "feed" },
+  { to: "/news", label: "News", icon: Rss, key: "news" },
+  { to: "/faculties", label: "Catalog", icon: Library, key: "cat" },
+  { to: "/market", label: "Market", icon: ShoppingBag, key: "mkt" },
+  { to: "/chat", label: "Chat", icon: MessageCircle, key: "chat" },
+  { to: "/tools", label: "Tools", icon: ScanLine, key: "tools" },
+] as const;
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, profile } = useAuth();
   const router = useRouter();
@@ -236,19 +256,23 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Logo size={44} />
             <span className="hidden sm:inline text-gradient font-display tracking-tight">StudentsPlug</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-1 ml-2 text-sm">
-            <Link to="/" className="px-3 py-1.5 rounded-md hover:bg-muted">Feed</Link>
-            <Link to="/news" className="px-3 py-1.5 rounded-md hover:bg-muted">News</Link>
-            <Link to="/faculties" className="px-3 py-1.5 rounded-md hover:bg-muted">Catalog</Link>
-            <Link to="/market" className="px-3 py-1.5 rounded-md hover:bg-muted">Market</Link>
-            <Link to="/courses" className="px-3 py-1.5 rounded-md hover:bg-muted">Courses</Link>
-            <Link to="/chat" className="px-3 py-1.5 rounded-md hover:bg-muted relative">
-              Chat
-              {unread > 0 && <UnreadDot count={unread} />}
-            </Link>
-            <Link to="/tools" className="px-3 py-1.5 rounded-md hover:bg-muted">Tools</Link>
-            <Link to="/games" className="px-3 py-1.5 rounded-md hover:bg-muted">Games</Link>
-            {showAdminUi && <Link to="/admin" className="px-3 py-1.5 rounded-md hover:bg-muted text-primary font-semibold flex items-center gap-1"><Shield className="w-3.5 h-3.5" />Admin</Link>}
+          <nav className="hidden md:flex items-center gap-1 ml-2 text-sm" aria-label="Primary navigation">
+            {DESKTOP_NAV.map(({ to, label, icon: Icon, key }) => (
+              <Link
+                key={to}
+                to={to}
+                activeProps={{ className: "bg-primary/10 text-primary border-primary/20 shadow-sm" }}
+                inactiveProps={{ className: "border-transparent text-foreground/75 hover:text-foreground hover:bg-muted" }}
+                className="group relative inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 font-semibold transition-all hover:-translate-y-0.5 active:scale-95"
+              >
+                <span className="grid h-6 w-6 place-items-center rounded-full bg-muted transition-all group-hover:bg-primary/10 group-hover:text-primary group-hover:rotate-[-8deg]">
+                  <Icon className="h-3.5 w-3.5 transition-transform group-hover:scale-110" />
+                </span>
+                {label}
+                {key === "chat" && unread > 0 && <UnreadDot count={unread} />}
+              </Link>
+            ))}
+            {showAdminUi && <Link to="/admin" className="group inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1.5 text-primary font-bold transition-all hover:-translate-y-0.5"><Shield className="w-3.5 h-3.5" />Admin</Link>}
           </nav>
           <div className="hidden md:flex flex-1 max-w-md mx-2">
             <SiteSearch />
@@ -322,21 +346,23 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 
 
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t bg-background/95 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-1 grid grid-cols-7 text-[10px]">
-          {[
-            { to: "/", label: "Feed", icon: Home, key: "feed" },
-            { to: "/news", label: "News", icon: Rss, key: "news" },
-            { to: "/faculties", label: "Catalog", icon: Library, key: "cat" },
-            { to: "/market", label: "Market", icon: ShoppingBag, key: "mkt" },
-            { to: "/chat", label: "Chat", icon: MessageCircle, key: "chat" },
-            { to: "/tools", label: "Tools", icon: ScanLine, key: "tools" },
-            { to: user ? "/me" : "/login", label: user ? "Me" : "Sign in", icon: user ? User : LogIn, key: "me" },
-          ].map(({ to, label, icon: Icon, key }) => (
-            <Link key={key} to={to} className="flex flex-col items-center gap-0.5 py-2 hover:text-primary transition-colors relative">
-              <Icon className="w-5 h-5" />
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t bg-background/90 backdrop-blur-xl shadow-[0_-12px_40px_hsl(var(--foreground)/0.08)]" aria-label="Mobile navigation">
+        <div className="max-w-6xl mx-auto px-1.5 grid grid-cols-7 text-[10px]">
+          {[...MOBILE_NAV, { to: user ? "/me" : "/login", label: user ? "Me" : "Sign in", icon: user ? User : LogIn, key: "me" }].map(({ to, label, icon: Icon, key }) => (
+            <Link
+              key={key}
+              to={to}
+              activeProps={{ className: "text-primary" }}
+              inactiveProps={{ className: "text-muted-foreground" }}
+              className="group relative flex min-w-0 flex-col items-center gap-0.5 px-0.5 py-1.5 transition-colors active:scale-95"
+            >
+              <span className="relative grid h-9 w-9 place-items-center rounded-2xl border border-transparent bg-transparent transition-all group-hover:-translate-y-0.5 group-hover:border-primary/20 group-hover:bg-primary/10 group-data-[status=active]:border-primary/20 group-data-[status=active]:bg-gradient-to-br group-data-[status=active]:from-primary group-data-[status=active]:to-accent group-data-[status=active]:text-primary-foreground group-data-[status=active]:shadow-glow">
+                <span className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100 group-data-[status=active]:opacity-0" aria-hidden />
+                <Icon className="relative h-5 w-5 transition-transform group-hover:scale-110 group-data-[status=active]:scale-110" />
+                {key === "tools" && <Sparkles className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 opacity-0 transition-opacity group-hover:opacity-100 group-data-[status=active]:opacity-100" aria-hidden />}
+              </span>
               {key === "chat" && unread > 0 && <UnreadDot count={unread} mobile />}
-              <span className="truncate">{label}</span>
+              <span className="w-full truncate text-center font-semibold leading-tight">{label}</span>
             </Link>
           ))}
         </div>

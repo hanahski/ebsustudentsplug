@@ -115,10 +115,23 @@ function ReadBookPage() {
   const detailsUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}` : (book?.read_url ?? null);
   const [cacheError, setCacheError] = useState<string | null>(null);
 
+  const cachedPdfStorageKey = `book-reader-pdf:${id}`;
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(cachedPdfStorageKey);
+      if (!raw) return;
+      const cached = JSON.parse(raw) as { url?: string; savedAt?: number };
+      if (cached.url && cached.savedAt && Date.now() - cached.savedAt < 7 * 24 * 60 * 60_000) {
+        setCachedPdfUrl(cached.url);
+      }
+    } catch {}
+  }, [cachedPdfStorageKey]);
+
   // The moment a user owns a non-Gutenberg book, mirror to Cloud and open the reader.
   // 45-second client timeout so the UI never stays stuck on "Preparing…".
   useEffect(() => {
-    if (!book || !owned || !shouldCachePdf) return;
+    if (!book || !owned || !shouldCachePdf || cachedPdfUrl) return;
     if (preparingBookId.current === book.id) return;
     preparingBookId.current = book.id;
     let cancelled = false;
@@ -135,6 +148,12 @@ function ReadBookPage() {
         if (cancelled) return;
         if (json?.ok && json.cached_url) {
           setCachedPdfUrl(json.cached_url);
+          try {
+            window.localStorage.setItem(
+              cachedPdfStorageKey,
+              JSON.stringify({ url: json.cached_url, savedAt: Date.now() }),
+            );
+          } catch {}
         } else {
           setCacheError(json?.error ?? "could_not_prepare");
         }
@@ -159,7 +178,7 @@ function ReadBookPage() {
       clearTimeout(timeoutId);
       ctrl.abort();
     };
-  }, [book?.id, owned, shouldCachePdf, prepareAttempt]);
+  }, [book?.id, owned, shouldCachePdf, prepareAttempt, cachedPdfUrl, cachedPdfStorageKey]);
 
   const downloadPdf = async () => {
     if (!cachedPdfUrl || !book) return;
