@@ -97,10 +97,22 @@ export const Route = createFileRoute("/api/news")({
               (data && (data.message as string)) || `Upstream error ${res.status}`;
             return json({ error: message }, res.status >= 500 ? 502 : 400);
           }
+          // Domains that block readers (paywall / bot-challenge). Hide from feed
+          // so tapping never leads to a dead reader view.
+          const BLOCKED_HOSTS = [
+            "wsj.com", "ft.com", "bloomberg.com", "nytimes.com", "economist.com",
+            "washingtonpost.com", "thetimes.co.uk", "telegraph.co.uk", "barrons.com",
+            "seekingalpha.com", "businessinsider.com", "medium.com", "newyorker.com",
+            "wired.com", "theatlantic.com", "forbes.com",
+          ];
+          const isBlocked = (url: string) => {
+            try { const h = new URL(url).hostname.replace(/^www\./, ""); return BLOCKED_HOSTS.some(b => h === b || h.endsWith("." + b)); }
+            catch { return true; }
+          };
           // Trim payload to what the UI needs
           const articles = Array.isArray(data?.articles)
             ? data.articles
-                .filter((a: any) => a?.title && a.title !== "[Removed]")
+                .filter((a: any) => a?.title && a.title !== "[Removed]" && a?.url && !isBlocked(a.url))
                 .map((a: any) => ({
                   title: a.title as string,
                   description: a.description as string | null,
