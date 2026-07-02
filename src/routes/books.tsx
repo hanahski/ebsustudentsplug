@@ -5,8 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { purchaseLibraryBook } from "@/lib/library-purchase.functions";
 import { getLibraryBooks, ensureLibraryCatalog } from "@/lib/library-books.functions";
-import { useAuth } from "@/lib/auth";
-import { getIsAdminUser } from "@/lib/admin-role";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import {
@@ -151,12 +149,6 @@ function BooksPage() {
   const purchaseFn = useServerFn(purchaseLibraryBook);
   const getBooksFn = useServerFn(getLibraryBooks);
   const ensureFn = useServerFn(ensureLibraryCatalog);
-  const { user } = useAuth();
-  const { data: isAdmin } = useQuery({
-    queryKey: ["is-admin", user?.id],
-    enabled: !!user,
-    queryFn: async () => getIsAdminUser(user!.id),
-  });
   // Auto-populate on entry and keep the catalog warm in the background.
   const ranAutoSync = useRef(false);
   useEffect(() => {
@@ -270,7 +262,6 @@ function BooksPage() {
                   <PlusCircle className="w-4 h-4 mr-1" /> Sell a book
                 </Link>
               </Button>
-              {isAdmin && <span className="sr-only">Book catalog auto-populates in the background.</span>}
             </div>
           </div>
 
