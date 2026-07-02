@@ -174,27 +174,17 @@ function NewsReaderPage() {
           {isFetching && !data ? (
             <ReadingSkeleton />
           ) : isError ? (
-            <div className="text-center py-6">
-              <p className="font-bold">Couldn't extract this article.</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                The site may block readers. Try again or open the original page.
-              </p>
-              <div className="flex gap-2 justify-center mt-4">
-                <button
-                  onClick={() => refetch()}
-                  className="text-sm font-bold px-4 py-2 rounded-full bg-primary text-primary-foreground shadow-glow"
-                >
-                  Retry
-                </button>
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-bold px-4 py-2 rounded-full border inline-flex items-center gap-1.5"
-                >
-                  Open original <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-              </div>
+            <div className="text-center py-8">
+              <p className="font-bold text-lg">This article can't be read here.</p>
+              <p className="text-sm text-muted-foreground mt-1">Go to the original page to continue.</p>
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-5 inline-flex items-center gap-1.5 text-sm font-bold px-5 py-2.5 rounded-full bg-primary text-primary-foreground shadow-glow"
+              >
+                Go to original page <ExternalLink className="w-3.5 h-3.5" />
+              </a>
             </div>
           ) : (
             <div
