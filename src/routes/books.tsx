@@ -124,6 +124,7 @@ function BooksPage() {
   const purchaseFn = useServerFn(purchaseLibraryBook);
   const getBooksFn = useServerFn(getLibraryBooks);
   const syncFn = useServerFn(runLibrarySync);
+  const ensureFn = useServerFn(ensureLibraryCatalog);
   const { user } = useAuth();
   const { data: isAdmin } = useQuery({
     queryKey: ["is-admin", user?.id],
@@ -138,6 +139,18 @@ function BooksPage() {
     },
     onError: (e: any) => toast.error(e?.message ?? "Sync failed"),
   });
+
+  // Auto-sync on first mount (self-rate-limited: only syncs sources with < 20 books).
+  const ranAutoSync = useRef(false);
+  useEffect(() => {
+    if (ranAutoSync.current) return;
+    ranAutoSync.current = true;
+    ensureFn({})
+      .then((res: any) => {
+        if (res?.ran > 0) qc.invalidateQueries({ queryKey: ["library-books"] });
+      })
+      .catch(() => {});
+  }, [ensureFn, qc]);
 
   const {
     data: books,
