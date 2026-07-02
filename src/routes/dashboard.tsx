@@ -18,7 +18,28 @@ export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Credit Dashboard — StudentsPlug" }] }),
 });
 
-const CREDIT_TO_NAIRA = 2; // 1 credit = ₦2
+// Credit economy — 3 credits = ₦1 when withdrawing, ₦1 buys 2 credits when topping up.
+const CREDITS_PER_NAIRA_SELL = 3; // 3 credits redeem to ₦1
+const NAIRA_PER_CREDIT_SELL = 1 / CREDITS_PER_NAIRA_SELL; // ≈ ₦0.333
+const CREDITS_PER_NAIRA_BUY = 2; // ₦1 buys 2 credits
+const WITHDRAWAL_FEE_PCT = 0.10;
+const WITHDRAWAL_FEE_FLAT = 150;
+const MIN_SWAP_CREDITS = 900; // ~₦300 gross, so payout is meaningful after fees
+
+const BUY_PACKAGES: Array<{ naira: number; credits: number; label?: string }> = [
+  { naira: 1150, credits: 2300, label: "Starter" },
+  { naira: 2300, credits: 4600, label: "Popular" },
+  { naira: 5750, credits: 11500, label: "Value" },
+  { naira: 11500, credits: 23000, label: "Pro" },
+  { naira: 17250, credits: 34500, label: "Mega" },
+];
+
+function computeWithdrawal(credits: number) {
+  const gross = credits * NAIRA_PER_CREDIT_SELL;
+  const fee = gross * WITHDRAWAL_FEE_PCT + WITHDRAWAL_FEE_FLAT;
+  const net = Math.max(0, gross - fee);
+  return { gross, fee, net };
+}
 
 function DashboardPage() {
   const { user, profile, loading, refreshProfile } = useAuth();
@@ -75,15 +96,18 @@ function DashboardPage() {
   const requestSwap = async () => {
     if (!profile) return;
     if (!payout?.account_number) return toast.error("Connect a payout account first");
-    if (swapAmount < 100) return toast.error("Minimum swap is 100 credits");
+    if (swapAmount < MIN_SWAP_CREDITS) return toast.error(`Minimum swap is ${MIN_SWAP_CREDITS.toLocaleString()} credits`);
     if ((profile.credits ?? 0) < swapAmount) return toast.error("Not enough credits");
-    toast.success(`Payout of ₦${(swapAmount * CREDIT_TO_NAIRA).toLocaleString()} requested — you'll receive it within 24h.`);
+    const { net } = computeWithdrawal(swapAmount);
+    if (net <= 0) return toast.error("Amount too low after the withdrawal fee");
+    toast.success(`Payout of ₦${net.toLocaleString(undefined, { maximumFractionDigits: 2 })} requested — you'll receive it within 24h.`);
     setSwapOpen(false);
   };
 
   if (loading || !profile) return <AppShell><div className="py-10 text-center text-muted-foreground">Loading…</div></AppShell>;
 
-  const nairaValue = (profile.credits ?? 0) * CREDIT_TO_NAIRA;
+  const nairaValue = (profile.credits ?? 0) * NAIRA_PER_CREDIT_SELL;
+  const swapPreview = computeWithdrawal(swapAmount);
 
   return (
     <AppShell>
@@ -95,7 +119,9 @@ function DashboardPage() {
               <div className="text-5xl sm:text-6xl font-extrabold font-display mt-2 tracking-tight">
                 {(profile.credits ?? 0).toLocaleString()}
               </div>
-              <div className="text-sm opacity-90 mt-1">≈ ₦{nairaValue.toLocaleString()} · 1 credit = ₦{CREDIT_TO_NAIRA}</div>
+              <div className="text-sm opacity-90 mt-1">
+                ≈ ₦{nairaValue.toLocaleString(undefined, { maximumFractionDigits: 2 })} · 3 credits = ₦1
+              </div>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button asChild variant="secondary" size="sm">
                   <Link to="/earn-credits"><TrendingUp className="w-4 h-4 mr-1" />Earn more</Link>
@@ -147,14 +173,14 @@ function DashboardPage() {
           <ActionCard
             icon={ShoppingCart}
             title="Buy credits"
-            desc="Top up instantly with card"
+            desc={`₦1 buys ${CREDITS_PER_NAIRA_BUY} credits`}
             tone="from-sky-500 to-indigo-600"
             onClick={() => setBuyOpen(true)}
           />
           <ActionCard
             icon={Banknote}
             title="Swap credits to cash"
-            desc={`${CREDIT_TO_NAIRA}₦ per credit · min 100`}
+            desc={`3 credits → ₦1 · min ${MIN_SWAP_CREDITS.toLocaleString()}`}
             tone="from-fuchsia-500 to-rose-600"
             onClick={() => setSwapOpen(true)}
           />
@@ -165,6 +191,13 @@ function DashboardPage() {
             tone="from-amber-500 to-orange-600"
             onClick={() => setPayoutOpen(true)}
           />
+        </div>
+
+        <div className="rounded-2xl border bg-muted/30 p-4 text-xs text-muted-foreground space-y-1">
+          <div className="font-semibold text-foreground text-sm">How the credit economy works</div>
+          <div>• Buy rate: <span className="font-semibold text-foreground">₦1 = {CREDITS_PER_NAIRA_BUY} credits</span> (₦0.50/credit)</div>
+          <div>• Redeem rate: <span className="font-semibold text-foreground">3 credits = ₦1</span> (≈ ₦0.33/credit)</div>
+          <div>• Withdrawal fee: <span className="font-semibold text-foreground">10% + ₦150 flat</span></div>
         </div>
 
         <div className="text-center">
@@ -201,13 +234,20 @@ function DashboardPage() {
           <div className="space-y-3">
             <div>
               <Label>Credits to swap</Label>
-              <Input type="number" min={100} value={swapAmount} onChange={(e) => setSwapAmount(Number(e.target.value) || 0)} />
-              <p className="text-xs text-muted-foreground mt-1">You'll receive ₦{(swapAmount * CREDIT_TO_NAIRA).toLocaleString()}</p>
+              <Input type="number" min={MIN_SWAP_CREDITS} value={swapAmount} onChange={(e) => setSwapAmount(Number(e.target.value) || 0)} />
+              <div className="mt-2 rounded-xl border bg-muted/40 p-3 text-xs space-y-1">
+                <Row label="Gross (3 credits = ₦1)" value={`₦${swapPreview.gross.toLocaleString(undefined, { maximumFractionDigits: 2 })}`} />
+                <Row label="Fee (10% + ₦150)" value={`− ₦${swapPreview.fee.toLocaleString(undefined, { maximumFractionDigits: 2 })}`} />
+                <div className="border-t pt-1 flex items-center justify-between font-semibold text-foreground">
+                  <span>You receive</span>
+                  <span>₦{swapPreview.net.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                </div>
+              </div>
             </div>
             {!payout?.account_number && (
               <p className="text-xs text-amber-600">Connect a payout account first.</p>
             )}
-            <Button onClick={requestSwap} className="w-full" disabled={!payout?.account_number}>
+            <Button onClick={requestSwap} className="w-full" disabled={!payout?.account_number || swapPreview.net <= 0}>
               Request payout <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
@@ -217,17 +257,21 @@ function DashboardPage() {
       <Dialog open={buyOpen} onOpenChange={setBuyOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>Buy credits</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            {[100, 500, 1000, 5000].map((amt) => (
-              <button key={amt} className="w-full flex items-center justify-between border rounded-2xl p-4 hover:border-primary hover:bg-primary/5 transition"
+          <div className="space-y-2.5">
+            <p className="text-xs text-muted-foreground">₦1 = {CREDITS_PER_NAIRA_BUY} credits. Pick a package below.</p>
+            {BUY_PACKAGES.map((pkg) => (
+              <button key={pkg.naira} className="w-full flex items-center justify-between border rounded-2xl p-4 hover:border-primary hover:bg-primary/5 transition"
                 onClick={() => toast.info("Payment integration coming soon — contact support to top up.")}>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-emerald-500 text-white flex items-center justify-center">
                     <CreditCoin size={26} />
                   </div>
                   <div className="text-left">
-                    <div className="font-bold">{amt.toLocaleString()} credits</div>
-                    <div className="text-xs text-muted-foreground">₦{(amt * CREDIT_TO_NAIRA).toLocaleString()}</div>
+                    <div className="font-bold flex items-center gap-2">
+                      {pkg.credits.toLocaleString()} credits
+                      {pkg.label && <span className="text-[10px] font-bold uppercase tracking-wide bg-primary/10 text-primary rounded-full px-2 py-0.5">{pkg.label}</span>}
+                    </div>
+                    <div className="text-xs text-muted-foreground">₦{pkg.naira.toLocaleString()}</div>
                   </div>
                 </div>
                 <ArrowRight className="w-4 h-4" />
@@ -237,6 +281,15 @@ function DashboardPage() {
         </DialogContent>
       </Dialog>
     </AppShell>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between text-muted-foreground">
+      <span>{label}</span>
+      <span className="font-medium text-foreground">{value}</span>
+    </div>
   );
 }
 
