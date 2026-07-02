@@ -138,14 +138,14 @@ function useUnreadChatCount(userId: string | undefined, activeThreadId: string |
 }
 
 const DESKTOP_NAV = [
-  { to: "/", label: "Feed", icon: Home },
-  { to: "/news", label: "News", icon: Rss },
-  { to: "/faculties", label: "Catalog", icon: GraduationCap },
-  { to: "/market", label: "Market", icon: ShoppingBag },
-  { to: "/courses", label: "Courses", icon: Library },
+  { to: "/", label: "Feed", icon: Home, key: "feed" },
+  { to: "/news", label: "News", icon: Rss, key: "news" },
+  { to: "/faculties", label: "Catalog", icon: GraduationCap, key: "catalog" },
+  { to: "/market", label: "Market", icon: ShoppingBag, key: "market" },
+  { to: "/courses", label: "Courses", icon: Library, key: "courses" },
   { to: "/chat", label: "Chat", icon: MessageCircle, key: "chat" },
-  { to: "/tools", label: "Tools", icon: Wrench },
-  { to: "/games", label: "Games", icon: Gamepad2 },
+  { to: "/tools", label: "Tools", icon: Wrench, key: "tools" },
+  { to: "/games", label: "Games", icon: Gamepad2, key: "games" },
 ] as const;
 
 const MOBILE_NAV = [
