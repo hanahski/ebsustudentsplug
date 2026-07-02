@@ -18,7 +18,28 @@ export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Credit Dashboard — StudentsPlug" }] }),
 });
 
-const CREDIT_TO_NAIRA = 2; // 1 credit = ₦2
+// Credit economy — 3 credits = ₦1 when withdrawing, ₦1 buys 2 credits when topping up.
+const CREDITS_PER_NAIRA_SELL = 3; // 3 credits redeem to ₦1
+const NAIRA_PER_CREDIT_SELL = 1 / CREDITS_PER_NAIRA_SELL; // ≈ ₦0.333
+const CREDITS_PER_NAIRA_BUY = 2; // ₦1 buys 2 credits
+const WITHDRAWAL_FEE_PCT = 0.10;
+const WITHDRAWAL_FEE_FLAT = 150;
+const MIN_SWAP_CREDITS = 900; // ~₦300 gross, so payout is meaningful after fees
+
+const BUY_PACKAGES: Array<{ naira: number; credits: number; label?: string }> = [
+  { naira: 1150, credits: 2300, label: "Starter" },
+  { naira: 2300, credits: 4600, label: "Popular" },
+  { naira: 5750, credits: 11500, label: "Value" },
+  { naira: 11500, credits: 23000, label: "Pro" },
+  { naira: 17250, credits: 34500, label: "Mega" },
+];
+
+function computeWithdrawal(credits: number) {
+  const gross = credits * NAIRA_PER_CREDIT_SELL;
+  const fee = gross * WITHDRAWAL_FEE_PCT + WITHDRAWAL_FEE_FLAT;
+  const net = Math.max(0, gross - fee);
+  return { gross, fee, net };
+}
 
 function DashboardPage() {
   const { user, profile, loading, refreshProfile } = useAuth();
