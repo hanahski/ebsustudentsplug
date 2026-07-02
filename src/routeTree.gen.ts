@@ -20,6 +20,7 @@ import { Route as SavedRouteImport } from './routes/saved'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReportRouteImport } from './routes/report'
 import { Route as RedeemRouteImport } from './routes/redeem'
+import { Route as ProductsRouteImport } from './routes/products'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as NewsRouteImport } from './routes/news'
 import { Route as MeRouteImport } from './routes/me'
@@ -164,6 +165,11 @@ const ReportRoute = ReportRouteImport.update({
 const RedeemRoute = RedeemRouteImport.update({
   id: '/redeem',
   path: '/redeem',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductsRoute = ProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -647,6 +653,7 @@ export interface FileRoutesByFullPath {
   '/me': typeof MeRouteWithChildren
   '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
+  '/products': typeof ProductsRoute
   '/redeem': typeof RedeemRoute
   '/report': typeof ReportRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -749,6 +756,7 @@ export interface FileRoutesByTo {
   '/me': typeof MeRouteWithChildren
   '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
+  '/products': typeof ProductsRoute
   '/redeem': typeof RedeemRoute
   '/report': typeof ReportRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -852,6 +860,7 @@ export interface FileRoutesById {
   '/me': typeof MeRouteWithChildren
   '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
+  '/products': typeof ProductsRoute
   '/redeem': typeof RedeemRoute
   '/report': typeof ReportRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -957,6 +966,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/news'
     | '/privacy'
+    | '/products'
     | '/redeem'
     | '/report'
     | '/reset-password'
@@ -1059,6 +1069,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/news'
     | '/privacy'
+    | '/products'
     | '/redeem'
     | '/report'
     | '/reset-password'
@@ -1161,6 +1172,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/news'
     | '/privacy'
+    | '/products'
     | '/redeem'
     | '/report'
     | '/reset-password'
@@ -1265,6 +1277,7 @@ export interface RootRouteChildren {
   MeRoute: typeof MeRouteWithChildren
   NewsRoute: typeof NewsRoute
   PrivacyRoute: typeof PrivacyRoute
+  ProductsRoute: typeof ProductsRoute
   RedeemRoute: typeof RedeemRoute
   ReportRoute: typeof ReportRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -1396,6 +1409,13 @@ declare module '@tanstack/react-router' {
       path: '/redeem'
       fullPath: '/redeem'
       preLoaderRoute: typeof RedeemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/products': {
+      id: '/products'
+      path: '/products'
+      fullPath: '/products'
+      preLoaderRoute: typeof ProductsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -2173,6 +2193,7 @@ const rootRouteChildren: RootRouteChildren = {
   MeRoute: MeRouteWithChildren,
   NewsRoute: NewsRoute,
   PrivacyRoute: PrivacyRoute,
+  ProductsRoute: ProductsRoute,
   RedeemRoute: RedeemRoute,
   ReportRoute: ReportRoute,
   ResetPasswordRoute: ResetPasswordRoute,
