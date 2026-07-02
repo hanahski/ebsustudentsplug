@@ -144,39 +144,69 @@ export async function syncOpenTextbookLibrary(limit = 200) {
   return { source: "open_textbook_library", booksFound: rows.length, rowsUpserted };
 }
 
-// ---------- LibreTexts (curated seed) ----------
-// LibreTexts doesn't expose a clean catalog API; we seed a curated set of the
-// most-visited bookshelves — each has a downloadable PDF + a printable version.
-const LIBRETEXTS_SEED: Array<{ id: string; title: string; subject: string; cover?: string; pdf: string; site: string }> = [
-  { id: "chem-generalchem", title: "General Chemistry (LibreTexts)", subject: "Chemistry", pdf: "https://chem.libretexts.org/Bookshelves/General_Chemistry/Book%3A_General_Chemistry_(OpenSTAX)?downloadfull", site: "https://chem.libretexts.org/" },
-  { id: "phys-university", title: "University Physics (LibreTexts)", subject: "Physics", pdf: "https://phys.libretexts.org/Bookshelves/University_Physics/Book%3A_University_Physics_(OpenStax)?downloadfull", site: "https://phys.libretexts.org/" },
-  { id: "math-calculus", title: "Calculus (LibreTexts)", subject: "Mathematics", pdf: "https://math.libretexts.org/Bookshelves/Calculus/Calculus_(OpenStax)?downloadfull", site: "https://math.libretexts.org/" },
-  { id: "bio-general", title: "General Biology (LibreTexts)", subject: "Biology", pdf: "https://bio.libretexts.org/Bookshelves/Introductory_and_General_Biology/Book%3A_General_Biology_(OpenStax)?downloadfull", site: "https://bio.libretexts.org/" },
-  { id: "stats-intro", title: "Introductory Statistics (LibreTexts)", subject: "Statistics", pdf: "https://stats.libretexts.org/Bookshelves/Introductory_Statistics/Book%3A_Introductory_Statistics_(OpenStax)?downloadfull", site: "https://stats.libretexts.org/" },
-  { id: "eng-intro", title: "Introduction to Engineering (LibreTexts)", subject: "Engineering", pdf: "https://eng.libretexts.org/Bookshelves/Introduction_to_Engineering?downloadfull", site: "https://eng.libretexts.org/" },
-  { id: "med-anatomy", title: "Anatomy and Physiology (LibreTexts)", subject: "Medicine", pdf: "https://med.libretexts.org/Bookshelves/Anatomy_and_Physiology/Book%3A_Anatomy_and_Physiology_(Boundless)?downloadfull", site: "https://med.libretexts.org/" },
-  { id: "biz-principles", title: "Principles of Management (LibreTexts)", subject: "Business", pdf: "https://biz.libretexts.org/Bookshelves/Management/Book%3A_Principles_of_Management?downloadfull", site: "https://biz.libretexts.org/" },
-];
+// ---------- LibreTexts (LibreCommons catalog API) ----------
+// Pulls the full LibreCommons catalog (3,000+ open textbooks) with real
+// thumbnails, PDFs, LMS, and ZIP downloads. Paginated at 100 per page.
+type LibreBook = {
+  bookID: string;
+  title: string;
+  author?: string;
+  affiliation?: string;
+  library?: string;
+  subject?: string;
+  summary?: string;
+  thumbnail?: string;
+  links?: { online?: string; pdf?: string; zip?: string; files?: string; lms?: string };
+};
 
-export async function syncLibreTexts() {
-  const rows: Row[] = LIBRETEXTS_SEED.map((t) => ({
-    openlibrary_key: `libretexts-${t.id}`,
-    title: t.title,
-    author: "LibreTexts",
-    cover_url: t.cover ?? null,
-    category: "book",
-    read_url: t.pdf,
-    download_url: t.pdf,
-    source_url: t.site,
-    source: "libretexts",
-    description: `Open access ${t.subject} textbook from the LibreTexts project.`,
-    first_publish_year: null,
-    price_credits: SOURCE_PRICE.libretexts,
-    download_formats: { pdf: t.pdf },
-  }));
+export async function syncLibreTexts(maxPages = 40) {
+  const rows: Row[] = [];
+  const perPage = 100;
+  for (let page = 1; page <= maxPages; page++) {
+    const res = await fetch(
+      `https://commons.libretexts.org/api/v1/commons/catalog?limit=${perPage}&page=${page}`,
+      { headers: { Accept: "application/json" } },
+    );
+    if (!res.ok) break;
+    const json = (await res.json()) as { books?: LibreBook[]; numTotal?: number };
+    const books = json.books ?? [];
+    if (books.length === 0) break;
+    for (const b of books) {
+      if (!b.bookID || !b.title) continue;
+      const online = b.links?.online ?? `https://commons.libretexts.org/book/${b.bookID}`;
+      const pdf = b.links?.pdf ?? null;
+      const zip = b.links?.zip ?? null;
+      const files = b.links?.files ?? null;
+      const lms = b.links?.lms ?? null;
+      const formats: Record<string, string> = {};
+      if (pdf) formats.pdf = pdf;
+      if (zip) formats.pages_zip = zip;
+      if (files) formats.html_zip = files;
+      if (lms) formats.lms = lms;
+      const primary = pdf ?? online;
+      rows.push({
+        openlibrary_key: `libretexts-${b.bookID}`,
+        title: b.title,
+        author: b.author?.trim() || b.affiliation?.trim() || "LibreTexts",
+        cover_url: b.thumbnail || null,
+        category: "book",
+        read_url: online,
+        download_url: primary,
+        source_url: online,
+        source: "libretexts",
+        description: stripHtml(b.summary) ?? `Open access ${b.subject || b.library || "textbook"} from LibreTexts.`,
+        first_publish_year: null,
+        price_credits: SOURCE_PRICE.libretexts,
+        download_formats: formats,
+      });
+    }
+    if (books.length < perPage) break;
+    if (json.numTotal && page * perPage >= json.numTotal) break;
+  }
   const rowsUpserted = await upsertBatch(rows);
   return { source: "libretexts", booksFound: rows.length, rowsUpserted };
 }
+
 
 // ---------- BCcampus (OPDS feed) ----------
 export async function syncBCcampus(limit = 150) {
