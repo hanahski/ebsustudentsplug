@@ -141,23 +141,35 @@ function ChatPage() {
   return (
     <AppShell>
       <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
-          <div className="min-w-0">
-            <h1 className="text-2xl font-display font-bold">Chat Plug</h1>
-            <p className="text-xs text-muted-foreground">DMs · Groups · Campus · Nearby</p>
+        {/* Premium hero — hide when a DM thread is open so mobile gets a real chat surface */}
+        <section className={`${activeTab === "dms" && activeThread ? "hidden md:block" : ""} relative overflow-hidden rounded-3xl border bg-card p-6 sm:p-7 mb-4 shadow-card`}>
+          <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-primary/25 blur-3xl" aria-hidden />
+          <div className="absolute -bottom-20 -left-10 w-72 h-72 rounded-full bg-emerald-400/20 blur-3xl" aria-hidden />
+          <div className="absolute top-8 left-1/2 w-40 h-40 rounded-full bg-sky-400/20 blur-3xl" aria-hidden />
+          <div className="relative flex items-end justify-between gap-4 flex-wrap">
+            <div className="min-w-0">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-bold uppercase tracking-wider">
+                <MessageCircle className="w-3.5 h-3.5" /> Chat Plug
+              </div>
+              <h1 className="mt-3 text-3xl sm:text-4xl font-black font-display leading-[1.05] bg-gradient-to-br from-foreground via-primary to-emerald-500 bg-clip-text text-transparent">
+                Your circle, always on.
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1.5">DMs · Groups · Campus rooms · Nearby students</p>
+            </div>
+            <div className="flex gap-1 bg-muted/70 backdrop-blur border rounded-xl p-1">
+              <TabButton active={activeTab === "dms"} onClick={() => navigate({ to: "/chat", search: { tab: "dms" } })}>
+                <MessageCircle className="w-3.5 h-3.5" /> Chats
+              </TabButton>
+              <TabButton active={activeTab === "campus"} onClick={() => navigate({ to: "/chat", search: { tab: "campus" } })}>
+                <Globe className="w-3.5 h-3.5" /> Campus
+              </TabButton>
+              <TabButton active={activeTab === "nearby"} onClick={() => navigate({ to: "/chat", search: { tab: "nearby" } })}>
+                <MapPin className="w-3.5 h-3.5" /> Nearby
+              </TabButton>
+            </div>
           </div>
-          <div className="flex gap-1 bg-muted rounded-lg p-1">
-            <TabButton active={activeTab === "dms"} onClick={() => navigate({ to: "/chat", search: { tab: "dms" } })}>
-              <MessageCircle className="w-3.5 h-3.5" /> Chats
-            </TabButton>
-            <TabButton active={activeTab === "campus"} onClick={() => navigate({ to: "/chat", search: { tab: "campus" } })}>
-              <Globe className="w-3.5 h-3.5" /> Campus
-            </TabButton>
-            <TabButton active={activeTab === "nearby"} onClick={() => navigate({ to: "/chat", search: { tab: "nearby" } })}>
-              <MapPin className="w-3.5 h-3.5" /> Nearby
-            </TabButton>
-          </div>
-        </div>
+        </section>
+
 
         {activeTab === "dms" && <DmsView meId={user.id} activeThread={activeThread} initialNewGroup={search.newGroup} initialGroupName={search.groupName} />}
         {activeTab === "campus" && <CampusLocationView meId={user.id} mode="campus" />}
