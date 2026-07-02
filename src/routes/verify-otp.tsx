@@ -54,6 +54,16 @@ function VerifyOtpPage() {
       if (SEED_ADMIN_EMAILS.has(email.trim().toLowerCase())) {
         await claimSeedAdminRole().catch((e) => console.error("[verify-otp] admin claim", e));
       }
+      // Claim the JAMB number stashed at signup time, now that we have a session.
+      try {
+        const pending = sessionStorage.getItem(PENDING_JAMB_KEY);
+        if (pending) {
+          await claimJambNumber({ data: { jamb: pending } }).catch((e) =>
+            console.error("[verify-otp] JAMB claim failed", e),
+          );
+          sessionStorage.removeItem(PENDING_JAMB_KEY);
+        }
+      } catch {}
       toast.success("Email verified — welcome!");
       await nav({ to: redirect });
     } catch (err: any) {
