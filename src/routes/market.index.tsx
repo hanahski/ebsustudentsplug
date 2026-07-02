@@ -76,6 +76,9 @@ function MarketPage() {
   const [showSold, setShowSold] = useState(false);
   const [listingLimit, setListingLimit] = useState(30);
   const getBooksFn = useServerFn(getLibraryBooks);
+  const getPopularNovelsFn = useServerFn(getPopularNovels);
+  // Fresh randomized set on every mount of the market feed.
+  const [feedSeed] = useState(() => Math.random().toString(36).slice(2));
 
   const { data: listings, isLoading, isFetching } = useQuery({
     queryKey: ["market", kind, debouncedQ, showSold, listingLimit],
