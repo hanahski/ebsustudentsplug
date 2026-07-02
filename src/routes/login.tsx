@@ -266,7 +266,26 @@ function LoginPage() {
 
         <form onSubmit={submit} className="space-y-3">
           {mode === "signup" && (
-            <div><Label htmlFor="name">Display name</Label><Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" /></div>
+            <>
+              <div><Label htmlFor="name">Display name</Label><Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" /></div>
+              <div>
+                <Label htmlFor="jamb">JAMB registration number</Label>
+                <Input
+                  id="jamb"
+                  required
+                  value={jamb}
+                  onChange={(e) => setJamb(e.target.value.replace(/\s+/g, "").toUpperCase().slice(0, 10))}
+                  placeholder="e.g. 20123456AB"
+                  pattern="[0-9]{8}[A-Z]{2}"
+                  title="8 digits followed by 2 letters"
+                  autoComplete="off"
+                  inputMode="text"
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  One JAMB number = one account, forever. It cannot be changed once set.
+                </p>
+              </div>
+            </>
           )}
           <div><Label htmlFor="email">Email</Label><Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
           <div>
