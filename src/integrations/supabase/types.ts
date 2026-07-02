@@ -160,6 +160,33 @@ export type Database = {
         }
         Relationships: []
       }
+      bank_account_resolutions: {
+        Row: {
+          account_name: string
+          account_number: string
+          bank_code: string
+          bank_name: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          account_name: string
+          account_number: string
+          bank_code: string
+          bank_name: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          account_name?: string
+          account_number?: string
+          bank_code?: string
+          bank_name?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       banner_events: {
         Row: {
           at: string
@@ -203,6 +230,9 @@ export type Database = {
           is_active: boolean
           layout: string
           link_url: string | null
+          mux_asset_id: string | null
+          mux_playback_id: string | null
+          mux_status: string | null
           publish_at: string | null
           sort_order: number
           subtitle: string | null
@@ -219,6 +249,9 @@ export type Database = {
           is_active?: boolean
           layout?: string
           link_url?: string | null
+          mux_asset_id?: string | null
+          mux_playback_id?: string | null
+          mux_status?: string | null
           publish_at?: string | null
           sort_order?: number
           subtitle?: string | null
@@ -235,6 +268,9 @@ export type Database = {
           is_active?: boolean
           layout?: string
           link_url?: string | null
+          mux_asset_id?: string | null
+          mux_playback_id?: string | null
+          mux_status?: string | null
           publish_at?: string | null
           sort_order?: number
           subtitle?: string | null
@@ -1053,6 +1089,30 @@ export type Database = {
           note?: string | null
           original_text?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      platform_settings: {
+        Row: {
+          is_secret: boolean
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: string | null
+        }
+        Insert: {
+          is_secret?: boolean
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: string | null
+        }
+        Update: {
+          is_secret?: boolean
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: string | null
         }
         Relationships: []
       }
