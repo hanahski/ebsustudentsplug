@@ -31,6 +31,7 @@ const TAGS = [
 
 function BooksPage() {
   const [cat, setCat] = useState<string>("all");
+  const [tag, setTag] = useState<string>("all");
   const [q, setQ] = useState("");
   const qc = useQueryClient();
   const purchaseFn = useServerFn(purchaseLibraryBook);
@@ -41,12 +42,13 @@ function BooksPage() {
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ["library-books", cat, q],
+    queryKey: ["library-books", cat, tag, q],
     placeholderData: keepPreviousData,
     queryFn: () =>
       getBooksFn({
         data: {
           category: cat as "all" | "novel" | "book" | "comics" | "poetry",
+          tag: tag as "all" | "pdf" | "free" | "ebsu",
           query: q,
           limit: 120,
         },
