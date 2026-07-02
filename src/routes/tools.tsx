@@ -44,29 +44,69 @@ function ToolsLayout() {
   return (
     <AppShell>
       <div className="max-w-4xl mx-auto">
-        <header className="flex items-center justify-between flex-wrap gap-3 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold font-display">Tools Plug</h1>
-            <p className="text-sm text-muted-foreground">Small utilities. Some cost credits.</p>
-          </div>
-          {user && (
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-primary/10 to-accent border">
-              <Coins className="w-4 h-4 text-primary" />
-              {isAdmin ? (
-                <span className="text-base font-bold leading-none" title="Unlimited credits (admin)">∞</span>
-              ) : (
-                <span className="text-sm font-bold">{profile?.credits ?? 0}</span>
+        {onHub && (
+          <div className="relative overflow-hidden bg-card border rounded-3xl p-6 shadow-card mb-6">
+            <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full bg-primary/10 blur-3xl" />
+            <div className="absolute -bottom-24 -left-16 w-64 h-64 rounded-full bg-accent/10 blur-3xl" />
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+
+            <div className="relative flex items-start justify-between gap-4 flex-wrap">
+              <div className="min-w-0">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-semibold uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Tools Plug
+                </div>
+                <h1 className="mt-2 text-2xl md:text-3xl font-bold font-display leading-tight">
+                  Small utilities,{" "}
+                  <span className="bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
+                    real superpowers
+                  </span>
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1 max-w-lg">
+                  Scan, convert, generate — a pocket of AI tools tuned for
+                  campus life. Some cost credits, most are free.
+                </p>
+              </div>
+              {user && (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-background/70 backdrop-blur border border-border/60 shadow-sm">
+                  <Coins className="w-4 h-4 text-primary" />
+                  {isAdmin ? (
+                    <span className="text-base font-bold leading-none" title="Unlimited credits (admin)">∞</span>
+                  ) : (
+                    <span className="text-sm font-bold">{profile?.credits ?? 0}</span>
+                  )}
+                  <span className="text-xs text-muted-foreground">credits</span>
+                </div>
               )}
-              <span className="text-xs text-muted-foreground">credits</span>
             </div>
-          )}
-        </header>
+          </div>
+        )}
+        {!onHub && (
+          <header className="flex items-center justify-between flex-wrap gap-3 mb-6">
+            <div>
+              <h1 className="text-2xl font-bold font-display">Tools Plug</h1>
+              <p className="text-sm text-muted-foreground">Small utilities. Some cost credits.</p>
+            </div>
+            {user && (
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-primary/10 to-accent border">
+                <Coins className="w-4 h-4 text-primary" />
+                {isAdmin ? (
+                  <span className="text-base font-bold leading-none" title="Unlimited credits (admin)">∞</span>
+                ) : (
+                  <span className="text-sm font-bold">{profile?.credits ?? 0}</span>
+                )}
+                <span className="text-xs text-muted-foreground">credits</span>
+              </div>
+            )}
+          </header>
+        )}
 
         {onHub ? <ToolsHub /> : <Outlet />}
       </div>
     </AppShell>
   );
 }
+
 
 const OTHER_TOOLS = new Set([
   "/tools/vocal-split",
