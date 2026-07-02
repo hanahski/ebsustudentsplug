@@ -41,19 +41,88 @@ export const Route = createFileRoute("/news_/reader")({
   },
 });
 
-// Clean the markdown from r.jina.ai: strip nav junk, image-only lines that are logos, etc.
+// Clean r.jina.ai markdown: strip nav/menu chrome, related-story lists,
+// promos, footer boilerplate — keep only the main article body.
+const NAV_WORDS = [
+  "skip to content", "skip to main", "menu", "main menu", "primary navigation",
+  "watch live", "listen live", "sign in", "log in", "log out", "sign up",
+  "subscribe", "subscribe now", "newsletter", "sign up for our newsletter",
+  "follow us", "follow", "share this article", "share this", "share",
+  "advertisement", "sponsored", "promoted",
+  "site search", "search", "site map", "sitemap",
+  "home", "news", "sport", "sports", "business", "technology", "tech",
+  "health", "science", "culture", "arts", "travel", "earth", "weather",
+  "audio", "video", "live", "documentaries", "opinion", "politics",
+  "world", "uk", "us", "africa", "asia", "europe", "middle east",
+  "entertainment", "lifestyle", "style", "fashion", "food", "climate",
+  "football", "football 2026", "cricket", "tennis", "formula 1", "f1",
+  "back to top", "top stories", "most read", "most watched", "most popular",
+  "related stories", "related articles", "related topics", "related",
+  "read more", "more from", "more stories", "more on this story",
+  "cookies", "cookie policy", "privacy policy", "terms of use", "terms",
+  "contact us", "about us", "about", "help", "accessibility",
+  "copyright", "all rights reserved",
+  "image source", "image caption", "getty images", "reuters", "afp",
+  "comments", "leave a comment", "post a comment",
+];
+
+function isNavLine(raw: string): boolean {
+  const line = raw.trim().replace(/^[-*+>#•·|]+\s*/, "").replace(/[:•·|]+$/, "").trim();
+  if (!line) return false;
+  // Strip a single wrapping [text](url) markdown link → text
+  const linkOnly = line.match(/^\[([^\]]+)\]\([^)]+\)$/);
+  const candidate = (linkOnly ? linkOnly[1] : line).toLowerCase().trim();
+  if (!candidate) return false;
+  // Very short lines that are a single nav word/phrase
+  if (candidate.length <= 32 && NAV_WORDS.includes(candidate)) return true;
+  // Standalone very short link-only lines are almost always nav
+  if (linkOnly && candidate.split(/\s+/).length <= 4 && candidate.length <= 28) return true;
+  return false;
+}
+
 function cleanMarkdown(md: string, heroImage?: string): string {
   if (!md) return md;
   let s = md;
-  // Drop leading title heading if it matches the hero title area (jina sometimes duplicates)
-  // Remove images equal to the hero to prevent duplicate hero.
+
+  // Remove the hero image if it's duplicated in the body
   if (heroImage) {
     const esc = heroImage.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     s = s.replace(new RegExp(`!\\[[^\\]]*\\]\\(${esc}\\)`, "g"), "");
   }
-  // Remove bare share/nav lines like "Share this article" links
-  s = s.replace(/^\s*\[.*?(share|subscribe|newsletter|follow us).*?\]\(.*?\)\s*$/gim, "");
-  // Collapse >2 blank lines
+
+  // Split, drop nav-ish lines, keep paragraphs
+  const lines = s.split("\n");
+  const kept: string[] = [];
+  for (const l of lines) {
+    if (isNavLine(l)) continue;
+    kept.push(l);
+  }
+  s = kept.join("\n");
+
+  // Cut everything after common "related" / "read more" section headers
+  s = s.replace(
+    /\n\s*#{1,6}\s*(related( stories| articles| topics)?|more (on this story|from|stories)|most (read|watched|popular)|top stories|read more|comments)\b[\s\S]*$/i,
+    "",
+  );
+
+  // Trim leading nav soup: drop everything before the first real paragraph
+  // (a paragraph = a line with 12+ words, not starting with '#' or '!')
+  const paraLines = s.split("\n");
+  let firstReal = -1;
+  for (let i = 0; i < paraLines.length; i++) {
+    const t = paraLines[i].trim();
+    if (!t) continue;
+    if (t.startsWith("#") || t.startsWith("![") || t.startsWith(">")) continue;
+    if (t.split(/\s+/).length >= 12) { firstReal = i; break; }
+  }
+  if (firstReal > 0) {
+    // Preserve any heading (#) that sits within the 3 lines just before the first paragraph
+    const headStart = Math.max(0, firstReal - 3);
+    const preamble = paraLines.slice(headStart, firstReal).filter((l) => l.trim().startsWith("#"));
+    s = [...preamble, ...paraLines.slice(firstReal)].join("\n");
+  }
+
+  // Collapse blank lines
   s = s.replace(/\n{3,}/g, "\n\n");
   return s.trim();
 }
