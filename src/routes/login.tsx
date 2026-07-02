@@ -9,7 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { claimSeedAdminRole } from "@/lib/admin-role";
+import { checkJambAvailable, claimJambNumber } from "@/lib/jamb.functions";
 import brandLogo from "@/assets/brand-logo.png";
+
+const JAMB_REGEX = /^[0-9]{8}[A-Z]{2}$/;
+const PENDING_JAMB_KEY = "studentsplug:pending-jamb";
 
 const SEED_ADMIN_EMAILS = new Set(["admin+qx162n@ebsuplug.app", "consequenceoct@gmail.com"]);
 const GOOGLE_REDIRECT_KEY = "studentsplug:google-redirect";
@@ -66,6 +70,7 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [jamb, setJamb] = useState("");
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     let cancelled = false;
@@ -83,16 +88,32 @@ function LoginPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
+        const jambNorm = jamb.replace(/\s+/g, "").toUpperCase();
+        if (!JAMB_REGEX.test(jambNorm)) {
+          throw new Error("Enter a valid JAMB number: 8 digits followed by 2 letters (e.g. 20123456AB).");
+        }
+        const avail = await checkJambAvailable({ data: { jamb: jambNorm } });
+        if (!avail.ok) throw new Error("Enter a valid JAMB number: 8 digits followed by 2 letters.");
+        if (!avail.available) {
+          throw new Error("This JAMB number is already registered to another account. One JAMB = one account.");
+        }
         const { data, error } = await supabase.auth.signUp({
           email, password,
-          options: { data: { display_name: name || email.split("@")[0] } },
+          options: { data: { display_name: name || email.split("@")[0], jamb_number: jambNorm } },
         });
         if (error) throw error;
+        // Stash for verify-otp flow (email-confirmation case) so we can claim
+        // it as soon as the user has a session.
+        try { sessionStorage.setItem(PENDING_JAMB_KEY, jambNorm); } catch {}
         if (!data.session) {
           toast.success("Account created. Check your email for a 6-digit code.", { duration: 6000 });
           await nav({ to: "/verify-otp", search: { email, redirect } });
           return;
         }
+        await claimJambNumber({ data: { jamb: jambNorm } }).catch((e) =>
+          console.error("[login] JAMB claim failed", e),
+        );
+        try { sessionStorage.removeItem(PENDING_JAMB_KEY); } catch {}
         toast.success("Welcome to StudentsPlug!");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -245,7 +266,26 @@ function LoginPage() {
 
         <form onSubmit={submit} className="space-y-3">
           {mode === "signup" && (
-            <div><Label htmlFor="name">Display name</Label><Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" /></div>
+            <>
+              <div><Label htmlFor="name">Display name</Label><Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" /></div>
+              <div>
+                <Label htmlFor="jamb">JAMB registration number</Label>
+                <Input
+                  id="jamb"
+                  required
+                  value={jamb}
+                  onChange={(e) => setJamb(e.target.value.replace(/\s+/g, "").toUpperCase().slice(0, 10))}
+                  placeholder="e.g. 20123456AB"
+                  pattern="[0-9]{8}[A-Z]{2}"
+                  title="8 digits followed by 2 letters"
+                  autoComplete="off"
+                  inputMode="text"
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  One JAMB number = one account, forever. It cannot be changed once set.
+                </p>
+              </div>
+            </>
           )}
           <div><Label htmlFor="email">Email</Label><Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
           <div>

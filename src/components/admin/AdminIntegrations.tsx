@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   Video,
   Landmark,
+  Newspaper,
 } from "lucide-react";
 
 const GROUPS = [
@@ -44,6 +45,16 @@ const GROUPS = [
     keys: [
       { key: "MUX_TOKEN_ID", label: "Token ID", placeholder: "abcd1234-…" },
       { key: "MUX_TOKEN_SECRET", label: "Token secret", placeholder: "long secret string" },
+    ],
+  },
+  {
+    id: "news",
+    label: "News API",
+    icon: Newspaper,
+    desc: "Powers the Daily Plug News feed and the auto EBSU news generator.",
+    hint: "Grab a free key at newsapi.org → Account → API keys. Change any time — takes effect immediately.",
+    keys: [
+      { key: "NEWS_API_KEY", label: "NewsAPI key", placeholder: "e.g. 1234abcd…" },
     ],
   },
 ] as const;

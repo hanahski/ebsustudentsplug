@@ -1,0 +1,1 @@
+ALTER VIEW public.jamb_availability SET (security_invoker = true);

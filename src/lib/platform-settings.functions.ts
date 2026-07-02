@@ -7,6 +7,7 @@ const KEY_ALLOWLIST = [
   "PAYSTACK_PUBLIC_KEY",
   "MUX_TOKEN_ID",
   "MUX_TOKEN_SECRET",
+  "NEWS_API_KEY",
 ] as const;
 
 async function assertAdmin(supabase: any, userId: string) {
