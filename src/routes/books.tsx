@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { purchaseLibraryBook } from "@/lib/library-purchase.functions";
-import { getLibraryBooks } from "@/lib/library-books.functions";
+import { getLibraryBooks, ensureLibraryCatalog } from "@/lib/library-books.functions";
 import { runLibrarySync } from "@/lib/library-sync.functions";
 import { useAuth } from "@/lib/auth";
 import { getIsAdminUser } from "@/lib/admin-role";
@@ -41,22 +41,52 @@ const CATS = [
   { key: "all", label: "All" },
   { key: "novel", label: "Novel" },
   { key: "book", label: "Book" },
+  { key: "textbook", label: "Textbook" },
   { key: "comics", label: "Comics" },
   { key: "poetry", label: "Poetry" },
 ] as const;
 
-const TAGS = [
-  { key: "all", label: "All sources" },
-  { key: "pdf", label: "PDF" },
-  { key: "epub", label: "EPUB" },
-  { key: "free", label: "Free" },
-  { key: "ebsu", label: "EBSU" },
-  { key: "openstax", label: "OpenStax" },
-  { key: "open_textbook_library", label: "Open Textbook" },
-  { key: "gutenberg", label: "Gutenberg" },
-  { key: "libretexts", label: "LibreTexts" },
-  { key: "bccampus", label: "BCcampus" },
-] as const;
+const TAG_GROUPS: Array<{ label: string; tags: Array<{ key: string; label: string }> }> = [
+  {
+    label: "Origin",
+    tags: [
+      { key: "all", label: "All" },
+      { key: "free", label: "Free" },
+      { key: "ebsu", label: "EBSU" },
+      { key: "studentsplug", label: "StudentsPlug" },
+      { key: "others", label: "Others" },
+    ],
+  },
+  {
+    label: "Copy",
+    tags: [
+      { key: "soft", label: "Soft copy" },
+      { key: "hard", label: "Hard copy" },
+    ],
+  },
+  {
+    label: "Format",
+    tags: [
+      { key: "pdf", label: "PDF" },
+      { key: "epub", label: "EPUB" },
+      { key: "kindle", label: "Kindle" },
+      { key: "html_zip", label: "HTML ZIP" },
+      { key: "pages_zip", label: "Pages ZIP" },
+      { key: "lms", label: "LMS" },
+      { key: "blueprint", label: "Blueprint" },
+    ],
+  },
+  {
+    label: "Source",
+    tags: [
+      { key: "openstax", label: "OpenStax" },
+      { key: "open_textbook_library", label: "Open Textbook" },
+      { key: "gutenberg", label: "Gutenberg" },
+      { key: "libretexts", label: "LibreTexts" },
+      { key: "bccampus", label: "BCcampus" },
+    ],
+  },
+];
 
 const FORMAT_META: Record<string, { label: string; short: string; tone: string }> = {
   pdf: { label: "Download PDF", short: "PDF", tone: "bg-rose-500" },
@@ -94,6 +124,7 @@ function BooksPage() {
   const purchaseFn = useServerFn(purchaseLibraryBook);
   const getBooksFn = useServerFn(getLibraryBooks);
   const syncFn = useServerFn(runLibrarySync);
+  const ensureFn = useServerFn(ensureLibraryCatalog);
   const { user } = useAuth();
   const { data: isAdmin } = useQuery({
     queryKey: ["is-admin", user?.id],
@@ -108,6 +139,18 @@ function BooksPage() {
     },
     onError: (e: any) => toast.error(e?.message ?? "Sync failed"),
   });
+
+  // Auto-sync on first mount (self-rate-limited: only syncs sources with < 20 books).
+  const ranAutoSync = useRef(false);
+  useEffect(() => {
+    if (ranAutoSync.current) return;
+    ranAutoSync.current = true;
+    ensureFn({})
+      .then((res: any) => {
+        if (res?.ran > 0) qc.invalidateQueries({ queryKey: ["library-books"] });
+      })
+      .catch(() => {});
+  }, [ensureFn, qc]);
 
   const {
     data: books,
@@ -237,19 +280,26 @@ function BooksPage() {
               </button>
             ))}
           </div>
-          <div className="relative mt-2 flex gap-2 flex-wrap">
-            {TAGS.map((t) => (
-              <button
-                key={t.key}
-                onClick={() => setTag(t.key)}
-                className={`px-3 py-1 rounded-full text-[11px] font-medium border transition ${
-                  tag === t.key
-                    ? "bg-emerald-500 text-white border-emerald-500 shadow"
-                    : "bg-background/70 hover:bg-background"
-                }`}
-              >
-                {t.label}
-              </button>
+          <div className="relative mt-3 space-y-2">
+            {TAG_GROUPS.map((group) => (
+              <div key={group.label} className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold min-w-[52px]">
+                  {group.label}
+                </span>
+                {group.tags.map((t) => (
+                  <button
+                    key={t.key}
+                    onClick={() => setTag(t.key)}
+                    className={`px-3 py-1 rounded-full text-[11px] font-medium border transition ${
+                      tag === t.key
+                        ? "bg-emerald-500 text-white border-emerald-500 shadow"
+                        : "bg-background/70 hover:bg-background"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
             ))}
           </div>
         </div>
@@ -272,10 +322,23 @@ function BooksPage() {
         {!isLoading && (books?.length ?? 0) === 0 && (
           <div className="text-center py-16 text-muted-foreground bg-card border rounded-2xl">
             <BookOpen className="w-12 h-12 mx-auto mb-2 opacity-30" />
-            <p>No books here yet. Try another filter.</p>
-            <Button className="mt-4" onClick={() => refetch()}>
-              Reload
-            </Button>
+            {tag === "hard" ? (
+              <>
+                <p>Hard copies are listed on the Market by fellow students.</p>
+                <Button asChild className="mt-4">
+                  <Link to="/market" search={{ kind: "books" } as any}>
+                    Browse hard copies on Market
+                  </Link>
+                </Button>
+              </>
+            ) : (
+              <>
+                <p>No books here yet. Try another filter.</p>
+                <Button className="mt-4" onClick={() => refetch()}>
+                  Reload
+                </Button>
+              </>
+            )}
           </div>
         )}
 
