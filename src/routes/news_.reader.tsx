@@ -229,8 +229,14 @@ function NewsReaderPage() {
                     // eslint-disable-next-line jsx-a11y/alt-text
                     <img loading="lazy" {...props} className="rounded-2xl shadow-card mx-auto my-4" />
                   ),
-                  a: ({ node, ...props }) => (
-                    <a {...props} target="_blank" rel="noopener noreferrer" />
+                  // Article body links are non-navigable — render as plain styled text.
+                  a: ({ node, children, ...props }) => (
+                    <span
+                      {...(props as any)}
+                      className="text-primary font-semibold underline decoration-primary/30 underline-offset-2 cursor-default"
+                    >
+                      {children}
+                    </span>
                   ),
                 }}
               >
