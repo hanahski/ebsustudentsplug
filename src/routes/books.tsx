@@ -191,6 +191,22 @@ function BooksPage() {
                   <PlusCircle className="w-4 h-4 mr-1" /> Sell a book
                 </Link>
               </Button>
+              {isAdmin && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => sync.mutate()}
+                  disabled={sync.isPending}
+                  title="Sync library sources"
+                >
+                  {sync.isPending ? (
+                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4 mr-1" />
+                  )}
+                  Sync sources
+                </Button>
+              )}
             </div>
           </div>
 
