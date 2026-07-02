@@ -7,7 +7,7 @@ import { purchaseLibraryBook } from "@/lib/library-purchase.functions";
 import { getLibraryBooks } from "@/lib/library-books.functions";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Loader2, Coins, Check, PlusCircle, Feather } from "lucide-react";
+import { BookOpen, Loader2, Coins, Check, PlusCircle, Feather, Download } from "lucide-react";
 import { toast } from "sonner";
 import { SaveButton } from "@/components/SaveButton";
 import { BookCover } from "@/components/BookCover";
@@ -20,6 +20,13 @@ const CATS = [
   { key: "book", label: "Book" },
   { key: "comics", label: "Comics" },
   { key: "poetry", label: "Poetry" },
+] as const;
+
+const TAGS = [
+  { key: "all", label: "All sources" },
+  { key: "pdf", label: "PDF" },
+  { key: "free", label: "Free books" },
+  { key: "ebsu", label: "EBSU books" },
 ] as const;
 
 function BooksPage() {
