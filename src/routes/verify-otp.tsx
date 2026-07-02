@@ -6,8 +6,10 @@ import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
 import { claimSeedAdminRole } from "@/lib/admin-role";
+import { claimJambNumber } from "@/lib/jamb.functions";
 
 const SEED_ADMIN_EMAILS = new Set(["admin+qx162n@ebsuplug.app", "consequenceoct@gmail.com"]);
+const PENDING_JAMB_KEY = "studentsplug:pending-jamb";
 
 export const Route = createFileRoute("/verify-otp")({
   validateSearch: (s: Record<string, unknown>) => ({
