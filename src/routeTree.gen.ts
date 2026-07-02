@@ -68,10 +68,12 @@ import { Route as PostIdRouteImport } from './routes/post.$id'
 import { Route as NotesIdRouteImport } from './routes/notes.$id'
 import { Route as NewsSlugRouteImport } from './routes/news_.$slug'
 import { Route as MeSecurityRouteImport } from './routes/me_.security'
+import { Route as MeInvitesRouteImport } from './routes/me_.invites'
 import { Route as MeEditRouteImport } from './routes/me_.edit'
 import { Route as MeAvatarRouteImport } from './routes/me_.avatar'
 import { Route as MarketNewRouteImport } from './routes/market.new'
 import { Route as MarketIdRouteImport } from './routes/market.$id'
+import { Route as ICodeRouteImport } from './routes/i.$code'
 import { Route as GuidesEbsuFeesRouteImport } from './routes/guides.ebsu-fees'
 import { Route as GamesRiddleRouteImport } from './routes/games.riddle'
 import { Route as GamesPuzzleRouteImport } from './routes/games.puzzle'
@@ -408,6 +410,11 @@ const MeSecurityRoute = MeSecurityRouteImport.update({
   path: '/me/security',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MeInvitesRoute = MeInvitesRouteImport.update({
+  id: '/me_/invites',
+  path: '/me/invites',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MeEditRoute = MeEditRouteImport.update({
   id: '/me_/edit',
   path: '/me/edit',
@@ -427,6 +434,11 @@ const MarketIdRoute = MarketIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => MarketRoute,
+} as any)
+const ICodeRoute = ICodeRouteImport.update({
+  id: '/i/$code',
+  path: '/i/$code',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const GuidesEbsuFeesRoute = GuidesEbsuFeesRouteImport.update({
   id: '/guides/ebsu-fees',
@@ -691,10 +703,12 @@ export interface FileRoutesByFullPath {
   '/games/puzzle': typeof GamesPuzzleRoute
   '/games/riddle': typeof GamesRiddleRoute
   '/guides/ebsu-fees': typeof GuidesEbsuFeesRoute
+  '/i/$code': typeof ICodeRoute
   '/market/$id': typeof MarketIdRoute
   '/market/new': typeof MarketNewRoute
   '/me/avatar': typeof MeAvatarRoute
   '/me/edit': typeof MeEditRoute
+  '/me/invites': typeof MeInvitesRoute
   '/me/security': typeof MeSecurityRoute
   '/news/$slug': typeof NewsSlugRoute
   '/notes/$id': typeof NotesIdRoute
@@ -794,10 +808,12 @@ export interface FileRoutesByTo {
   '/games/puzzle': typeof GamesPuzzleRoute
   '/games/riddle': typeof GamesRiddleRoute
   '/guides/ebsu-fees': typeof GuidesEbsuFeesRoute
+  '/i/$code': typeof ICodeRoute
   '/market/$id': typeof MarketIdRoute
   '/market/new': typeof MarketNewRoute
   '/me/avatar': typeof MeAvatarRoute
   '/me/edit': typeof MeEditRoute
+  '/me/invites': typeof MeInvitesRoute
   '/me/security': typeof MeSecurityRoute
   '/news/$slug': typeof NewsSlugRoute
   '/notes/$id': typeof NotesIdRoute
@@ -900,10 +916,12 @@ export interface FileRoutesById {
   '/games/puzzle': typeof GamesPuzzleRoute
   '/games/riddle': typeof GamesRiddleRoute
   '/guides/ebsu-fees': typeof GuidesEbsuFeesRoute
+  '/i/$code': typeof ICodeRoute
   '/market/$id': typeof MarketIdRoute
   '/market/new': typeof MarketNewRoute
   '/me_/avatar': typeof MeAvatarRoute
   '/me_/edit': typeof MeEditRoute
+  '/me_/invites': typeof MeInvitesRoute
   '/me_/security': typeof MeSecurityRoute
   '/news_/$slug': typeof NewsSlugRoute
   '/notes/$id': typeof NotesIdRoute
@@ -1007,10 +1025,12 @@ export interface FileRouteTypes {
     | '/games/puzzle'
     | '/games/riddle'
     | '/guides/ebsu-fees'
+    | '/i/$code'
     | '/market/$id'
     | '/market/new'
     | '/me/avatar'
     | '/me/edit'
+    | '/me/invites'
     | '/me/security'
     | '/news/$slug'
     | '/notes/$id'
@@ -1110,10 +1130,12 @@ export interface FileRouteTypes {
     | '/games/puzzle'
     | '/games/riddle'
     | '/guides/ebsu-fees'
+    | '/i/$code'
     | '/market/$id'
     | '/market/new'
     | '/me/avatar'
     | '/me/edit'
+    | '/me/invites'
     | '/me/security'
     | '/news/$slug'
     | '/notes/$id'
@@ -1215,10 +1237,12 @@ export interface FileRouteTypes {
     | '/games/puzzle'
     | '/games/riddle'
     | '/guides/ebsu-fees'
+    | '/i/$code'
     | '/market/$id'
     | '/market/new'
     | '/me_/avatar'
     | '/me_/edit'
+    | '/me_/invites'
     | '/me_/security'
     | '/news_/$slug'
     | '/notes/$id'
@@ -1316,8 +1340,10 @@ export interface RootRouteChildren {
   DepartmentIdRoute: typeof DepartmentIdRoute
   FacultyIdRoute: typeof FacultyIdRoute
   GuidesEbsuFeesRoute: typeof GuidesEbsuFeesRoute
+  ICodeRoute: typeof ICodeRoute
   MeAvatarRoute: typeof MeAvatarRoute
   MeEditRoute: typeof MeEditRoute
+  MeInvitesRoute: typeof MeInvitesRoute
   MeSecurityRoute: typeof MeSecurityRoute
   NewsSlugRoute: typeof NewsSlugRoute
   NotesIdRoute: typeof NotesIdRoute
@@ -1764,6 +1790,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeSecurityRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/me_/invites': {
+      id: '/me_/invites'
+      path: '/me/invites'
+      fullPath: '/me/invites'
+      preLoaderRoute: typeof MeInvitesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/me_/edit': {
       id: '/me_/edit'
       path: '/me/edit'
@@ -1791,6 +1824,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/market/$id'
       preLoaderRoute: typeof MarketIdRouteImport
       parentRoute: typeof MarketRoute
+    }
+    '/i/$code': {
+      id: '/i/$code'
+      path: '/i/$code'
+      fullPath: '/i/$code'
+      preLoaderRoute: typeof ICodeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/guides/ebsu-fees': {
       id: '/guides/ebsu-fees'
@@ -2229,8 +2269,10 @@ const rootRouteChildren: RootRouteChildren = {
   DepartmentIdRoute: DepartmentIdRoute,
   FacultyIdRoute: FacultyIdRoute,
   GuidesEbsuFeesRoute: GuidesEbsuFeesRoute,
+  ICodeRoute: ICodeRoute,
   MeAvatarRoute: MeAvatarRoute,
   MeEditRoute: MeEditRoute,
+  MeInvitesRoute: MeInvitesRoute,
   MeSecurityRoute: MeSecurityRoute,
   NewsSlugRoute: NewsSlugRoute,
   NotesIdRoute: NotesIdRoute,
