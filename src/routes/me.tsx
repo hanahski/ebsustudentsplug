@@ -418,8 +418,8 @@ function MePage() {
   );
 }
 
-function ProfileTile({ to, onClick, label, desc, icon: Icon, gradient }: {
-  to?: string; onClick?: () => void; label: string; desc: string; icon: any; gradient: string;
+function ProfileTile({ to, search, onClick, label, desc, icon: Icon, gradient }: {
+  to?: string; search?: Record<string, any>; onClick?: () => void; label: string; desc: string; icon: any; gradient: string;
 }) {
   const inner = (
     <>
@@ -433,7 +433,8 @@ function ProfileTile({ to, onClick, label, desc, icon: Icon, gradient }: {
     </>
   );
   const cls = "bg-card border rounded-2xl p-3.5 shadow-card text-left transition hover:-translate-y-0.5 hover:shadow-lg";
-  if (to) return <Link to={to} className={cls}>{inner}</Link>;
+  if (to) return <Link to={to} search={search as any} className={cls}>{inner}</Link>;
   return <button type="button" onClick={onClick} className={cls}>{inner}</button>;
 }
+
 
