@@ -643,3 +643,18 @@ html.in-app .route-loader-dot { display: none !important; }
 }
 .book-page-flip-next { animation: bookFlipNext 0.52s cubic-bezier(0.4, 0.0, 0.2, 1); }
 .book-page-flip-prev { animation: bookFlipPrev 0.52s cubic-bezier(0.4, 0.0, 0.2, 1); }
+
+/* Invite FOMO — animated shimmer + subtle pulse for invite banners */
+@keyframes fomoShimmer {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.animate-fomo-shimmer {
+  background-size: 200% auto;
+  animation: fomoShimmer 2.4s linear infinite;
+}
+@keyframes fomoFlash {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+.animate-fomo-flash { animation: fomoFlash 1.8s ease-in-out infinite; }
