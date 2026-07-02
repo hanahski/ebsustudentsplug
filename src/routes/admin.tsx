@@ -13,19 +13,20 @@ import { toast } from "sonner";
 import {
   Shield, Trash2, ShoppingBag, FileText, Users, LayoutDashboard,
   Inbox, Image as ImageIcon, BadgeCheck, Star, Sparkles, Plug, Ban, CheckCircle2,
-  BookOpen, ShieldCheck, Ticket, Wand2, Newspaper, Coins, ScanLine, Library, GraduationCap, Tag,
+  BookOpen, ShieldCheck, Ticket, Wand2, Newspaper, Coins, ScanLine, Library, GraduationCap, Tag, KeyRound,
 } from "lucide-react";
 import { ToolEditor } from "@/components/admin/ToolEditor";
 import { ToolPricesPanel } from "@/components/admin/ToolPricesPanel";
 import { AdminAiPanel } from "@/components/admin/AdminAiPanel";
 import { ToolAiPanel } from "@/components/admin/ToolAiPanel";
 import { EbsuNewsPanel } from "@/components/admin/EbsuNewsPanel";
+import { AdminIntegrations } from "@/components/admin/AdminIntegrations";
 import { resolveBannerUrls } from "@/lib/banner-url";
 import { claimSeedAdminRole, getIsAdminUser } from "@/lib/admin-role";
 
 export const Route = createFileRoute("/admin")({ component: AdminPanel });
 
-type Tab = "dashboard" | "ai" | "toolai" | "ebsunews" | "users" | "applications" | "verifications" | "posts" | "listings" | "tickets" | "scans" | "catalogue" | "marketcats" | "banners" | "tools" | "prices";
+type Tab = "dashboard" | "ai" | "toolai" | "ebsunews" | "users" | "applications" | "verifications" | "posts" | "listings" | "tickets" | "scans" | "catalogue" | "marketcats" | "banners" | "tools" | "prices" | "integrations";
 
 
 function AdminPanel() {
