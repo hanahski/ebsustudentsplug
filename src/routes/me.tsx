@@ -277,7 +277,26 @@ function MePage() {
   return (
     <AppShell>
       <div className="max-w-3xl mx-auto space-y-6">
+        {/* Premium hero header */}
+        <section className="relative overflow-hidden rounded-3xl border bg-card p-6 sm:p-7 shadow-card">
+          <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-primary/25 blur-3xl" aria-hidden />
+          <div className="absolute -bottom-20 -left-10 w-72 h-72 rounded-full bg-fuchsia-500/20 blur-3xl" aria-hidden />
+          <div className="absolute top-8 left-1/2 w-40 h-40 rounded-full bg-amber-400/15 blur-3xl" aria-hidden />
+          <div className="relative">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-bold uppercase tracking-wider">
+              <UserCog className="w-3.5 h-3.5" /> Your Profile
+            </div>
+            <h1 className="mt-3 text-3xl sm:text-4xl font-black font-display leading-[1.05] bg-gradient-to-br from-foreground via-primary to-fuchsia-500 bg-clip-text text-transparent">
+              This is your plug.
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1.5 max-w-md">
+              Customize your presence, unlock badges, and keep your campus card sharp.
+            </p>
+          </div>
+        </section>
+
         <section className="bg-card border rounded-3xl shadow-card overflow-hidden">
+
           <div
             className="relative h-32 sm:h-44 bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10 bg-cover bg-center"
             style={!coverVideoUrl && coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined}
