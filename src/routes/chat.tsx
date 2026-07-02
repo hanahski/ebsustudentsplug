@@ -119,6 +119,15 @@ function ChatPage() {
         <div className="max-w-md mx-auto text-center py-16">
           <MessageCircle className="w-12 h-12 mx-auto text-primary mb-3 animate-pulse" />
           <p className="text-sm text-muted-foreground">Opening Chat Plug…</p>
+          <p className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
+            <span>DMs</span>
+            <span aria-hidden>·</span>
+            <span>Groups</span>
+            <span aria-hidden>·</span>
+            <ComingSoonLabel>Campus rooms</ComingSoonLabel>
+            <span aria-hidden>·</span>
+            <ComingSoonLabel>Nearby students</ComingSoonLabel>
+          </p>
         </div>
       </AppShell>
     );
