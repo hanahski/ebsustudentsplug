@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, ScanLine, Eye, ShieldCheck, ShieldAlert, Sparkles, Upload, Wand2, ImageIcon, X, PenLine, FileText, Link2, Image as ImageLucide, Type, BookOpen, Megaphone, ClipboardList, NotebookPen, Newspaper, Hash } from "lucide-react";
+import { Loader2, ScanLine, Eye, ShieldCheck, ShieldAlert, Sparkles, Upload, Wand2, ImageIcon, X, PenLine, FileText, Link2, Image as ImageLucide, Type, BookOpen, Megaphone, ClipboardList, NotebookPen, Newspaper, Hash, ChevronLeft, Send } from "lucide-react";
 import { MathText } from "@/components/MathText";
 import { MediaPlayer } from "@/components/MediaPlayer";
 import { extractTextFromImage } from "@/lib/ocr.functions";
@@ -268,9 +268,34 @@ function NewPostPage() {
 
   return (
     <AppShell>
-      <div className="max-w-2xl mx-auto pb-24">
-        {/* Hero header */}
-        <header className="mb-5 rounded-3xl p-6 bg-gradient-to-br from-primary via-primary/80 to-accent text-primary-foreground shadow-card relative overflow-hidden">
+      {/* MOBILE — native-app-style sticky top bar (only on small screens) */}
+      <div className="sm:hidden sticky top-0 -mx-4 px-4 py-2.5 mb-3 z-30 bg-background/85 backdrop-blur-xl border-b flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => nav({ to: "/" })}
+          className="w-10 h-10 -ml-2 rounded-full inline-flex items-center justify-center hover:bg-muted active:scale-95 transition"
+          aria-label="Back"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <div className="flex-1 min-w-0 text-center">
+          <div className="font-bold text-sm leading-tight">New Post</div>
+          <div className="text-[10px] text-muted-foreground truncate">{title.trim() ? `“${title.trim()}”` : "Draft"}</div>
+        </div>
+        <Button
+          type="submit"
+          form="post-new-form"
+          size="sm"
+          disabled={busy || scanning || !title.trim()}
+          className="rounded-full h-9 px-4 font-bold shadow-glow"
+        >
+          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-3.5 h-3.5 mr-1" />Post</>}
+        </Button>
+      </div>
+
+      <div className="max-w-2xl mx-auto pb-32 sm:pb-24">
+        {/* DESKTOP — premium hero */}
+        <header className="hidden sm:block mb-5 rounded-3xl p-6 bg-gradient-to-br from-primary via-primary/80 to-accent text-primary-foreground shadow-card relative overflow-hidden">
           <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/10 blur-2xl" aria-hidden />
           <div className="absolute -left-6 -bottom-10 w-32 h-32 rounded-full bg-white/10 blur-2xl" aria-hidden />
           <div className="relative flex items-center gap-3">
@@ -283,6 +308,7 @@ function NewPostPage() {
             </div>
           </div>
         </header>
+
 
         {profile && !profile.is_verified && !isAdmin && (
           <div className="mb-4 border-2 border-primary/40 bg-gradient-to-br from-primary/10 via-accent/10 to-background rounded-2xl p-4 flex items-start gap-3">
@@ -312,7 +338,7 @@ function NewPostPage() {
           </div>
         )}
 
-        <form onSubmit={submit} className="space-y-4">
+        <form id="post-new-form" onSubmit={submit} className="space-y-4">
           {/* SECTION 1 — Type + Course */}
           <section className="bg-card border rounded-2xl p-5 shadow-card space-y-4">
             <SectionHead icon={Hash} title="What are you posting?" hint="Pick the type & (optional) course." />
@@ -606,8 +632,9 @@ function NewPostPage() {
             )}
           </section>
 
-          {/* Sticky publish bar */}
-          <div className="sticky bottom-3 z-20">
+          {/* Sticky publish bar — desktop only; mobile uses the top-bar Post button */}
+          <div className="hidden sm:block sticky bottom-3 z-20">
+
             <div className="rounded-2xl border bg-card/90 backdrop-blur shadow-card p-2 flex items-center gap-2">
               <div className="hidden sm:flex flex-1 min-w-0 items-center gap-2 px-2 text-xs text-muted-foreground">
                 <Sparkles className="w-3.5 h-3.5 text-primary" />

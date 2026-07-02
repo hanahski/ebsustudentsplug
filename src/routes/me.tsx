@@ -277,7 +277,26 @@ function MePage() {
   return (
     <AppShell>
       <div className="max-w-3xl mx-auto space-y-6">
+        {/* Premium hero header */}
+        <section className="relative overflow-hidden rounded-3xl border bg-card p-6 sm:p-7 shadow-card">
+          <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-primary/25 blur-3xl" aria-hidden />
+          <div className="absolute -bottom-20 -left-10 w-72 h-72 rounded-full bg-fuchsia-500/20 blur-3xl" aria-hidden />
+          <div className="absolute top-8 left-1/2 w-40 h-40 rounded-full bg-amber-400/15 blur-3xl" aria-hidden />
+          <div className="relative">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-bold uppercase tracking-wider">
+              <UserCog className="w-3.5 h-3.5" /> Your Profile
+            </div>
+            <h1 className="mt-3 text-3xl sm:text-4xl font-black font-display leading-[1.05] bg-gradient-to-br from-foreground via-primary to-fuchsia-500 bg-clip-text text-transparent">
+              This is your plug.
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1.5 max-w-md">
+              Customize your presence, unlock badges, and keep your campus card sharp.
+            </p>
+          </div>
+        </section>
+
         <section className="bg-card border rounded-3xl shadow-card overflow-hidden">
+
           <div
             className="relative h-32 sm:h-44 bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10 bg-cover bg-center"
             style={!coverVideoUrl && coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined}
@@ -423,8 +442,9 @@ function ProfileTile({ to, search, onClick, label, desc, icon: Icon, gradient }:
 }) {
   const inner = (
     <>
-      <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${gradient} text-white flex items-center justify-center shadow`}>
-        <Icon className="w-5 h-5" />
+      <div className={`relative w-12 h-12 rounded-2xl bg-gradient-to-br ${gradient} text-white flex items-center justify-center shadow-lg overflow-hidden`}>
+        <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent" aria-hidden />
+        <Icon className="w-5 h-5 relative drop-shadow" />
       </div>
       <div className="mt-3">
         <div className="font-semibold text-sm leading-tight">{label}</div>
@@ -432,9 +452,11 @@ function ProfileTile({ to, search, onClick, label, desc, icon: Icon, gradient }:
       </div>
     </>
   );
-  const cls = "bg-card border rounded-2xl p-3.5 shadow-card text-left transition hover:-translate-y-0.5 hover:shadow-lg";
-  if (to) return <Link to={to} search={search as any} className={cls}>{inner}</Link>;
-  return <button type="button" onClick={onClick} className={cls}>{inner}</button>;
+  const cls = "group relative overflow-hidden bg-card border rounded-2xl p-4 shadow-card text-left transition hover:-translate-y-1 hover:shadow-glow hover:border-primary/40";
+  const decor = <div className={`pointer-events-none absolute -top-8 -right-8 w-24 h-24 rounded-full bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-20 blur-2xl transition`} aria-hidden />;
+  if (to) return <Link to={to} search={search as any} className={cls}>{decor}{inner}</Link>;
+  return <button type="button" onClick={onClick} className={cls}>{decor}{inner}</button>;
 }
+
 
 
