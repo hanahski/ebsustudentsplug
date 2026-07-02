@@ -74,7 +74,6 @@ function MarketPage() {
   const [kind, setKind] = useState<string>("all");
   const [showSold, setShowSold] = useState(false);
   const [listingLimit, setListingLimit] = useState(30);
-  const qc = useQueryClient();
   const getBooksFn = useServerFn(getLibraryBooks);
 
   const { data: listings, isLoading, isFetching } = useQuery({
