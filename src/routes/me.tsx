@@ -336,14 +336,13 @@ function MePage() {
           <div className="p-4 sm:p-6">
 
             <div className="flex items-center gap-4 flex-wrap">
-              <button
-                type="button"
-                onClick={() => setPhotoOpen(true)}
+              <Link
+                to="/me/avatar"
                 className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                aria-label="View profile photo"
+                aria-label="Change avatar"
               >
                 <AvatarDisplay avatarKey={profile.avatar_key} size={80} online={profile.show_online} photoUrl={(profile as any).picture_url} />
-              </button>
+              </Link>
               <div className="flex-1 min-w-0">
                 <h1 className="text-xl sm:text-2xl font-bold font-display break-words leading-tight inline-flex items-center gap-1.5">
                   {profile.display_name}
