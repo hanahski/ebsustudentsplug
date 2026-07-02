@@ -745,6 +745,7 @@ export type Database = {
           cover_url: string | null
           created_at: string
           description: string | null
+          download_formats: Json
           download_url: string | null
           external_id: string | null
           file_url: string | null
@@ -768,6 +769,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           description?: string | null
+          download_formats?: Json
           download_url?: string | null
           external_id?: string | null
           file_url?: string | null
@@ -791,6 +793,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           description?: string | null
+          download_formats?: Json
           download_url?: string | null
           external_id?: string | null
           file_url?: string | null

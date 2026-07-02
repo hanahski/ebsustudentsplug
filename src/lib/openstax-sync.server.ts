@@ -72,7 +72,13 @@ export async function syncOpenStax(limitPerPage = 100) {
         first_publish_year: item.meta?.first_published_at
           ? new Date(item.meta.first_published_at).getFullYear()
           : null,
-        price_credits: 0,
+        price_credits: 0.7,
+        download_formats: {
+          pdf,
+          ...(item.low_resolution_pdf_url && item.low_resolution_pdf_url !== pdf
+            ? { pages_zip: item.low_resolution_pdf_url }
+            : {}),
+        },
       });
     }
     offset += json.items.length || limitPerPage;

@@ -101,6 +101,7 @@ import { Route as ApiPublicVocalSplitRouteImport } from './routes/api/public/voc
 import { Route as ApiPublicVirtualNumberRouteImport } from './routes/api/public/virtual-number'
 import { Route as ApiPublicPlugAiRouteImport } from './routes/api/public/plug-ai'
 import { Route as ApiPublicHooksSyncOpenstaxRouteImport } from './routes/api/public/hooks/sync-openstax'
+import { Route as ApiPublicHooksSyncLibrarySourcesRouteImport } from './routes/api/public/hooks/sync-library-sources'
 import { Route as ApiPublicHooksSyncLibraryBooksRouteImport } from './routes/api/public/hooks/sync-library-books'
 import { Route as ApiPublicHooksSyncCoursesRouteImport } from './routes/api/public/hooks/sync-courses'
 import { Route as ApiPublicHooksRunScheduledAdminRouteImport } from './routes/api/public/hooks/run-scheduled-admin'
@@ -571,6 +572,12 @@ const ApiPublicHooksSyncOpenstaxRoute =
     path: '/api/public/hooks/sync-openstax',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksSyncLibrarySourcesRoute =
+  ApiPublicHooksSyncLibrarySourcesRouteImport.update({
+    id: '/api/public/hooks/sync-library-sources',
+    path: '/api/public/hooks/sync-library-sources',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksSyncLibraryBooksRoute =
   ApiPublicHooksSyncLibraryBooksRouteImport.update({
     id: '/api/public/hooks/sync-library-books',
@@ -720,6 +727,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/run-scheduled-admin': typeof ApiPublicHooksRunScheduledAdminRoute
   '/api/public/hooks/sync-courses': typeof ApiPublicHooksSyncCoursesRoute
   '/api/public/hooks/sync-library-books': typeof ApiPublicHooksSyncLibraryBooksRoute
+  '/api/public/hooks/sync-library-sources': typeof ApiPublicHooksSyncLibrarySourcesRoute
   '/api/public/hooks/sync-openstax': typeof ApiPublicHooksSyncOpenstaxRoute
 }
 export interface FileRoutesByTo {
@@ -820,6 +828,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/run-scheduled-admin': typeof ApiPublicHooksRunScheduledAdminRoute
   '/api/public/hooks/sync-courses': typeof ApiPublicHooksSyncCoursesRoute
   '/api/public/hooks/sync-library-books': typeof ApiPublicHooksSyncLibraryBooksRoute
+  '/api/public/hooks/sync-library-sources': typeof ApiPublicHooksSyncLibrarySourcesRoute
   '/api/public/hooks/sync-openstax': typeof ApiPublicHooksSyncOpenstaxRoute
 }
 export interface FileRoutesById {
@@ -923,6 +932,7 @@ export interface FileRoutesById {
   '/api/public/hooks/run-scheduled-admin': typeof ApiPublicHooksRunScheduledAdminRoute
   '/api/public/hooks/sync-courses': typeof ApiPublicHooksSyncCoursesRoute
   '/api/public/hooks/sync-library-books': typeof ApiPublicHooksSyncLibraryBooksRoute
+  '/api/public/hooks/sync-library-sources': typeof ApiPublicHooksSyncLibrarySourcesRoute
   '/api/public/hooks/sync-openstax': typeof ApiPublicHooksSyncOpenstaxRoute
 }
 export interface FileRouteTypes {
@@ -1027,6 +1037,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/run-scheduled-admin'
     | '/api/public/hooks/sync-courses'
     | '/api/public/hooks/sync-library-books'
+    | '/api/public/hooks/sync-library-sources'
     | '/api/public/hooks/sync-openstax'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -1127,6 +1138,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/run-scheduled-admin'
     | '/api/public/hooks/sync-courses'
     | '/api/public/hooks/sync-library-books'
+    | '/api/public/hooks/sync-library-sources'
     | '/api/public/hooks/sync-openstax'
   id:
     | '__root__'
@@ -1229,6 +1241,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/run-scheduled-admin'
     | '/api/public/hooks/sync-courses'
     | '/api/public/hooks/sync-library-books'
+    | '/api/public/hooks/sync-library-sources'
     | '/api/public/hooks/sync-openstax'
   fileRoutesById: FileRoutesById
 }
@@ -1302,6 +1315,7 @@ export interface RootRouteChildren {
   ApiPublicHooksRunScheduledAdminRoute: typeof ApiPublicHooksRunScheduledAdminRoute
   ApiPublicHooksSyncCoursesRoute: typeof ApiPublicHooksSyncCoursesRoute
   ApiPublicHooksSyncLibraryBooksRoute: typeof ApiPublicHooksSyncLibraryBooksRoute
+  ApiPublicHooksSyncLibrarySourcesRoute: typeof ApiPublicHooksSyncLibrarySourcesRoute
   ApiPublicHooksSyncOpenstaxRoute: typeof ApiPublicHooksSyncOpenstaxRoute
 }
 
@@ -1951,6 +1965,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksSyncOpenstaxRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/sync-library-sources': {
+      id: '/api/public/hooks/sync-library-sources'
+      path: '/api/public/hooks/sync-library-sources'
+      fullPath: '/api/public/hooks/sync-library-sources'
+      preLoaderRoute: typeof ApiPublicHooksSyncLibrarySourcesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/sync-library-books': {
       id: '/api/public/hooks/sync-library-books'
       path: '/api/public/hooks/sync-library-books'
@@ -2202,6 +2223,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksRunScheduledAdminRoute: ApiPublicHooksRunScheduledAdminRoute,
   ApiPublicHooksSyncCoursesRoute: ApiPublicHooksSyncCoursesRoute,
   ApiPublicHooksSyncLibraryBooksRoute: ApiPublicHooksSyncLibraryBooksRoute,
+  ApiPublicHooksSyncLibrarySourcesRoute: ApiPublicHooksSyncLibrarySourcesRoute,
   ApiPublicHooksSyncOpenstaxRoute: ApiPublicHooksSyncOpenstaxRoute,
 }
 export const routeTree = rootRouteImport
