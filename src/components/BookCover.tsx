@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { resolveStorageUrl } from "@/lib/storage-url";
 
 type BookCoverProps = {
   title: string;
@@ -12,16 +13,34 @@ type BookCoverProps = {
 
 export function BookCover({ title, author, src, className, imageClassName }: BookCoverProps) {
   const [failed, setFailed] = useState(false);
+  const [resolvedSrc, setResolvedSrc] = useState<string | null>(src ?? null);
 
-  useEffect(() => setFailed(false), [src]);
+  useEffect(() => {
+    let alive = true;
+    setFailed(false);
+    setResolvedSrc(src ?? null);
+    resolveStorageUrl(src).then((url) => {
+      if (!alive) return;
+      setResolvedSrc(url ?? src ?? null);
+      if (url) {
+        const img = new Image();
+        img.decoding = "async";
+        img.src = url;
+      }
+    });
+    return () => {
+      alive = false;
+    };
+  }, [src]);
 
-  if (src && !failed) {
+  if (resolvedSrc && !failed) {
     return (
       <div className={cn("overflow-hidden bg-muted", className)}>
         <img
-          src={src}
+          src={resolvedSrc}
           alt={`Cover of ${title}`}
-         
+          loading="lazy"
+          decoding="async"
           onError={() => setFailed(true)}
           className={cn("h-full w-full object-cover", imageClassName)}
         />

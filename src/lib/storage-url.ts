@@ -19,6 +19,7 @@ function parseStorageUrl(url: string): { bucket: string; path: string } | null {
 }
 
 const cache = new Map<string, { url: string; exp: number }>();
+const STORAGE_CACHE_PREFIX = "storage-url-cache:";
 
 /** Resolve a (possibly private) storage URL to a signed URL that <img>/<video> can load. */
 export async function resolveStorageUrl(url: string | null | undefined): Promise<string | null> {
@@ -27,10 +28,24 @@ export async function resolveStorageUrl(url: string | null | undefined): Promise
   if (!parsed || !SIGN_BUCKETS.includes(parsed.bucket)) return url;
   const cached = cache.get(url);
   if (cached && cached.exp > Date.now()) return cached.url;
+  try {
+    const stored = localStorage.getItem(`${STORAGE_CACHE_PREFIX}${url}`);
+    if (stored) {
+      const parsedStored = JSON.parse(stored) as { url?: string; exp?: number };
+      if (parsedStored.url && parsedStored.exp && parsedStored.exp > Date.now()) {
+        cache.set(url, { url: parsedStored.url, exp: parsedStored.exp });
+        return parsedStored.url;
+      }
+    }
+  } catch {}
   const ttl = 60 * 60 * 24 * 7; // 1 week
   const { data } = await supabase.storage.from(parsed.bucket).createSignedUrl(parsed.path, ttl);
   if (!data?.signedUrl) return url;
-  cache.set(url, { url: data.signedUrl, exp: Date.now() + (ttl - 60) * 1000 });
+  const next = { url: data.signedUrl, exp: Date.now() + (ttl - 60) * 1000 };
+  cache.set(url, next);
+  try {
+    localStorage.setItem(`${STORAGE_CACHE_PREFIX}${url}`, JSON.stringify(next));
+  } catch {}
   return data.signedUrl;
 }
 

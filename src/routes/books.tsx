@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { purchaseLibraryBook } from "@/lib/library-purchase.functions";
 import { getLibraryBooks, ensureLibraryCatalog } from "@/lib/library-books.functions";
-import { runLibrarySync } from "@/lib/library-sync.functions";
 import { useAuth } from "@/lib/auth";
 import { getIsAdminUser } from "@/lib/admin-role";
 import { AppShell } from "@/components/AppShell";
@@ -29,7 +28,6 @@ import {
   ChevronDown,
   Search,
   Sparkles,
-  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { SaveButton } from "@/components/SaveButton";
@@ -116,6 +114,35 @@ function formatCredits(v: unknown) {
   return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
 }
 
+const BOOK_CACHE_PREFIX = "book-plug-cache:";
+
+function cachedBooksKey(category: string, tag: string, query: string) {
+  return `${BOOK_CACHE_PREFIX}${category}:${tag}:${query.trim().toLowerCase()}`;
+}
+
+function readCachedBooks(category: string, tag: string, query: string) {
+  if (typeof window === "undefined") return undefined;
+  try {
+    const raw = window.localStorage.getItem(cachedBooksKey(category, tag, query));
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw) as { books?: any[]; savedAt?: number };
+    if (!Array.isArray(parsed.books)) return undefined;
+    return parsed.books;
+  } catch {
+    return undefined;
+  }
+}
+
+function saveCachedBooks(category: string, tag: string, query: string, books: any[]) {
+  if (typeof window === "undefined" || !books.length) return;
+  try {
+    window.localStorage.setItem(
+      cachedBooksKey(category, tag, query),
+      JSON.stringify({ books, savedAt: Date.now() }),
+    );
+  } catch {}
+}
+
 function BooksPage() {
   const [cat, setCat] = useState<string>("all");
   const [tag, setTag] = useState<string>("all");
@@ -123,7 +150,6 @@ function BooksPage() {
   const qc = useQueryClient();
   const purchaseFn = useServerFn(purchaseLibraryBook);
   const getBooksFn = useServerFn(getLibraryBooks);
-  const syncFn = useServerFn(runLibrarySync);
   const ensureFn = useServerFn(ensureLibraryCatalog);
   const { user } = useAuth();
   const { data: isAdmin } = useQuery({
@@ -131,34 +157,36 @@ function BooksPage() {
     enabled: !!user,
     queryFn: async () => getIsAdminUser(user!.id),
   });
-  const sync = useMutation({
-    mutationFn: async () => syncFn({ data: { source: "all" } }),
-    onSuccess: (res) => {
-      toast.success(`Catalog synced (${res.results?.length ?? 0} sources)`);
-      qc.invalidateQueries({ queryKey: ["library-books"] });
-    },
-    onError: (e: any) => toast.error(e?.message ?? "Sync failed"),
-  });
-
-  // Auto-sync on first mount (self-rate-limited: only syncs sources with < 20 books).
+  // Auto-populate on entry and keep the catalog warm in the background.
   const ranAutoSync = useRef(false);
   useEffect(() => {
     if (ranAutoSync.current) return;
     ranAutoSync.current = true;
-    ensureFn({})
+    ensureFn()
       .then((res: any) => {
         if (res?.ran > 0) qc.invalidateQueries({ queryKey: ["library-books"] });
       })
       .catch(() => {});
+    const timer = window.setInterval(() => {
+      ensureFn()
+        .then((res: any) => {
+          if (res?.ran > 0) qc.invalidateQueries({ queryKey: ["library-books"] });
+        })
+        .catch(() => {});
+    }, 10 * 60_000);
+    return () => window.clearInterval(timer);
   }, [ensureFn, qc]);
+
+  const bookQueryKey = ["library-books", cat, tag, q] as const;
 
   const {
     data: books,
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ["library-books", cat, tag, q],
+    queryKey: bookQueryKey,
     placeholderData: keepPreviousData,
+    initialData: () => readCachedBooks(cat, tag, q),
     queryFn: () =>
       getBooksFn({
         data: {
@@ -168,8 +196,16 @@ function BooksPage() {
           limit: 160,
         },
       }),
-    staleTime: 60_000,
+    staleTime: 10 * 60_000,
+    gcTime: 24 * 60 * 60_000,
+    retry: 2,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
   });
+
+  useEffect(() => {
+    if (books?.length) saveCachedBooks(cat, tag, q, books as any[]);
+  }, [books, cat, tag, q]);
 
   const { data: owned } = useQuery({
     queryKey: ["library-owned"],
@@ -234,22 +270,7 @@ function BooksPage() {
                   <PlusCircle className="w-4 h-4 mr-1" /> Sell a book
                 </Link>
               </Button>
-              {isAdmin && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => sync.mutate()}
-                  disabled={sync.isPending}
-                  title="Sync library sources"
-                >
-                  {sync.isPending ? (
-                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                  ) : (
-                    <RefreshCw className="w-4 h-4 mr-1" />
-                  )}
-                  Sync sources
-                </Button>
-              )}
+              {isAdmin && <span className="sr-only">Book catalog auto-populates in the background.</span>}
             </div>
           </div>
 
