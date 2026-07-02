@@ -41,7 +41,13 @@ export const Route = createFileRoute("/api/news")({
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: corsHeaders }),
       GET: async ({ request }) => {
-        const apiKey = process.env.NEWS_API_KEY;
+        let apiKey = process.env.NEWS_API_KEY ?? "";
+        if (!apiKey) {
+          try {
+            const { readPlatformSetting } = await import("@/lib/platform-settings.server");
+            apiKey = (await readPlatformSetting("NEWS_API_KEY")) ?? "";
+          } catch {}
+        }
         if (!apiKey) {
           return json({ articles: [], total: 0, notConfigured: true });
         }
