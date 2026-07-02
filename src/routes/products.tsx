@@ -13,8 +13,8 @@ import {
   SlidersHorizontal,
   MapPin,
   ArrowUpRight,
-  Sparkles,
 } from "lucide-react";
+
 
 import { EbsuBadge } from "@/components/EbsuBadge";
 import { StorageMedia } from "@/components/StorageMedia";
