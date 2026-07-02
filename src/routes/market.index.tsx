@@ -350,7 +350,7 @@ function MarketPage() {
                 <ShoppingBag className="w-12 h-12 mx-auto mb-2 opacity-30" />
                 <p>No listings in this category yet. Be the first!</p>
                 <Button asChild className="mt-4">
-                  <Link to="/market/new">
+                  <Link to="/market/new" search={{ kind: "products" } as any}>
                     <PlusCircle className="w-4 h-4 mr-1" />
                     Post a listing
                   </Link>

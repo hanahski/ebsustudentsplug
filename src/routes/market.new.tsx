@@ -51,27 +51,39 @@ function NewListing() {
   const initial = (search.kind as Kind | undefined) ?? null;
   const [kind, setKind] = useState<Kind | null>(initial);
 
+  // No category picker page — if no kind was chosen upstream, send the user
+  // back to the market hub where they pick a hub (Products / Tickets / Books / Advert).
+  useEffect(() => {
+    if (!loading && user && !kind) {
+      nav({ to: "/market" });
+    }
+  }, [loading, user, kind, nav]);
+
   const { data: profile } = useQuery({
     queryKey: ["my-badges", user?.id],
     enabled: !!user?.id,
-    queryFn: async () => (await supabase.from("profiles").select("is_sure_plug,is_legit,is_star").eq("id", user!.id).maybeSingle()).data,
+    queryFn: async () => (await supabase.from("profiles").select("is_sure_plug,is_legit,is_star,is_verified").eq("id", user!.id).maybeSingle()).data,
   });
 
-  if (!kind) return <KindPicker onPick={setKind} />;
+  if (!kind) return null;
 
-  // Badge gates
-  if (kind === "products" && !isAdmin && !profile?.is_sure_plug) {
-    return <BadgeGate kind={kind} need="sure_plug" onBack={() => setKind(null)} />;
+  // Any verified user can post a product. The Sure Plug badge just marks
+  // trusted sellers — it is no longer a gate.
+  if (kind === "products" && !isAdmin && !profile?.is_verified) {
+    return <BadgeGate kind={kind} need="verified" onBack={() => nav({ to: "/market" })} />;
   }
-  return <ComposerForm kind={kind} onBack={() => setKind(null)} userId={user?.id} />;
+  return <ComposerForm kind={kind} onBack={() => nav({ to: "/market" })} userId={user?.id} />;
 }
 
-function BadgeGate({ kind, need, onBack }: { kind: Kind; need: "sure_plug" | "legit" | "star"; onBack: () => void }) {
+
+function BadgeGate({ kind, need, onBack }: { kind: Kind; need: "sure_plug" | "legit" | "star" | "verified"; onBack: () => void }) {
   const labels: Record<string, { title: string; msg: string }> = {
     sure_plug: { title: "Sure Plug badge required", msg: "Only trusted sellers (Sure Plug) can post products. Apply for the badge to unlock product listings." },
     legit: { title: "Legit badge required", msg: "Only Legit contributors can post news. Apply for the Legit badge to share verified news." },
     star: { title: "Star badge required", msg: "Only Star authors can compose books. Apply for the Star badge to unlock the book composer." },
+    verified: { title: "Verify your student account", msg: "Any verified student can post products. Verify your JAMB / student status to unlock listings — trusted (Sure Plug) sellers just get an extra badge on their posts." },
   };
+
   const l = labels[need];
   return (
     <AppShell>
