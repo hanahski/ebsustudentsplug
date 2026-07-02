@@ -23,6 +23,10 @@ async function run(request: Request) {
       const { syncOpenStax } = await import("@/lib/openstax-sync.server");
       tasks.push(["openstax", () => syncOpenStax()]);
     }
+    if (which === "all" || which === "obooko") {
+      const { syncObooko } = await import("@/lib/obooko-sync.server");
+      tasks.push(["obooko", () => syncObooko()]);
+    }
     for (const [name, task] of tasks) {
       try {
         results.push({ name, ...(await task()) });

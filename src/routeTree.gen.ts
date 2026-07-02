@@ -102,6 +102,7 @@ import { Route as ApiPublicVocalSplitRouteImport } from './routes/api/public/voc
 import { Route as ApiPublicVirtualNumberRouteImport } from './routes/api/public/virtual-number'
 import { Route as ApiPublicPlugAiRouteImport } from './routes/api/public/plug-ai'
 import { Route as ApiPublicHooksSyncOpenstaxRouteImport } from './routes/api/public/hooks/sync-openstax'
+import { Route as ApiPublicHooksSyncObookoRouteImport } from './routes/api/public/hooks/sync-obooko'
 import { Route as ApiPublicHooksSyncLibrarySourcesRouteImport } from './routes/api/public/hooks/sync-library-sources'
 import { Route as ApiPublicHooksSyncLibraryBooksRouteImport } from './routes/api/public/hooks/sync-library-books'
 import { Route as ApiPublicHooksSyncCoursesRouteImport } from './routes/api/public/hooks/sync-courses'
@@ -578,6 +579,12 @@ const ApiPublicHooksSyncOpenstaxRoute =
     path: '/api/public/hooks/sync-openstax',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksSyncObookoRoute =
+  ApiPublicHooksSyncObookoRouteImport.update({
+    id: '/api/public/hooks/sync-obooko',
+    path: '/api/public/hooks/sync-obooko',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksSyncLibrarySourcesRoute =
   ApiPublicHooksSyncLibrarySourcesRouteImport.update({
     id: '/api/public/hooks/sync-library-sources',
@@ -735,6 +742,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/sync-courses': typeof ApiPublicHooksSyncCoursesRoute
   '/api/public/hooks/sync-library-books': typeof ApiPublicHooksSyncLibraryBooksRoute
   '/api/public/hooks/sync-library-sources': typeof ApiPublicHooksSyncLibrarySourcesRoute
+  '/api/public/hooks/sync-obooko': typeof ApiPublicHooksSyncObookoRoute
   '/api/public/hooks/sync-openstax': typeof ApiPublicHooksSyncOpenstaxRoute
 }
 export interface FileRoutesByTo {
@@ -837,6 +845,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/sync-courses': typeof ApiPublicHooksSyncCoursesRoute
   '/api/public/hooks/sync-library-books': typeof ApiPublicHooksSyncLibraryBooksRoute
   '/api/public/hooks/sync-library-sources': typeof ApiPublicHooksSyncLibrarySourcesRoute
+  '/api/public/hooks/sync-obooko': typeof ApiPublicHooksSyncObookoRoute
   '/api/public/hooks/sync-openstax': typeof ApiPublicHooksSyncOpenstaxRoute
 }
 export interface FileRoutesById {
@@ -942,6 +951,7 @@ export interface FileRoutesById {
   '/api/public/hooks/sync-courses': typeof ApiPublicHooksSyncCoursesRoute
   '/api/public/hooks/sync-library-books': typeof ApiPublicHooksSyncLibraryBooksRoute
   '/api/public/hooks/sync-library-sources': typeof ApiPublicHooksSyncLibrarySourcesRoute
+  '/api/public/hooks/sync-obooko': typeof ApiPublicHooksSyncObookoRoute
   '/api/public/hooks/sync-openstax': typeof ApiPublicHooksSyncOpenstaxRoute
 }
 export interface FileRouteTypes {
@@ -1048,6 +1058,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/sync-courses'
     | '/api/public/hooks/sync-library-books'
     | '/api/public/hooks/sync-library-sources'
+    | '/api/public/hooks/sync-obooko'
     | '/api/public/hooks/sync-openstax'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -1150,6 +1161,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/sync-courses'
     | '/api/public/hooks/sync-library-books'
     | '/api/public/hooks/sync-library-sources'
+    | '/api/public/hooks/sync-obooko'
     | '/api/public/hooks/sync-openstax'
   id:
     | '__root__'
@@ -1254,6 +1266,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/sync-courses'
     | '/api/public/hooks/sync-library-books'
     | '/api/public/hooks/sync-library-sources'
+    | '/api/public/hooks/sync-obooko'
     | '/api/public/hooks/sync-openstax'
   fileRoutesById: FileRoutesById
 }
@@ -1332,6 +1345,7 @@ export interface RootRouteChildren {
   ApiPublicHooksSyncCoursesRoute: typeof ApiPublicHooksSyncCoursesRoute
   ApiPublicHooksSyncLibraryBooksRoute: typeof ApiPublicHooksSyncLibraryBooksRoute
   ApiPublicHooksSyncLibrarySourcesRoute: typeof ApiPublicHooksSyncLibrarySourcesRoute
+  ApiPublicHooksSyncObookoRoute: typeof ApiPublicHooksSyncObookoRoute
   ApiPublicHooksSyncOpenstaxRoute: typeof ApiPublicHooksSyncOpenstaxRoute
 }
 
@@ -1988,6 +2002,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksSyncOpenstaxRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/sync-obooko': {
+      id: '/api/public/hooks/sync-obooko'
+      path: '/api/public/hooks/sync-obooko'
+      fullPath: '/api/public/hooks/sync-obooko'
+      preLoaderRoute: typeof ApiPublicHooksSyncObookoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/sync-library-sources': {
       id: '/api/public/hooks/sync-library-sources'
       path: '/api/public/hooks/sync-library-sources'
@@ -2237,6 +2258,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksSyncCoursesRoute: ApiPublicHooksSyncCoursesRoute,
   ApiPublicHooksSyncLibraryBooksRoute: ApiPublicHooksSyncLibraryBooksRoute,
   ApiPublicHooksSyncLibrarySourcesRoute: ApiPublicHooksSyncLibrarySourcesRoute,
+  ApiPublicHooksSyncObookoRoute: ApiPublicHooksSyncObookoRoute,
   ApiPublicHooksSyncOpenstaxRoute: ApiPublicHooksSyncOpenstaxRoute,
 }
 export const routeTree = rootRouteImport
