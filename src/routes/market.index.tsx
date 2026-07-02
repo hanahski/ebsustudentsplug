@@ -25,36 +25,46 @@ import { getLibraryBooks } from "@/lib/library-books.functions";
 
 export const Route = createFileRoute("/market/")({ component: MarketPage });
 
-const KINDS = [
+const HUBS = [
   {
-    key: "tickets",
-    label: "Tickets",
-    icon: Ticket,
-    cta: "I want to sell my Ticket",
-    tone: "from-fuchsia-500 to-rose-500",
+    key: "books",
+    label: "Book Plug",
+    tagline: "Textbooks, novels & study material",
+    icon: BookOpen,
+    to: "/books",
+    tone: "from-emerald-500/90 via-emerald-600 to-teal-700",
+    ring: "ring-emerald-300/40",
   },
   {
     key: "products",
     label: "Products",
+    tagline: "Phones, fashion, hostel essentials",
     icon: Package,
-    cta: "I want to sell a Product",
-    tone: "from-sky-500 to-indigo-500",
+    to: "/products",
+    tone: "from-sky-500/90 via-indigo-600 to-blue-700",
+    ring: "ring-sky-300/40",
   },
   {
-    key: "books",
-    label: "Book Plug",
-    icon: BookOpen,
-    cta: "I want to sell my Book",
-    tone: "from-emerald-500 to-teal-500",
+    key: "tickets",
+    label: "Tickets",
+    tagline: "Events, parties & conferences",
+    icon: Ticket,
+    to: "/tickets",
+    tone: "from-fuchsia-500/90 via-pink-600 to-rose-700",
+    ring: "ring-fuchsia-300/40",
   },
   {
     key: "composer",
     label: "Book Composer",
+    tagline: "Write, publish & sell your book",
     icon: PenLine,
-    cta: "I want to write a Book",
-    tone: "from-violet-500 to-purple-600",
+    to: "/books/composer",
+    tone: "from-violet-500/90 via-purple-600 to-indigo-800",
+    ring: "ring-violet-300/40",
   },
 ] as const;
+
+const KIND_FILTERS = ["all", "products", "tickets", "books", "composer"] as const;
 
 function MarketPage() {
   const [q, setQ] = useState("");
