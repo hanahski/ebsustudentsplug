@@ -73,6 +73,8 @@ function LoginPage() {
   const [name, setName] = useState("");
   const [jamb, setJamb] = useState("");
   const [busy, setBusy] = useState(false);
+  const [bannerKey, setBannerKey] = useState(0);
+  useEffect(() => { if (readPendingReferral()) setMode("signup"); }, []);
   useEffect(() => {
     let cancelled = false;
     supabase.auth.getSession().then(async ({ data }) => {
