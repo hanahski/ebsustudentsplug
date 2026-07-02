@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { EbsuBadge } from "@/components/EbsuBadge";
 import { StorageMedia } from "@/components/StorageMedia";
+import { BookCover } from "@/components/BookCover";
 import { getLibraryBooks } from "@/lib/library-books.functions";
 
 export const Route = createFileRoute("/market/")({ component: MarketPage });
@@ -295,18 +296,12 @@ function MarketPage() {
                   className="bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition flex flex-col"
                 >
                   <div className="aspect-[2/3] bg-muted overflow-hidden">
-                    {b.cover_url ? (
-                      <img
-                        src={b.cover_url}
-                        alt={b.title}
-                       
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                        <BookOpen className="w-10 h-10 opacity-40" />
-                      </div>
-                    )}
+                    <BookCover
+                      title={b.title}
+                      author={b.author}
+                      src={b.cover_url}
+                      className="w-full h-full"
+                    />
                   </div>
                   <div className="p-3 flex flex-col gap-1 flex-1">
                     <h3 className="text-sm font-semibold line-clamp-2 leading-tight">{b.title}</h3>
