@@ -117,6 +117,7 @@ function LoginPage() {
           console.error("[login] JAMB claim failed", e),
         );
         try { sessionStorage.removeItem(PENDING_JAMB_KEY); } catch {}
+        await tryRedeemPendingReferral();
         toast.success("Welcome to StudentsPlug!");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
