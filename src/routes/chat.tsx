@@ -131,6 +131,15 @@ function ChatPage() {
           <MessageCircle className="w-12 h-12 mx-auto text-primary mb-3" />
           <h1 className="text-2xl font-display font-bold">Chat Plug</h1>
           <p className="text-sm text-muted-foreground mt-2">Sign in to send and receive private messages.</p>
+          <p className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
+            <span>DMs</span>
+            <span aria-hidden>·</span>
+            <span>Groups</span>
+            <span aria-hidden>·</span>
+            <ComingSoonLabel>Campus rooms</ComingSoonLabel>
+            <span aria-hidden>·</span>
+            <ComingSoonLabel>Nearby students</ComingSoonLabel>
+          </p>
           <Button asChild className="mt-4">
             <Link to="/login" search={{ redirect: "/chat" }}>Sign in to chat</Link>
           </Button>
