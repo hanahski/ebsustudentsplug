@@ -100,15 +100,14 @@ function parseTiles(html: string): Array<{ href: string; title: string; author: 
   return out;
 }
 
-async function crawlBucket(
+async function crawlCategory(
   slug: string,
   category: string,
-  rating: number,
   found: Map<string, Row>,
   maxPages: number,
 ) {
   for (let page = 1; page <= maxPages; page++) {
-    const url = `${BASE}/category/${slug}?rating=stars${rating}&page=${page}`;
+    const url = `${BASE}/category/${slug}?page=${page}`;
     let html: string;
     try {
       html = await fetchHtml(url);
@@ -117,12 +116,11 @@ async function crawlBucket(
     }
     const tiles = parseTiles(html);
     if (tiles.length === 0) break;
+    let added = 0;
     for (const t of tiles) {
       const key = `obooko-${slugFromUrl(t.href)}`;
-      // Prefer the highest rating we see for a given book (if it appears in
-      // more than one bucket for whatever reason).
-      const prev = found.get(key);
-      if (prev && prev.price_credits >= rating) continue;
+      if (found.has(key)) continue;
+      added += 1;
       found.set(key, {
         openlibrary_key: key,
         title: t.title.slice(0, 280),
@@ -135,21 +133,19 @@ async function crawlBucket(
         source: "obooko",
         description: null,
         first_publish_year: null,
-        price_credits: rating,
+        price_credits: DEFAULT_PRICE,
         download_formats: {},
       });
     }
-    // Obooko shows 12 tiles per page; a short page means we've hit the end.
-    if (tiles.length < 12) break;
+    // Stop once a page yields no new titles (we've circled back to the start).
+    if (added === 0) break;
   }
 }
 
-export async function syncObooko(maxPagesPerBucket = 60) {
+export async function syncObooko(maxPagesPerCategory = 80) {
   const found = new Map<string, Row>();
   for (const cat of CATEGORIES) {
-    for (const stars of STARS) {
-      await crawlBucket(cat.slug, cat.category, stars, found, maxPagesPerBucket);
-    }
+    await crawlCategory(cat.slug, cat.category, found, maxPagesPerCategory);
   }
   const rows = [...found.values()];
   let rowsUpserted = 0;
