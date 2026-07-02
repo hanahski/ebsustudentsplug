@@ -1351,6 +1351,7 @@ export type Database = {
           is_star: boolean
           is_sure_plug: boolean
           is_verified: boolean
+          jamb_number: string | null
           last_seen_at: string | null
           location_updated_at: string | null
           payout_account: Json | null
@@ -1386,6 +1387,7 @@ export type Database = {
           is_star?: boolean
           is_sure_plug?: boolean
           is_verified?: boolean
+          jamb_number?: string | null
           last_seen_at?: string | null
           location_updated_at?: string | null
           payout_account?: Json | null
@@ -1421,6 +1423,7 @@ export type Database = {
           is_star?: boolean
           is_sure_plug?: boolean
           is_verified?: boolean
+          jamb_number?: string | null
           last_seen_at?: string | null
           location_updated_at?: string | null
           payout_account?: Json | null
@@ -2154,7 +2157,12 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      jamb_availability: {
+        Row: {
+          jamb: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       _agent_exec_sql: { Args: { sql: string }; Returns: undefined }
@@ -2189,6 +2197,7 @@ export type Database = {
         Returns: Json
       }
       admin_post_to_note: { Args: { _post_id: string }; Returns: string }
+      admin_reset_jamb: { Args: { _user_id: string }; Returns: undefined }
       admin_set_badge: {
         Args: { _badge: string; _user_id: string; _value: boolean }
         Returns: undefined
@@ -2203,6 +2212,7 @@ export type Database = {
       }
       buy_ticket: { Args: { _ticket_id: string }; Returns: Json }
       claim_ad_reward: { Args: { _amount: number }; Returns: Json }
+      claim_jamb_number: { Args: { _jamb: string }; Returns: Json }
       claim_seed_admin_role: { Args: never; Returns: boolean }
       create_dm_group: {
         Args: { _member_ids: string[]; _name: string }
