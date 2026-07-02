@@ -93,6 +93,21 @@ function BooksPage() {
   const qc = useQueryClient();
   const purchaseFn = useServerFn(purchaseLibraryBook);
   const getBooksFn = useServerFn(getLibraryBooks);
+  const syncFn = useServerFn(runLibrarySync);
+  const { user } = useAuth();
+  const { data: isAdmin } = useQuery({
+    queryKey: ["is-admin", user?.id],
+    enabled: !!user,
+    queryFn: async () => getIsAdminUser(user!.id),
+  });
+  const sync = useMutation({
+    mutationFn: async () => syncFn({ data: { source: "all" } }),
+    onSuccess: (res) => {
+      toast.success(`Catalog synced (${res.results?.length ?? 0} sources)`);
+      qc.invalidateQueries({ queryKey: ["library-books"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Sync failed"),
+  });
 
   const {
     data: books,
