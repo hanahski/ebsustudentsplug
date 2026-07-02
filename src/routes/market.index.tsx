@@ -136,40 +136,30 @@ function MarketPage() {
   return (
     <AppShell>
       <div className="space-y-6">
-        <div className="bg-card border rounded-3xl p-6 shadow-card">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div>
-              <h1 className="text-2xl font-bold font-display flex items-center gap-2">
-                <ShoppingBag className="w-6 h-6 text-primary" />
-                Market Plug
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Buy, sell, and trade with fellow students.
-              </p>
+        <div className="relative overflow-hidden bg-card border rounded-3xl p-6 shadow-card">
+          <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full bg-primary/10 blur-3xl" />
+          <div className="absolute -bottom-24 -left-16 w-64 h-64 rounded-full bg-accent/10 blur-3xl" />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+
+          <div className="relative">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-semibold uppercase tracking-wider">
+              <ShoppingBag className="w-3.5 h-3.5" />
+              Market Plug
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  qc.invalidateQueries({ queryKey: ["market"] });
-                  qc.invalidateQueries({ queryKey: ["market-books"] });
-                  qc.invalidateQueries({ queryKey: ["market-tickets"] });
-                }}
-              >
-                <RefreshCw className="w-4 h-4 mr-1" />
-                Refresh
-              </Button>
-              <Button asChild variant="outline" size="sm">
-                <Link to="/tools/qr">
-                  <QrCode className="w-4 h-4 mr-1" />
-                  Ticket Scanner
-                </Link>
-              </Button>
-            </div>
+            <h1 className="mt-2 text-2xl md:text-3xl font-bold font-display leading-tight">
+              The student marketplace,{" "}
+              <span className="bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
+                reimagined
+              </span>
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1 max-w-xl">
+              Buy, sell and trade with verified StudentsPlug members — books,
+              products, tickets and original writing, all in one place.
+            </p>
           </div>
 
           <div className="mt-5 grid grid-cols-2 lg:grid-cols-4 gap-3">
+
             {HUBS.map(({ key, label, tagline, icon: Icon, to, tone, ring }) => (
               <Link
                 key={key}
