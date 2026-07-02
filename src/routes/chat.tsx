@@ -1092,28 +1092,40 @@ function ThreadPane({ meId, threadId, onBack }: { meId: string; threadId: string
           e.preventDefault();
           send();
         }}
-        className="border-t p-2 flex gap-2 bg-card"
+        className="relative border-t bg-gradient-to-b from-background/60 to-background/90 backdrop-blur-xl px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:p-3"
       >
-        <Input
-          value={text}
-          onChange={(e) => {
-            setText(e.target.value);
-            if (e.target.value.trim()) sendTyping();
-          }}
-          placeholder="Type a message…"
-          maxLength={2000}
-          type="text"
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="sentences"
-          spellCheck
-          enterKeyHint="send"
-          name="chat-message"
-          inputMode="text"
-        />
-        <Button type="submit" disabled={!text.trim()}>
-          <Send className="w-4 h-4" />
-        </Button>
+        {/* decorative blur blobs */}
+        <div className="pointer-events-none absolute -top-8 left-8 h-16 w-24 rounded-full bg-primary/20 blur-3xl" aria-hidden />
+        <div className="pointer-events-none absolute -top-8 right-8 h-16 w-24 rounded-full bg-accent/20 blur-3xl" aria-hidden />
+
+        <div className="relative flex items-end gap-2 rounded-full border border-white/20 bg-background/70 backdrop-blur-xl shadow-lg shadow-primary/5 pl-4 pr-1.5 py-1.5 focus-within:border-primary/40 focus-within:shadow-primary/20 transition">
+          <input
+            value={text}
+            onChange={(e) => {
+              setText(e.target.value);
+              if (e.target.value.trim()) sendTyping();
+            }}
+            placeholder="Type a message…"
+            maxLength={2000}
+            type="text"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="sentences"
+            spellCheck
+            enterKeyHint="send"
+            name="chat-message"
+            inputMode="text"
+            className="flex-1 min-w-0 bg-transparent outline-none border-0 text-[15px] sm:text-sm placeholder:text-muted-foreground/70 py-2"
+          />
+          <button
+            type="submit"
+            disabled={!text.trim()}
+            aria-label="Send message"
+            className="shrink-0 h-10 w-10 rounded-full flex items-center justify-center bg-gradient-to-br from-primary via-primary to-accent text-primary-foreground shadow-md shadow-primary/30 hover:shadow-lg hover:shadow-primary/40 active:scale-95 transition disabled:opacity-40 disabled:pointer-events-none"
+          >
+            <Send className="w-4 h-4 translate-x-[1px]" />
+          </button>
+        </div>
       </form>
     </div>
   );
