@@ -280,19 +280,26 @@ function BooksPage() {
               </button>
             ))}
           </div>
-          <div className="relative mt-2 flex gap-2 flex-wrap">
-            {TAGS.map((t) => (
-              <button
-                key={t.key}
-                onClick={() => setTag(t.key)}
-                className={`px-3 py-1 rounded-full text-[11px] font-medium border transition ${
-                  tag === t.key
-                    ? "bg-emerald-500 text-white border-emerald-500 shadow"
-                    : "bg-background/70 hover:bg-background"
-                }`}
-              >
-                {t.label}
-              </button>
+          <div className="relative mt-3 space-y-2">
+            {TAG_GROUPS.map((group) => (
+              <div key={group.label} className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold min-w-[52px]">
+                  {group.label}
+                </span>
+                {group.tags.map((t) => (
+                  <button
+                    key={t.key}
+                    onClick={() => setTag(t.key)}
+                    className={`px-3 py-1 rounded-full text-[11px] font-medium border transition ${
+                      tag === t.key
+                        ? "bg-emerald-500 text-white border-emerald-500 shadow"
+                        : "bg-background/70 hover:bg-background"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
             ))}
           </div>
         </div>
