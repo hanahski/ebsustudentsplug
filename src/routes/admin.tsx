@@ -67,6 +67,7 @@ function AdminPanel() {
     { k: "banners", label: "Banners", icon: ImageIcon },
     { k: "tools", label: "Tools", icon: Wand2 },
     { k: "prices", label: "Tool Prices", icon: Coins },
+    { k: "integrations", label: "Integrations", icon: KeyRound },
   ];
 
   return (
@@ -107,6 +108,7 @@ function AdminPanel() {
         {tab === "banners" && <AdminBanners />}
         {tab === "tools" && <ToolEditor />}
         {tab === "prices" && <ToolPricesPanel />}
+        {tab === "integrations" && <AdminIntegrations />}
       </div>
     </AppShell>
   );
