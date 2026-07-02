@@ -170,60 +170,31 @@ function MarketPage() {
           </div>
 
           <div className="mt-5 grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {KINDS.map(({ key, label, icon: Icon, cta, tone }) => {
-              const isTicket = key === "tickets";
-              return (
-                <div
-                  key={key}
-                  className={`relative overflow-hidden rounded-2xl p-4 text-white bg-gradient-to-br ${tone} shadow-card flex flex-col`}
-                >
-                  <div className="absolute top-2 left-2 flex items-center gap-1 z-10">
-                    <EbsuBadge size={22} />
-                    <span className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-full bg-white/95 text-foreground shadow-card">
-                      <Icon className="w-3.5 h-3.5" />
-                    </span>
-                  </div>
-                  <Icon className="w-7 h-7 mb-2 opacity-90 mt-6 self-end" />
-                  <div className="font-bold font-display text-base leading-tight">{label}</div>
-                  {isTicket ? (
-                    <Link to="/tickets" className="text-xs underline opacity-90 mt-1 block">
-                      View tickets
-                    </Link>
-                  ) : key === "books" ? (
-                    <Link to="/books" className="text-xs underline opacity-90 mt-1 block">
-                      Browse books
-                    </Link>
-                  ) : key === "composer" ? (
-                    <Link to="/books/composer" className="text-xs underline opacity-90 mt-1 block">
-                      Open composer
-                    </Link>
-                  ) : (
-                    <button
-                      onClick={() => setKind(key)}
-                      className="text-xs underline opacity-90 mt-1 block text-left"
-                    >
-                      View listings
-                    </button>
-                  )}
-                  <Button
-                    asChild
-                    size="sm"
-                    variant="secondary"
-                    className="mt-3 w-full h-auto whitespace-normal break-words text-[11px] leading-tight py-2 px-2"
-                  >
-                    {isTicket ? (
-                      <Link to="/tickets">{cta}</Link>
-                    ) : key === "composer" ? (
-                      <Link to="/books/composer">{cta}</Link>
-                    ) : (
-                      <Link to="/market/new" search={{ kind: key } as any}>
-                        {cta}
-                      </Link>
-                    )}
-                  </Button>
+            {HUBS.map(({ key, label, tagline, icon: Icon, to, tone, ring }) => (
+              <Link
+                key={key}
+                to={to}
+                className={`group relative overflow-hidden rounded-2xl p-4 min-h-[148px] text-white bg-gradient-to-br ${tone} shadow-card ring-1 ${ring} hover:shadow-glow hover:-translate-y-0.5 transition-all flex flex-col justify-between`}
+              >
+                <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full bg-white/10 blur-2xl" />
+                <div className="absolute -bottom-10 -left-6 w-24 h-24 rounded-full bg-black/10 blur-2xl" />
+                <div className="relative flex items-center justify-between">
+                  <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/15 backdrop-blur border border-white/20">
+                    <Icon className="w-5 h-5" />
+                  </span>
+                  <EbsuBadge size={22} />
                 </div>
-              );
-            })}
+                <div className="relative">
+                  <div className="font-bold font-display text-base leading-tight">{label}</div>
+                  <p className="text-[11px] text-white/85 mt-0.5 leading-snug line-clamp-2">
+                    {tagline}
+                  </p>
+                  <div className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-white/95 group-hover:gap-2 transition-all">
+                    Open <span aria-hidden>→</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
           </div>
 
           <div className="mt-5 flex gap-2 flex-wrap items-center">
@@ -247,7 +218,7 @@ function MarketPage() {
             </label>
           </div>
           <div className="mt-3 flex gap-2 flex-wrap">
-            {["all", ...KINDS.map((k) => k.key)].map((c) => (
+            {KIND_FILTERS.map((c) => (
               <button
                 key={c}
                 onClick={() => setKind(c)}
