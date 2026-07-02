@@ -322,10 +322,23 @@ function BooksPage() {
         {!isLoading && (books?.length ?? 0) === 0 && (
           <div className="text-center py-16 text-muted-foreground bg-card border rounded-2xl">
             <BookOpen className="w-12 h-12 mx-auto mb-2 opacity-30" />
-            <p>No books here yet. Try another filter.</p>
-            <Button className="mt-4" onClick={() => refetch()}>
-              Reload
-            </Button>
+            {tag === "hard" ? (
+              <>
+                <p>Hard copies are listed on the Market by fellow students.</p>
+                <Button asChild className="mt-4">
+                  <Link to="/market" search={{ kind: "books" } as any}>
+                    Browse hard copies on Market
+                  </Link>
+                </Button>
+              </>
+            ) : (
+              <>
+                <p>No books here yet. Try another filter.</p>
+                <Button className="mt-4" onClick={() => refetch()}>
+                  Reload
+                </Button>
+              </>
+            )}
           </div>
         )}
 
