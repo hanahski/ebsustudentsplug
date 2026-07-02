@@ -83,7 +83,7 @@ function ProfilePage() {
           <div className="p-4 sm:p-6">
             <div className="flex items-start gap-4 flex-wrap -mt-12 sm:-mt-16">
               <div className="rounded-full ring-4 ring-card">
-                <AvatarDisplay avatarKey={p.avatar_key} size={88} online={online} photoUrl={(p as any).picture_url} />
+                <AvatarDisplay avatarKey={p.avatar_key} size={88} online={online} interactive photoUrl={(p as any).picture_url} />
               </div>
               <div className="flex-1 min-w-0 pt-2 w-full">
                 <h1 className="text-xl sm:text-2xl font-bold font-display leading-tight break-words flex items-start gap-2">
