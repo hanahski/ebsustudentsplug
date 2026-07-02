@@ -7,7 +7,7 @@ import { purchaseLibraryBook } from "@/lib/library-purchase.functions";
 import { getLibraryBooks } from "@/lib/library-books.functions";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Loader2, Coins, Check, PlusCircle, Feather } from "lucide-react";
+import { BookOpen, Loader2, Coins, Check, PlusCircle, Feather, Download } from "lucide-react";
 import { toast } from "sonner";
 import { SaveButton } from "@/components/SaveButton";
 import { BookCover } from "@/components/BookCover";
@@ -22,8 +22,16 @@ const CATS = [
   { key: "poetry", label: "Poetry" },
 ] as const;
 
+const TAGS = [
+  { key: "all", label: "All sources" },
+  { key: "pdf", label: "PDF" },
+  { key: "free", label: "Free books" },
+  { key: "ebsu", label: "EBSU books" },
+] as const;
+
 function BooksPage() {
   const [cat, setCat] = useState<string>("all");
+  const [tag, setTag] = useState<string>("all");
   const [q, setQ] = useState("");
   const qc = useQueryClient();
   const purchaseFn = useServerFn(purchaseLibraryBook);
@@ -34,12 +42,13 @@ function BooksPage() {
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ["library-books", cat, q],
+    queryKey: ["library-books", cat, tag, q],
     placeholderData: keepPreviousData,
     queryFn: () =>
       getBooksFn({
         data: {
           category: cat as "all" | "novel" | "book" | "comics" | "poetry",
+          tag: tag as "all" | "pdf" | "free" | "ebsu",
           query: q,
           limit: 120,
         },
@@ -142,6 +151,17 @@ function BooksPage() {
               </button>
             ))}
           </div>
+          <div className="mt-2 flex gap-2 flex-wrap">
+            {TAGS.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setTag(t.key)}
+                className={`px-3 py-1 rounded-full text-[11px] font-medium border transition ${tag === t.key ? "bg-emerald-500 text-white border-emerald-500" : "bg-background hover:bg-muted"}`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {isLoading && (
@@ -163,6 +183,25 @@ function BooksPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {(books ?? []).map((b: any) => {
             const isOwned = owned?.has(b.id);
+            const isPdfSource = b.source === "openstax" && !!b.download_url;
+            const target = isPdfSource ? undefined : "/books/read/$id";
+            const CoverWrap: any = isPdfSource
+              ? ({ children }: any) => (
+                  <a
+                    href={b.download_url}
+                    target="_blank"
+                    rel="noopener"
+                    className="block"
+                    aria-label={`Open PDF: ${b.title}`}
+                  >
+                    {children}
+                  </a>
+                )
+              : ({ children }: any) => (
+                  <Link to={target!} params={{ id: b.id }} className="block">
+                    {children}
+                  </Link>
+                );
             return (
               <div
                 key={b.id}
@@ -176,7 +215,12 @@ function BooksPage() {
                   thumbUrl={b.cover_url}
                   className="absolute top-2 right-2 z-10"
                 />
-                <Link to="/books/read/$id" params={{ id: b.id }} className="block">
+                {isPdfSource && (
+                  <span className="absolute top-2 left-2 z-10 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500 text-white shadow">
+                    PDF
+                  </span>
+                )}
+                <CoverWrap>
                   <div className="aspect-[2/3] bg-muted overflow-hidden">
                     <BookCover
                       title={b.title}
@@ -186,16 +230,12 @@ function BooksPage() {
                       imageClassName="hover:scale-105 transition-transform"
                     />
                   </div>
-                </Link>
+                </CoverWrap>
                 <div className="p-3 flex flex-col gap-2 flex-1">
-                  <Link
-                    to="/books/read/$id"
-                    params={{ id: b.id }}
-                    className="hover:text-primary transition-colors"
-                  >
+                  <div>
                     <h3 className="text-sm font-semibold line-clamp-2 leading-tight">{b.title}</h3>
                     <p className="text-xs text-muted-foreground line-clamp-1">{b.author}</p>
-                  </Link>
+                  </div>
                   <div className="flex items-center justify-between text-xs mt-auto">
                     <span className="capitalize px-2 py-0.5 rounded-full bg-muted">
                       {b.category}
@@ -204,7 +244,13 @@ function BooksPage() {
                       <Coins className="w-3 h-3" /> {b.price_credits}
                     </span>
                   </div>
-                  {isOwned ? (
+                  {isPdfSource ? (
+                    <Button size="sm" asChild className="w-full">
+                      <a href={b.download_url} target="_blank" rel="noopener" download>
+                        <Download className="w-3.5 h-3.5 mr-1" /> Get PDF
+                      </a>
+                    </Button>
+                  ) : isOwned ? (
                     <Button size="sm" variant="secondary" asChild className="w-full">
                       <Link to="/books/read/$id" params={{ id: b.id }}>
                         <Check className="w-3.5 h-3.5 mr-1" /> Read
