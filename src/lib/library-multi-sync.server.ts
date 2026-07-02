@@ -203,9 +203,13 @@ export async function syncLibreTexts(maxPages = 40) {
     if (books.length < perPage) break;
     if (json.numTotal && page * perPage >= json.numTotal) break;
   }
-  const rowsUpserted = await upsertBatch(rows);
-  return { source: "libretexts", booksFound: rows.length, rowsUpserted };
+  // Dedupe by key — the LibreCommons feed can list the same bookID twice.
+  const seen = new Set<string>();
+  const unique = rows.filter((r) => (seen.has(r.openlibrary_key) ? false : (seen.add(r.openlibrary_key), true)));
+  const rowsUpserted = await upsertBatch(unique);
+  return { source: "libretexts", booksFound: unique.length, rowsUpserted };
 }
+
 
 
 // ---------- BCcampus (OPDS feed) ----------
