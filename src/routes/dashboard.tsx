@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Coins, TrendingUp, Banknote, ShoppingCart, Landmark, ArrowRight, ShieldCheck } from "lucide-react";
+import { Coins, TrendingUp, Banknote, ShoppingCart, Landmark, ArrowRight, ShieldCheck, Plus } from "lucide-react";
 import { CreditCoin } from "@/components/CreditCoin";
 import { BankAccountResolver } from "@/components/BankAccountResolver";
+import { BankCard } from "@/components/BankCard";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
@@ -110,6 +111,31 @@ function DashboardPage() {
           </div>
         </section>
 
+        {payout?.account_number ? (
+          <BankCard
+            bankName={payout.bank_name ?? ""}
+            accountName={payout.account_name ?? ""}
+            accountNumber={payout.account_number ?? ""}
+            onEdit={() => setPayoutOpen(true)}
+          />
+        ) : (
+          <button
+            onClick={() => setPayoutOpen(true)}
+            className="group flex w-full items-center justify-between gap-3 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 p-5 text-left transition hover:border-primary hover:bg-primary/10"
+          >
+            <div className="flex items-center gap-3">
+              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary to-indigo-600 text-primary-foreground shadow">
+                <Plus className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="font-bold">Connect payout account</div>
+                <div className="text-xs text-muted-foreground">Get paid in naira — verified through Paystack</div>
+              </div>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+          </button>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <ActionCard
             icon={TrendingUp}
@@ -126,18 +152,18 @@ function DashboardPage() {
             onClick={() => setBuyOpen(true)}
           />
           <ActionCard
-            icon={Landmark}
-            title={payout?.account_number ? "Payout account" : "Get paid"}
-            desc={payout?.account_number ? `${payout.bank_name} · ****${payout.account_number.slice(-4)}` : "Connect a bank account for payout"}
-            tone="from-amber-500 to-orange-600"
-            onClick={() => setPayoutOpen(true)}
-          />
-          <ActionCard
             icon={Banknote}
             title="Swap credits to cash"
             desc={`${CREDIT_TO_NAIRA}₦ per credit · min 100`}
             tone="from-fuchsia-500 to-rose-600"
             onClick={() => setSwapOpen(true)}
+          />
+          <ActionCard
+            icon={Landmark}
+            title={payout?.account_number ? "Change payout bank" : "Payout details"}
+            desc={payout?.account_number ? "Update your bank account" : "Add before requesting cash"}
+            tone="from-amber-500 to-orange-600"
+            onClick={() => setPayoutOpen(true)}
           />
         </div>
 
