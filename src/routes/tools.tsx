@@ -121,19 +121,39 @@ const OTHER_TOOLS = new Set([
 ]);
 
 
+// Deterministic per-tool gradient tone so every icon well has its own personality.
+const TOOL_TONES = [
+  "from-sky-500 to-indigo-600",
+  "from-fuchsia-500 to-rose-500",
+  "from-emerald-500 to-teal-600",
+  "from-amber-500 to-orange-600",
+  "from-violet-500 to-purple-600",
+  "from-pink-500 to-rose-600",
+  "from-cyan-500 to-blue-600",
+  "from-lime-500 to-emerald-600",
+] as const;
+function toneFor(key: string) {
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0;
+  return TOOL_TONES[Math.abs(h) % TOOL_TONES.length];
+}
+
 function ToolCard({ t }: { t: Tool }) {
+  const tone = toneFor(t.to);
   const inner = (
     <>
-      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-accent flex items-center justify-center shrink-0">
-        <t.icon className="w-5 h-5 text-primary" />
+      <div className={`relative w-12 h-12 rounded-2xl bg-gradient-to-br ${tone} text-white flex items-center justify-center shrink-0 shadow-card ring-1 ring-white/20 overflow-hidden`}>
+        <div className="absolute -top-4 -right-4 w-10 h-10 rounded-full bg-white/25 blur-xl" />
+        <div className="absolute -bottom-4 -left-4 w-10 h-10 rounded-full bg-black/15 blur-xl" />
+        <t.icon className="relative w-5 h-5 drop-shadow-sm" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
           <h3 className="font-bold font-display text-sm truncate">{t.label}</h3>
-          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
             t.soon ? "bg-amber-500/20 text-amber-600 dark:text-amber-400"
-            : t.cost === 0 ? "bg-success/20 text-success"
-            : "bg-muted text-muted-foreground"
+            : t.cost === 0 ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+            : "bg-primary/10 text-primary"
           }`}>
             {t.soon ? "SOON" : t.cost === 0 ? "FREE" : `-${t.cost}`}
           </span>
@@ -142,12 +162,10 @@ function ToolCard({ t }: { t: Tool }) {
       </div>
     </>
   );
+  const base = "relative overflow-hidden bg-card border border-border/60 rounded-2xl p-3.5 shadow-card flex items-start gap-3 h-full";
   if (t.soon) {
     return (
-      <div
-        aria-disabled="true"
-        className="bg-card border rounded-2xl p-3 shadow-card flex items-start gap-3 opacity-60 cursor-not-allowed h-full"
-      >
+      <div aria-disabled="true" className={`${base} opacity-60 cursor-not-allowed`}>
         {inner}
       </div>
     );
@@ -155,12 +173,14 @@ function ToolCard({ t }: { t: Tool }) {
   return (
     <Link
       to={t.to}
-      className="group bg-card border rounded-2xl p-3 shadow-card hover:shadow-glow hover:-translate-y-0.5 transition flex items-start gap-3 h-full"
+      className={`group ${base} hover:shadow-glow hover:-translate-y-0.5 hover:border-primary/40 transition`}
     >
+      <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-br from-primary/[0.04] to-transparent" />
       {inner}
     </Link>
   );
 }
+
 
 /** Vertical list — every tool stacked as full-width rows. */
 function HorizontalToolStrip({ tools }: { tools: Tool[] }) {
