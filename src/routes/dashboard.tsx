@@ -148,12 +148,23 @@ function DashboardPage() {
 
       <Dialog open={payoutOpen} onOpenChange={setPayoutOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Payout account</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div><Label>Bank name</Label><Input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="e.g. Access Bank" /></div>
-            <div><Label>Account number</Label><Input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))} placeholder="10 digits" inputMode="numeric" /></div>
-            <div><Label>Account name</Label><Input value={accountName} onChange={(e) => setAccountName(e.target.value)} /></div>
-            <Button onClick={savePayout} className="w-full">Save account</Button>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Landmark className="w-5 h-5 text-primary" /> Payout account
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <BankAccountResolver
+              value={payout ?? undefined}
+              onResolved={(r) => setResolved(r)}
+            />
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Verified through Paystack — we never store your card or PIN.
+            </div>
+            <Button onClick={savePayout} className="w-full" disabled={!resolved?.account_name}>
+              Save payout account
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
