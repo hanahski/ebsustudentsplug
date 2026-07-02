@@ -10,13 +10,14 @@ export const purchaseLibraryBook = createServerFn({ method: "POST" })
     const { bookId } = data;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { data: book, error: bookErr } = await supabaseAdmin
+    const { data: bookRaw, error: bookErr } = await supabaseAdmin
       .from("library_books")
       .select("id,title,price_credits,read_url")
       .eq("id", bookId)
       .maybeSingle();
     if (bookErr) throw new Error(bookErr.message);
-    if (!book) throw new Error("Book not found");
+    if (!bookRaw) throw new Error("Book not found");
+    const book = { ...bookRaw, price_credits: Number(bookRaw.price_credits) || 0 };
 
     const { data: isAdmin, error: adminErr } = await supabaseAdmin.rpc("has_role", {
       _user_id: uid,
@@ -55,11 +56,12 @@ export const purchaseLibraryBook = createServerFn({ method: "POST" })
         .eq("id", uid)
         .maybeSingle();
       if (pErr) throw new Error(pErr.message);
-      if (!profile || profile.credits < book.price_credits) {
+      const balance = Number(profile?.credits) || 0;
+      if (!profile || balance < book.price_credits) {
         await supabaseAdmin.from("library_book_purchases").delete().eq("book_id", bookId).eq("user_id", uid);
         throw new Error("INSUFFICIENT_CREDITS");
       }
-      const newBalance = profile.credits - book.price_credits;
+      const newBalance = Math.round((balance - book.price_credits) * 100) / 100;
       const { error: updErr } = await supabaseAdmin
         .from("profiles")
         .update({ credits: newBalance })
