@@ -106,6 +106,39 @@ export const getLibraryBooks = createServerFn({ method: "GET" })
     return books ?? [];
   });
 
+// Popular novels for the market feed. Samples from a wide candidate pool
+// (novels/books with real covers) and returns a random 50 each call so the
+// feed feels fresh on every visit.
+export const getPopularNovels = createServerFn({ method: "GET" })
+  .inputValidator((input) => z.object({ limit: z.number().int().min(1).max(100).default(50) }).parse(input))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const cols =
+      "id,title,author,cover_url,category,price_credits,created_at,source,download_url,download_formats,source_url";
+
+    // Candidate pool: novels + generic books, must have a cover and a title,
+    // from established sources (skip empty/uncurated rows).
+    const { data: pool, error } = await supabaseAdmin
+      .from("library_books")
+      .select(cols)
+      .in("category", ["novel", "book"])
+      .not("title", "is", null)
+      .neq("title", "")
+      .not("cover_url", "is", null)
+      .neq("cover_url", "")
+      .in("source", ALL_SOURCES)
+      .limit(400);
+    if (error) throw new Error("Could not load popular novels");
+
+    const arr = [...(pool ?? [])];
+    // Fisher–Yates shuffle for a uniform random sample each request.
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr.slice(0, data.limit);
+  });
+
 // --- Auto-sync: public, self-rate-limiting (only syncs sources with < 20 books) ---
 export const ensureLibraryCatalog = createServerFn({ method: "POST" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
