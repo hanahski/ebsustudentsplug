@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { claimSeedAdminRole } from "@/lib/admin-role";
 import { checkJambAvailable, claimJambNumber } from "@/lib/jamb.functions";
 import brandLogo from "@/assets/brand-logo.png";
+import { InviteFomoBanner, readPendingReferral, clearPendingReferral } from "@/components/InviteFomoBanner";
 
 const JAMB_REGEX = /^[0-9]{8}[A-Z]{2}$/;
 const PENDING_JAMB_KEY = "studentsplug:pending-jamb";

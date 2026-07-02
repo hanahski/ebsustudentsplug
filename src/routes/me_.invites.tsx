@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { Copy, Share2, Users, Coins, Sparkles, ArrowLeft } from "lucide-react";
 
-export const Route = createFileRoute("/me/invites")({ component: InvitesPage });
+export const Route = createFileRoute("/me_/invites")({ component: InvitesPage });
 
 function InvitesPage() {
   const { user, profile, loading } = useAuth();

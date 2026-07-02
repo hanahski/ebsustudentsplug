@@ -15,7 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { LogOut, Coins, Camera, Ticket, Bookmark, ShieldCheck, Library, Shield, UserCog, Award, KeyRound, LayoutDashboard, Settings as SettingsIcon, Megaphone } from "lucide-react";
+import { LogOut, Coins, Camera, Ticket, Bookmark, ShieldCheck, Library, Shield, UserCog, Award, KeyRound, LayoutDashboard, Settings as SettingsIcon, Megaphone, Users } from "lucide-react";
 import { enhanceImageFile } from "@/lib/image-enhance";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AvatarLightbox } from "@/components/AvatarLightbox";
@@ -420,6 +420,7 @@ function MePage() {
           <ProfileTile to="/me/security" label="Password & Security" desc="Password, 2FA, alerts" icon={KeyRound} gradient="from-violet-500 to-fuchsia-600" />
           <ProfileTile to="/dashboard" label="Dashboard" desc="Credits, payouts" icon={LayoutDashboard} gradient="from-indigo-500 to-purple-600" />
           <ProfileTile to="/market/new" search={{ kind: "advert" }} label="Advert" desc="Advertise on the site" icon={Megaphone} gradient="from-amber-500 to-orange-600" />
+          <ProfileTile to="/me/invites" label="Invites" desc={`${refStats?.count ?? 0} joined • +100 each`} icon={Users} gradient="from-fuchsia-500 to-pink-600" />
           <ProfileTile to="/settings" label="Settings" desc="Preferences & privacy" icon={SettingsIcon} gradient="from-slate-500 to-slate-700" />
 
         </section>
