@@ -298,7 +298,7 @@ function OtherNewsFeed(props: {
           {articles.map((a, i) => (
             <Link
               key={`${a.url}-${i}`}
-              to="/news_/reader"
+              to="/news/reader"
               search={{
                 url: a.url,
                 title: a.title ?? "",

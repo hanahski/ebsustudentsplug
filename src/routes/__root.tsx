@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { NetworkStatus } from "@/components/NetworkStatus";
 import { AppBridgeMount } from "@/components/AppBridgeMount";
 import { VideoSWRegister } from "@/components/VideoSWRegister";
-import { RouteTransitionLoader } from "@/components/RouteTransitionLoader";
+
 import appCss from "../styles.css?url";
 import brandLogoUrl from "@/assets/brand-logo.png";
 
@@ -143,7 +143,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           <VideoSWRegister />
           <AuthStatusBanner />
           <RouteLoadingIndicator />
-          <RouteTransitionLoader />
+          
           <NetworkStatus />
           <Outlet />
           <Toaster richColors position="top-center" />
