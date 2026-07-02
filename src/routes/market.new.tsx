@@ -72,7 +72,7 @@ function NewListing() {
   if (kind === "products" && !isAdmin && !profile?.is_verified) {
     return <BadgeGate kind={kind} need="verified" onBack={() => nav({ to: "/market" })} />;
   }
-  return <ComposerForm kind={kind} onBack={() => nav({ to: "/market" })} userId={user?.id} isTrusted={!!profile?.is_sure_plug || isAdmin} />;
+  return <ComposerForm kind={kind} onBack={() => nav({ to: "/market" })} userId={user?.id} />;
 }
 
 
