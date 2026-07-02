@@ -281,7 +281,15 @@ function DashboardPage() {
         </DialogContent>
       </Dialog>
     </AppShell>
-    </AppShell>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between text-muted-foreground">
+      <span>{label}</span>
+      <span className="font-medium text-foreground">{value}</span>
+    </div>
   );
 }
 
