@@ -98,7 +98,7 @@ function DashboardPage() {
           <ActionCard
             icon={TrendingUp}
             title="Earn more credits"
-            desc="Tasks, games, tournaments & predictions"
+            desc="Tasks, games & tournaments"
             tone="from-emerald-500 to-teal-600"
             to="/earn-credits"
           />
