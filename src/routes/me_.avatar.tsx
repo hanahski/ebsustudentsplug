@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Camera, Trash2 } from "lucide-react";
 import { enhanceImageFile } from "@/lib/image-enhance";
 
-export const Route = createFileRoute("/me/avatar")({
+export const Route = createFileRoute("/me_/avatar")({
   component: AvatarPage,
   head: () => ({ meta: [{ title: "Avatar — StudentsPlug" }] }),
 });
