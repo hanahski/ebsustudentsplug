@@ -338,7 +338,7 @@ function NewPostPage() {
           </div>
         )}
 
-        <form onSubmit={submit} className="space-y-4">
+        <form id="post-new-form" onSubmit={submit} className="space-y-4">
           {/* SECTION 1 — Type + Course */}
           <section className="bg-card border rounded-2xl p-5 shadow-card space-y-4">
             <SectionHead icon={Hash} title="What are you posting?" hint="Pick the type & (optional) course." />
