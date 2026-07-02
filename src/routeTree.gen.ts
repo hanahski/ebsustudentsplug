@@ -67,9 +67,9 @@ import { Route as PostNewRouteImport } from './routes/post.new'
 import { Route as PostIdRouteImport } from './routes/post.$id'
 import { Route as NotesIdRouteImport } from './routes/notes.$id'
 import { Route as NewsSlugRouteImport } from './routes/news_.$slug'
-import { Route as MeSecurityRouteImport } from './routes/me.security'
-import { Route as MeEditRouteImport } from './routes/me.edit'
-import { Route as MeAvatarRouteImport } from './routes/me.avatar'
+import { Route as MeSecurityRouteImport } from './routes/me_.security'
+import { Route as MeEditRouteImport } from './routes/me_.edit'
+import { Route as MeAvatarRouteImport } from './routes/me_.avatar'
 import { Route as MarketNewRouteImport } from './routes/market.new'
 import { Route as MarketIdRouteImport } from './routes/market.$id'
 import { Route as GuidesEbsuFeesRouteImport } from './routes/guides.ebsu-fees'
@@ -403,19 +403,19 @@ const NewsSlugRoute = NewsSlugRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const MeSecurityRoute = MeSecurityRouteImport.update({
-  id: '/security',
-  path: '/security',
-  getParentRoute: () => MeRoute,
+  id: '/me_/security',
+  path: '/me/security',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const MeEditRoute = MeEditRouteImport.update({
-  id: '/edit',
-  path: '/edit',
-  getParentRoute: () => MeRoute,
+  id: '/me_/edit',
+  path: '/me/edit',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const MeAvatarRoute = MeAvatarRouteImport.update({
-  id: '/avatar',
-  path: '/avatar',
-  getParentRoute: () => MeRoute,
+  id: '/me_/avatar',
+  path: '/me/avatar',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const MarketNewRoute = MarketNewRouteImport.update({
   id: '/new',
@@ -650,7 +650,7 @@ export interface FileRoutesByFullPath {
   '/get-credits': typeof GetCreditsRoute
   '/login': typeof LoginRoute
   '/market': typeof MarketRouteWithChildren
-  '/me': typeof MeRouteWithChildren
+  '/me': typeof MeRoute
   '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
   '/products': typeof ProductsRoute
@@ -753,7 +753,7 @@ export interface FileRoutesByTo {
   '/games': typeof GamesRouteWithChildren
   '/get-credits': typeof GetCreditsRoute
   '/login': typeof LoginRoute
-  '/me': typeof MeRouteWithChildren
+  '/me': typeof MeRoute
   '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
   '/products': typeof ProductsRoute
@@ -857,7 +857,7 @@ export interface FileRoutesById {
   '/get-credits': typeof GetCreditsRoute
   '/login': typeof LoginRoute
   '/market': typeof MarketRouteWithChildren
-  '/me': typeof MeRouteWithChildren
+  '/me': typeof MeRoute
   '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
   '/products': typeof ProductsRoute
@@ -893,9 +893,9 @@ export interface FileRoutesById {
   '/guides/ebsu-fees': typeof GuidesEbsuFeesRoute
   '/market/$id': typeof MarketIdRoute
   '/market/new': typeof MarketNewRoute
-  '/me/avatar': typeof MeAvatarRoute
-  '/me/edit': typeof MeEditRoute
-  '/me/security': typeof MeSecurityRoute
+  '/me_/avatar': typeof MeAvatarRoute
+  '/me_/edit': typeof MeEditRoute
+  '/me_/security': typeof MeSecurityRoute
   '/news_/$slug': typeof NewsSlugRoute
   '/notes/$id': typeof NotesIdRoute
   '/post/$id': typeof PostIdRoute
@@ -1205,9 +1205,9 @@ export interface FileRouteTypes {
     | '/guides/ebsu-fees'
     | '/market/$id'
     | '/market/new'
-    | '/me/avatar'
-    | '/me/edit'
-    | '/me/security'
+    | '/me_/avatar'
+    | '/me_/edit'
+    | '/me_/security'
     | '/news_/$slug'
     | '/notes/$id'
     | '/post/$id'
@@ -1274,7 +1274,7 @@ export interface RootRouteChildren {
   GetCreditsRoute: typeof GetCreditsRoute
   LoginRoute: typeof LoginRoute
   MarketRoute: typeof MarketRouteWithChildren
-  MeRoute: typeof MeRouteWithChildren
+  MeRoute: typeof MeRoute
   NewsRoute: typeof NewsRoute
   PrivacyRoute: typeof PrivacyRoute
   ProductsRoute: typeof ProductsRoute
@@ -1303,6 +1303,9 @@ export interface RootRouteChildren {
   DepartmentIdRoute: typeof DepartmentIdRoute
   FacultyIdRoute: typeof FacultyIdRoute
   GuidesEbsuFeesRoute: typeof GuidesEbsuFeesRoute
+  MeAvatarRoute: typeof MeAvatarRoute
+  MeEditRoute: typeof MeEditRoute
+  MeSecurityRoute: typeof MeSecurityRoute
   NewsSlugRoute: typeof NewsSlugRoute
   NotesIdRoute: typeof NotesIdRoute
   PostIdRoute: typeof PostIdRoute
@@ -1740,26 +1743,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NewsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/me/security': {
-      id: '/me/security'
-      path: '/security'
+    '/me_/security': {
+      id: '/me_/security'
+      path: '/me/security'
       fullPath: '/me/security'
       preLoaderRoute: typeof MeSecurityRouteImport
-      parentRoute: typeof MeRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/me/edit': {
-      id: '/me/edit'
-      path: '/edit'
+    '/me_/edit': {
+      id: '/me_/edit'
+      path: '/me/edit'
       fullPath: '/me/edit'
       preLoaderRoute: typeof MeEditRouteImport
-      parentRoute: typeof MeRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/me/avatar': {
-      id: '/me/avatar'
-      path: '/avatar'
+    '/me_/avatar': {
+      id: '/me_/avatar'
+      path: '/me/avatar'
       fullPath: '/me/avatar'
       preLoaderRoute: typeof MeAvatarRouteImport
-      parentRoute: typeof MeRoute
+      parentRoute: typeof rootRouteImport
     }
     '/market/new': {
       id: '/market/new'
@@ -2094,20 +2097,6 @@ const MarketRouteChildren: MarketRouteChildren = {
 const MarketRouteWithChildren =
   MarketRoute._addFileChildren(MarketRouteChildren)
 
-interface MeRouteChildren {
-  MeAvatarRoute: typeof MeAvatarRoute
-  MeEditRoute: typeof MeEditRoute
-  MeSecurityRoute: typeof MeSecurityRoute
-}
-
-const MeRouteChildren: MeRouteChildren = {
-  MeAvatarRoute: MeAvatarRoute,
-  MeEditRoute: MeEditRoute,
-  MeSecurityRoute: MeSecurityRoute,
-}
-
-const MeRouteWithChildren = MeRoute._addFileChildren(MeRouteChildren)
-
 interface TicketsRouteChildren {
   TicketsIdRoute: typeof TicketsIdRoute
 }
@@ -2190,7 +2179,7 @@ const rootRouteChildren: RootRouteChildren = {
   GetCreditsRoute: GetCreditsRoute,
   LoginRoute: LoginRoute,
   MarketRoute: MarketRouteWithChildren,
-  MeRoute: MeRouteWithChildren,
+  MeRoute: MeRoute,
   NewsRoute: NewsRoute,
   PrivacyRoute: PrivacyRoute,
   ProductsRoute: ProductsRoute,
@@ -2219,6 +2208,9 @@ const rootRouteChildren: RootRouteChildren = {
   DepartmentIdRoute: DepartmentIdRoute,
   FacultyIdRoute: FacultyIdRoute,
   GuidesEbsuFeesRoute: GuidesEbsuFeesRoute,
+  MeAvatarRoute: MeAvatarRoute,
+  MeEditRoute: MeEditRoute,
+  MeSecurityRoute: MeSecurityRoute,
   NewsSlugRoute: NewsSlugRoute,
   NotesIdRoute: NotesIdRoute,
   PostIdRoute: PostIdRoute,

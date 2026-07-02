@@ -453,7 +453,7 @@ function ProfileTile({ to, search, onClick, label, desc, icon: Icon, gradient }:
   );
   const cls = "group relative overflow-hidden bg-card border rounded-2xl p-4 shadow-card text-left transition hover:-translate-y-1 hover:shadow-glow hover:border-primary/40";
   const decor = <div className={`pointer-events-none absolute -top-8 -right-8 w-24 h-24 rounded-full bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-20 blur-2xl transition`} aria-hidden />;
-  if (to) return <Link to={to} search={search as any} className={cls}>{decor}{inner}</Link>;
+  if (to) return <Link to={to as any} search={search as any} className={cls}>{decor}{inner}</Link>;
   return <button type="button" onClick={onClick} className={cls}>{decor}{inner}</button>;
 }
 

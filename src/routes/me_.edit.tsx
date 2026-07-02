@@ -13,7 +13,7 @@ import { toast } from "sonner";
 
 const ACADEMIC_LEVELS = ["100", "200", "300", "400", "500", "Postgraduate", "Alumni"];
 
-export const Route = createFileRoute("/me/edit")({
+export const Route = createFileRoute("/me_/edit")({
   component: EditProfilePage,
   head: () => ({ meta: [{ title: "Edit profile — StudentsPlug" }] }),
 });

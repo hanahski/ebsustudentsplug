@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { KeyRound, Shield, LogOut, Smartphone, Mail, Bell, History, Fingerprint, AlertTriangle } from "lucide-react";
 
-export const Route = createFileRoute("/me/security")({
+export const Route = createFileRoute("/me_/security")({
   component: SecurityPage,
   head: () => ({ meta: [{ title: "Password & security — StudentsPlug" }] }),
 });
