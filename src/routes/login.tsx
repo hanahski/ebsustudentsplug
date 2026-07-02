@@ -227,6 +227,7 @@ function LoginPage() {
           token: idToken,
         });
         if (error) throw error;
+        await tryRedeemPendingReferral({ onlyFresh: true }).catch(() => {});
         toast.success("Signed in");
         await nav({ to: redirect });
       } catch (err: any) {
