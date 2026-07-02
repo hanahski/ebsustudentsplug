@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { CheckSquare, Gamepad2, Trophy, Target } from "lucide-react";
+import { CheckSquare, Gamepad2, Trophy } from "lucide-react";
 
 export const Route = createFileRoute("/earn-credits")({
   component: EarnCreditsPage,
@@ -11,7 +11,6 @@ const TILES = [
   { key: "tasks", label: "Tasks", icon: CheckSquare, cta: "Complete tasks to earn credits", tone: "from-emerald-500 to-teal-600", to: "/get-credits" as const },
   { key: "games", label: "Games", icon: Gamepad2, cta: "Play games, win credits", tone: "from-sky-500 to-indigo-600", to: "/games" as const },
   { key: "tournament", label: "Tournament", icon: Trophy, cta: "Compete for prize pools", tone: "from-amber-500 to-orange-600", to: "/earn-credits/tournament" as const },
-  { key: "prediction", label: "Prediction Challenge", icon: Target, cta: "Predict outcomes, win big", tone: "from-fuchsia-500 to-rose-600", to: "/earn-credits/prediction" as const },
 ];
 
 function EarnCreditsPage() {

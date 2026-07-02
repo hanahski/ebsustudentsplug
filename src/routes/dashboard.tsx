@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Coins, TrendingUp, Banknote, ShoppingCart, Landmark, ArrowRight } from "lucide-react";
+import { Coins, TrendingUp, Banknote, ShoppingCart, Landmark, ArrowRight, ShieldCheck } from "lucide-react";
 import { CreditCoin } from "@/components/CreditCoin";
+import { BankAccountResolver } from "@/components/BankAccountResolver";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
@@ -27,28 +28,43 @@ function DashboardPage() {
   const [swapOpen, setSwapOpen] = useState(false);
   const [buyOpen, setBuyOpen] = useState(false);
 
-  const [bankName, setBankName] = useState("");
-  const [accountNumber, setAccountNumber] = useState("");
-  const [accountName, setAccountName] = useState("");
+  const [resolved, setResolved] = useState<
+    | { account_number: string; bank_code: string; bank_name: string; account_name: string }
+    | null
+  >(null);
   const [swapAmount, setSwapAmount] = useState(100);
 
-  const payout = (profile as any)?.payout_account as { bank_name?: string; account_number?: string; account_name?: string } | null;
+  const payout = (profile as any)?.payout_account as
+    | { bank_name?: string; bank_code?: string; account_number?: string; account_name?: string }
+    | null;
 
   useEffect(() => {
-    if (payout) {
-      setBankName(payout.bank_name ?? "");
-      setAccountNumber(payout.account_number ?? "");
-      setAccountName(payout.account_name ?? "");
+    if (payoutOpen && payout?.account_name) {
+      setResolved({
+        account_number: payout.account_number ?? "",
+        bank_code: payout.bank_code ?? "",
+        bank_name: payout.bank_name ?? "",
+        account_name: payout.account_name ?? "",
+      });
+    } else if (payoutOpen) {
+      setResolved(null);
     }
   }, [payoutOpen]);
 
   const savePayout = async () => {
     if (!profile) return;
-    if (!bankName || !accountNumber || !accountName) return toast.error("Fill all fields");
-    if (!/^\d{10}$/.test(accountNumber)) return toast.error("Account number must be 10 digits");
-    const { error } = await supabase.from("profiles").update({
-      payout_account: { bank_name: bankName, account_number: accountNumber, account_name: accountName },
-    } as any).eq("id", profile.id);
+    if (!resolved?.account_name) return toast.error("Enter a valid account number");
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        payout_account: {
+          bank_name: resolved.bank_name,
+          bank_code: resolved.bank_code,
+          account_number: resolved.account_number,
+          account_name: resolved.account_name,
+        },
+      } as any)
+      .eq("id", profile.id);
     if (error) return toast.error(error.message);
     toast.success("Payout account saved");
     setPayoutOpen(false);
@@ -98,7 +114,7 @@ function DashboardPage() {
           <ActionCard
             icon={TrendingUp}
             title="Earn more credits"
-            desc="Tasks, games, tournaments & predictions"
+            desc="Tasks, games & tournaments"
             tone="from-emerald-500 to-teal-600"
             to="/earn-credits"
           />
@@ -132,12 +148,23 @@ function DashboardPage() {
 
       <Dialog open={payoutOpen} onOpenChange={setPayoutOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Payout account</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div><Label>Bank name</Label><Input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="e.g. Access Bank" /></div>
-            <div><Label>Account number</Label><Input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))} placeholder="10 digits" inputMode="numeric" /></div>
-            <div><Label>Account name</Label><Input value={accountName} onChange={(e) => setAccountName(e.target.value)} /></div>
-            <Button onClick={savePayout} className="w-full">Save account</Button>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Landmark className="w-5 h-5 text-primary" /> Payout account
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <BankAccountResolver
+              value={payout ?? undefined}
+              onResolved={(r) => setResolved(r)}
+            />
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Verified through Paystack — we never store your card or PIN.
+            </div>
+            <Button onClick={savePayout} className="w-full" disabled={!resolved?.account_name}>
+              Save payout account
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
