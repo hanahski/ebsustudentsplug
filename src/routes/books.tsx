@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { purchaseLibraryBook } from "@/lib/library-purchase.functions";
-import { getLibraryBooks } from "@/lib/library-books.functions";
+import { getLibraryBooks, ensureLibraryCatalog } from "@/lib/library-books.functions";
 import { runLibrarySync } from "@/lib/library-sync.functions";
 import { useAuth } from "@/lib/auth";
 import { getIsAdminUser } from "@/lib/admin-role";
@@ -41,22 +41,52 @@ const CATS = [
   { key: "all", label: "All" },
   { key: "novel", label: "Novel" },
   { key: "book", label: "Book" },
+  { key: "textbook", label: "Textbook" },
   { key: "comics", label: "Comics" },
   { key: "poetry", label: "Poetry" },
 ] as const;
 
-const TAGS = [
-  { key: "all", label: "All sources" },
-  { key: "pdf", label: "PDF" },
-  { key: "epub", label: "EPUB" },
-  { key: "free", label: "Free" },
-  { key: "ebsu", label: "EBSU" },
-  { key: "openstax", label: "OpenStax" },
-  { key: "open_textbook_library", label: "Open Textbook" },
-  { key: "gutenberg", label: "Gutenberg" },
-  { key: "libretexts", label: "LibreTexts" },
-  { key: "bccampus", label: "BCcampus" },
-] as const;
+const TAG_GROUPS: Array<{ label: string; tags: Array<{ key: string; label: string }> }> = [
+  {
+    label: "Origin",
+    tags: [
+      { key: "all", label: "All" },
+      { key: "free", label: "Free" },
+      { key: "ebsu", label: "EBSU" },
+      { key: "studentsplug", label: "StudentsPlug" },
+      { key: "others", label: "Others" },
+    ],
+  },
+  {
+    label: "Copy",
+    tags: [
+      { key: "soft", label: "Soft copy" },
+      { key: "hard", label: "Hard copy" },
+    ],
+  },
+  {
+    label: "Format",
+    tags: [
+      { key: "pdf", label: "PDF" },
+      { key: "epub", label: "EPUB" },
+      { key: "kindle", label: "Kindle" },
+      { key: "html_zip", label: "HTML ZIP" },
+      { key: "pages_zip", label: "Pages ZIP" },
+      { key: "lms", label: "LMS" },
+      { key: "blueprint", label: "Blueprint" },
+    ],
+  },
+  {
+    label: "Source",
+    tags: [
+      { key: "openstax", label: "OpenStax" },
+      { key: "open_textbook_library", label: "Open Textbook" },
+      { key: "gutenberg", label: "Gutenberg" },
+      { key: "libretexts", label: "LibreTexts" },
+      { key: "bccampus", label: "BCcampus" },
+    ],
+  },
+];
 
 const FORMAT_META: Record<string, { label: string; short: string; tone: string }> = {
   pdf: { label: "Download PDF", short: "PDF", tone: "bg-rose-500" },
