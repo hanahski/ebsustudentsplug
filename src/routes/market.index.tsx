@@ -20,7 +20,7 @@ import {
 import { EbsuBadge } from "@/components/EbsuBadge";
 import { StorageMedia } from "@/components/StorageMedia";
 import { BookCover } from "@/components/BookCover";
-import { getLibraryBooks } from "@/lib/library-books.functions";
+import { getLibraryBooks, getPopularNovels } from "@/lib/library-books.functions";
 
 export const Route = createFileRoute("/market/")({ component: MarketPage });
 
