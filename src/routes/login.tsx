@@ -86,15 +86,25 @@ function LoginPage() {
     return () => { cancelled = true; };
   }, [nav, redirect]);
 
-  const tryRedeemPendingReferral = async () => {
+  const tryRedeemPendingReferral = async (opts: { onlyFresh?: boolean } = {}) => {
     const pending = readPendingReferral();
     if (!pending?.code) return;
+    if (opts.onlyFresh) {
+      // Guard: only redeem if the current user's profile is brand-new
+      // (created within the last 10 minutes). Prevents existing users from
+      // farming credits by visiting invite links.
+      const { data: userRes } = await supabase.auth.getUser();
+      const uid = userRes.user?.id;
+      if (!uid) return;
+      const { data: prof } = await supabase.from("profiles").select("created_at").eq("id", uid).maybeSingle();
+      const createdAt = prof?.created_at ? new Date(prof.created_at).getTime() : 0;
+      if (!createdAt || Date.now() - createdAt > 10 * 60 * 1000) { clearPendingReferral(); return; }
+    }
     const { error } = await supabase.rpc("redeem_referral", { _code: pending.code });
     if (!error) {
       toast.success(`+50 credits from ${pending.inviter_name ?? "your inviter"}!`);
       clearPendingReferral();
     } else {
-      // Already redeemed or self-invite — silently clear so it doesn't linger.
       clearPendingReferral();
       console.info("[invite] redeem_referral skipped:", error.message);
     }
