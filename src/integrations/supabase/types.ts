@@ -1743,6 +1743,42 @@ export type Database = {
           },
         ]
       }
+      tasks: {
+        Row: {
+          bucket: number
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          reward_credits: number
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          bucket: number
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          reward_credits: number
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          bucket?: number
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          reward_credits?: number
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ticket_purchases: {
         Row: {
           buyer_id: string

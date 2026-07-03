@@ -115,6 +115,7 @@ import { Route as ApiPublicHooksGenerateNovelRouteImport } from './routes/api/pu
 import { Route as ApiPublicHooksGenerateBookCoversRouteImport } from './routes/api/public/hooks/generate-book-covers'
 import { Route as ApiPublicHooksCacheBookPdfRouteImport } from './routes/api/public/hooks/cache-book-pdf'
 import { Route as ApiPublicHooksAutoEbsuNewsRouteImport } from './routes/api/public/hooks/auto-ebsu-news'
+import { Route as ApiPublicHooksAdminResetPasswordRouteImport } from './routes/api/public/hooks/admin-reset-password'
 import { Route as ApiPublicHooksAdminAiPulseRouteImport } from './routes/api/public/hooks/admin-ai-pulse'
 
 const VerifyOtpRoute = VerifyOtpRouteImport.update({
@@ -657,6 +658,12 @@ const ApiPublicHooksAutoEbsuNewsRoute =
     path: '/api/public/hooks/auto-ebsu-news',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksAdminResetPasswordRoute =
+  ApiPublicHooksAdminResetPasswordRouteImport.update({
+    id: '/api/public/hooks/admin-reset-password',
+    path: '/api/public/hooks/admin-reset-password',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksAdminAiPulseRoute =
   ApiPublicHooksAdminAiPulseRouteImport.update({
     id: '/api/public/hooks/admin-ai-pulse',
@@ -762,6 +769,7 @@ export interface FileRoutesByFullPath {
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books/composer/': typeof BooksComposerIndexRoute
   '/api/public/hooks/admin-ai-pulse': typeof ApiPublicHooksAdminAiPulseRoute
+  '/api/public/hooks/admin-reset-password': typeof ApiPublicHooksAdminResetPasswordRoute
   '/api/public/hooks/auto-ebsu-news': typeof ApiPublicHooksAutoEbsuNewsRoute
   '/api/public/hooks/cache-book-pdf': typeof ApiPublicHooksCacheBookPdfRoute
   '/api/public/hooks/generate-book-covers': typeof ApiPublicHooksGenerateBookCoversRoute
@@ -869,6 +877,7 @@ export interface FileRoutesByTo {
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books/composer': typeof BooksComposerIndexRoute
   '/api/public/hooks/admin-ai-pulse': typeof ApiPublicHooksAdminAiPulseRoute
+  '/api/public/hooks/admin-reset-password': typeof ApiPublicHooksAdminResetPasswordRoute
   '/api/public/hooks/auto-ebsu-news': typeof ApiPublicHooksAutoEbsuNewsRoute
   '/api/public/hooks/cache-book-pdf': typeof ApiPublicHooksCacheBookPdfRoute
   '/api/public/hooks/generate-book-covers': typeof ApiPublicHooksGenerateBookCoversRoute
@@ -979,6 +988,7 @@ export interface FileRoutesById {
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books_/composer/': typeof BooksComposerIndexRoute
   '/api/public/hooks/admin-ai-pulse': typeof ApiPublicHooksAdminAiPulseRoute
+  '/api/public/hooks/admin-reset-password': typeof ApiPublicHooksAdminResetPasswordRoute
   '/api/public/hooks/auto-ebsu-news': typeof ApiPublicHooksAutoEbsuNewsRoute
   '/api/public/hooks/cache-book-pdf': typeof ApiPublicHooksCacheBookPdfRoute
   '/api/public/hooks/generate-book-covers': typeof ApiPublicHooksGenerateBookCoversRoute
@@ -1090,6 +1100,7 @@ export interface FileRouteTypes {
     | '/tools/ai/$slug'
     | '/books/composer/'
     | '/api/public/hooks/admin-ai-pulse'
+    | '/api/public/hooks/admin-reset-password'
     | '/api/public/hooks/auto-ebsu-news'
     | '/api/public/hooks/cache-book-pdf'
     | '/api/public/hooks/generate-book-covers'
@@ -1197,6 +1208,7 @@ export interface FileRouteTypes {
     | '/tools/ai/$slug'
     | '/books/composer'
     | '/api/public/hooks/admin-ai-pulse'
+    | '/api/public/hooks/admin-reset-password'
     | '/api/public/hooks/auto-ebsu-news'
     | '/api/public/hooks/cache-book-pdf'
     | '/api/public/hooks/generate-book-covers'
@@ -1306,6 +1318,7 @@ export interface FileRouteTypes {
     | '/tools/ai/$slug'
     | '/books_/composer/'
     | '/api/public/hooks/admin-ai-pulse'
+    | '/api/public/hooks/admin-reset-password'
     | '/api/public/hooks/auto-ebsu-news'
     | '/api/public/hooks/cache-book-pdf'
     | '/api/public/hooks/generate-book-covers'
@@ -1388,6 +1401,7 @@ export interface RootRouteChildren {
   BooksPreviewTokenRoute: typeof BooksPreviewTokenRoute
   BooksReadIdRoute: typeof BooksReadIdRoute
   ApiPublicHooksAdminAiPulseRoute: typeof ApiPublicHooksAdminAiPulseRoute
+  ApiPublicHooksAdminResetPasswordRoute: typeof ApiPublicHooksAdminResetPasswordRoute
   ApiPublicHooksAutoEbsuNewsRoute: typeof ApiPublicHooksAutoEbsuNewsRoute
   ApiPublicHooksCacheBookPdfRoute: typeof ApiPublicHooksCacheBookPdfRoute
   ApiPublicHooksGenerateBookCoversRoute: typeof ApiPublicHooksGenerateBookCoversRoute
@@ -2144,6 +2158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksAutoEbsuNewsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/admin-reset-password': {
+      id: '/api/public/hooks/admin-reset-password'
+      path: '/api/public/hooks/admin-reset-password'
+      fullPath: '/api/public/hooks/admin-reset-password'
+      preLoaderRoute: typeof ApiPublicHooksAdminResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/admin-ai-pulse': {
       id: '/api/public/hooks/admin-ai-pulse'
       path: '/api/public/hooks/admin-ai-pulse'
@@ -2343,6 +2364,7 @@ const rootRouteChildren: RootRouteChildren = {
   BooksPreviewTokenRoute: BooksPreviewTokenRoute,
   BooksReadIdRoute: BooksReadIdRoute,
   ApiPublicHooksAdminAiPulseRoute: ApiPublicHooksAdminAiPulseRoute,
+  ApiPublicHooksAdminResetPasswordRoute: ApiPublicHooksAdminResetPasswordRoute,
   ApiPublicHooksAutoEbsuNewsRoute: ApiPublicHooksAutoEbsuNewsRoute,
   ApiPublicHooksCacheBookPdfRoute: ApiPublicHooksCacheBookPdfRoute,
   ApiPublicHooksGenerateBookCoversRoute: ApiPublicHooksGenerateBookCoversRoute,
@@ -2357,13 +2379,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -490,7 +490,14 @@ function BookCard({
 // Silent background download — never opens a new tab. Fetches the file as a
 // blob and clicks a hidden <a download>. Falls back to a hidden iframe when
 // the fetch is blocked by CORS so the user still gets their file.
+// Requires an authenticated user — anonymous visitors are redirected to /login.
 async function silentDownload(url: string, suggestedName?: string) {
+  const { data: sessionData } = await supabase.auth.getUser();
+  if (!sessionData.user) {
+    toast.error("Sign in to download books");
+    setTimeout(() => { window.location.href = "/login"; }, 700);
+    return;
+  }
   const t = toast.loading("Downloading…");
   try {
     const res = await fetch(url, { mode: "cors" });
