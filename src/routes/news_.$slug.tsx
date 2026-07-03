@@ -87,6 +87,7 @@ function NewsArticlePage() {
 
   return (
     <AppShell>
+      <AdsterraPopunder />
       <article className="max-w-3xl mx-auto">
         <Link to="/news" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
           <ArrowLeft className="w-4 h-4" /> All news
@@ -108,7 +109,20 @@ function NewsArticlePage() {
         )}
 
         <div className="prose prose-sm sm:prose-base max-w-none dark:prose-invert prose-headings:font-display">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{a.body}</ReactMarkdown>
+          {(() => {
+            const [firstHalf, secondHalf] = splitMarkdownForAd(a.body ?? "");
+            return (
+              <>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{firstHalf}</ReactMarkdown>
+                {secondHalf ? (
+                  <>
+                    <AdsterraNative />
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{secondHalf}</ReactMarkdown>
+                  </>
+                ) : null}
+              </>
+            );
+          })()}
         </div>
 
         {sources.length > 0 && (
