@@ -5,16 +5,8 @@ import { AppShell } from "@/components/AppShell";
 import { ArrowLeft, ExternalLink, Calendar } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { AdsterraNative, AdsterraPopunder } from "@/components/AdsterraNative";
 
-function splitMarkdownForAd(md: string): [string, string] {
-  if (!md) return ["", ""];
-  const target = Math.floor(md.length / 2);
-  let idx = md.indexOf("\n\n", target);
-  if (idx === -1) idx = md.lastIndexOf("\n\n", target);
-  if (idx === -1 || idx < 200 || idx > md.length - 200) return [md, ""];
-  return [md.slice(0, idx).trim(), md.slice(idx).trim()];
-}
+
 
 export const Route = createFileRoute("/news_/$slug")({
   component: NewsArticlePage,
@@ -87,7 +79,6 @@ function NewsArticlePage() {
 
   return (
     <AppShell>
-      <AdsterraPopunder />
       <article className="max-w-3xl mx-auto">
         <Link to="/news" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
           <ArrowLeft className="w-4 h-4" /> All news
@@ -109,20 +100,7 @@ function NewsArticlePage() {
         )}
 
         <div className="prose prose-sm sm:prose-base max-w-none dark:prose-invert prose-headings:font-display">
-          {(() => {
-            const [firstHalf, secondHalf] = splitMarkdownForAd(a.body ?? "");
-            return (
-              <>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{firstHalf}</ReactMarkdown>
-                {secondHalf ? (
-                  <>
-                    <AdsterraNative />
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{secondHalf}</ReactMarkdown>
-                  </>
-                ) : null}
-              </>
-            );
-          })()}
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{a.body ?? ""}</ReactMarkdown>
         </div>
 
         {sources.length > 0 && (
