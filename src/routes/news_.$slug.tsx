@@ -5,6 +5,16 @@ import { AppShell } from "@/components/AppShell";
 import { ArrowLeft, ExternalLink, Calendar } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { AdsterraNative, AdsterraPopunder } from "@/components/AdsterraNative";
+
+function splitMarkdownForAd(md: string): [string, string] {
+  if (!md) return ["", ""];
+  const target = Math.floor(md.length / 2);
+  let idx = md.indexOf("\n\n", target);
+  if (idx === -1) idx = md.lastIndexOf("\n\n", target);
+  if (idx === -1 || idx < 200 || idx > md.length - 200) return [md, ""];
+  return [md.slice(0, idx).trim(), md.slice(idx).trim()];
+}
 
 export const Route = createFileRoute("/news_/$slug")({
   component: NewsArticlePage,
