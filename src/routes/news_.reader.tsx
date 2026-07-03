@@ -282,7 +282,6 @@ function NewsReaderPage() {
               "
             >
               {(() => {
-                const [firstHalf, secondHalf] = splitMarkdownForAd(cleaned);
                 const mdComponents = {
                   table: ({ node, ...props }: any) => (
                     <div className="not-prose overflow-x-auto my-4 rounded-2xl border border-border">
@@ -309,19 +308,9 @@ function NewsReaderPage() {
                   ),
                 } as any;
                 return (
-                  <>
-                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
-                      {firstHalf}
-                    </ReactMarkdown>
-                    {secondHalf ? (
-                      <>
-                        <AdsterraNative />
-                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
-                          {secondHalf}
-                        </ReactMarkdown>
-                      </>
-                    ) : null}
-                  </>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+                    {cleaned}
+                  </ReactMarkdown>
                 );
               })()}
             </div>
