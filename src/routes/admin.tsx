@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { ToolEditor } from "@/components/admin/ToolEditor";
 import { ToolPricesPanel } from "@/components/admin/ToolPricesPanel";
+import { TaskComposerPanel } from "@/components/admin/TaskComposerPanel";
 import { AdminAiPanel } from "@/components/admin/AdminAiPanel";
 import { ToolAiPanel } from "@/components/admin/ToolAiPanel";
 import { EbsuNewsPanel } from "@/components/admin/EbsuNewsPanel";
@@ -26,7 +27,7 @@ import { claimSeedAdminRole, getIsAdminUser } from "@/lib/admin-role";
 
 export const Route = createFileRoute("/admin")({ component: AdminPanel });
 
-type Tab = "dashboard" | "ai" | "toolai" | "ebsunews" | "users" | "applications" | "verifications" | "posts" | "listings" | "tickets" | "scans" | "catalogue" | "marketcats" | "banners" | "tools" | "prices" | "integrations";
+type Tab = "dashboard" | "ai" | "toolai" | "ebsunews" | "users" | "applications" | "verifications" | "posts" | "listings" | "tickets" | "scans" | "catalogue" | "marketcats" | "banners" | "tools" | "prices" | "tasks" | "integrations";
 
 
 function AdminPanel() {
@@ -67,6 +68,7 @@ function AdminPanel() {
     { k: "banners", label: "Banners", icon: ImageIcon },
     { k: "tools", label: "Tools", icon: Wand2 },
     { k: "prices", label: "Tool Prices", icon: Coins },
+    { k: "tasks", label: "Task Composer", icon: Coins },
     { k: "integrations", label: "Integrations", icon: KeyRound },
   ];
 
@@ -108,6 +110,7 @@ function AdminPanel() {
         {tab === "banners" && <AdminBanners />}
         {tab === "tools" && <ToolEditor />}
         {tab === "prices" && <ToolPricesPanel />}
+        {tab === "tasks" && <TaskComposerPanel />}
         {tab === "integrations" && <AdminIntegrations />}
       </div>
     </AppShell>
