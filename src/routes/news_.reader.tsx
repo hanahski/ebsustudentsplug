@@ -15,6 +15,17 @@ import remarkGfm from "remark-gfm";
 import { z } from "zod";
 import { useMemo } from "react";
 import { toast } from "sonner";
+import { AdsterraNative, AdsterraPopunder } from "@/components/AdsterraNative";
+
+function splitMarkdownForAd(md: string): [string, string] {
+  if (!md) return ["", ""];
+  const target = Math.floor(md.length / 2);
+  // Find the nearest blank line (paragraph break) after the midpoint.
+  let idx = md.indexOf("\n\n", target);
+  if (idx === -1) idx = md.lastIndexOf("\n\n", target);
+  if (idx === -1 || idx < 200 || idx > md.length - 200) return [md, ""];
+  return [md.slice(0, idx).trim(), md.slice(idx).trim()];
+}
 
 const searchSchema = z.object({
   url: z.string().url(),
@@ -176,6 +187,7 @@ function NewsReaderPage() {
 
   return (
     <AppShell>
+      <AdsterraPopunder />
       <article className="max-w-3xl mx-auto">
         <Link
           to="/news"
@@ -279,27 +291,25 @@ function NewsReaderPage() {
                 prose-td:px-3 prose-td:py-2 prose-td:border-t prose-td:border-border/60
               "
             >
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  // Wrap tables so they scroll horizontally on mobile
-                  table: ({ node, ...props }) => (
+              {(() => {
+                const [firstHalf, secondHalf] = splitMarkdownForAd(cleaned);
+                const mdComponents = {
+                  table: ({ node, ...props }: any) => (
                     <div className="not-prose overflow-x-auto my-4 rounded-2xl border border-border">
                       <table className="w-full text-sm" {...props} />
                     </div>
                   ),
-                  th: ({ node, ...props }) => (
+                  th: ({ node, ...props }: any) => (
                     <th className="px-3 py-2 text-left font-bold bg-muted/70 border-b border-border" {...props} />
                   ),
-                  td: ({ node, ...props }) => (
+                  td: ({ node, ...props }: any) => (
                     <td className="px-3 py-2 border-t border-border/60 align-top" {...props} />
                   ),
-                  img: ({ node, ...props }) => (
+                  img: ({ node, ...props }: any) => (
                     // eslint-disable-next-line jsx-a11y/alt-text
                     <img loading="lazy" {...props} className="rounded-2xl shadow-card mx-auto my-4" />
                   ),
-                  // Article body links are non-navigable — render as plain styled text.
-                  a: ({ node, children, ...props }) => (
+                  a: ({ node, children, ...props }: any) => (
                     <span
                       {...(props as any)}
                       className="text-primary font-semibold underline decoration-primary/30 underline-offset-2 cursor-default"
@@ -307,10 +317,23 @@ function NewsReaderPage() {
                       {children}
                     </span>
                   ),
-                }}
-              >
-                {cleaned}
-              </ReactMarkdown>
+                } as any;
+                return (
+                  <>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+                      {firstHalf}
+                    </ReactMarkdown>
+                    {secondHalf ? (
+                      <>
+                        <AdsterraNative />
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+                          {secondHalf}
+                        </ReactMarkdown>
+                      </>
+                    ) : null}
+                  </>
+                );
+              })()}
             </div>
           )}
         </section>
