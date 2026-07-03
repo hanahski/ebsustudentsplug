@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -12,27 +13,6 @@ export const Route = createFileRoute("/tasks/$amount")({
   head: () => ({ meta: [{ title: "Tasks — StudentsPlug" }] }),
 });
 
-const TASK_LIBRARY: Record<string, { id: string; title: string; desc: string }[]> = {
-  "10": [
-    { id: "share-post", title: "Share a post to your feed", desc: "Pick any post and tap Share." },
-    { id: "comment-3", title: "Leave 3 helpful comments", desc: "Comment on 3 different posts." },
-    { id: "invite-1", title: "Invite 1 friend (they must open)", desc: "Send your referral link." },
-    { id: "profile-photo", title: "Upload a profile photo", desc: "Complete your profile." },
-  ],
-  "20": [
-    { id: "publish-note", title: "Publish a study note", desc: "Share notes with your department." },
-    { id: "review-book", title: "Review a book you've read", desc: "Post a 2-line review." },
-    { id: "answer-5", title: "Answer 5 questions in Q&A", desc: "Help other students out." },
-    { id: "watch-2ads", title: "Watch 2 sponsored clips", desc: "Short partner videos." },
-  ],
-  "50": [
-    { id: "post-article", title: "Publish a full article", desc: "300+ words on a topic you know." },
-    { id: "sell-item", title: "List a product on Market Plug", desc: "First listing this week." },
-    { id: "refer-3", title: "Refer 3 friends who sign up", desc: "They must verify." },
-    { id: "complete-quiz", title: "Complete a study quiz", desc: "Score 80%+." },
-  ],
-};
-
 function TasksPage() {
   const { amount } = Route.useParams();
   const nav = useNavigate();
@@ -42,13 +22,27 @@ function TasksPage() {
 
   useEffect(() => { if (!user) nav({ to: "/login" }); }, [user]);
 
-  const tasks = TASK_LIBRARY[amount] ?? [];
-  const reward = Number(amount) || 0;
+  const bucket = Number(amount) || 0;
 
-  const claim = async (taskId: string) => {
+  const { data: tasks = [], isLoading } = useQuery({
+    queryKey: ["tasks", bucket],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("id,title,description,reward_credits,sort_order")
+        .eq("bucket", bucket)
+        .eq("is_active", true)
+        .order("sort_order")
+        .order("created_at");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const claim = async (taskId: string, reward: number) => {
     if (!user) return;
     setClaiming(taskId);
-    const { data, error } = await supabase.rpc("claim_ad_reward", { _amount: reward });
+    const { error } = await supabase.rpc("claim_ad_reward", { _amount: reward });
     setClaiming(null);
     if (error) {
       const msg = error.message || "Couldn't grant credits";
@@ -65,7 +59,7 @@ function TasksPage() {
       <div className="max-w-lg mx-auto space-y-6">
         <header className="text-center space-y-1">
           <h1 className="text-2xl font-bold font-display">{amount}-credit tasks</h1>
-          <p className="text-sm text-muted-foreground">Complete any task below to earn <b>{amount} credits</b>.</p>
+          <p className="text-sm text-muted-foreground">Complete any task below to earn credits.</p>
           {user && (
             <div className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary bg-primary/10 rounded-full px-3 py-1">
               <Coins className="w-4 h-4" /> Balance: {profile?.credits ?? 0}
@@ -74,9 +68,12 @@ function TasksPage() {
         </header>
 
         <div className="space-y-3">
-          {tasks.length === 0 && (
+          {isLoading && (
+            <div className="text-center py-10"><Loader2 className="w-5 h-5 animate-spin inline" /></div>
+          )}
+          {!isLoading && tasks.length === 0 && (
             <div className="text-center text-sm text-muted-foreground py-10 border rounded-2xl">
-              No tasks for this amount yet.
+              No tasks available for this amount yet. Check back soon!
             </div>
           )}
           {tasks.map((t) => {
@@ -89,16 +86,16 @@ function TasksPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold">{t.title}</div>
-                    <div className="text-xs text-muted-foreground">{t.desc}</div>
+                    {t.description && <div className="text-xs text-muted-foreground">{t.description}</div>}
                   </div>
-                  <span className="text-xs font-bold text-primary shrink-0">+{amount}</span>
+                  <span className="text-xs font-bold text-primary shrink-0">+{t.reward_credits}</span>
                 </div>
                 <Button
                   className="mt-3 w-full"
                   size="sm"
                   variant={isDone ? "outline" : "default"}
                   disabled={isDone || claiming === t.id}
-                  onClick={() => claim(t.id)}
+                  onClick={() => claim(t.id, t.reward_credits)}
                 >
                   {claiming === t.id ? (<><Loader2 className="w-4 h-4 mr-1 animate-spin" />Claiming…</>) :
                    isDone ? (<><CheckCircle2 className="w-4 h-4 mr-1" />Claimed</>) :
