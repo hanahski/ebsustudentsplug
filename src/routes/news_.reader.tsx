@@ -15,6 +15,17 @@ import remarkGfm from "remark-gfm";
 import { z } from "zod";
 import { useMemo } from "react";
 import { toast } from "sonner";
+import { AdsterraNative, AdsterraPopunder } from "@/components/AdsterraNative";
+
+function splitMarkdownForAd(md: string): [string, string] {
+  if (!md) return ["", ""];
+  const target = Math.floor(md.length / 2);
+  // Find the nearest blank line (paragraph break) after the midpoint.
+  let idx = md.indexOf("\n\n", target);
+  if (idx === -1) idx = md.lastIndexOf("\n\n", target);
+  if (idx === -1 || idx < 200 || idx > md.length - 200) return [md, ""];
+  return [md.slice(0, idx).trim(), md.slice(idx).trim()];
+}
 
 const searchSchema = z.object({
   url: z.string().url(),
