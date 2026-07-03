@@ -187,6 +187,7 @@ function NewsReaderPage() {
 
   return (
     <AppShell>
+      <AdsterraPopunder />
       <article className="max-w-3xl mx-auto">
         <Link
           to="/news"
