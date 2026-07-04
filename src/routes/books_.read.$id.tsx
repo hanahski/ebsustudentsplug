@@ -79,6 +79,7 @@ function ReadBookPage() {
       qc.invalidateQueries({ queryKey: ["library-owned", id] });
       qc.invalidateQueries({ queryKey: ["profile"] });
       toast.success("Unlocked! Enjoy the read.");
+      setChooserOpen(true);
     },
     onError: (e: any) => {
       const msg = e?.message ?? "Purchase failed";
@@ -90,6 +91,15 @@ function ReadBookPage() {
       else toast.error(msg);
     },
   });
+
+  // First time we discover the user already owns this book, offer the chooser.
+  useEffect(() => {
+    if (!owned) return;
+    try {
+      if (window.localStorage.getItem(chooserSeenKey)) return;
+    } catch { /* no-op */ }
+    setChooserOpen(true);
+  }, [owned, chooserSeenKey]);
 
   // Detect user-authored books (composer). Render their chapters inline.
   const userBookId = useMemo(() => {
