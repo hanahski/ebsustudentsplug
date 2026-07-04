@@ -418,6 +418,64 @@ function ReadBookPage() {
           </div>
         )}
       </div>
+
+      {/* Enjoy chooser — "Read here" vs "Download file" */}
+      <Dialog
+        open={chooserOpen}
+        onOpenChange={(o) => {
+          setChooserOpen(o);
+          if (!o) {
+            try { window.localStorage.setItem(chooserSeenKey, "1"); } catch { /* no-op */ }
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>How would you like to enjoy this book?</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                setViewMode("read");
+                setChooserOpen(false);
+                try { window.localStorage.setItem(chooserSeenKey, "1"); } catch { /* no-op */ }
+              }}
+              className="rounded-2xl border p-4 text-left hover:border-primary hover:shadow-glow transition group"
+            >
+              <BookOpen className="w-6 h-6 text-primary mb-2" />
+              <div className="font-semibold">Read in app</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Open the reader right here — flip pages, resume anytime.
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setViewMode("download");
+                setChooserOpen(false);
+                try { window.localStorage.setItem(chooserSeenKey, "1"); } catch { /* no-op */ }
+                if (cachedPdfUrl) downloadPdf();
+              }}
+              className="rounded-2xl border p-4 text-left hover:border-primary hover:shadow-glow transition group"
+            >
+              <Download className="w-6 h-6 text-primary mb-2" />
+              <div className="font-semibold">Download file</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Save the PDF{gid ? " / EPUB / Kindle" : ""} to your device.
+              </p>
+            </button>
+          </div>
+          <p className="text-[11px] text-center text-muted-foreground pt-2">
+            You can switch anytime from the buttons above the reader.
+          </p>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
+// viewMode is intentionally read via the download buttons already rendered
+// on the page — the chooser sets user intent and either scrolls to the
+// reader or fires the PDF download.
+export { };
+
