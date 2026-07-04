@@ -1,16 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { CheckSquare, Gamepad2, Trophy, PlayCircle } from "lucide-react";
+import { CheckSquare, Trophy, PlayCircle } from "lucide-react";
 
 export const Route = createFileRoute("/earn-credits")({
   component: EarnCreditsPage,
-  head: () => ({ meta: [{ title: "Earn credits — StudentsPlug" }] }),
+  head: () => ({ meta: [{ title: "Earn Plug Credits — StudentsPlug" }] }),
 });
 
+// Games are intentionally NOT listed here — the earning flow is separate from
+// the /games tab, which is for fun-only play with no reward.
 const TILES = [
-  { key: "watch", label: "Watch & Earn", icon: PlayCircle, cta: "Watch a quick ad, earn credits", tone: "from-fuchsia-500 to-rose-500", to: "/earn-credits/watch" as const },
-  { key: "tasks", label: "Tasks", icon: CheckSquare, cta: "Complete tasks to earn credits", tone: "from-emerald-500 to-teal-600", to: "/get-credits" as const },
-  { key: "games", label: "Games", icon: Gamepad2, cta: "Play games, win credits", tone: "from-sky-500 to-indigo-600", to: "/games" as const },
+  { key: "watch", label: "Watch & Earn", icon: PlayCircle, cta: "Watch a quick ad, earn Plug Credits", tone: "from-fuchsia-500 to-rose-500", to: "/earn-credits/watch" as const },
+  { key: "tasks", label: "Tasks", icon: CheckSquare, cta: "Complete tasks to earn Plug Credits", tone: "from-emerald-500 to-teal-600", to: "/get-credits" as const },
   { key: "tournament", label: "Tournament", icon: Trophy, cta: "Compete for prize pools", tone: "from-amber-500 to-orange-600", to: "/earn-credits/tournament" as const },
 ];
 
@@ -19,8 +20,8 @@ function EarnCreditsPage() {
     <AppShell>
       <div className="max-w-3xl mx-auto space-y-6">
         <div>
-          <h1 className="text-2xl font-bold font-display">Earn credits</h1>
-          <p className="text-sm text-muted-foreground">Pick a way to earn — tap any card to start.</p>
+          <h1 className="text-2xl font-bold font-display">Earn Plug Credits</h1>
+          <p className="text-sm text-muted-foreground">Pick a way to earn — tap any card to start. Looking for games to play just for fun? <Link to="/games" className="underline text-primary">Try the Games tab</Link>.</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {TILES.map((t) => (

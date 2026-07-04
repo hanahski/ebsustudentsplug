@@ -2228,10 +2228,15 @@ export type Database = {
           status: Database["public"]["Enums"]["profile_status"]
         }[]
       }
-      admin_grant_credits: {
-        Args: { _amount: number; _reason: string; _user_id: string }
-        Returns: Json
-      }
+      admin_grant_credits:
+        | {
+            Args: { _amount: number; _reason: string; _user_id: string }
+            Returns: Json
+          }
+        | {
+            Args: { _amount: number; _reason: string; _user_id: string }
+            Returns: Json
+          }
       admin_post_to_note: { Args: { _post_id: string }; Returns: string }
       admin_reset_jamb: { Args: { _user_id: string }; Returns: undefined }
       admin_set_badge: {
@@ -2247,7 +2252,19 @@ export type Database = {
         Returns: undefined
       }
       buy_ticket: { Args: { _ticket_id: string }; Returns: Json }
-      claim_ad_reward: { Args: { _amount: number }; Returns: Json }
+      claim_ad_reward:
+        | {
+            Args: { _amount: number }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.claim_ad_reward(_amount => int4), public.claim_ad_reward(_amount => numeric). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+          }
+        | {
+            Args: { _amount: number }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.claim_ad_reward(_amount => int4), public.claim_ad_reward(_amount => numeric). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+          }
       claim_jamb_number: { Args: { _jamb: string }; Returns: Json }
       claim_popunder_view: { Args: { _hold_ms: number }; Returns: Json }
       claim_seed_admin_role: { Args: never; Returns: boolean }
@@ -2284,10 +2301,9 @@ export type Database = {
         Args: { _profile_id?: string }
         Returns: boolean
       }
-      spend_credits: {
-        Args: { _amount: number; _reason: string }
-        Returns: Json
-      }
+      spend_credits:
+        | { Args: { _amount: number; _reason: string }; Returns: Json }
+        | { Args: { _amount: number; _reason: string }; Returns: Json }
       verify_ticket: { Args: { _qr_token: string }; Returns: Json }
     }
     Enums: {

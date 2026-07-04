@@ -368,27 +368,52 @@ function ReadBookPage() {
                         <p className="text-sm">Preparing your book in the cloud…</p>
                       </>
                     ) : cacheError ? (
-                      <>
-                        <p className="text-sm">
-                          We couldn't extract a downloadable PDF for this book.
-                        </p>
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            preparingBookId.current = null;
-                            setPrepareAttempt((attempt) => attempt + 1);
-                          }}
-                        >
-                          Try again
-                        </Button>
-                        {detailsUrl && (
-                          <Button size="sm" variant="outline" asChild>
-                            <a href={detailsUrl} target="_blank" rel="noopener">
-                              <ExternalLink className="w-3.5 h-3.5 mr-1" /> Open source page
-                            </a>
-                          </Button>
-                        )}
-                      </>
+                      (() => {
+                        // Fall back to the original source download URL rather
+                        // than dead-ending the reader. Anonymous / free books
+                        // always link straight to the source file.
+                        const fallbackUrl =
+                          (book.download_formats as any)?.pdf ||
+                          (book.download_formats as any)?.epub ||
+                          book.download_url ||
+                          book.source_url;
+                        return (
+                          <div className="space-y-3">
+                            <Download className="w-8 h-8 mx-auto text-primary" />
+                            <p className="text-sm">
+                              {fallbackUrl
+                                ? "Your book is ready — download the original file from the source."
+                                : "We couldn't extract a downloadable file for this book."}
+                            </p>
+                            {fallbackUrl && (
+                              <Button asChild>
+                                <a href={fallbackUrl} target="_blank" rel="noopener">
+                                  <Download className="w-4 h-4 mr-1" /> Download file
+                                </a>
+                              </Button>
+                            )}
+                            <div className="flex justify-center gap-2 flex-wrap pt-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  preparingBookId.current = null;
+                                  setPrepareAttempt((attempt) => attempt + 1);
+                                }}
+                              >
+                                Try again
+                              </Button>
+                              {detailsUrl && (
+                                <Button size="sm" variant="ghost" asChild>
+                                  <a href={detailsUrl} target="_blank" rel="noopener">
+                                    <ExternalLink className="w-3.5 h-3.5 mr-1" /> Open source page
+                                  </a>
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()
                     ) : (
                       <div className="space-y-3">
                         <Download className="w-8 h-8 mx-auto text-primary" />

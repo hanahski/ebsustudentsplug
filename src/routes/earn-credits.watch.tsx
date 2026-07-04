@@ -12,6 +12,7 @@ export const Route = createFileRoute("/earn-credits/watch")({
   head: () => ({ meta: [{ title: "Watch & Earn — StudentsPlug" }] }),
 });
 
+const PER_VIEW = 0.1; // Plug Credits per view
 const DAILY_CAP = 15;
 const HOLD_MS = 20_000;      // 20s minimum hold before claim allowed
 const FAST_RETURN_MS = 5_000; // <5s focus return = suspicious
@@ -90,8 +91,7 @@ function WatchEarnPage() {
     setFlagged(false);
     clickTimeRef.current = Date.now();
 
-    // If the popunder didn't preload yet, inject now (best-effort) — it may
-    // fire the next time the user clicks anywhere on the page.
+    // Ensure the popunder script is loaded (idempotent).
     try {
       if (!document.querySelector(`script[src="${POPUNDER_SRC}"]`)) {
         const s = document.createElement("script");
@@ -101,7 +101,31 @@ function WatchEarnPage() {
       }
     } catch { /* no-op */ }
 
-    toast.message("Ad opened in a new tab", { description: "Come back in 20 seconds to claim your credit." });
+    // Fallback: some browsers/ad-blockers silently swallow the popunder.
+    // Track whether the tab loses focus within 1200ms; if not, open a
+    // fallback ad tab manually so the reward flow can still complete.
+    let opened = false;
+    const onBlur = () => { opened = true; };
+    window.addEventListener("blur", onBlur, { once: true });
+    setTimeout(() => {
+      window.removeEventListener("blur", onBlur);
+      if (!opened) {
+        try {
+          const w = window.open(POPUNDER_SRC.replace(/\/[^/]+\.js$/, "/"), "_blank", "noopener,noreferrer");
+          if (!w) {
+            toast.info("Popup blocked", {
+              description: "Allow pop-ups for this site so the ad can open, then try again.",
+            });
+          } else {
+            toast.message("Ad opened", { description: "Come back in 20 seconds to claim your reward." });
+          }
+        } catch {
+          toast.info("Ad couldn't open", { description: "Please allow pop-ups and try again." });
+        }
+      } else {
+        toast.message("Ad opened in a new tab", { description: "Come back in 20 seconds to claim your reward." });
+      }
+    }, 1200);
 
     setPhase("holding");
     setHoldRemaining(Math.ceil(HOLD_MS / 1000));
@@ -138,8 +162,7 @@ function WatchEarnPage() {
     }
     const payload = data as any;
     setViewsToday(payload?.views_today ?? viewsToday + 1);
-    if (payload?.credits_added > 0) toast.success(`+${payload.credits_added} credit added!`);
-    else toast.success("View counted (+0.5) — next view rounds up to a full credit!");
+    toast.success(`+${payload?.credits_added ?? PER_VIEW} PC added!`);
     try { await refreshProfile(); } catch { /* no-op */ }
     setPhase("idle");
   };
@@ -167,10 +190,10 @@ function WatchEarnPage() {
       <div className="max-w-lg mx-auto space-y-6">
         <header className="text-center space-y-1">
           <h1 className="text-2xl font-bold font-display">Watch & Earn</h1>
-          <p className="text-sm text-muted-foreground">Watch a quick ad, earn credits.</p>
+          <p className="text-sm text-muted-foreground">Watch a quick ad, earn Plug Credits.</p>
           {user && (
             <div className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary bg-primary/10 rounded-full px-3 py-1">
-              <Coins className="w-4 h-4" /> Balance: {profile?.credits ?? 0}
+              <Coins className="w-4 h-4" /> Balance: {Number(profile?.credits ?? 0).toFixed(3).replace(/\.?0+$/, "")} PC
             </div>
           )}
         </header>
@@ -179,7 +202,7 @@ function WatchEarnPage() {
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className="rounded-2xl bg-primary/5 p-3">
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Per view</div>
-              <div className="text-lg font-bold text-primary">0.5</div>
+              <div className="text-lg font-bold text-primary">{PER_VIEW} PC</div>
             </div>
             <div className="rounded-2xl bg-primary/5 p-3">
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Watched</div>
