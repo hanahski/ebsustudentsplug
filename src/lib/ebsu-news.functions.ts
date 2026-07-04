@@ -282,7 +282,7 @@ export const generateEbsuNews = createServerFn({ method: "POST" })
   .inputValidator((d: { topic?: string; sourceUrls?: string[]; publish?: boolean }) =>
     z
       .object({
-        topic: z.string().max(500).optional(),
+        topic: z.string().optional(),
         sourceUrls: z.array(z.string().url()).max(8).optional(),
         publish: z.boolean().default(true),
       })
