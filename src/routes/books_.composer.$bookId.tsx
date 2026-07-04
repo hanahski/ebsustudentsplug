@@ -814,7 +814,36 @@ function ComposerEditorPage() {
             {(chapters?.length ?? 0) === 0 && (
               <p className="text-xs text-muted-foreground p-2">No chapters yet.</p>
             )}
+            <div className="pt-2 border-t mt-2 space-y-1">
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full text-xs"
+                onClick={() => importInput.current?.click()}
+                disabled={!!importBusy}
+                title="Import a PDF or EPUB — chapters and images are pulled in automatically"
+              >
+                {importBusy ? (
+                  <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                ) : (
+                  <Upload className="w-3.5 h-3.5 mr-1" />
+                )}
+                {importBusy ? "Importing…" : "Import PDF / EPUB"}
+              </Button>
+              <p className="text-[10px] text-muted-foreground px-1 leading-snug">
+                Chapters, headings and images are pulled in automatically. Kindle files
+                (.mobi/.azw3) need to be converted to EPUB first.
+              </p>
+              <input
+                ref={importInput}
+                type="file"
+                accept=".pdf,.epub,application/pdf,application/epub+zip"
+                className="hidden"
+                onChange={onImportFile}
+              />
+            </div>
           </aside>
+
 
 
           <section className="space-y-3">
