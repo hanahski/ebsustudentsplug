@@ -2249,6 +2249,7 @@ export type Database = {
       buy_ticket: { Args: { _ticket_id: string }; Returns: Json }
       claim_ad_reward: { Args: { _amount: number }; Returns: Json }
       claim_jamb_number: { Args: { _jamb: string }; Returns: Json }
+      claim_popunder_view: { Args: { _hold_ms: number }; Returns: Json }
       claim_seed_admin_role: { Args: never; Returns: boolean }
       create_dm_group: {
         Args: { _member_ids: string[]; _name: string }
