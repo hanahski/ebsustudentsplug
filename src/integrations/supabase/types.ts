@@ -2274,6 +2274,52 @@ export type Database = {
       }
       generate_referral_code: { Args: never; Returns: string }
       get_book_by_share_token: { Args: { _token: string }; Returns: Json }
+      get_my_profile: {
+        Args: never
+        Returns: {
+          academic_level: string | null
+          approved_post_count: number
+          avatar_key: string
+          bio: string | null
+          cover_url: string | null
+          cover_video_url: string | null
+          created_at: string
+          credits: number
+          current_lat: number | null
+          current_lng: number | null
+          current_zone: string | null
+          department_id: string | null
+          display_name: string
+          email: string | null
+          id: string
+          is_legit: boolean
+          is_star: boolean
+          is_sure_plug: boolean
+          is_verified: boolean
+          jamb_number: string | null
+          last_seen_at: string | null
+          location_updated_at: string | null
+          payout_account: Json | null
+          picture_url: string | null
+          rank_step: number
+          rank_tier: Database["public"]["Enums"]["rank_tier"]
+          referral_code: string | null
+          referrer_id: string | null
+          seen_welcome: boolean
+          share_location: boolean
+          show_online: boolean
+          status: Database["public"]["Enums"]["profile_status"]
+          tool_consent_at: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_my_ticket_qr: { Args: { _ticket_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
