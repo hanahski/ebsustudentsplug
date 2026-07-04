@@ -129,6 +129,8 @@ function ComposerEditorPage() {
   const aiCoverFn = useServerFn(bookAiCover);
   const aiInlineImgFn = useServerFn(bookAiInlineImage);
   const [aiCoverBusy, setAiCoverBusy] = useState(false);
+  const [importBusy, setImportBusy] = useState<null | { done: number; total: number; name: string }>(null);
+  const importInput = useRef<HTMLInputElement | null>(null);
 
 
 
