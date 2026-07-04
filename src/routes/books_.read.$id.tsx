@@ -34,6 +34,10 @@ function ReadBookPage() {
   const [downloadLoading, setDownloadLoading] = useState(false);
   const preparingBookId = useRef<string | null>(null);
   const [prepareAttempt, setPrepareAttempt] = useState(0);
+  // "How do you want to enjoy this book?" chooser — shown once per owned book.
+  const [chooserOpen, setChooserOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"read" | "download" | null>(null);
+  const chooserSeenKey = `book-chooser-seen:${id}`;
 
   const { data: book, isLoading } = useQuery({
     queryKey: ["library-book", id],
