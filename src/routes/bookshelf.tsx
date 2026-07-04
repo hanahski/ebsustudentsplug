@@ -14,9 +14,9 @@ export const Route = createFileRoute("/bookshelf")({
       { name: "description", content: "Your private bookshelf on StudentsPlug — every novel and textbook you've unlocked, organised and ready to read on any device." },
       { property: "og:title", content: "My Bookshelf — StudentsPlug" },
       { property: "og:description", content: "Every novel and textbook you've unlocked on StudentsPlug, ready to read." },
-      { property: "og:url", content: "/bookshelf" },
+      { property: "og:url", content: "https://ebsustudentsplug.lovable.app/bookshelf" },
     ],
-    links: [{ rel: "canonical", href: "/bookshelf" }],
+    links: [{ rel: "canonical", href: "https://ebsustudentsplug.lovable.app/bookshelf" }],
   }),
   component: BookshelfPage,
 });

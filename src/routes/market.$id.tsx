@@ -11,7 +11,7 @@ import { getIsAdminUser } from "@/lib/admin-role";
 export const Route = createFileRoute("/market/$id")({
   component: ListingDetail,
   head: ({ params }) => {
-    const url = `/market/${params.id}`;
+    const url = `https://ebsustudentsplug.lovable.app/market/${params.id}`;
     return {
       meta: [
         { title: "Market listing — StudentsPlug" },
