@@ -65,9 +65,9 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Past questions, assignments, notes, quizzes, market and games for Ebonyi State University students. Post, level up, and pass with flying colours." },
       { property: "og:title", content: "StudentsPlug — EBSU's student knowledge hub" },
       { property: "og:description", content: "The home feed for EBSU students: past questions, notes, news, market and more." },
-      { property: "og:url", content: "/" },
+      { property: "og:url", content: "https://ebsustudentsplug.lovable.app/" },
     ],
-    links: [{ rel: "canonical", href: "/" }],
+    links: [{ rel: "canonical", href: "https://ebsustudentsplug.lovable.app/" }],
   }),
 });
 

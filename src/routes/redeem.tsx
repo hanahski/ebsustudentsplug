@@ -16,9 +16,9 @@ export const Route = createFileRoute("/redeem")({
       { name: "description", content: "Got a promo, bonus or referral code? Redeem it on StudentsPlug and instantly add credits to your student account." },
       { property: "og:title", content: "Redeem a code — StudentsPlug" },
       { property: "og:description", content: "Turn promo, bonus and referral codes into StudentsPlug credits in seconds." },
-      { property: "og:url", content: "/redeem" },
+      { property: "og:url", content: "https://ebsustudentsplug.lovable.app/redeem" },
     ],
-    links: [{ rel: "canonical", href: "/redeem" }],
+    links: [{ rel: "canonical", href: "https://ebsustudentsplug.lovable.app/redeem" }],
   }),
 });
 

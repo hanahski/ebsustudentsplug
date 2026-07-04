@@ -15,9 +15,9 @@ export const Route = createFileRoute("/terms")({
         property: "og:description",
         content: "Rules and terms for using the StudentsPlug platform.",
       },
-      { property: "og:url", content: "/terms" },
+      { property: "og:url", content: "https://ebsustudentsplug.lovable.app/terms" },
     ],
-    links: [{ rel: "canonical", href: "/terms" }],
+    links: [{ rel: "canonical", href: "https://ebsustudentsplug.lovable.app/terms" }],
   }),
   component: TermsPage,
 });
