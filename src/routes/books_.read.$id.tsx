@@ -37,11 +37,13 @@ function ReadBookPage() {
   const { data: book, isLoading } = useQuery({
     queryKey: ["library-book", id],
     queryFn: async () => {
+      // Accept any source — market feed surfaces books from every provider
+      // (openstax, obooko, gutenberg, freebookcentre, user…). Filtering by
+      // source here was causing "Book not found" for perfectly valid rows.
       const { data, error } = await supabase
         .from("library_books")
         .select("*")
         .eq("id", id)
-        .or("source.eq.user,source.eq.freebookcentre")
         .maybeSingle();
       if (error) throw error;
       return data;
