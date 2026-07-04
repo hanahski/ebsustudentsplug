@@ -34,6 +34,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { useServerFn } from "@tanstack/react-start";
 import { bookAiAssist, bookAiCover, bookAiInlineImage } from "@/lib/book-ai.functions";
 import { buildEpubBlob, downloadBlob } from "@/lib/epub-export";
+import { importBookFile } from "@/lib/book-import";
 
 const COVER_TEMPLATES: {
   id: string;
