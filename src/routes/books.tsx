@@ -453,33 +453,32 @@ function BookCard({
           </span>
         </div>
 
-        {/* Action */}
-        {isEbsu ? (
-          // Community-written EBSU book → read online is fine (composer flow).
-          owned ? (
+        {/* Action — every book requires Unlock first, then reveals read/download. */}
+        {owned ? (
+          isEbsu ? (
             <Button size="sm" variant="secondary" asChild className="w-full">
               <Link to="/books/read/$id" params={{ id: book.id }}>
                 <Check className="w-3.5 h-3.5 mr-1" /> Read
               </Link>
             </Button>
+          ) : hasFormats ? (
+            <DownloadPicker formats={formats} keys={orderedKeys} />
           ) : (
-            <Button size="sm" disabled={buying} onClick={onBuy} className="w-full">
-              {buying ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <>
-                  <Coins className="w-3.5 h-3.5 mr-1" /> Unlock
-                </>
-              )}
+            <Button size="sm" variant="outline" asChild className="w-full">
+              <a href={book.source_url ?? book.download_url ?? "#"} target="_blank" rel="noopener">
+                <Download className="w-3.5 h-3.5 mr-1" /> Open source
+              </a>
             </Button>
           )
-        ) : hasFormats ? (
-          <DownloadPicker formats={formats} keys={orderedKeys} />
         ) : (
-          <Button size="sm" variant="outline" asChild className="w-full">
-            <a href={book.source_url ?? book.download_url ?? "#"} target="_blank" rel="noopener">
-              <Download className="w-3.5 h-3.5 mr-1" /> Open source
-            </a>
+          <Button size="sm" disabled={buying} onClick={onBuy} className="w-full">
+            {buying ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <>
+                <Coins className="w-3.5 h-3.5 mr-1" /> Unlock
+              </>
+            )}
           </Button>
         )}
       </div>
