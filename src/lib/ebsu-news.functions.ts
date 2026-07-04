@@ -198,48 +198,63 @@ async function runGenerate(opts: {
   authorId: string | null;
 }) {
   const sources = opts.sourceUrls.slice(0, 6);
-  if (sources.length === 0) throw new Error("No sources provided");
+  const hasSources = sources.length > 0;
+  const hasTopic = !!(opts.topic && opts.topic.trim().length > 0);
+  if (!hasSources && !hasTopic) {
+    throw new Error("Add at least one source or write an editor brief.");
+  }
 
-  // 1. Scrape
-  const scraped = await Promise.all(
-    sources.map(async (u) => ({ url: u, text: await fetchPageText(u) })),
-  );
-  const usable = scraped.filter((s) => s.text.length > 200);
-  if (usable.length === 0) throw new Error("Could not fetch any source content");
+  // 1. Scrape (only if sources provided)
+  let usable: { url: string; text: string }[] = [];
+  if (hasSources) {
+    const scraped = await Promise.all(
+      sources.map(async (u) => ({ url: u, text: await fetchPageText(u) })),
+    );
+    usable = scraped.filter((s) => s.text.length > 200);
+    if (usable.length === 0 && !hasTopic) {
+      throw new Error("Could not fetch any source content");
+    }
+  }
 
   // 2. Synthesize
-  const system = `You are the editor of "EBSU Plug News" — a sharp, student-first news desk covering Ebonyi State University. You write eye-catching, accurate, useful posts that students actually want to read. Tone: confident, warm, never clickbait. Always Nigerian student-friendly English.
-
-ACCURACY RULES (non-negotiable):
+  const sourcedRules = `ACCURACY RULES (non-negotiable):
 1. Use ONLY facts that appear verbatim in the supplied sources. Do NOT invent dates, names, fees, deadlines, statistics, course codes, or quotes.
 2. If a key detail (e.g. a date or amount) is missing or ambiguous in the sources, write the article without it — never guess.
 3. Do not fabricate quotes. If you cite someone, the exact sentence must appear in the source text.
 4. Do not promise anything ("admissions are now open", "results released") unless the source explicitly says so.
-5. List the source URLs you actually used in "sources_used" — they are rendered as a separate "Sources" section by the site.
+5. List the source URLs you actually used in "sources_used" — rendered as a separate "Sources" section by the site.`;
+
+  const briefRules = `EDITOR-BRIEF MODE (no external sources):
+1. Base the article strictly on the editor brief supplied below. Do not fabricate specific dates, fees, names, quotes, or statistics that are not in the brief.
+2. If the brief is short, expand it into a well-structured article about EBSU with helpful context students already know.
+3. Leave "sources_used" as an empty array [].`;
+
+  const system = `You are the editor of "EBSU Plug News" — a sharp, student-first news desk covering Ebonyi State University. You write eye-catching, accurate, useful posts that students actually want to read. Tone: confident, warm, never clickbait. Always Nigerian student-friendly English.
+
+${usable.length > 0 ? sourcedRules : briefRules}
 
 BODY STYLE RULES (non-negotiable):
-- DO NOT mention, link to, name, or reference the source websites, blogs, or publications anywhere in the body or summary. No phrases like "according to X", "as reported by Y", "the source says", "via …", "(see link)", or any inline URLs/footnote markers ([1], [^1], etc.).
-- DO NOT include a "Sources", "References", or "Read more" section in the body — the site renders that automatically from "sources_used".
+- DO NOT mention, link to, name, or reference source websites, blogs, or publications anywhere in the body or summary. No phrases like "according to X", "as reported by Y", "the source says", "via …", "(see link)", or any inline URLs/footnote markers ([1], [^1], etc.).
+- DO NOT include a "Sources", "References", or "Read more" section in the body — the site renders that automatically.
 - Write the article as ORIGINAL EBSU Plug News reporting, in your own words, fully self-contained.
-
-You will receive scraped text from multiple sources. Combine their intelligence into ONE polished article. Skip anything not relevant or useful to EBSU students.
 
 Return STRICT JSON with this shape:
 {
   "title": "punchy headline under 80 chars",
-  "summary": "1-2 sentence hook under 200 chars, no source mentions",
-  "body": "full article in markdown, 350-700 words, with ## subheadings, key facts, what it means for students, and a closing 'Bottom line' line. NO source mentions, NO links, NO references section.",
+  "summary": "1-2 sentence hook under 200 chars",
+  "body": "full article in markdown, 350-900 words, with ## subheadings, key facts, what it means for students, and a closing 'Bottom line' line.",
   "image_prompt": "short visual prompt for cover photo, no text or logos",
   "sources_used": ["https://..."],
   "skip": false
 }
 
-If none of the sources have anything fresh and useful for EBSU students, return { "skip": true, "reason": "..." }.`;
+If you truly have nothing to write about, return { "skip": true, "reason": "..." }.`;
 
-  const userPrompt = `${opts.topic ? `Editor brief / angle: ${opts.topic}\n\n` : ""}Sources (use ONLY these — do not add outside knowledge):\n\n${usable
-    .map((s, i) => `[${i + 1}] ${s.url}\n${s.text}`)
-    .join("\n\n---\n\n")}`;
-
+  const userPrompt = usable.length > 0
+    ? `${hasTopic ? `Editor brief / angle: ${opts.topic}\n\n` : ""}Sources (use ONLY these — do not add outside knowledge):\n\n${usable
+        .map((s, i) => `[${i + 1}] ${s.url}\n${s.text}`)
+        .join("\n\n---\n\n")}`
+    : `Editor brief (write the article from this alone, no external sources):\n\n${opts.topic}`;
 
   const j = await aiJSON(userPrompt, system);
   if (j.skip) throw new Error(`AI skipped: ${j.reason || "no relevant content"}`);
@@ -282,7 +297,7 @@ export const generateEbsuNews = createServerFn({ method: "POST" })
   .inputValidator((d: { topic?: string; sourceUrls?: string[]; publish?: boolean }) =>
     z
       .object({
-        topic: z.string().max(500).optional(),
+        topic: z.string().optional(),
         sourceUrls: z.array(z.string().url()).max(8).optional(),
         publish: z.boolean().default(true),
       })

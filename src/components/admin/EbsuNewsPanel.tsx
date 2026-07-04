@@ -105,20 +105,22 @@ export function EbsuNewsPanel() {
         <Textarea
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
-          placeholder="Optional angle / editor brief — e.g. 'New semester resumption date' or leave blank to let the AI pick the best story from sources."
-          rows={2}
-          maxLength={500}
+          placeholder="Optional angle / editor brief — paste any length. Leave blank to let the AI pick the best story from sources."
+          rows={4}
           className="mb-3"
         />
         <div className="flex gap-2">
-          <Button onClick={() => generate(true)} disabled={busy || sources.filter((s: any) => s.is_active).length === 0} className="flex-1">
+          <Button onClick={() => generate(true)} disabled={busy} className="flex-1">
             {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
             Generate & Publish
           </Button>
-          <Button variant="outline" onClick={() => generate(false)} disabled={busy || sources.filter((s: any) => s.is_active).length === 0}>
+          <Button variant="outline" onClick={() => generate(false)} disabled={busy}>
             Draft only
           </Button>
         </div>
+        <p className="text-[11px] text-muted-foreground mt-2">
+          Tip: with no sources, the AI writes purely from your editor brief above.
+        </p>
       </div>
 
       {/* Sources */}
