@@ -574,6 +574,43 @@ function ComposerEditorPage() {
     finally { setApplyingTpl(null); }
   };
 
+  // ---------- Import PDF / EPUB ----------
+  const onImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    setImportBusy({ done: 0, total: 0, name: f.name });
+    try {
+      const imported = await importBookFile(f);
+      if (!imported.length) throw new Error("Nothing to import from that file.");
+      setImportBusy({ done: 0, total: imported.length, name: f.name });
+
+      const startIdx = chapters?.length ?? 0;
+      // Insert in order. Use single insert-many for speed.
+      const rows = imported.map((c, i) => ({
+        book_id: bookId,
+        idx: startIdx + i,
+        title: c.title.slice(0, 200),
+        content: c.html,
+      }));
+      const { data: inserted, error } = await supabase
+        .from("user_book_chapters")
+        .insert(rows)
+        .select("id,idx");
+      if (error) throw error;
+
+      qc.invalidateQueries({ queryKey: ["composer-chapters", bookId] });
+      const firstNew = inserted?.sort((a: any, b: any) => a.idx - b.idx)?.[0];
+      if (firstNew) setActiveId(firstNew.id);
+      toast.success(`Imported ${imported.length} chapter${imported.length === 1 ? "" : "s"} from ${f.name}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Import failed");
+    } finally {
+      setImportBusy(null);
+    }
+  };
+
+
 
   if (bookLoading || chLoading) {
     return (
