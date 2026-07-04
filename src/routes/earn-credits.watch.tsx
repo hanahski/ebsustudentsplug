@@ -90,16 +90,18 @@ function WatchEarnPage() {
     setFlagged(false);
     clickTimeRef.current = Date.now();
 
-    // Inject the Adsterra popunder once per click. The network's own script
-    // decides whether/when to open a tab based on their frequency rules.
+    // If the popunder didn't preload yet, inject now (best-effort) — it may
+    // fire the next time the user clicks anywhere on the page.
     try {
-      const s = document.createElement("script");
-      s.src = POPUNDER_SRC;
-      s.async = true;
-      document.body.appendChild(s);
-    } catch {
-      /* no-op — script inject failure just means no popunder this click */
-    }
+      if (!document.querySelector(`script[src="${POPUNDER_SRC}"]`)) {
+        const s = document.createElement("script");
+        s.src = POPUNDER_SRC;
+        s.async = true;
+        document.body.appendChild(s);
+      }
+    } catch { /* no-op */ }
+
+    toast.message("Ad opened in a new tab", { description: "Come back in 20 seconds to claim your credit." });
 
     setPhase("holding");
     setHoldRemaining(Math.ceil(HOLD_MS / 1000));
