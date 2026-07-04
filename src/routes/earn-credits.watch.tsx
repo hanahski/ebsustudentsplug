@@ -34,6 +34,25 @@ function WatchEarnPage() {
 
   useEffect(() => { if (user === null) nav({ to: "/login" }); }, [user, nav]);
 
+  // Preload the Adsterra popunder script ONCE on mount. Popunder networks
+  // hook their own click listener at load time — injecting the script inside
+  // the click handler loses the user-gesture context and the popup is silently
+  // blocked. Preloading gives the first tap a real chance to open a tab.
+  const popunderReady = useRef(false);
+  useEffect(() => {
+    if (popunderReady.current) return;
+    try {
+      const existing = document.querySelector(`script[src="${POPUNDER_SRC}"]`);
+      if (!existing) {
+        const s = document.createElement("script");
+        s.src = POPUNDER_SRC;
+        s.async = true;
+        document.body.appendChild(s);
+      }
+      popunderReady.current = true;
+    } catch { /* no-op */ }
+  }, []);
+
   // Load today's view count from credit_transactions.
   useEffect(() => {
     if (!user) return;
@@ -71,16 +90,18 @@ function WatchEarnPage() {
     setFlagged(false);
     clickTimeRef.current = Date.now();
 
-    // Inject the Adsterra popunder once per click. The network's own script
-    // decides whether/when to open a tab based on their frequency rules.
+    // If the popunder didn't preload yet, inject now (best-effort) — it may
+    // fire the next time the user clicks anywhere on the page.
     try {
-      const s = document.createElement("script");
-      s.src = POPUNDER_SRC;
-      s.async = true;
-      document.body.appendChild(s);
-    } catch {
-      /* no-op — script inject failure just means no popunder this click */
-    }
+      if (!document.querySelector(`script[src="${POPUNDER_SRC}"]`)) {
+        const s = document.createElement("script");
+        s.src = POPUNDER_SRC;
+        s.async = true;
+        document.body.appendChild(s);
+      }
+    } catch { /* no-op */ }
+
+    toast.message("Ad opened in a new tab", { description: "Come back in 20 seconds to claim your credit." });
 
     setPhase("holding");
     setHoldRemaining(Math.ceil(HOLD_MS / 1000));

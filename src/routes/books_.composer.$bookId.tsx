@@ -34,6 +34,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { useServerFn } from "@tanstack/react-start";
 import { bookAiAssist, bookAiCover, bookAiInlineImage } from "@/lib/book-ai.functions";
 import { buildEpubBlob, downloadBlob } from "@/lib/epub-export";
+import { importBookFile } from "@/lib/book-import";
 
 const COVER_TEMPLATES: {
   id: string;
@@ -128,6 +129,8 @@ function ComposerEditorPage() {
   const aiCoverFn = useServerFn(bookAiCover);
   const aiInlineImgFn = useServerFn(bookAiInlineImage);
   const [aiCoverBusy, setAiCoverBusy] = useState(false);
+  const [importBusy, setImportBusy] = useState<null | { done: number; total: number; name: string }>(null);
+  const importInput = useRef<HTMLInputElement | null>(null);
 
 
 
@@ -571,6 +574,43 @@ function ComposerEditorPage() {
     finally { setApplyingTpl(null); }
   };
 
+  // ---------- Import PDF / EPUB ----------
+  const onImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    setImportBusy({ done: 0, total: 0, name: f.name });
+    try {
+      const imported = await importBookFile(f);
+      if (!imported.length) throw new Error("Nothing to import from that file.");
+      setImportBusy({ done: 0, total: imported.length, name: f.name });
+
+      const startIdx = chapters?.length ?? 0;
+      // Insert in order. Use single insert-many for speed.
+      const rows = imported.map((c, i) => ({
+        book_id: bookId,
+        idx: startIdx + i,
+        title: c.title.slice(0, 200),
+        content: c.html,
+      }));
+      const { data: inserted, error } = await supabase
+        .from("user_book_chapters")
+        .insert(rows)
+        .select("id,idx");
+      if (error) throw error;
+
+      qc.invalidateQueries({ queryKey: ["composer-chapters", bookId] });
+      const firstNew = inserted?.sort((a: any, b: any) => a.idx - b.idx)?.[0];
+      if (firstNew) setActiveId(firstNew.id);
+      toast.success(`Imported ${imported.length} chapter${imported.length === 1 ? "" : "s"} from ${f.name}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Import failed");
+    } finally {
+      setImportBusy(null);
+    }
+  };
+
+
 
   if (bookLoading || chLoading) {
     return (
@@ -774,7 +814,36 @@ function ComposerEditorPage() {
             {(chapters?.length ?? 0) === 0 && (
               <p className="text-xs text-muted-foreground p-2">No chapters yet.</p>
             )}
+            <div className="pt-2 border-t mt-2 space-y-1">
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full text-xs"
+                onClick={() => importInput.current?.click()}
+                disabled={!!importBusy}
+                title="Import a PDF or EPUB — chapters and images are pulled in automatically"
+              >
+                {importBusy ? (
+                  <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                ) : (
+                  <Upload className="w-3.5 h-3.5 mr-1" />
+                )}
+                {importBusy ? "Importing…" : "Import PDF / EPUB"}
+              </Button>
+              <p className="text-[10px] text-muted-foreground px-1 leading-snug">
+                Chapters, headings and images are pulled in automatically. Kindle files
+                (.mobi/.azw3) need to be converted to EPUB first.
+              </p>
+              <input
+                ref={importInput}
+                type="file"
+                accept=".pdf,.epub,application/pdf,application/epub+zip"
+                className="hidden"
+                onChange={onImportFile}
+              />
+            </div>
           </aside>
+
 
 
           <section className="space-y-3">

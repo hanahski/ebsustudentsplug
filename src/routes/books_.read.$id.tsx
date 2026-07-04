@@ -10,6 +10,7 @@ import { BookOpen, Loader2, Download, ExternalLink, Coins, ArrowLeft } from "luc
 import { toast } from "sonner";
 import { BookCover } from "@/components/BookCover";
 import { SwipeBookReader } from "@/components/SwipeBookReader";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/books_/read/$id")({ component: ReadBookPage });
 
@@ -33,15 +34,21 @@ function ReadBookPage() {
   const [downloadLoading, setDownloadLoading] = useState(false);
   const preparingBookId = useRef<string | null>(null);
   const [prepareAttempt, setPrepareAttempt] = useState(0);
+  // "How do you want to enjoy this book?" chooser — shown once per owned book.
+  const [chooserOpen, setChooserOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"read" | "download" | null>(null);
+  const chooserSeenKey = `book-chooser-seen:${id}`;
 
   const { data: book, isLoading } = useQuery({
     queryKey: ["library-book", id],
     queryFn: async () => {
+      // Accept any source — market feed surfaces books from every provider
+      // (openstax, obooko, gutenberg, freebookcentre, user…). Filtering by
+      // source here was causing "Book not found" for perfectly valid rows.
       const { data, error } = await supabase
         .from("library_books")
         .select("*")
         .eq("id", id)
-        .or("source.eq.user,source.eq.freebookcentre")
         .maybeSingle();
       if (error) throw error;
       return data;
@@ -72,6 +79,7 @@ function ReadBookPage() {
       qc.invalidateQueries({ queryKey: ["library-owned", id] });
       qc.invalidateQueries({ queryKey: ["profile"] });
       toast.success("Unlocked! Enjoy the read.");
+      setChooserOpen(true);
     },
     onError: (e: any) => {
       const msg = e?.message ?? "Purchase failed";
@@ -83,6 +91,15 @@ function ReadBookPage() {
       else toast.error(msg);
     },
   });
+
+  // First time we discover the user already owns this book, offer the chooser.
+  useEffect(() => {
+    if (!owned) return;
+    try {
+      if (window.localStorage.getItem(chooserSeenKey)) return;
+    } catch { /* no-op */ }
+    setChooserOpen(true);
+  }, [owned, chooserSeenKey]);
 
   // Detect user-authored books (composer). Render their chapters inline.
   const userBookId = useMemo(() => {
@@ -401,6 +418,60 @@ function ReadBookPage() {
           </div>
         )}
       </div>
+
+      {/* Enjoy chooser — "Read here" vs "Download file" */}
+      <Dialog
+        open={chooserOpen}
+        onOpenChange={(o) => {
+          setChooserOpen(o);
+          if (!o) {
+            try { window.localStorage.setItem(chooserSeenKey, "1"); } catch { /* no-op */ }
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>How would you like to enjoy this book?</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                setViewMode("read");
+                setChooserOpen(false);
+                try { window.localStorage.setItem(chooserSeenKey, "1"); } catch { /* no-op */ }
+              }}
+              className="rounded-2xl border p-4 text-left hover:border-primary hover:shadow-glow transition group"
+            >
+              <BookOpen className="w-6 h-6 text-primary mb-2" />
+              <div className="font-semibold">Read in app</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Open the reader right here — flip pages, resume anytime.
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setViewMode("download");
+                setChooserOpen(false);
+                try { window.localStorage.setItem(chooserSeenKey, "1"); } catch { /* no-op */ }
+                if (cachedPdfUrl) downloadPdf();
+              }}
+              className="rounded-2xl border p-4 text-left hover:border-primary hover:shadow-glow transition group"
+            >
+              <Download className="w-6 h-6 text-primary mb-2" />
+              <div className="font-semibold">Download file</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Save the PDF{gid ? " / EPUB / Kindle" : ""} to your device.
+              </p>
+            </button>
+          </div>
+          <p className="text-[11px] text-center text-muted-foreground pt-2">
+            You can switch anytime from the buttons above the reader.
+          </p>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
+
