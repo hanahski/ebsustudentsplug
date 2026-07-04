@@ -474,8 +474,4 @@ function ReadBookPage() {
     </AppShell>
   );
 }
-// viewMode is intentionally read via the download buttons already rendered
-// on the page — the chooser sets user intent and either scrolls to the
-// reader or fires the PDF download.
-export { };
 
