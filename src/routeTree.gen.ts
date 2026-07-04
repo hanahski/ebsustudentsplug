@@ -81,6 +81,7 @@ import { Route as GamesPuzzleRouteImport } from './routes/games.puzzle'
 import { Route as GamesFreegamesRouteImport } from './routes/games.freegames'
 import { Route as GamesEightballRouteImport } from './routes/games.eightball'
 import { Route as FacultyIdRouteImport } from './routes/faculty.$id'
+import { Route as EarnCreditsWatchRouteImport } from './routes/earn-credits.watch'
 import { Route as EarnCreditsTournamentRouteImport } from './routes/earn-credits.tournament'
 import { Route as DepartmentIdRouteImport } from './routes/department.$id'
 import { Route as CoursesIdRouteImport } from './routes/courses.$id'
@@ -478,6 +479,11 @@ const FacultyIdRoute = FacultyIdRouteImport.update({
   path: '/faculty/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EarnCreditsWatchRoute = EarnCreditsWatchRouteImport.update({
+  id: '/watch',
+  path: '/watch',
+  getParentRoute: () => EarnCreditsRoute,
+} as any)
 const EarnCreditsTournamentRoute = EarnCreditsTournamentRouteImport.update({
   id: '/tournament',
   path: '/tournament',
@@ -716,6 +722,7 @@ export interface FileRoutesByFullPath {
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
   '/earn-credits/tournament': typeof EarnCreditsTournamentRoute
+  '/earn-credits/watch': typeof EarnCreditsWatchRoute
   '/faculty/$id': typeof FacultyIdRoute
   '/games/eightball': typeof GamesEightballRoute
   '/games/freegames': typeof GamesFreegamesRoute
@@ -824,6 +831,7 @@ export interface FileRoutesByTo {
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
   '/earn-credits/tournament': typeof EarnCreditsTournamentRoute
+  '/earn-credits/watch': typeof EarnCreditsWatchRoute
   '/faculty/$id': typeof FacultyIdRoute
   '/games/eightball': typeof GamesEightballRoute
   '/games/freegames': typeof GamesFreegamesRoute
@@ -935,6 +943,7 @@ export interface FileRoutesById {
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
   '/earn-credits/tournament': typeof EarnCreditsTournamentRoute
+  '/earn-credits/watch': typeof EarnCreditsWatchRoute
   '/faculty/$id': typeof FacultyIdRoute
   '/games/eightball': typeof GamesEightballRoute
   '/games/freegames': typeof GamesFreegamesRoute
@@ -1047,6 +1056,7 @@ export interface FileRouteTypes {
     | '/courses/$id'
     | '/department/$id'
     | '/earn-credits/tournament'
+    | '/earn-credits/watch'
     | '/faculty/$id'
     | '/games/eightball'
     | '/games/freegames'
@@ -1155,6 +1165,7 @@ export interface FileRouteTypes {
     | '/courses/$id'
     | '/department/$id'
     | '/earn-credits/tournament'
+    | '/earn-credits/watch'
     | '/faculty/$id'
     | '/games/eightball'
     | '/games/freegames'
@@ -1265,6 +1276,7 @@ export interface FileRouteTypes {
     | '/courses/$id'
     | '/department/$id'
     | '/earn-credits/tournament'
+    | '/earn-credits/watch'
     | '/faculty/$id'
     | '/games/eightball'
     | '/games/freegames'
@@ -1920,6 +1932,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FacultyIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/earn-credits/watch': {
+      id: '/earn-credits/watch'
+      path: '/watch'
+      fullPath: '/earn-credits/watch'
+      preLoaderRoute: typeof EarnCreditsWatchRouteImport
+      parentRoute: typeof EarnCreditsRoute
+    }
     '/earn-credits/tournament': {
       id: '/earn-credits/tournament'
       path: '/tournament'
@@ -2177,10 +2196,12 @@ declare module '@tanstack/react-router' {
 
 interface EarnCreditsRouteChildren {
   EarnCreditsTournamentRoute: typeof EarnCreditsTournamentRoute
+  EarnCreditsWatchRoute: typeof EarnCreditsWatchRoute
 }
 
 const EarnCreditsRouteChildren: EarnCreditsRouteChildren = {
   EarnCreditsTournamentRoute: EarnCreditsTournamentRoute,
+  EarnCreditsWatchRoute: EarnCreditsWatchRoute,
 }
 
 const EarnCreditsRouteWithChildren = EarnCreditsRoute._addFileChildren(
@@ -2379,13 +2400,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
