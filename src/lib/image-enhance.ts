@@ -1,67 +1,118 @@
-import { enhanceImage } from "./image-enhance.functions";
+// Client-side image enhancement — no AI, no server call, no API key needed.
+// Applies subtle sharpening + light contrast/saturation/brightness lift via
+// a Canvas 2D pipeline. Runs entirely in the browser.
 
-const MAX_DIM = 1600; // downscale very large images before sending to AI
-const MAX_BYTES = 9_000_000; // ~9MB base64 budget
+const MAX_DIM = 2400;
 
-function fileToDataUrl(file: Blob): Promise<string> {
+function loadBitmap(file: File): Promise<ImageBitmap | HTMLImageElement> {
+  if ("createImageBitmap" in window) {
+    return createImageBitmap(file).catch(() => loadViaImg(file));
+  }
+  return loadViaImg(file);
+}
+
+function loadViaImg(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(r.result as string);
-    r.onerror = () => reject(r.error);
-    r.readAsDataURL(file);
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("image load failed"));
+    };
+    img.src = url;
   });
 }
 
-async function downscaleIfNeeded(file: File): Promise<string> {
-  // If small enough, send as-is for max fidelity.
-  if (file.size < MAX_BYTES) {
-    const url = await fileToDataUrl(file);
-    return url;
+// Unsharp-mask style sharpen using a 3x3 convolution. Modest amount so it
+// looks natural rather than crunchy.
+function sharpen(ctx: CanvasRenderingContext2D, w: number, h: number, amount = 0.35) {
+  const src = ctx.getImageData(0, 0, w, h);
+  const dst = ctx.createImageData(w, h);
+  const s = src.data;
+  const d = dst.data;
+  const a = amount;
+  const center = 1 + 4 * a;
+  const side = -a;
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const i = (y * w + x) * 4;
+      for (let c = 0; c < 3; c++) {
+        const v =
+          s[i + c] * center +
+          s[i - 4 + c] * side +
+          s[i + 4 + c] * side +
+          s[i - w * 4 + c] * side +
+          s[i + w * 4 + c] * side;
+        d[i + c] = v < 0 ? 0 : v > 255 ? 255 : v;
+      }
+      d[i + 3] = s[i + 3];
+    }
   }
-  const bmp = await createImageBitmap(file).catch(() => null);
-  if (!bmp) return fileToDataUrl(file);
-  const scale = Math.min(1, MAX_DIM / Math.max(bmp.width, bmp.height));
-  const w = Math.round(bmp.width * scale);
-  const h = Math.round(bmp.height * scale);
-  const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext("2d")!;
-  ctx.drawImage(bmp, 0, 0, w, h);
-  return canvas.toDataURL("image/jpeg", 0.95);
-}
-
-function dataUrlToFile(dataUrl: string, name: string): File {
-  const [meta, b64] = dataUrl.split(",");
-  const mime = /data:([^;]+);/.exec(meta)?.[1] || "image/png";
-  const bin = atob(b64);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  const ext = mime.split("/")[1] || "png";
-  const cleanName = name.replace(/\.[^.]+$/, "") + `.${ext}`;
-  return new File([bytes], cleanName, { type: mime });
+  // Copy border pixels through unchanged.
+  for (let x = 0; x < w; x++) {
+    for (const y of [0, h - 1]) {
+      const i = (y * w + x) * 4;
+      d[i] = s[i]; d[i + 1] = s[i + 1]; d[i + 2] = s[i + 2]; d[i + 3] = s[i + 3];
+    }
+  }
+  for (let y = 0; y < h; y++) {
+    for (const x of [0, w - 1]) {
+      const i = (y * w + x) * 4;
+      d[i] = s[i]; d[i + 1] = s[i + 1]; d[i + 2] = s[i + 2]; d[i + 3] = s[i + 3];
+    }
+  }
+  ctx.putImageData(dst, 0, 0);
 }
 
 /**
- * Enhance an image File via AI. Returns enhanced File on success,
- * or the original file on any failure. Never throws.
+ * Enhance an image File via client-side canvas filters. Returns an enhanced
+ * File on success, or the original file on any failure. Never throws.
  */
-export async function enhanceImageFile(file: File, opts?: { timeoutMs?: number }): Promise<File> {
+export async function enhanceImageFile(file: File, _opts?: { timeoutMs?: number }): Promise<File> {
   if (!file.type.startsWith("image/")) return file;
-  // GIFs / SVGs: skip (animation/vector — enhancement would break them).
   if (/gif|svg/.test(file.type)) return file;
 
-  const timeoutMs = opts?.timeoutMs ?? 45_000;
   try {
-    const dataUrl = await downscaleIfNeeded(file);
-    const result = await Promise.race([
-      enhanceImage({ data: { imageDataUrl: dataUrl } }),
-      new Promise<{ ok: false; error: string }>((resolve) =>
-        setTimeout(() => resolve({ ok: false, error: "timeout" }), timeoutMs),
-      ),
-    ]);
-    if (!result || (result as any).ok !== true) return file;
-    return dataUrlToFile((result as any).imageDataUrl, file.name);
+    const bmp = await loadBitmap(file);
+    const iw = (bmp as any).width as number;
+    const ih = (bmp as any).height as number;
+    const scale = Math.min(1, MAX_DIM / Math.max(iw, ih));
+    const w = Math.max(1, Math.round(iw * scale));
+    const h = Math.max(1, Math.round(ih * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+
+    // Base tonal lift via built-in CSS filters (fast, GPU-accelerated).
+    (ctx as any).filter =
+      "contrast(1.08) saturate(1.08) brightness(1.03)";
+    ctx.drawImage(bmp as any, 0, 0, w, h);
+    (ctx as any).filter = "none";
+
+    // Then a light unsharp-mask for perceived clarity.
+    try { sharpen(ctx, w, h, 0.3); } catch { /* ignore convolution failures */ }
+
+    // Prefer JPEG for photos to keep files small; keep PNG when the source
+    // was PNG (may contain transparency or crisp text).
+    const isPng = /png/i.test(file.type);
+    const outType = isPng ? "image/png" : "image/jpeg";
+    const quality = isPng ? undefined : 0.92;
+
+    const blob: Blob | null = await new Promise((resolve) =>
+      canvas.toBlob((b) => resolve(b), outType, quality),
+    );
+    if (!blob) return file;
+
+    const ext = outType === "image/png" ? "png" : "jpg";
+    const cleanName = file.name.replace(/\.[^.]+$/, "") + `.${ext}`;
+    return new File([blob], cleanName, { type: outType });
   } catch {
     return file;
   }
