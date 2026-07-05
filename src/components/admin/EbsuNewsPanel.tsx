@@ -44,7 +44,8 @@ export function EbsuNewsPanel() {
 
   const [newUrl, setNewUrl] = useState("");
   const [newLabel, setNewLabel] = useState("");
-  const [topic, setTopic] = useState("");
+  const [pasted, setPasted] = useState("");
+  const [instruction, setInstruction] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function addSource() {
