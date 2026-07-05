@@ -64,7 +64,7 @@ export function AuthStatusBanner() {
       </div>
       <button
         onClick={() => signOut()}
-        className="shrink-0 inline-flex items-center gap-1 rounded bg-success-foreground/20 px-2 py-0.5 text-[11px] hover:bg-success-foreground/30"
+        className="shrink-0 inline-flex items-center gap-1 rounded bg-primary-foreground/20 px-2 py-0.5 text-[11px] hover:bg-primary-foreground/30"
       >
         <LogOut className="h-3 w-3" />
         Sign out
