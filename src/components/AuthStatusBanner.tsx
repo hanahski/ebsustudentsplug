@@ -28,21 +28,59 @@ export function AuthStatusBanner() {
       </div>
     );
   } else if (error) {
-    tone = "bg-destructive/90 text-destructive-foreground";
-    content = (
-      <>
-        <div className="flex items-center gap-2">
-          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-          <span>Auth error: {error.message}</span>
-        </div>
-        <button
-          onClick={() => window.location.reload()}
-          className="shrink-0 rounded bg-destructive-foreground/20 px-2 py-0.5 text-[11px] hover:bg-destructive-foreground/30"
-        >
-          Retry
-        </button>
-      </>
-    );
+    const raw = error.message ?? "";
+    const isAuth = /unauthorized|no authorization header|invalid token|no user id found|jwt|not authenticated/i.test(raw);
+    if (isAuth && !user) {
+      // Treat missing/invalid auth as simply "signed out" — no scary red banner.
+      tone = "bg-muted/90 text-muted-foreground border-b border-border";
+      content = (
+        <>
+          <div className="flex items-center gap-2">
+            <LogIn className="h-3.5 w-3.5 shrink-0" />
+            <span>You are signed out</span>
+          </div>
+          <Link
+            to="/login"
+            className="shrink-0 inline-flex items-center gap-1 rounded bg-primary px-2 py-0.5 text-[11px] font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            Sign in
+          </Link>
+        </>
+      );
+    } else if (isAuth && user) {
+      // Signed in locally but the server rejected the token — session likely expired.
+      tone = "bg-warning/90 text-warning-foreground";
+      content = (
+        <>
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+            <span>Your session expired. Sign in again to continue.</span>
+          </div>
+          <button
+            onClick={async () => { await signOut(); window.location.href = "/login"; }}
+            className="shrink-0 rounded bg-warning-foreground/20 px-2 py-0.5 text-[11px] hover:bg-warning-foreground/30"
+          >
+            Sign in again
+          </button>
+        </>
+      );
+    } else {
+      tone = "bg-destructive/90 text-destructive-foreground";
+      content = (
+        <>
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+            <span>Auth error: {raw}</span>
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            className="shrink-0 rounded bg-destructive-foreground/20 px-2 py-0.5 text-[11px] hover:bg-destructive-foreground/30"
+          >
+            Retry
+          </button>
+        </>
+      );
+    }
   } else if (user) {
     tone = "bg-success/90 text-success-foreground";
     content = (
