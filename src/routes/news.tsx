@@ -197,7 +197,7 @@ function EbsuFeed({ articles, loading }: { articles: any[]; loading: boolean }) 
       <div className="bg-card border rounded-2xl p-8 text-center shadow-card">
         <GraduationCap className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
         <p className="font-bold">No EBSU stories yet.</p>
-        <p className="text-sm text-muted-foreground mt-1">Check back soon — our AI editor is brewing fresh ones daily.</p>
+        <p className="text-sm text-muted-foreground mt-1">Our editors are working on fresh stories — check back soon.</p>
       </div>
     );
   }
