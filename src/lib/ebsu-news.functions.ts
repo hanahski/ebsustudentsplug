@@ -328,8 +328,14 @@ If the editor told you to skip, or you truly have nothing to write about, return
   if (j.skip) throw new Error(`AI skipped: ${j.reason || "no relevant content"}`);
   if (!j.title || !j.body) throw new Error("AI returned incomplete article");
 
-  // 3. Cover image (best-effort)
-  const imageUrl = await generateCover(j.image_prompt || j.title);
+  // 3. Cover image (best-effort). Fetch any editor-supplied reference images
+  // and pass them into the cover generator so the AI can blend them with the
+  // StudentsPlug brand watermark.
+  const refImageDataUrls = (
+    await Promise.all(inlineImageUrls.slice(0, 3).map(fetchImageAsDataUrl))
+  ).filter((x): x is string => !!x);
+  const imageUrl = await generateCover(j.image_prompt || j.title, refImageDataUrls);
+
 
   // 4. Insert
   let slug = slugify(j.title) || `ebsu-${Date.now()}`;
