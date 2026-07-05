@@ -134,11 +134,11 @@ export function EbsuNewsPanel() {
         />
 
         <div className="flex gap-2">
-          <Button onClick={() => generate(true)} disabled={busy || (!pasted.trim() && !instruction.trim())} className="flex-1">
+          <Button onClick={() => generate(true)} disabled={busy} className="flex-1">
             {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
             Generate & Publish
           </Button>
-          <Button variant="outline" onClick={() => generate(false)} disabled={busy || (!pasted.trim() && !instruction.trim())}>
+          <Button variant="outline" onClick={() => generate(false)} disabled={busy}>
             Draft only
           </Button>
         </div>
