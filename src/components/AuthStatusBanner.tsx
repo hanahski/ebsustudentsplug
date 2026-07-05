@@ -1,24 +1,37 @@
 import { useAuth } from "@/lib/auth";
 import { useRouterState } from "@tanstack/react-router";
-import { LogOut, User, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export function AuthStatusBanner() {
   const { user, error, signOut } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-
-  // Only ever shown on the home page.
-  if (pathname !== "/") return null;
+  const [visible, setVisible] = useState(true);
 
   const raw = error?.message ?? "";
   const isAuthError = /unauthorized|no authorization header|invalid token|no user id found|jwt|not authenticated/i.test(raw);
 
-  // Signed-out state: no banner at all (the header already offers Sign in).
+  // Auto-hide any shown banner after 2s.
+  useEffect(() => {
+    setVisible(true);
+    if (!error) return;
+    const t = setTimeout(() => setVisible(false), 2000);
+    return () => clearTimeout(t);
+  }, [error?.message, user?.id]);
+
+  if (pathname !== "/") return null;
+  if (!visible) return null;
+
+  // Signed-out: no banner.
   if (!user && (!error || isAuthError)) return null;
+  // Signed in without error: no banner.
+  if (user && !error) return null;
+  // Ignore benign permission errors (e.g. has_role) — don't nag the user.
+  if (/permission denied/i.test(raw)) return null;
 
   const baseClasses =
-    "fixed inset-x-0 top-0 z-[60] flex items-center justify-between gap-3 px-4 py-2 text-xs font-medium backdrop-blur-sm transition-transform duration-500 ease-out translate-y-0";
+    "fixed inset-x-0 top-0 z-[60] flex items-center justify-between gap-3 px-4 py-2 text-xs font-medium backdrop-blur-sm";
 
-  // Signed-in but token was rejected: quiet nudge to re-auth.
   if (user && error && isAuthError) {
     return (
       <div className={`${baseClasses} bg-muted/90 text-muted-foreground border-b border-border`}>
@@ -36,39 +49,12 @@ export function AuthStatusBanner() {
     );
   }
 
-  if (error) {
-    return (
-      <div className={`${baseClasses} bg-destructive/90 text-destructive-foreground`}>
-        <div className="flex items-center gap-2">
-          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-          <span>Auth error: {raw}</span>
-        </div>
-        <button
-          onClick={() => window.location.reload()}
-          className="shrink-0 rounded bg-destructive-foreground/20 px-2 py-0.5 text-[11px] hover:bg-destructive-foreground/30"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
-  // Signed in, no error: hide (slide up).
   return (
-    <div className={`${baseClasses} bg-primary/90 text-primary-foreground -translate-y-full`}>
+    <div className={`${baseClasses} bg-destructive/90 text-destructive-foreground`}>
       <div className="flex items-center gap-2">
-        <User className="h-3.5 w-3.5 shrink-0" />
-        <span>
-          Signed in as <span className="font-semibold">{user!.email ?? user!.id.slice(0, 8)}</span>
-        </span>
+        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+        <span>Auth error: {raw}</span>
       </div>
-      <button
-        onClick={() => signOut()}
-        className="shrink-0 inline-flex items-center gap-1 rounded bg-primary-foreground/20 px-2 py-0.5 text-[11px] hover:bg-primary-foreground/30"
-      >
-        <LogOut className="h-3 w-3" />
-        Sign out
-      </button>
     </div>
   );
 }
