@@ -16,7 +16,7 @@ export const Route = createFileRoute("/sitemap.xml")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const [{ data: newsRows }, { data: blogRows }] = await Promise.all([
           supabaseAdmin.from("news_articles").select("slug").eq("status", "published"),
-          supabaseAdmin.from("blog_posts").select("slug").eq("status", "published"),
+          supabaseAdmin.from("blog_posts").select("slug").eq("published", true),
         ]);
 
         const entries: SitemapEntry[] = [
