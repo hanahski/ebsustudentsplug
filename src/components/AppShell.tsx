@@ -346,7 +346,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 
 
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t bg-background/90 backdrop-blur-xl shadow-[0_-12px_40px_hsl(var(--foreground)/0.08)]" aria-label="Mobile navigation">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t bg-background/90 backdrop-blur-xl shadow-[0_-12px_40px_color-mix(in oklab, var(--foreground) 8%, transparent)]" aria-label="Mobile navigation">
         <div className="max-w-6xl mx-auto px-1.5 grid grid-cols-7 text-[10px]">
           {[...MOBILE_NAV, { to: user ? "/me" : "/login", label: user ? "Me" : "Sign in", icon: user ? User : LogIn, key: "me" }].map(({ to, label, icon: Icon, key }) => (
             <Link

@@ -62,7 +62,7 @@ export function WaveformCanvas({
     }
 
     // Waveform.
-    ctx.strokeStyle = "hsl(var(--primary, 220 70% 55%))";
+    ctx.strokeStyle = "var(--primary)";
     ctx.lineWidth = 1;
     ctx.beginPath();
     for (let x = 0; x < cssW; x++) {
@@ -83,7 +83,7 @@ export function WaveformCanvas({
     // Playhead.
     if (playhead != null && dur > 0) {
       const px = (playhead / dur) * cssW;
-      ctx.strokeStyle = "hsl(var(--accent-foreground, 0 0% 100%))";
+      ctx.strokeStyle = "var(--accent-foreground)";
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(px, 0);

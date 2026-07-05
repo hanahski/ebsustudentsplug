@@ -83,9 +83,10 @@ export function AvatarDisplay({
         style={{
           padding: ringPad,
           background:
-            "conic-gradient(from 140deg, hsl(var(--primary)), hsl(var(--accent)), hsl(340 90% 60%), hsl(var(--primary)))",
+            "conic-gradient(from 140deg, var(--primary), var(--accent), oklch(0.65 0.22 15), var(--primary))",
           boxShadow:
-            "0 8px 24px -10px hsl(var(--primary) / 0.5), 0 2px 8px -2px hsl(var(--foreground) / 0.18)",
+            "0 8px 24px -10px color-mix(in oklab, var(--primary) 50%, transparent), 0 2px 8px -2px color-mix(in oklab, var(--foreground) 18%, transparent)",
+
         }}
         aria-hidden
       >
@@ -141,7 +142,7 @@ export function AvatarDisplay({
           style={{
             width: dotSize,
             height: dotSize,
-            boxShadow: "0 0 0 2px hsl(var(--card)), 0 0 12px hsl(var(--success) / 0.7)",
+            boxShadow: "0 0 0 2px var(--card), 0 0 12px color-mix(in oklab, var(--success) 70%, transparent)",
           }}
           aria-label="Online"
         >
