@@ -72,25 +72,62 @@ async function aiJSON(prompt: string, system: string): Promise<any> {
   }
 }
 
-async function generateCover(prompt: string): Promise<string | null> {
+async function fetchImageAsDataUrl(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 StudentsPlugBot/1.0" },
+      signal: AbortSignal.timeout(12_000),
+    });
+    if (!res.ok) return null;
+    const ct = res.headers.get("content-type") || "image/png";
+    if (!ct.startsWith("image/")) return null;
+    const buf = new Uint8Array(await res.arrayBuffer());
+    if (buf.byteLength > 6_000_000) return null; // ~6MB cap
+    const b64 = Buffer.from(buf).toString("base64");
+    return `data:${ct};base64,${b64}`;
+  } catch (e) {
+    console.error("fetchImage fail", url, e);
+    return null;
+  }
+}
+
+async function generateCover(
+  prompt: string,
+  refImageDataUrls: string[] = [],
+): Promise<string | null> {
   const key = process.env.LOVABLE_API_KEY;
   if (!key) return null;
   try {
+    // Always include the StudentsPlug brand logo so the AI blends it in.
+    const { BRAND_LOGO_DATA_URL } = await import("./brand-logo-b64");
+    const brandInstruction =
+      "Create an editorial magazine-style cover photo for an Ebonyi State University (EBSU) news story. Bright, vibrant, real-world Nigerian university setting. " +
+      (refImageDataUrls.length > 0
+        ? "Use the supplied reference image(s) as the main subject/scene — blend, restyle and integrate them naturally into the composition. "
+        : "") +
+      "IMPORTANT BRANDING: place the supplied StudentsPlug logo (the SG upward-arrow mark) as a small, clean watermark in a corner of the image — keep it crisp, unaltered, and clearly visible but not overpowering. Do NOT invent other text, letters, taglines or logos anywhere else in the image. " +
+      `Subject / story: ${prompt}`;
+
+    const content: any[] = [{ type: "text", text: brandInstruction }];
+    for (const u of refImageDataUrls.slice(0, 3)) {
+      content.push({ type: "image_url", image_url: { url: u } });
+    }
+    // Brand logo goes last so the model treats it as the overlay asset.
+    content.push({ type: "image_url", image_url: { url: BRAND_LOGO_DATA_URL } });
+
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-image",
-        messages: [
-          {
-            role: "user",
-            content: `Editorial magazine-style cover photo for an Ebonyi State University (EBSU) news story. Bright, vibrant, real-world Nigerian university setting. NO text, NO letters, NO logos. Subject: ${prompt}`,
-          },
-        ],
+        messages: [{ role: "user", content }],
         modalities: ["image", "text"],
       }),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error("cover gen http", res.status, await res.text().catch(() => ""));
+      return null;
+    }
     const j: any = await res.json();
     const parts = j.choices?.[0]?.message?.images ?? j.choices?.[0]?.message?.content;
     let b64: string | undefined;
@@ -118,6 +155,7 @@ async function generateCover(prompt: string): Promise<string | null> {
     return null;
   }
 }
+
 
 // ---------- sources CRUD ----------
 export const listSources = createServerFn({ method: "GET" })
