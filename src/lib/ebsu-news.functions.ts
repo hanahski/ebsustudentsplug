@@ -191,13 +191,23 @@ export const deleteSource = createServerFn({ method: "POST" })
   });
 
 // ---------- generate news ----------
+function extractUrls(text: string): string[] {
+  if (!text) return [];
+  const re = /https?:\/\/[^\s"'<>)\]]+/gi;
+  const found = Array.from(new Set((text.match(re) ?? []).map((u) => u.replace(/[.,;:!?)\]]+$/, ""))));
+  return found.slice(0, 6);
+}
+
 async function runGenerate(opts: {
   topic?: string;
   sourceUrls: string[];
   publish: boolean;
   authorId: string | null;
 }) {
-  const sources = opts.sourceUrls.slice(0, 6);
+  // Pull URLs the editor typed into the brief and merge with saved sources
+  const inlineUrls = extractUrls(opts.topic ?? "");
+  const merged = Array.from(new Set([...(opts.sourceUrls ?? []), ...inlineUrls])).slice(0, 8);
+  const sources = merged;
   const hasSources = sources.length > 0;
   const hasTopic = !!(opts.topic && opts.topic.trim().length > 0);
   if (!hasSources && !hasTopic) {
@@ -215,6 +225,7 @@ async function runGenerate(opts: {
       throw new Error("Could not fetch any source content");
     }
   }
+
 
   // 2. Synthesize
   const sourcedRules = `ACCURACY RULES (non-negotiable):
