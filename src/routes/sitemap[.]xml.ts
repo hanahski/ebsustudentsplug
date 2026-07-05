@@ -14,13 +14,15 @@ export const Route = createFileRoute("/sitemap.xml")({
     handlers: {
       GET: async () => {
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { data: newsRows } = await supabaseAdmin
-          .from("news_articles")
-          .select("slug");
+        const [{ data: newsRows }, { data: blogRows }] = await Promise.all([
+          supabaseAdmin.from("news_articles").select("slug").eq("status", "published"),
+          supabaseAdmin.from("blog_posts").select("slug").eq("published", true),
+        ]);
 
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "daily", priority: "1.0" },
           { path: "/news", changefreq: "daily", priority: "0.9" },
+          { path: "/blog", changefreq: "weekly", priority: "0.8" },
           { path: "/faculties", changefreq: "weekly", priority: "0.8" },
           { path: "/courses", changefreq: "weekly", priority: "0.8" },
           { path: "/books", changefreq: "weekly", priority: "0.7" },
@@ -34,12 +36,14 @@ export const Route = createFileRoute("/sitemap.xml")({
         ];
 
         for (const row of newsRows ?? []) {
-          entries.push({
-            path: `/news/${(row as { slug: string }).slug}`,
-            changefreq: "weekly",
-            priority: "0.7",
-          });
+          const slug = (row as { slug: string }).slug;
+          if (slug) entries.push({ path: `/news/${slug}`, changefreq: "weekly", priority: "0.7" });
         }
+        for (const row of blogRows ?? []) {
+          const slug = (row as { slug: string }).slug;
+          if (slug) entries.push({ path: `/blog/${slug}`, changefreq: "weekly", priority: "0.6" });
+        }
+
 
 
         const urls = entries.map((e) =>
