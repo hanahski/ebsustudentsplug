@@ -1,121 +1,74 @@
 import { useAuth } from "@/lib/auth";
-import { Link, useRouterState } from "@tanstack/react-router";
-import { LogIn, LogOut, Loader2, AlertCircle, User } from "lucide-react";
+import { useRouterState } from "@tanstack/react-router";
+import { LogOut, User, AlertCircle } from "lucide-react";
 
 export function AuthStatusBanner() {
-  const { user, loading, error, signOut } = useAuth();
+  const { user, error, signOut } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   // Only ever shown on the home page.
   if (pathname !== "/") return null;
 
-  // Slide up (hide) once the user is signed in.
-  const hidden = !!user;
+  const raw = error?.message ?? "";
+  const isAuthError = /unauthorized|no authorization header|invalid token|no user id found|jwt|not authenticated/i.test(raw);
+
+  // Signed-out state: no banner at all (the header already offers Sign in).
+  if (!user && (!error || isAuthError)) return null;
 
   const baseClasses =
-    "fixed inset-x-0 top-0 z-[60] flex items-center justify-between gap-3 px-4 py-2 text-xs font-medium backdrop-blur-sm transition-transform duration-500 ease-out";
-  const slide = hidden ? "-translate-y-full" : "translate-y-0";
+    "fixed inset-x-0 top-0 z-[60] flex items-center justify-between gap-3 px-4 py-2 text-xs font-medium backdrop-blur-sm transition-transform duration-500 ease-out translate-y-0";
 
-  let content: React.ReactNode;
-  let tone = "bg-muted/90 text-muted-foreground border-b border-border";
-
-  if (loading) {
-    tone = "bg-primary/90 text-primary-foreground";
-    content = (
-      <div className="flex items-center gap-2 mx-auto">
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        Checking auth status…
-      </div>
-    );
-  } else if (error) {
-    const raw = error.message ?? "";
-    const isAuth = /unauthorized|no authorization header|invalid token|no user id found|jwt|not authenticated/i.test(raw);
-    if (isAuth && !user) {
-      // Treat missing/invalid auth as simply "signed out" — no scary red banner.
-      tone = "bg-muted/90 text-muted-foreground border-b border-border";
-      content = (
-        <>
-          <div className="flex items-center gap-2">
-            <LogIn className="h-3.5 w-3.5 shrink-0" />
-            <span>You are signed out</span>
-          </div>
-          <Link
-            to="/login"
-            className="shrink-0 inline-flex items-center gap-1 rounded bg-primary px-2 py-0.5 text-[11px] font-medium text-primary-foreground hover:bg-primary/90"
-          >
-            Sign in
-          </Link>
-        </>
-      );
-    } else if (isAuth && user) {
-      // Signed in locally but the server rejected the token — session likely expired.
-      tone = "bg-warning/90 text-warning-foreground";
-      content = (
-        <>
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-            <span>Your session expired. Sign in again to continue.</span>
-          </div>
-          <button
-            onClick={async () => { await signOut(); window.location.href = "/login"; }}
-            className="shrink-0 rounded bg-warning-foreground/20 px-2 py-0.5 text-[11px] hover:bg-warning-foreground/30"
-          >
-            Sign in again
-          </button>
-        </>
-      );
-    } else {
-      tone = "bg-destructive/90 text-destructive-foreground";
-      content = (
-        <>
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-            <span>Auth error: {raw}</span>
-          </div>
-          <button
-            onClick={() => window.location.reload()}
-            className="shrink-0 rounded bg-destructive-foreground/20 px-2 py-0.5 text-[11px] hover:bg-destructive-foreground/30"
-          >
-            Retry
-          </button>
-        </>
-      );
-    }
-  } else if (user) {
-    tone = "bg-success/90 text-success-foreground";
-    content = (
-      <>
+  // Signed-in but token was rejected: quiet nudge to re-auth.
+  if (user && error && isAuthError) {
+    return (
+      <div className={`${baseClasses} bg-muted/90 text-muted-foreground border-b border-border`}>
         <div className="flex items-center gap-2">
-          <User className="h-3.5 w-3.5 shrink-0" />
-          <span>
-            Signed in as <span className="font-semibold">{user.email ?? user.id.slice(0, 8)}</span>
-          </span>
+          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+          <span>Your session expired. Sign in again to continue.</span>
         </div>
         <button
-          onClick={() => signOut()}
-          className="shrink-0 inline-flex items-center gap-1 rounded bg-success-foreground/20 px-2 py-0.5 text-[11px] hover:bg-success-foreground/30"
+          onClick={async () => { await signOut(); window.location.href = "/login"; }}
+          className="shrink-0 rounded bg-foreground/10 px-2 py-0.5 text-[11px] hover:bg-foreground/20"
         >
-          <LogOut className="h-3 w-3" />
-          Sign out
+          Sign in again
         </button>
-      </>
-    );
-  } else {
-    content = (
-      <>
-        <div className="flex items-center gap-2">
-          <LogIn className="h-3.5 w-3.5 shrink-0" />
-          <span>You are signed out</span>
-        </div>
-        <Link
-          to="/login"
-          className="shrink-0 inline-flex items-center gap-1 rounded bg-primary px-2 py-0.5 text-[11px] font-medium text-primary-foreground hover:bg-primary/90"
-        >
-          Sign in
-        </Link>
-      </>
+      </div>
     );
   }
 
-  return <div className={`${baseClasses} ${tone} ${slide}`}>{content}</div>;
+  if (error) {
+    return (
+      <div className={`${baseClasses} bg-destructive/90 text-destructive-foreground`}>
+        <div className="flex items-center gap-2">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+          <span>Auth error: {raw}</span>
+        </div>
+        <button
+          onClick={() => window.location.reload()}
+          className="shrink-0 rounded bg-destructive-foreground/20 px-2 py-0.5 text-[11px] hover:bg-destructive-foreground/30"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  // Signed in, no error: hide (slide up).
+  return (
+    <div className={`${baseClasses} bg-success/90 text-success-foreground -translate-y-full`}>
+      <div className="flex items-center gap-2">
+        <User className="h-3.5 w-3.5 shrink-0" />
+        <span>
+          Signed in as <span className="font-semibold">{user!.email ?? user!.id.slice(0, 8)}</span>
+        </span>
+      </div>
+      <button
+        onClick={() => signOut()}
+        className="shrink-0 inline-flex items-center gap-1 rounded bg-success-foreground/20 px-2 py-0.5 text-[11px] hover:bg-success-foreground/30"
+      >
+        <LogOut className="h-3 w-3" />
+        Sign out
+      </button>
+    </div>
+  );
 }
