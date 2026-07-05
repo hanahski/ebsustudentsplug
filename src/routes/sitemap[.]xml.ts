@@ -14,20 +14,16 @@ export const Route = createFileRoute("/sitemap.xml")({
     handlers: {
       GET: async () => {
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { data: blogRows } = await supabaseAdmin
-          .from("blog_posts")
-          .select("slug, updated_at")
-          .eq("published", true);
+        const { data: newsRows } = await supabaseAdmin
+          .from("news_articles")
+          .select("slug");
 
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "daily", priority: "1.0" },
           { path: "/news", changefreq: "daily", priority: "0.9" },
-          { path: "/blog", changefreq: "weekly", priority: "0.9" },
           { path: "/faculties", changefreq: "weekly", priority: "0.8" },
           { path: "/courses", changefreq: "weekly", priority: "0.8" },
-          { path: "/notes", changefreq: "weekly", priority: "0.8" },
           { path: "/books", changefreq: "weekly", priority: "0.7" },
-          { path: "/market", changefreq: "daily", priority: "0.7" },
           { path: "/games", changefreq: "monthly", priority: "0.5" },
           { path: "/tools", changefreq: "monthly", priority: "0.5" },
           { path: "/guides/ebsu-fees", changefreq: "monthly", priority: "0.7" },
@@ -37,13 +33,14 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/terms", changefreq: "yearly", priority: "0.4" },
         ];
 
-        for (const row of blogRows ?? []) {
+        for (const row of newsRows ?? []) {
           entries.push({
-            path: `/blog/${(row as { slug: string }).slug}`,
-            changefreq: "monthly",
+            path: `/news/${(row as { slug: string }).slug}`,
+            changefreq: "weekly",
             priority: "0.7",
           });
         }
+
 
         const urls = entries.map((e) =>
           [
