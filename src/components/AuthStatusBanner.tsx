@@ -55,7 +55,7 @@ export function AuthStatusBanner() {
 
   // Signed in, no error: hide (slide up).
   return (
-    <div className={`${baseClasses} bg-success/90 text-success-foreground -translate-y-full`}>
+    <div className={`${baseClasses} bg-primary/90 text-primary-foreground -translate-y-full`}>
       <div className="flex items-center gap-2">
         <User className="h-3.5 w-3.5 shrink-0" />
         <span>
