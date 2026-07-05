@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import { Coins, PlayCircle, Loader2, ShieldCheck, Clock } from "lucide-react";
+import { Coins, PlayCircle, Loader2, ShieldCheck, Clock, Video, MousePointerClick } from "lucide-react";
 
 export const Route = createFileRoute("/earn-credits/watch")({
   component: WatchEarnPage,
@@ -18,13 +18,23 @@ const HOLD_MS = 20_000;      // 20s minimum hold before claim allowed
 const FAST_RETURN_MS = 5_000; // <5s focus return = suspicious
 const POPUNDER_SRC =
   "https://pl30191443.effectivecpmnetwork.com/42/2e/9c/422e9c1120d4e5695c47b9c2d592ca75.js";
+const VAST_TAG_URL = "https://youradexchange.com/video/select.php?r=11575442";
+const FLUID_PLAYER_SRC = "https://cdn.fluidplayer.com/v3/current/fluidplayer.min.js";
 
 type Phase = "idle" | "holding" | "ready" | "claiming";
+type Mode = "video" | "popunder";
+
+declare global {
+  interface Window {
+    fluidPlayer?: (id: string | HTMLVideoElement, opts?: any) => any;
+  }
+}
 
 function WatchEarnPage() {
   const nav = useNavigate();
   const { user, profile, refreshProfile } = useAuth();
 
+  const [mode, setMode] = useState<Mode>("video");
   const [viewsToday, setViewsToday] = useState(0);
   const [loading, setLoading] = useState(true);
   const [phase, setPhase] = useState<Phase>("idle");
@@ -32,19 +42,19 @@ function WatchEarnPage() {
   const [flagged, setFlagged] = useState(false);
   const clickTimeRef = useRef<number>(0);
   const holdTimerRef = useRef<number | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const fluidInstanceRef = useRef<any>(null);
+  const [videoBooting, setVideoBooting] = useState(false);
+  const [videoAdPlaying, setVideoAdPlaying] = useState(false);
 
   useEffect(() => { if (user === null) nav({ to: "/login" }); }, [user, nav]);
 
-  // Preload the Adsterra popunder script ONCE on mount. Popunder networks
-  // hook their own click listener at load time — injecting the script inside
-  // the click handler loses the user-gesture context and the popup is silently
-  // blocked. Preloading gives the first tap a real chance to open a tab.
+  // Preload the popunder script once so the first tap has a real user-gesture.
   const popunderReady = useRef(false);
   useEffect(() => {
     if (popunderReady.current) return;
     try {
-      const existing = document.querySelector(`script[src="${POPUNDER_SRC}"]`);
-      if (!existing) {
+      if (!document.querySelector(`script[src="${POPUNDER_SRC}"]`)) {
         const s = document.createElement("script");
         s.src = POPUNDER_SRC;
         s.async = true;
@@ -54,7 +64,24 @@ function WatchEarnPage() {
     } catch { /* no-op */ }
   }, []);
 
-  // Load today's view count from credit_transactions.
+  // Load Fluid Player script once.
+  const [fluidReady, setFluidReady] = useState(!!(typeof window !== "undefined" && window.fluidPlayer));
+  useEffect(() => {
+    if (fluidReady) return;
+    const existing = document.querySelector<HTMLScriptElement>(`script[src="${FLUID_PLAYER_SRC}"]`);
+    if (existing) {
+      existing.addEventListener("load", () => setFluidReady(true), { once: true });
+      if (window.fluidPlayer) setFluidReady(true);
+      return;
+    }
+    const s = document.createElement("script");
+    s.src = FLUID_PLAYER_SRC;
+    s.async = true;
+    s.onload = () => setFluidReady(true);
+    document.body.appendChild(s);
+  }, [fluidReady]);
+
+  // Load today's view count.
   useEffect(() => {
     if (!user) return;
     (async () => {
@@ -72,26 +99,119 @@ function WatchEarnPage() {
     })();
   }, [user]);
 
-  // Detect suspiciously fast return to the tab.
+  // Fast-return detector (popunder mode only).
   useEffect(() => {
     const onFocus = () => {
-      if (phase !== "holding") return;
+      if (phase !== "holding" || mode !== "popunder") return;
       const elapsed = Date.now() - clickTimeRef.current;
       if (elapsed < FAST_RETURN_MS) setFlagged(true);
     };
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
-  }, [phase]);
+  }, [phase, mode]);
 
   const remaining = Math.max(0, DAILY_CAP - viewsToday);
   const capped = remaining <= 0;
 
-  const startWatch = () => {
+  // Cleanup Fluid Player when switching mode / unmounting.
+  useEffect(() => {
+    return () => {
+      try { fluidInstanceRef.current?.destroy?.(); } catch { /* no-op */ }
+      fluidInstanceRef.current = null;
+    };
+  }, []);
+  useEffect(() => {
+    if (mode !== "video") {
+      try { fluidInstanceRef.current?.destroy?.(); } catch { /* no-op */ }
+      fluidInstanceRef.current = null;
+      setVideoAdPlaying(false);
+    }
+  }, [mode]);
+
+  const startVideoAd = () => {
+    if (capped || phase !== "idle") return;
+    if (!fluidReady || !window.fluidPlayer || !videoRef.current) {
+      toast.info("Video player still loading, hang on…");
+      return;
+    }
+    setFlagged(false);
+    setVideoBooting(true);
+    clickTimeRef.current = Date.now();
+
+    try { fluidInstanceRef.current?.destroy?.(); } catch { /* no-op */ }
+
+    try {
+      const player = window.fluidPlayer(videoRef.current, {
+        layoutControls: {
+          primaryColor: "hsl(var(--primary))",
+          fillToContainer: true,
+          autoPlay: true,
+          mute: false,
+          allowDownload: false,
+          playButtonShowing: true,
+          playPauseAnimation: true,
+          controlBar: { autoHide: true, autoHideTimeout: 3, animated: true },
+          logo: { imageUrl: null },
+        },
+        vastOptions: {
+          adList: [
+            {
+              roll: "preRoll",
+              vastTag: VAST_TAG_URL,
+              adText: "Sponsored — watch to earn",
+            },
+          ],
+          adCTAText: false,
+          adCTATextPosition: "bottom right",
+          skipButtonCaption: "Skip in [seconds]",
+          skipButtonClickCaption: "Skip Ad ▶",
+          allowVPAID: true,
+          showPlayButton: true,
+          maxAllowedVastTagRedirects: 5,
+          vastAdvanced: {
+            vastLoadedCallback: () => setVideoBooting(false),
+            noVastVideoCallback: () => {
+              setVideoBooting(false);
+              toast.info("No video ad available right now — try the Pop-under tab.");
+              setPhase("idle");
+            },
+            vastVideoSkippedCallback: () => {
+              // Skipped ads still count toward hold.
+            },
+            vastVideoEndedCallback: () => {
+              setVideoAdPlaying(false);
+              setPhase("ready");
+            },
+          },
+        },
+      });
+      fluidInstanceRef.current = player;
+      setVideoAdPlaying(true);
+
+      // Kick off hold timer as a fallback (in case the ad callback never fires).
+      setPhase("holding");
+      setHoldRemaining(Math.ceil(HOLD_MS / 1000));
+      const startedAt = Date.now();
+      holdTimerRef.current = window.setInterval(() => {
+        const left = Math.max(0, HOLD_MS - (Date.now() - startedAt));
+        setHoldRemaining(Math.ceil(left / 1000));
+        if (left <= 0) {
+          if (holdTimerRef.current) window.clearInterval(holdTimerRef.current);
+          holdTimerRef.current = null;
+          setPhase("ready");
+        }
+      }, 250);
+    } catch (e: any) {
+      setVideoBooting(false);
+      toast.error("Couldn't start the video ad — try the Pop-under tab.");
+      setPhase("idle");
+    }
+  };
+
+  const startPopunder = () => {
     if (capped || phase !== "idle") return;
     setFlagged(false);
     clickTimeRef.current = Date.now();
-
-    // Ensure the popunder script is loaded (idempotent).
     try {
       if (!document.querySelector(`script[src="${POPUNDER_SRC}"]`)) {
         const s = document.createElement("script");
@@ -101,9 +221,6 @@ function WatchEarnPage() {
       }
     } catch { /* no-op */ }
 
-    // Fallback: some browsers/ad-blockers silently swallow the popunder.
-    // Track whether the tab loses focus within 1200ms; if not, open a
-    // fallback ad tab manually so the reward flow can still complete.
     let opened = false;
     const onBlur = () => { opened = true; };
     window.addEventListener("blur", onBlur, { once: true });
@@ -112,13 +229,8 @@ function WatchEarnPage() {
       if (!opened) {
         try {
           const w = window.open(POPUNDER_SRC.replace(/\/[^/]+\.js$/, "/"), "_blank", "noopener,noreferrer");
-          if (!w) {
-            toast.info("Popup blocked", {
-              description: "Allow pop-ups for this site so the ad can open, then try again.",
-            });
-          } else {
-            toast.message("Ad opened", { description: "Come back in 20 seconds to claim your reward." });
-          }
+          if (!w) toast.info("Popup blocked", { description: "Allow pop-ups for this site, then try again." });
+          else toast.message("Ad opened", { description: "Come back in 20 seconds to claim your reward." });
         } catch {
           toast.info("Ad couldn't open", { description: "Please allow pop-ups and try again." });
         }
@@ -165,6 +277,9 @@ function WatchEarnPage() {
     toast.success(`+${payload?.credits_added ?? PER_VIEW} PC added!`);
     try { await refreshProfile(); } catch { /* no-op */ }
     setPhase("idle");
+    setVideoAdPlaying(false);
+    try { fluidInstanceRef.current?.destroy?.(); } catch { /* no-op */ }
+    fluidInstanceRef.current = null;
   };
 
   // Countdown to midnight reset.
@@ -185,6 +300,10 @@ function WatchEarnPage() {
 
   const progressPct = Math.min(100, (viewsToday / DAILY_CAP) * 100);
 
+  const startCurrent = () => (mode === "video" ? startVideoAd() : startPopunder());
+  const startLabel =
+    mode === "video" ? "Play Video Ad to Earn" : "Open Pop-under Ad to Earn";
+
   return (
     <AppShell>
       <div className="max-w-lg mx-auto space-y-6">
@@ -197,6 +316,30 @@ function WatchEarnPage() {
             </div>
           )}
         </header>
+
+        {/* Ad-format tabs — Video first */}
+        <div className="grid grid-cols-2 gap-2 bg-muted/50 p-1 rounded-2xl">
+          <button
+            type="button"
+            onClick={() => phase === "idle" && setMode("video")}
+            disabled={phase !== "idle"}
+            className={`h-11 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-1.5 transition ${
+              mode === "video" ? "bg-card shadow text-foreground" : "text-muted-foreground hover:text-foreground"
+            } ${phase !== "idle" ? "opacity-60 cursor-not-allowed" : ""}`}
+          >
+            <Video className="w-4 h-4" /> Video Ad
+          </button>
+          <button
+            type="button"
+            onClick={() => phase === "idle" && setMode("popunder")}
+            disabled={phase !== "idle"}
+            className={`h-11 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-1.5 transition ${
+              mode === "popunder" ? "bg-card shadow text-foreground" : "text-muted-foreground hover:text-foreground"
+            } ${phase !== "idle" ? "opacity-60 cursor-not-allowed" : ""}`}
+          >
+            <MousePointerClick className="w-4 h-4" /> Pop-under
+          </button>
+        </div>
 
         <div className="bg-card border rounded-3xl p-6 shadow-card space-y-5">
           <div className="grid grid-cols-3 gap-3 text-center">
@@ -224,21 +367,47 @@ function WatchEarnPage() {
             </div>
           </div>
 
+          {/* Video player — only rendered in video mode */}
+          {mode === "video" && (
+            <div className="rounded-2xl overflow-hidden border bg-black aspect-video relative">
+              <video
+                ref={videoRef}
+                id="sp-watch-earn-video"
+                className="w-full h-full"
+                playsInline
+                controls
+              >
+                {/* Empty source — Fluid Player fills preRoll VAST ad */}
+              </video>
+              {!videoAdPlaying && !videoBooting && phase === "idle" && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-white/90 pointer-events-none">
+                  <Video className="w-10 h-10 mb-2 opacity-80" />
+                  <div className="text-sm">Tap "Play Video Ad" below</div>
+                </div>
+              )}
+              {videoBooting && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-white text-sm">
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading ad…
+                </div>
+              )}
+            </div>
+          )}
+
           {phase === "idle" && (
             <Button
               className="w-full h-12 text-base"
-              disabled={capped || loading}
-              onClick={startWatch}
+              disabled={capped || loading || (mode === "video" && !fluidReady)}
+              onClick={startCurrent}
             >
               <PlayCircle className="w-5 h-5 mr-2" />
-              {capped ? "Daily limit reached" : "Watch Ad to Earn Coin"}
+              {capped ? "Daily limit reached" : startLabel}
             </Button>
           )}
 
           {phase === "holding" && (
             <Button className="w-full h-12 text-base" disabled variant="outline">
               <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              Hold on… {holdRemaining}s
+              {mode === "video" ? `Watching… ${holdRemaining}s` : `Hold on… ${holdRemaining}s`}
             </Button>
           )}
 
@@ -255,8 +424,8 @@ function WatchEarnPage() {
           )}
 
           <p className="text-[11px] text-muted-foreground text-center">
-            Credits are written server-side. Returning to this tab too quickly, or spamming clicks,
-            won't count.
+            Credits are written server-side. Skipping the video, returning too fast, or spamming
+            clicks won't count.
           </p>
         </div>
 
