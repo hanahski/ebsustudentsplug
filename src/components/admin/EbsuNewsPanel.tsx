@@ -44,7 +44,8 @@ export function EbsuNewsPanel() {
 
   const [newUrl, setNewUrl] = useState("");
   const [newLabel, setNewLabel] = useState("");
-  const [topic, setTopic] = useState("");
+  const [pasted, setPasted] = useState("");
+  const [instruction, setInstruction] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function addSource() {
@@ -75,9 +76,20 @@ export function EbsuNewsPanel() {
   async function generate(publish: boolean) {
     setBusy(true);
     try {
-      const r = await gen({ data: { topic: topic.trim() || undefined, publish } });
+      const p = pasted.trim();
+      const i = instruction.trim();
+      let topic: string | undefined;
+      if (p && i) {
+        topic = `INSTRUCTION FROM EDITOR:\n${i}\n\nPASTED CONTENT (apply the instruction above to this text):\n"""\n${p}\n"""`;
+      } else if (p) {
+        topic = `PASTED CONTENT (rewrite into an original EBSU Plug News article — do not copy verbatim):\n"""\n${p}\n"""`;
+      } else if (i) {
+        topic = i;
+      }
+      const r = await gen({ data: { topic, publish } });
       toast.success(publish ? "EBSU news published!" : "Draft created");
-      setTopic("");
+      setPasted("");
+      setInstruction("");
       qc.invalidateQueries({ queryKey: ["ebsu-news-articles"] });
       console.log("generated", r);
     } catch (e: any) {
@@ -100,15 +112,27 @@ export function EbsuNewsPanel() {
           <h2 className="font-bold font-display text-lg">Smart EBSU News Composer</h2>
         </div>
         <p className="text-xs text-muted-foreground mb-3">
-          The AI pulls fresh content from your active sources, combines what students care about, and writes a polished, eye-catching post with cover image.
+          Paste any article, announcement, or notes below — then tell the AI what to do with it (rewrite, summarize, turn into a student-friendly explainer, etc.).
         </p>
+
+        <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Pasted text (optional)</label>
         <Textarea
-          value={topic}
-          onChange={(e) => setTopic(e.target.value)}
-          placeholder="Optional angle / editor brief — paste any length. Leave blank to let the AI pick the best story from sources."
-          rows={4}
-          className="mb-3"
+          value={pasted}
+          onChange={(e) => setPasted(e.target.value)}
+          placeholder="Paste the raw article, press release, WhatsApp broadcast, or notes here…"
+          rows={6}
+          className="mt-1 mb-3"
         />
+
+        <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Your prompt / command</label>
+        <Textarea
+          value={instruction}
+          onChange={(e) => setInstruction(e.target.value)}
+          placeholder='e.g. "Rewrite this as breaking news for EBSU students", "Summarize and add what it means for 300-level students", "Turn into a 5-point explainer".'
+          rows={3}
+          className="mt-1 mb-3"
+        />
+
         <div className="flex gap-2">
           <Button onClick={() => generate(true)} disabled={busy} className="flex-1">
             {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
@@ -119,9 +143,10 @@ export function EbsuNewsPanel() {
           </Button>
         </div>
         <p className="text-[11px] text-muted-foreground mt-2">
-          Tip: with no sources, the AI writes purely from your editor brief above.
+          Tip: leave both blank and hit Generate to let the editor pick the best story from your saved sources.
         </p>
       </div>
+
 
       {/* Sources */}
       <div className="bg-card border rounded-3xl p-5 shadow-card">
