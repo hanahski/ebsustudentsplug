@@ -55,7 +55,7 @@ export function AuthStatusBanner() {
 
   // Signed in, no error: hide (slide up).
   return (
-    <div className={`${baseClasses} bg-success/90 text-success-foreground -translate-y-full`}>
+    <div className={`${baseClasses} bg-primary/90 text-primary-foreground -translate-y-full`}>
       <div className="flex items-center gap-2">
         <User className="h-3.5 w-3.5 shrink-0" />
         <span>
@@ -64,7 +64,7 @@ export function AuthStatusBanner() {
       </div>
       <button
         onClick={() => signOut()}
-        className="shrink-0 inline-flex items-center gap-1 rounded bg-success-foreground/20 px-2 py-0.5 text-[11px] hover:bg-success-foreground/30"
+        className="shrink-0 inline-flex items-center gap-1 rounded bg-primary-foreground/20 px-2 py-0.5 text-[11px] hover:bg-primary-foreground/30"
       >
         <LogOut className="h-3 w-3" />
         Sign out
