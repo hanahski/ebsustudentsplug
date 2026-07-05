@@ -40,8 +40,7 @@ export function AvatarDisplay({
       ? savedAvatar
       : avatarDataUri(savedAvatar)
     : avatarDataUri("boy-1");
-  const dotSize = Math.max(size * 0.26, 9);
-  const ringPad = Math.max(size * 0.05, 2);
+  const dotSize = Math.max(size * 0.28, 10);
 
   const anim = ANIM_BY_KEY[savedAvatar ?? ""] ?? DEFAULT_ANIM;
   const [playing, setPlaying] = useState(false);
@@ -77,45 +76,21 @@ export function AvatarDisplay({
       )}
       style={{ width: size, height: size }}
     >
-      {/* Gradient ring frame */}
-      <div
-        className={cn("absolute inset-0 rounded-full transition-transform", playing && anim.cls)}
-        style={{
-          padding: ringPad,
-          background:
-            "conic-gradient(from 140deg, var(--primary), var(--accent), oklch(0.65 0.22 15), var(--primary))",
-          boxShadow:
-            "0 8px 24px -10px color-mix(in oklab, var(--primary) 50%, transparent), 0 2px 8px -2px color-mix(in oklab, var(--foreground) 18%, transparent)",
-
-        }}
-        aria-hidden
-      >
-        <div className="w-full h-full rounded-full bg-card p-[1.5px]">
-          <img
-            src={src}
-            alt=""
-            width={size}
-            height={size}
-            referrerPolicy="no-referrer"
-            draggable={false}
-            className="block w-full h-full rounded-full object-cover aspect-square bg-muted"
-            style={{ filter: "saturate(1.08) contrast(1.03)" }}
-            onError={(e) => {
-              const fallback = avatarDataUri("boy-1");
-              if (e.currentTarget.src !== fallback) e.currentTarget.src = fallback;
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Glossy highlight */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-full"
-        style={{
-          background:
-            "radial-gradient(120% 70% at 30% 15%, hsl(0 0% 100% / 0.24), transparent 55%)",
-          mixBlendMode: "screen",
+      <img
+        src={src}
+        alt=""
+        width={size}
+        height={size}
+        referrerPolicy="no-referrer"
+        draggable={false}
+        style={{ width: size, height: size }}
+        className={cn(
+          "block rounded-full border-2 border-card shadow-card object-cover aspect-square bg-muted",
+          playing && anim.cls,
+        )}
+        onError={(e) => {
+          const fallback = avatarDataUri("boy-1");
+          if (e.currentTarget.src !== fallback) e.currentTarget.src = fallback;
         }}
       />
 
@@ -138,16 +113,10 @@ export function AvatarDisplay({
 
       {online && (
         <span
-          className="absolute bottom-0 right-0 rounded-full border-2 border-card bg-success shadow"
-          style={{
-            width: dotSize,
-            height: dotSize,
-            boxShadow: "0 0 0 2px var(--card), 0 0 12px color-mix(in oklab, var(--success) 70%, transparent)",
-          }}
+          className="online-dot absolute bottom-0 right-0 block rounded-full bg-success border-2 border-card"
+          style={{ width: dotSize, height: dotSize }}
           aria-label="Online"
-        >
-          <span className="absolute inset-0 rounded-full animate-ping bg-success/60" aria-hidden />
-        </span>
+        />
       )}
     </Wrapper>
   );
