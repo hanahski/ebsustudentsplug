@@ -112,7 +112,7 @@ export function EbsuNewsPanel() {
           <h2 className="font-bold font-display text-lg">Smart EBSU News Composer</h2>
         </div>
         <p className="text-xs text-muted-foreground mb-3">
-          Paste any article, announcement, or notes below — then tell the AI what to do with it (rewrite, summarize, turn into a student-friendly explainer, etc.).
+          Paste text, drop links, or give commands like "fetch this link and summarize", "filter out X", "rewrite as a 5-point explainer", or "don't post if it's not newsworthy". The AI follows your instructions before publishing.
         </p>
 
         <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Pasted text (optional)</label>
