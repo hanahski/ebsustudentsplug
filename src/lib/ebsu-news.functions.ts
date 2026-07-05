@@ -249,17 +249,28 @@ BODY STYLE RULES (non-negotiable):
 - DO NOT include a "Sources", "References", or "Read more" section in the body — the site renders that automatically.
 - Write the article as ORIGINAL EBSU Plug News reporting, in your own words, fully self-contained.
 
+EDITOR-COMMAND MODE (highest priority):
+The editor brief may contain SMART INSTRUCTIONS you MUST follow literally. Examples:
+- "Fetch this link and summarize it" → base the article on the fetched source content provided below.
+- "Filter out / remove / do not mention X" → the final article must contain zero references to X.
+- "Only include the part about Y" → focus the article strictly on Y and drop everything else.
+- "Rewrite as a 5-point explainer / breaking news / opinion piece" → obey the requested format.
+- "Do NOT post / skip this / not newsworthy / cancel" → return { "skip": true, "reason": "editor asked to skip" }.
+- "Keep it short" → 200-400 words. "Long form" → 700-1200 words.
+Always obey editor instructions over your default style. If instructions conflict with accuracy rules above, prefer accuracy and note the conflict in "reason".
+
 Return STRICT JSON with this shape:
 {
   "title": "punchy headline under 80 chars",
   "summary": "1-2 sentence hook under 200 chars",
-  "body": "full article in markdown, 350-900 words, with ## subheadings, key facts, what it means for students, and a closing 'Bottom line' line.",
+  "body": "full article in markdown, with ## subheadings, key facts, what it means for students, and a closing 'Bottom line' line.",
   "image_prompt": "short visual prompt for cover photo, no text or logos",
   "sources_used": ["https://..."],
   "skip": false
 }
 
-If you truly have nothing to write about, return { "skip": true, "reason": "..." }.`;
+If the editor told you to skip, or you truly have nothing to write about, return { "skip": true, "reason": "..." }.`;
+
 
   const userPrompt = usable.length > 0
     ? `${hasTopic ? `Editor brief / angle: ${opts.topic}\n\n` : ""}Sources (use ONLY these — do not add outside knowledge):\n\n${usable
