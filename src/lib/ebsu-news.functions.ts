@@ -191,13 +191,23 @@ export const deleteSource = createServerFn({ method: "POST" })
   });
 
 // ---------- generate news ----------
+function extractUrls(text: string): string[] {
+  if (!text) return [];
+  const re = /https?:\/\/[^\s"'<>)\]]+/gi;
+  const found = Array.from(new Set((text.match(re) ?? []).map((u) => u.replace(/[.,;:!?)\]]+$/, ""))));
+  return found.slice(0, 6);
+}
+
 async function runGenerate(opts: {
   topic?: string;
   sourceUrls: string[];
   publish: boolean;
   authorId: string | null;
 }) {
-  const sources = opts.sourceUrls.slice(0, 6);
+  // Pull URLs the editor typed into the brief and merge with saved sources
+  const inlineUrls = extractUrls(opts.topic ?? "");
+  const merged = Array.from(new Set([...(opts.sourceUrls ?? []), ...inlineUrls])).slice(0, 8);
+  const sources = merged;
   const hasSources = sources.length > 0;
   const hasTopic = !!(opts.topic && opts.topic.trim().length > 0);
   if (!hasSources && !hasTopic) {
@@ -215,6 +225,7 @@ async function runGenerate(opts: {
       throw new Error("Could not fetch any source content");
     }
   }
+
 
   // 2. Synthesize
   const sourcedRules = `ACCURACY RULES (non-negotiable):
@@ -238,17 +249,28 @@ BODY STYLE RULES (non-negotiable):
 - DO NOT include a "Sources", "References", or "Read more" section in the body — the site renders that automatically.
 - Write the article as ORIGINAL EBSU Plug News reporting, in your own words, fully self-contained.
 
+EDITOR-COMMAND MODE (highest priority):
+The editor brief may contain SMART INSTRUCTIONS you MUST follow literally. Examples:
+- "Fetch this link and summarize it" → base the article on the fetched source content provided below.
+- "Filter out / remove / do not mention X" → the final article must contain zero references to X.
+- "Only include the part about Y" → focus the article strictly on Y and drop everything else.
+- "Rewrite as a 5-point explainer / breaking news / opinion piece" → obey the requested format.
+- "Do NOT post / skip this / not newsworthy / cancel" → return { "skip": true, "reason": "editor asked to skip" }.
+- "Keep it short" → 200-400 words. "Long form" → 700-1200 words.
+Always obey editor instructions over your default style. If instructions conflict with accuracy rules above, prefer accuracy and note the conflict in "reason".
+
 Return STRICT JSON with this shape:
 {
   "title": "punchy headline under 80 chars",
   "summary": "1-2 sentence hook under 200 chars",
-  "body": "full article in markdown, 350-900 words, with ## subheadings, key facts, what it means for students, and a closing 'Bottom line' line.",
+  "body": "full article in markdown, with ## subheadings, key facts, what it means for students, and a closing 'Bottom line' line.",
   "image_prompt": "short visual prompt for cover photo, no text or logos",
   "sources_used": ["https://..."],
   "skip": false
 }
 
-If you truly have nothing to write about, return { "skip": true, "reason": "..." }.`;
+If the editor told you to skip, or you truly have nothing to write about, return { "skip": true, "reason": "..." }.`;
+
 
   const userPrompt = usable.length > 0
     ? `${hasTopic ? `Editor brief / angle: ${opts.topic}\n\n` : ""}Sources (use ONLY these — do not add outside knowledge):\n\n${usable
