@@ -142,7 +142,7 @@ export function AvatarDisplay({
           style={{
             width: dotSize,
             height: dotSize,
-            boxShadow: "0 0 0 2px hsl(var(--card)), 0 0 12px hsl(var(--success) / 0.7)",
+            boxShadow: "0 0 0 2px var(--card), 0 0 12px color-mix(in oklab, var(--success) 70%, transparent)",
           }}
           aria-label="Online"
         >
