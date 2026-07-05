@@ -112,7 +112,7 @@ export function EbsuNewsPanel() {
           <h2 className="font-bold font-display text-lg">Smart EBSU News Composer</h2>
         </div>
         <p className="text-xs text-muted-foreground mb-3">
-          Paste text, drop links, or give commands like "fetch this link and summarize", "filter out X", "rewrite as a 5-point explainer", or "don't post if it's not newsworthy". The AI follows your instructions before publishing.
+          Paste text, drop links, or give commands like "fetch this link and summarize", "filter out X", "rewrite as a 5-point explainer", or "don't post if it's not newsworthy". You can also drop an image URL (.jpg / .png / .webp) and the AI will blend it into the cover — every cover is auto-branded with the StudentsPlug logo.
         </p>
 
         <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Pasted text (optional)</label>
