@@ -242,11 +242,19 @@ async function runGenerate(opts: {
   publish: boolean;
   authorId: string | null;
 }) {
-  // Pull URLs the editor typed into the brief and merge with saved sources
+  // Pull URLs the editor typed into the brief and merge with saved sources.
+  // Split out image URLs — they become reference images for the cover art,
+  // not article sources to scrape.
   const inlineUrls = extractUrls(opts.topic ?? "");
-  const merged = Array.from(new Set([...(opts.sourceUrls ?? []), ...inlineUrls])).slice(0, 8);
+  const isImg = (u: string) => /\.(png|jpe?g|webp|gif|avif)(\?|$)/i.test(u);
+  const inlineImageUrls = inlineUrls.filter(isImg);
+  const inlineArticleUrls = inlineUrls.filter((u) => !isImg(u));
+  const merged = Array.from(
+    new Set([...(opts.sourceUrls ?? []), ...inlineArticleUrls]),
+  ).slice(0, 8);
   const sources = merged;
   const hasSources = sources.length > 0;
+
   const hasTopic = !!(opts.topic && opts.topic.trim().length > 0);
   if (!hasSources && !hasTopic) {
     throw new Error("Add at least one source or write an editor brief.");
