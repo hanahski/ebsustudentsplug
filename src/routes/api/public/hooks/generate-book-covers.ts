@@ -1,11 +1,9 @@
-// Generate realistic book-cover images via Lovable AI Gateway for books that
-// don't yet have an AI cover. Batches small numbers per request to bound cost
-// and avoid Worker timeouts.
+// Generate realistic book-cover images via Google AI Studio (BOOK_IMAGE_AI_KEY)
+// for books that don't yet have an AI cover. Batches small numbers per request
+// to bound cost and avoid Worker timeouts.
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-
-const GATEWAY = "https://ai.gateway.lovable.dev/v1/images/generations";
-const MODEL = "openai/gpt-image-2";
+import { AI_KEYS, googleImage } from "@/lib/google-ai";
 
 type Book = { id: string; title: string; author: string | null; category: string };
 
@@ -33,27 +31,11 @@ function coverPrompt(b: Book): string {
 }
 
 async function generatePng(prompt: string): Promise<Uint8Array> {
-  const key = process.env.LOVABLE_API_KEY;
-  if (!key) throw new Error("Missing LOVABLE_API_KEY");
-  const res = await fetch(GATEWAY, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: MODEL,
-      prompt,
-      size: "1024x1536",
-      quality: "low",
-      n: 1,
-    }),
-  });
-  if (!res.ok) {
-    const txt = await res.text().catch(() => "");
-    throw new Error(`gateway ${res.status}: ${txt.slice(0, 200)}`);
-  }
-  const json = (await res.json()) as { data?: Array<{ b64_json?: string }> };
-  const b64 = json.data?.[0]?.b64_json;
-  if (!b64) throw new Error("no image in response");
-  const bin = atob(b64);
+  const key = AI_KEYS.bookImage();
+  if (!key) throw new Error("BOOK_IMAGE_AI_KEY missing");
+  const img = await googleImage({ apiKey: key, prompt });
+  if (!img) throw new Error("no image in response");
+  const bin = atob(img.base64);
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
   return bytes;
