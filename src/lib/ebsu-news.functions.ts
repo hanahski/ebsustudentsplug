@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { AI_KEYS, googleChat, googleImage } from "./google-ai";
 import { z } from "zod";
 
 // ---------- helpers ----------
