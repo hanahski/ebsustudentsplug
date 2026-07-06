@@ -1,8 +1,12 @@
-// Direct Google AI Studio (Gemini) helper.
-// Each AI feature group passes its own API key so admins can rotate/scope
-// keys independently of the Lovable AI Gateway.
+// AI calls are routed through the AI Bank (a separate Lovable project that
+// fronts a pool of AI proxy sources and fails over automatically).
 //
-// Endpoint: https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key=...
+// The public API of this module is unchanged so existing callers keep working:
+//   - googleChat({ apiKey, model, system, messages, json })
+//   - googleImage({ apiKey, prompt, refImages, model })
+//   - AI_KEYS.{tools,bookImage,plug,news}()
+//
+// The `apiKey` argument is ignored — auth happens via AI_BANK_KEY on the server.
 
 type TextPart = { type: "text"; text: string };
 type ImagePart = { type: "image_url"; image_url: { url: string } };
@@ -12,117 +16,101 @@ export type ChatMsg = {
   content: string | Part[];
 };
 
-const BASE = "https://generativelanguage.googleapis.com/v1beta/models";
-
-function stripVendor(model: string): string {
-  return model.replace(/^google\//, "");
-}
-
-function partsFromContent(content: ChatMsg["content"]): any[] {
-  if (typeof content === "string") return [{ text: content }];
-  return content.map((p) => {
-    if (p.type === "text") return { text: p.text };
-    const url = p.image_url.url;
-    const m = url.match(/^data:([^;]+);base64,(.+)$/);
-    if (m) return { inlineData: { mimeType: m[1], data: m[2] } };
-    return { fileData: { mimeType: "image/png", fileUri: url } };
-  });
+function bankConfig() {
+  const url = process.env.AI_BANK_URL;
+  const key = process.env.AI_BANK_KEY;
+  if (!url || !key) throw new Error("AI Bank not configured (AI_BANK_URL/AI_BANK_KEY)");
+  return { url: url.replace(/\/+$/, ""), key };
 }
 
 function errorFor(status: number, body: string): Error {
   if (status === 429) return new Error("AI is busy — try again in a moment.");
   if (status === 402) return new Error("AI credits exhausted.");
   if (status === 401 || status === 403)
-    return new Error(`AI key rejected (${status}). Check the API key.`);
-  return new Error(`AI error ${status}: ${body.slice(0, 200)}`);
+    return new Error(`AI Bank rejected the request (${status}).`);
+  if (status === 503) return new Error("All AI sources are down. Try again shortly.");
+  return new Error(`AI Bank error ${status}: ${body.slice(0, 200)}`);
+}
+
+async function callBank(payload: Record<string, unknown>): Promise<any> {
+  const { url, key } = bankConfig();
+  const res = await fetch(`${url}/api/public/bank`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Bank-Key": key,
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw errorFor(res.status, await res.text().catch(() => ""));
+  return res.json();
 }
 
 export async function googleChat(opts: {
-  apiKey: string;
+  apiKey?: string;
   model?: string;
   system?: string;
   messages: ChatMsg[];
   json?: boolean;
 }): Promise<string> {
-  if (!opts.apiKey) throw new Error("Missing Google AI key");
-  const model = stripVendor(opts.model ?? "gemini-2.5-flash");
+  const model = opts.model ?? "google/gemini-2.5-flash";
+  // OpenAI-compatible message shape (Lovable AI Gateway).
+  const msgs: Array<{ role: string; content: string | Part[] }> = [];
+  if (opts.system) msgs.push({ role: "system", content: opts.system });
+  for (const m of opts.messages) msgs.push({ role: m.role, content: m.content });
 
-  const systemMsgs = opts.messages.filter((m) => m.role === "system");
-  const nonSystem = opts.messages.filter((m) => m.role !== "system");
-  const sysText = [
-    opts.system,
-    ...systemMsgs.map((m) => (typeof m.content === "string" ? m.content : "")),
-  ]
-    .filter(Boolean)
-    .join("\n\n");
-
-  const body: any = {
-    contents: nonSystem.map((m) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: partsFromContent(m.content),
-    })),
-  };
-  if (sysText) body.systemInstruction = { parts: [{ text: sysText }] };
-  if (opts.json) body.generationConfig = { responseMimeType: "application/json" };
-
-  const url = `${BASE}/${model}:generateContent?key=${encodeURIComponent(opts.apiKey)}`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+  const j = await callBank({
+    kind: "chat",
+    model,
+    messages: msgs,
+    ...(opts.json ? { response_format: { type: "json_object" } } : {}),
   });
-  if (!res.ok) throw errorFor(res.status, await res.text().catch(() => ""));
-  const j: any = await res.json();
-  const parts = j?.candidates?.[0]?.content?.parts ?? [];
-  return parts.map((p: any) => p?.text ?? "").join("");
+
+  // Accept either a raw OpenAI response or a normalised { text } shape.
+  if (typeof j?.text === "string") return j.text;
+  if (typeof j?.reply === "string") return j.reply;
+  const content = j?.choices?.[0]?.message?.content;
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content.map((p: any) => p?.text ?? "").join("");
+  }
+  return "";
 }
 
 export async function googleImage(opts: {
-  apiKey: string;
+  apiKey?: string;
   prompt: string;
-  refImages?: string[]; // data URLs or http URLs
+  refImages?: string[];
   model?: string;
 }): Promise<{ base64: string; mimeType: string } | null> {
-  if (!opts.apiKey) throw new Error("Missing Google AI key");
-  const model = stripVendor(opts.model ?? "gemini-2.5-flash-image-preview");
-
-  const parts: any[] = [{ text: opts.prompt }];
-  for (const r of opts.refImages ?? []) {
-    const m = r.match(/^data:([^;]+);base64,(.+)$/);
-    if (m) parts.push({ inlineData: { mimeType: m[1], data: m[2] } });
-    else parts.push({ fileData: { mimeType: "image/png", fileUri: r } });
-  }
-  const url = `${BASE}/${model}:generateContent?key=${encodeURIComponent(opts.apiKey)}`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ role: "user", parts }],
-      generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
-    }),
+  const model = opts.model ?? "google/gemini-2.5-flash-image-preview";
+  const j = await callBank({
+    kind: "image",
+    model,
+    prompt: opts.prompt,
+    ...(opts.refImages && opts.refImages.length
+      ? { ref_images: opts.refImages }
+      : {}),
   });
-  if (!res.ok) throw errorFor(res.status, await res.text().catch(() => ""));
-  const j: any = await res.json();
-  const outParts = j?.candidates?.[0]?.content?.parts ?? [];
-  for (const p of outParts) {
-    if (p?.inlineData?.data) {
-      return {
-        base64: p.inlineData.data,
-        mimeType: p.inlineData.mimeType || "image/png",
-      };
-    }
+  if (j?.base64 && (j.mimeType || j.mime_type)) {
+    return { base64: j.base64, mimeType: j.mimeType || j.mime_type };
+  }
+  // Fallback: OpenAI-style image response with data URL.
+  const url = j?.data?.[0]?.url || j?.url;
+  if (typeof url === "string") {
+    const m = url.match(/^data:([^;]+);base64,(.+)$/);
+    if (m) return { mimeType: m[1], base64: m[2] };
   }
   return null;
 }
 
 /**
- * Key group helpers — read the right env var for each AI feature group.
- * Falls back to LOVABLE_API_KEY so nothing breaks while admins are still
- * rolling out the per-group Google AI Studio keys.
+ * Back-compat shim — every group now routes through the AI Bank, so the
+ * returned "key" is just the bank key. Callers only check truthiness.
  */
 export const AI_KEYS = {
-  tools: () => process.env.TOOLS_AI_KEY || process.env.LOVABLE_API_KEY || "",
-  bookImage: () => process.env.BOOK_IMAGE_AI_KEY || process.env.LOVABLE_API_KEY || "",
-  plug: () => process.env.PLUG_AI_KEY || process.env.LOVABLE_API_KEY || "",
-  news: () => process.env.NEWS_AI_KEY || process.env.LOVABLE_API_KEY || "",
+  tools: () => process.env.AI_BANK_KEY || "",
+  bookImage: () => process.env.AI_BANK_KEY || "",
+  plug: () => process.env.AI_BANK_KEY || "",
+  news: () => process.env.AI_BANK_KEY || "",
 };
