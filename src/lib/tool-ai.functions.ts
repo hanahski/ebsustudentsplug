@@ -2,6 +2,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { BUILTIN_AI_TOOLS, type SeedTool } from "@/data/aiToolsSeed";
+import { AI_KEYS, googleChat, googleImage } from "./google-ai";
 
 type ToolKind = "ai_prompt" | "ai_image" | "api_call";
 
@@ -83,24 +84,16 @@ export const toolAiPropose = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     await requireAdmin(context);
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
+    const apiKey = AI_KEYS.tools();
+    if (!apiKey) throw new Error("TOOLS_AI_KEY missing");
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: PROPOSE_SYSTEM },
-          { role: "user", content: data.brief },
-        ],
-        response_format: { type: "json_object" },
-      }),
+    const content = await googleChat({
+      apiKey,
+      model: "gemini-2.5-flash",
+      system: PROPOSE_SYSTEM,
+      messages: [{ role: "user", content: data.brief }],
+      json: true,
     });
-    if (!res.ok) throw new Error(`AI gateway ${res.status}: ${(await res.text()).slice(0, 300)}`);
-    const payload = await res.json();
-    const content: string = payload?.choices?.[0]?.message?.content ?? "{}";
     let spec: any = {};
     try { spec = JSON.parse(content); }
     catch { const m = content.match(/\{[\s\S]*\}/); if (m) try { spec = JSON.parse(m[0]); } catch {} }
@@ -203,44 +196,27 @@ export const toolAiRun = createServerFn({ method: "POST" })
     const { data: tool, error } = await supabaseAdmin.from("ai_tools").select("*").eq("slug", data.slug).maybeSingle();
     if (error) throw new Error(error.message);
     if (!tool || tool.status !== "approved") throw new Error("tool not available");
-    const apiKey = process.env.LOVABLE_API_KEY;
+    const apiKey = AI_KEYS.tools();
 
     if (tool.kind === "ai_prompt") {
-      if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
+      if (!apiKey) throw new Error("TOOLS_AI_KEY missing");
       const cfg: any = tool.config || {};
-      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: cfg.model || "google/gemini-2.5-flash",
-          messages: [
-            { role: "system", content: cfg.system_prompt || "You are a helpful assistant." },
-            { role: "user", content: data.input },
-          ],
-        }),
+      const text = await googleChat({
+        apiKey,
+        model: cfg.model || "gemini-2.5-flash",
+        system: cfg.system_prompt || "You are a helpful assistant.",
+        messages: [{ role: "user", content: data.input }],
       });
-      if (!res.ok) throw new Error(`AI gateway ${res.status}`);
-      const j = await res.json();
-      return { type: "text" as const, text: j?.choices?.[0]?.message?.content ?? "" };
+      return { type: "text" as const, text };
     }
 
     if (tool.kind === "ai_image") {
-      if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
+      if (!apiKey) throw new Error("TOOLS_AI_KEY missing");
       const cfg: any = tool.config || {};
       const prompt = String(cfg.prompt_template || "{input}").replace(/\{input\}/g, data.input);
-      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash-image",
-          messages: [{ role: "user", content: prompt }],
-          modalities: ["image", "text"],
-        }),
-      });
-      if (!res.ok) throw new Error(`AI gateway ${res.status}`);
-      const j = await res.json();
-      const img = j?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-      return { type: "image" as const, url: img, text: j?.choices?.[0]?.message?.content ?? "" };
+      const img = await googleImage({ apiKey, prompt });
+      const url = img ? `data:${img.mimeType};base64,${img.base64}` : undefined;
+      return { type: "image" as const, url, text: "" };
     }
 
     // api_call

@@ -138,31 +138,23 @@ export const Route = createFileRoute("/api/public/plug-ai")({
           return json(429, { error: "Too many requests. Slow down a bit." }, { "Retry-After": String(limit.retryAfter) });
         }
 
-        const apiKey = process.env.LOVABLE_API_KEY;
+        const apiKey = process.env.PLUG_AI_KEY || process.env.LOVABLE_API_KEY;
         if (!apiKey) return json(500, { error: "AI not configured" });
 
         try {
-          const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-              model: "google/gemini-2.5-flash",
-              messages: [{ role: "system", content: BASE_PROMPT }, ...payload.messages],
-            }),
+          const { googleChat } = await import("@/lib/google-ai");
+          const reply = await googleChat({
+            apiKey,
+            model: "gemini-2.5-flash",
+            system: BASE_PROMPT,
+            messages: payload.messages,
           });
-          if (res.status === 429) return json(429, { error: "Plug AI is busy. Try again in a moment." }, { "Retry-After": "10" });
-          if (res.status === 402) return json(503, { error: "Service temporarily unavailable. Please try again later." });
-          if (!res.ok) {
-            const t = await res.text();
-            console.error("[plug-ai proxy] gateway", res.status, t.slice(0, 200));
-            return json(502, { error: "AI upstream error" });
-          }
-          const j: any = await res.json();
-          const reply = j?.choices?.[0]?.message?.content ?? "";
           return json(200, { reply });
         } catch (e: any) {
-          console.error("[plug-ai proxy] fetch failed", e);
-          return json(502, { error: "Network error reaching AI" });
+          const msg = String(e?.message ?? "");
+          if (msg.includes("busy")) return json(429, { error: "Plug AI is busy. Try again in a moment." }, { "Retry-After": "10" });
+          console.error("[plug-ai proxy] failed", e);
+          return json(502, { error: "AI upstream error" });
         }
       },
     },

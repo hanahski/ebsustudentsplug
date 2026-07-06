@@ -1,5 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { AI_KEYS, googleChat, googleImage } from "./google-ai";
+
+// ---------- Book cover & inline illustrations (BOOK_IMAGE_AI_KEY) ----------
 
 export const bookAiCover = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -14,26 +17,12 @@ export const bookAiCover = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ data }) => {
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("AI is not configured");
+    const apiKey = AI_KEYS.bookImage();
+    if (!apiKey) throw new Error("BOOK_IMAGE_AI_KEY missing");
     const prompt = `Professional book cover art. Title: "${data.title}". ${data.description ? `Story: ${data.description}. ` : ""}Style: ${data.style}. Vertical 2:3 poster composition, dramatic lighting, no lettering, no watermark, no text.`;
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image-preview",
-        modalities: ["image", "text"],
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
-    if (res.status === 429) throw new Error("AI is busy — try again in a moment.");
-    if (res.status === 402) throw new Error("AI credits exhausted.");
-    if (!res.ok) throw new Error(`AI error ${res.status}`);
-    const json = await res.json();
-    const images: Array<{ image_url?: { url?: string } }> = json?.choices?.[0]?.message?.images ?? [];
-    const url = images[0]?.image_url?.url;
-    if (!url) throw new Error("No image returned");
-    return { dataUrl: url };
+    const img = await googleImage({ apiKey, prompt });
+    if (!img) throw new Error("No image returned");
+    return { dataUrl: `data:${img.mimeType};base64,${img.base64}` };
   });
 
 export const bookAiInlineImage = createServerFn({ method: "POST" })
@@ -45,28 +34,15 @@ export const bookAiInlineImage = createServerFn({ method: "POST" })
     return { prompt, style: String(d.style ?? "cinematic illustration, painterly, richly detailed") };
   })
   .handler(async ({ data }) => {
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("AI is not configured");
+    const apiKey = AI_KEYS.bookImage();
+    if (!apiKey) throw new Error("BOOK_IMAGE_AI_KEY missing");
     const prompt = `${data.prompt}. Style: ${data.style}. Landscape 16:9 illustration for a book chapter. No text, no watermarks, no logos.`;
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image-preview",
-        modalities: ["image", "text"],
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
-    if (res.status === 429) throw new Error("AI is busy — try again in a moment.");
-    if (res.status === 402) throw new Error("AI credits exhausted.");
-    if (!res.ok) throw new Error(`AI error ${res.status}`);
-    const json = await res.json();
-    const images: Array<{ image_url?: { url?: string } }> = json?.choices?.[0]?.message?.images ?? [];
-    const url = images[0]?.image_url?.url;
-    if (!url) throw new Error("No image returned");
-    return { dataUrl: url };
+    const img = await googleImage({ apiKey, prompt });
+    if (!img) throw new Error("No image returned");
+    return { dataUrl: `data:${img.mimeType};base64,${img.base64}` };
   });
 
+// ---------- Book AI writing assist (TOOLS_AI_KEY) ----------
 
 type Mode = "continue" | "rewrite" | "expand" | "shorten" | "grammar";
 
@@ -95,26 +71,18 @@ export const bookAiAssist = createServerFn({ method: "POST" })
     return { mode, text, context };
   })
   .handler(async ({ data }) => {
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("AI is not configured");
+    const apiKey = AI_KEYS.tools();
+    if (!apiKey) throw new Error("TOOLS_AI_KEY missing");
 
-    const messages = [
-      { role: "system" as const, content: PROMPTS[data.mode] },
-      ...(data.context
-        ? [{ role: "system" as const, content: `Book context (for tone reference only, do not repeat):\n${data.context}` }]
-        : []),
-      { role: "user" as const, content: data.text },
-    ];
+    const system = data.context
+      ? `${PROMPTS[data.mode]}\n\nBook context (for tone reference only, do not repeat):\n${data.context}`
+      : PROMPTS[data.mode];
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "google/gemini-2.5-flash", messages }),
+    const output = await googleChat({
+      apiKey,
+      model: "gemini-2.5-flash",
+      system,
+      messages: [{ role: "user", content: data.text }],
     });
-    if (res.status === 429) throw new Error("AI is busy — try again in a moment.");
-    if (res.status === 402) throw new Error("AI credits exhausted.");
-    if (!res.ok) throw new Error(`AI error ${res.status}`);
-    const json = await res.json();
-    const output: string = json?.choices?.[0]?.message?.content ?? "";
     return { output: output.trim() };
   });

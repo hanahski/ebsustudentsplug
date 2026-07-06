@@ -163,47 +163,35 @@ export const plugAiChat = createServerFn({ method: "POST" })
     return d;
   })
   .handler(async ({ data, context }) => {
-    const apiKey = process.env.LOVABLE_API_KEY;
+    const apiKey = process.env.PLUG_AI_KEY || process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("AI is not configured");
 
     let siteCtx = "";
     try { siteCtx = await buildSiteContext(context.userId); }
     catch (e) { console.error("[plug-ai] context build failed", e); }
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: BASE_PROMPT },
-          ...(siteCtx ? [{ role: "system" as const, content: siteCtx }] : []),
-          ...data.messages,
-        ],
-      }),
-    });
-
-    if (res.status === 429) throw new Error("Plug AI is busy right now. Try again in a moment.");
-    if (res.status === 402) throw new Error("Plug AI credits exhausted. Please contact admin.");
-    if (!res.ok) {
-      const t = await res.text();
+    const { googleChat } = await import("./google-ai");
+    try {
+      const reply = await googleChat({
+        apiKey,
+        model: "gemini-2.5-flash",
+        system: BASE_PROMPT + (siteCtx ? `\n\n${siteCtx}` : ""),
+        messages: data.messages,
+      });
+      return { reply };
+    } catch (e: any) {
+      const msg = String(e?.message ?? e);
       try {
         const { data: admins } = await supabaseAdmin.from("user_roles").select("user_id").eq("role", "admin");
         for (const a of admins ?? []) {
           await supabaseAdmin.from("admin_ai_messages").insert({
             admin_user_id: a.user_id,
             kind: "plug_ai_error",
-            content: `⚠️ Plug AI failure (${res.status}) for user ${context.userId}: ${t.slice(0, 180)}`,
-            payload: { status: res.status, user_id: context.userId } as any,
+            content: `⚠️ Plug AI failure for user ${context.userId}: ${msg.slice(0, 180)}`,
+            payload: { user_id: context.userId } as any,
           });
         }
       } catch {}
-      throw new Error(`AI error ${res.status}: ${t.slice(0, 200)}`);
+      throw e;
     }
-    const json = await res.json();
-    const reply: string = json?.choices?.[0]?.message?.content ?? "";
-    return { reply };
   });

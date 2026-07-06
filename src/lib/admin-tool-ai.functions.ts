@@ -4,6 +4,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { AI_KEYS, googleChat } from "./google-ai";
 
 type Parsed = {
   host?: string;
@@ -31,8 +32,8 @@ export const aiParseToolSnippet = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!role) throw new Error("admin only");
 
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
+    const apiKey = AI_KEYS.tools();
+    if (!apiKey) throw new Error("TOOLS_AI_KEY missing");
 
     const actions = (data.actions ?? []).join(", ") || "any relevant endpoint";
     const prompt = `You parse RapidAPI integration snippets (cURL, fetch JS, C#, JSON config, plain URLs). Extract config for a Lovable admin "tool_overrides" record.
@@ -54,28 +55,13 @@ Snippet:
 ${data.snippet}
 """`;
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: "You return STRICT JSON only — no markdown, no commentary." },
-          { role: "user", content: prompt },
-        ],
-        response_format: { type: "json_object" },
-      }),
+    const content = await googleChat({
+      apiKey,
+      model: "gemini-2.5-flash",
+      system: "You return STRICT JSON only — no markdown, no commentary.",
+      messages: [{ role: "user", content: prompt }],
+      json: true,
     });
-
-    if (!res.ok) {
-      const body = await res.text();
-      throw new Error(`AI gateway ${res.status}: ${body.slice(0, 300)}`);
-    }
-    const payload = await res.json();
-    const content: string = payload?.choices?.[0]?.message?.content ?? "{}";
     let parsed: Parsed = {};
     try {
       parsed = JSON.parse(content);

@@ -1,5 +1,8 @@
+// Auto-generate a Nigerian novel listing.
+// Text uses TOOLS_AI_KEY (Book AI writing group); cover uses BOOK_IMAGE_AI_KEY.
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { AI_KEYS, googleChat, googleImage } from "@/lib/google-ai";
 
 const GENRES = [
   { genre: "campus romance", premise: "A first-year EBSU student falls for a final-year hostel rep amid a missing-textbook mystery." },
@@ -15,47 +18,34 @@ function slugify(s: string) {
 }
 
 async function generateCover(prompt: string): Promise<Buffer | null> {
-  const apiKey = process.env.LOVABLE_API_KEY!;
+  const key = AI_KEYS.bookImage();
+  if (!key) return null;
   try {
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image",
-        messages: [{ role: "user", content: `Photorealistic Nigerian novel book cover photograph, portrait 2:3 aspect ratio, cinematic moody lighting, real Nigerian people and setting, magazine-quality photography (NOT illustration, NOT cartoon, NOT 3D). Composition leaves clean negative space at top for a title. No text, no letters, no logos. Scene: ${prompt}` }],
-        modalities: ["image", "text"],
-      }),
+    const img = await googleImage({
+      apiKey: key,
+      prompt: `Photorealistic Nigerian novel book cover photograph, portrait 2:3 aspect ratio, cinematic moody lighting, real Nigerian people and setting, magazine-quality photography (NOT illustration, NOT cartoon, NOT 3D). Composition leaves clean negative space at top for a title. No text, no letters, no logos. Scene: ${prompt}`,
     });
-    if (!res.ok) return null;
-    const j = await res.json();
-    const b64 = j.data?.[0]?.b64_json;
-    return b64 ? Buffer.from(b64, "base64") : null;
+    return img ? Buffer.from(img.base64, "base64") : null;
   } catch {
     return null;
   }
 }
 
 async function generateOne() {
-  const apiKey = process.env.LOVABLE_API_KEY!;
+  const textKey = AI_KEYS.tools();
+  if (!textKey) throw new Error("TOOLS_AI_KEY missing");
   const pick = GENRES[Math.floor(Math.random() * GENRES.length)];
   const prompt = `Write a short Nigerian novel listing for a campus marketplace. Genre: ${pick.genre}. Premise: ${pick.premise}.
 Return STRICT JSON only (no markdown fences) with keys:
 {"title": string (max 70 chars, evocative), "description": string (250-350 words, 3 paragraphs, hook + setup + cliffhanger; mention real Nigerian places naturally), "price": integer in Naira between 1500 and 4500, "cover_prompt": string (one-sentence photo description, no text/letters)}`;
 
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
-      messages: [
-        { role: "system", content: "You are a Nigerian novelist. Respond with valid JSON only." },
-        { role: "user", content: prompt },
-      ],
-    }),
+  const raw = await googleChat({
+    apiKey: textKey,
+    model: "gemini-2.5-flash",
+    system: "You are a Nigerian novelist. Respond with valid JSON only.",
+    messages: [{ role: "user", content: prompt }],
+    json: true,
   });
-  if (!res.ok) throw new Error(`AI gateway ${res.status}: ${await res.text()}`);
-  const j = await res.json();
-  const raw = j.choices?.[0]?.message?.content ?? "";
   const clean = raw.replace(/```json|```/g, "").trim();
   const parsed = JSON.parse(clean) as { title: string; description: string; price: number; cover_prompt?: string };
 
@@ -72,7 +62,6 @@ Return STRICT JSON only (no markdown fences) with keys:
     }
   }
 
-  // Find an admin/system seller id (first admin user) for the listing
   const { data: adminRow } = await supabaseAdmin
     .from("user_roles").select("user_id").eq("role", "admin").limit(1).maybeSingle();
   const seller_id = adminRow?.user_id;
