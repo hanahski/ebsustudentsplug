@@ -23,17 +23,20 @@ function bankConfig() {
   return { url: url.replace(/\/+$/, ""), key };
 }
 
-function errorFor(status: number, body: string): Error {
-  if (status === 429) return new Error("AI is busy — try again in a moment.");
-  if (status === 402) return new Error("AI credits exhausted.");
+function errorFor(status: number, _body: string): Error {
+  if (status === 429)
+    return new Error("Hold on a moment — Plug AI is catching its breath. Try again in a few seconds.");
+  if (status === 402)
+    return new Error("Plug AI is topping up. Please try again shortly.");
   if (status === 401 || status === 403)
-    return new Error(`AI Bank rejected the request (${status}).`);
+    return new Error("Plug AI is reconnecting. Please try again in a moment.");
   if (status === 503)
-    return new Error(
-      "AI Bank has no healthy source right now. Check the Bank proxy source key/cooldown, then retry.",
-    );
-  return new Error(`AI Bank error ${status}: ${body.slice(0, 200)}`);
+    return new Error("Plug AI is warming up its brain. Please be patient — models will be back in a few moments.");
+  if (status >= 500)
+    return new Error("Plug AI hit a small hiccup. Please try again shortly.");
+  return new Error("Plug AI couldn't respond just now. Please try again in a moment.");
 }
+
 
 const CHAT_MODEL_ALIASES: Record<string, string> = {
   "gemini-2.5-flash": "google/gemini-2.5-flash",
