@@ -45,26 +45,15 @@ async function fetchPageText(url: string): Promise<string> {
 }
 
 async function aiJSON(prompt: string, system: string): Promise<any> {
-  const key = process.env.LOVABLE_API_KEY;
-  if (!key) throw new Error("LOVABLE_API_KEY missing");
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: prompt },
-      ],
-      response_format: { type: "json_object" },
-    }),
+  const key = AI_KEYS.news();
+  if (!key) throw new Error("NEWS_AI_KEY missing");
+  const txt = await googleChat({
+    apiKey: key,
+    model: "gemini-2.5-flash",
+    system,
+    messages: [{ role: "user", content: prompt }],
+    json: true,
   });
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`AI error ${res.status}: ${t.slice(0, 200)}`);
-  }
-  const j: any = await res.json();
-  const txt = j.choices?.[0]?.message?.content ?? "{}";
   try {
     return JSON.parse(txt);
   } catch {
