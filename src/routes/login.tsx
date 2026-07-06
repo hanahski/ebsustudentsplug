@@ -69,7 +69,7 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [jamb, setJamb] = useState("");
+
   const [busy, setBusy] = useState(false);
   const [bannerKey, setBannerKey] = useState(0);
   useEffect(() => { if (readPendingReferral()) setMode("signup"); }, []);
