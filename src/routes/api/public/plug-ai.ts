@@ -152,9 +152,11 @@ export const Route = createFileRoute("/api/public/plug-ai")({
           return json(200, { reply });
         } catch (e: any) {
           const msg = String(e?.message ?? "");
-          if (msg.includes("busy")) return json(429, { error: "Plug AI is busy. Try again in a moment." }, { "Retry-After": "10" });
+          if (msg.includes("busy") || msg.includes("catching") || msg.includes("hold on"))
+            return json(429, { error: "Hold on a moment — Plug AI is catching its breath. Try again in a few seconds." }, { "Retry-After": "10" });
           console.error("[plug-ai proxy] failed", e);
-          return json(502, { error: "AI upstream error" });
+          return json(502, { error: "Plug AI is warming up. Please be patient — it'll be back in a few moments." });
+
         }
       },
     },
