@@ -215,12 +215,21 @@ export function EbsuNewsPanel() {
 
       {/* Articles */}
       <div className="bg-card border rounded-3xl p-5 shadow-card">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
           <h2 className="font-bold font-display text-lg flex items-center gap-2"><Newspaper className="w-5 h-5" />Recent EBSU Articles</h2>
-          <Button size="sm" variant="ghost" onClick={() => qc.invalidateQueries({ queryKey: ["ebsu-news-articles"] })}>
-            <RotateCw className="w-3.5 h-3.5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={remakeAll} disabled={remakingAll || articles.length === 0}>
+              {remakingAll ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Wand2 className="w-3.5 h-3.5 mr-1" />}
+              Remake all
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => qc.invalidateQueries({ queryKey: ["ebsu-news-articles"] })}>
+              <RotateCw className="w-3.5 h-3.5" />
+            </Button>
+          </div>
         </div>
+        <p className="text-xs text-muted-foreground mb-3">
+          Remake rewrites the article body, summary, and cover image using the current news AI (fresh source scrape when sources are set, brand-watermarked cover). The slug and publish date stay the same.
+        </p>
         <ul className="space-y-2">
           {articles.map((a: any) => (
             <li key={a.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/40">
@@ -231,7 +240,15 @@ export function EbsuNewsPanel() {
                   {a.status} · {new Date(a.published_at).toLocaleString()}
                 </div>
               </div>
-              <button onClick={() => removeArticle(a.id)} className="text-muted-foreground hover:text-destructive p-1"><Trash2 className="w-4 h-4" /></button>
+              <button
+                onClick={() => remakeOne(a.id)}
+                disabled={remakingId === a.id || remakingAll}
+                className="text-muted-foreground hover:text-primary p-1 disabled:opacity-50"
+                title="Remake with updated AI"
+              >
+                {remakingId === a.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+              </button>
+              <button onClick={() => removeArticle(a.id)} disabled={remakingAll} className="text-muted-foreground hover:text-destructive p-1 disabled:opacity-50"><Trash2 className="w-4 h-4" /></button>
             </li>
           ))}
           {articles.length === 0 && <p className="text-sm text-muted-foreground">No EBSU articles yet — generate one above.</p>}
