@@ -116,34 +116,19 @@ function LoginPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        const jambNorm = jamb.replace(/\s+/g, "").toUpperCase();
-        if (!JAMB_REGEX.test(jambNorm)) {
-          throw new Error("Enter a valid JAMB number: 8 digits followed by 2 letters (e.g. 20123456AB).");
-        }
-        const avail = await checkJambAvailable({ data: { jamb: jambNorm } });
-        if (!avail.ok) throw new Error("Enter a valid JAMB number: 8 digits followed by 2 letters.");
-        if (!avail.available) {
-          throw new Error("This JAMB number is already registered to another account. One JAMB = one account.");
-        }
         const { data, error } = await supabase.auth.signUp({
           email, password,
-          options: { data: { display_name: name || email.split("@")[0], jamb_number: jambNorm } },
+          options: { data: { display_name: name || email.split("@")[0] } },
         });
         if (error) throw error;
-        // Stash for verify-otp flow (email-confirmation case) so we can claim
-        // it as soon as the user has a session.
-        try { sessionStorage.setItem(PENDING_JAMB_KEY, jambNorm); } catch {}
         if (!data.session) {
           toast.success("Account created. Check your email for a 6-digit code.", { duration: 6000 });
           await nav({ to: "/verify-otp", search: { email, redirect } });
           return;
         }
-        await claimJambNumber({ data: { jamb: jambNorm } }).catch((e) =>
-          console.error("[login] JAMB claim failed", e),
-        );
-        try { sessionStorage.removeItem(PENDING_JAMB_KEY); } catch {}
         await tryRedeemPendingReferral();
         toast.success("Welcome to StudentsPlug!");
+
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
