@@ -4,6 +4,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { AI_KEYS, googleChat } from "./google-ai";
 
 type Parsed = {
   host?: string;
