@@ -85,10 +85,9 @@ async function generateCover(
   prompt: string,
   refImageDataUrls: string[] = [],
 ): Promise<string | null> {
-  const key = process.env.LOVABLE_API_KEY;
+  const key = AI_KEYS.news();
   if (!key) return null;
   try {
-    // Always include the StudentsPlug brand logo so the AI blends it in.
     const { BRAND_LOGO_DATA_URL } = await import("./brand-logo-b64");
     const brandInstruction =
       "Create an editorial magazine-style cover photo for an Ebonyi State University (EBSU) news story. Bright, vibrant, real-world Nigerian university setting. " +
@@ -98,43 +97,14 @@ async function generateCover(
       "IMPORTANT BRANDING: place the supplied StudentsPlug logo (the SG upward-arrow mark) as a small, clean watermark in a corner of the image — keep it crisp, unaltered, and clearly visible but not overpowering. Do NOT invent other text, letters, taglines or logos anywhere else in the image. " +
       `Subject / story: ${prompt}`;
 
-    const content: any[] = [{ type: "text", text: brandInstruction }];
-    for (const u of refImageDataUrls.slice(0, 3)) {
-      content.push({ type: "image_url", image_url: { url: u } });
-    }
-    // Brand logo goes last so the model treats it as the overlay asset.
-    content.push({ type: "image_url", image_url: { url: BRAND_LOGO_DATA_URL } });
-
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image",
-        messages: [{ role: "user", content }],
-        modalities: ["image", "text"],
-      }),
-    });
-    if (!res.ok) {
-      console.error("cover gen http", res.status, await res.text().catch(() => ""));
-      return null;
-    }
-    const j: any = await res.json();
-    const parts = j.choices?.[0]?.message?.images ?? j.choices?.[0]?.message?.content;
-    let b64: string | undefined;
-    if (Array.isArray(parts)) {
-      const url: string | undefined = parts[0]?.image_url?.url ?? parts[0]?.url;
-      if (url?.startsWith("data:")) b64 = url.split(",")[1];
-    }
-    if (!b64 && typeof parts === "string") {
-      const m = parts.match(/data:image\/[a-z]+;base64,([A-Za-z0-9+/=]+)/);
-      if (m) b64 = m[1];
-    }
-    if (!b64) return null;
-    const buf = Buffer.from(b64, "base64");
+    const refs = [...refImageDataUrls.slice(0, 3), BRAND_LOGO_DATA_URL];
+    const img = await googleImage({ apiKey: key, prompt: brandInstruction, refImages: refs });
+    if (!img) return null;
+    const buf = Buffer.from(img.base64, "base64");
     const path = `ebsu-news/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.png`;
     const { error } = await supabaseAdmin.storage
       .from("post-images")
-      .upload(path, buf, { contentType: "image/png", upsert: false });
+      .upload(path, buf, { contentType: img.mimeType || "image/png", upsert: false });
     if (error) {
       console.error("cover upload err", error);
       return null;
