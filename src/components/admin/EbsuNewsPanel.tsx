@@ -9,12 +9,13 @@ import {
   deleteSource,
   generateEbsuNews,
   deleteNewsArticle,
+  regenerateEbsuNews,
 } from "@/lib/ebsu-news.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, Sparkles, Newspaper, ExternalLink, RotateCw } from "lucide-react";
+import { Loader2, Plus, Trash2, Sparkles, Newspaper, ExternalLink, RotateCw, Wand2 } from "lucide-react";
 
 export function EbsuNewsPanel() {
   const qc = useQueryClient();
