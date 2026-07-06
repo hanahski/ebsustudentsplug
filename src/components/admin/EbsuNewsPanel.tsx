@@ -107,6 +107,40 @@ export function EbsuNewsPanel() {
     qc.invalidateQueries({ queryKey: ["ebsu-news-articles"] });
   }
 
+  async function remakeOne(id: string) {
+    setRemakingId(id);
+    try {
+      await remakeArt({ data: { id } });
+      toast.success("Article remade with updated AI");
+      qc.invalidateQueries({ queryKey: ["ebsu-news-articles"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Remake failed");
+    } finally {
+      setRemakingId(null);
+    }
+  }
+
+  async function remakeAll() {
+    if (!articles.length) return;
+    if (!confirm(`Remake all ${articles.length} EBSU articles with the updated AI? This rewrites bodies and generates new cover images.`)) return;
+    setRemakingAll(true);
+    let ok = 0, fail = 0;
+    for (const a of articles as any[]) {
+      setRemakingId(a.id);
+      try {
+        await remakeArt({ data: { id: a.id } });
+        ok++;
+      } catch (e: any) {
+        fail++;
+        console.error("remake failed", a.id, e);
+      }
+    }
+    setRemakingId(null);
+    setRemakingAll(false);
+    qc.invalidateQueries({ queryKey: ["ebsu-news-articles"] });
+    toast[fail ? "warning" : "success"](`Remade ${ok}/${articles.length}${fail ? ` (${fail} failed)` : ""}`);
+  }
+
   return (
     <div className="space-y-5">
       {/* Composer */}
