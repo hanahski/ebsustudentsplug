@@ -28,22 +28,59 @@ function errorFor(status: number, body: string): Error {
   if (status === 402) return new Error("AI credits exhausted.");
   if (status === 401 || status === 403)
     return new Error(`AI Bank rejected the request (${status}).`);
-  if (status === 503) return new Error("All AI sources are down. Try again shortly.");
+  if (status === 503)
+    return new Error(
+      "AI Bank has no healthy source right now. Check the Bank proxy source key/cooldown, then retry.",
+    );
   return new Error(`AI Bank error ${status}: ${body.slice(0, 200)}`);
+}
+
+const CHAT_MODEL_ALIASES: Record<string, string> = {
+  "gemini-2.5-flash": "google/gemini-2.5-flash",
+  "gemini-2.5-pro": "google/gemini-2.5-pro",
+  "gemini-2.5-flash-lite": "google/gemini-2.5-flash-lite",
+  "gemini-3-flash-preview": "google/gemini-3-flash-preview",
+  "gpt-5": "openai/gpt-5",
+  "gpt-5-mini": "openai/gpt-5-mini",
+  "gpt-5-nano": "openai/gpt-5-nano",
+};
+
+function normalizeModel(model: string | undefined, fallback: string) {
+  const raw = (model || fallback).trim();
+  return CHAT_MODEL_ALIASES[raw] ?? raw;
+}
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function callBank(payload: Record<string, unknown>): Promise<any> {
   const { url, key } = bankConfig();
-  const res = await fetch(`${url}/api/public/bank`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Bank-Key": key,
-    },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) throw errorFor(res.status, await res.text().catch(() => ""));
-  return res.json();
+  let lastStatus = 0;
+  let lastBody = "";
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const res = await fetch(`${url}/api/public/bank`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Bank-Key": key,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (res.ok) return res.json();
+
+    lastStatus = res.status;
+    lastBody = await res.text().catch(() => "");
+
+    // Retry only transient Bank/proxy failures. Auth, credits, and validation
+    // errors should fail fast with the original status.
+    if (![429, 500, 502, 503, 504].includes(res.status) || attempt === 2) break;
+    await delay(400 * (attempt + 1));
+  }
+
+  throw errorFor(lastStatus, lastBody);
 }
 
 export async function googleChat(opts: {
@@ -53,7 +90,7 @@ export async function googleChat(opts: {
   messages: ChatMsg[];
   json?: boolean;
 }): Promise<string> {
-  const model = opts.model ?? "google/gemini-2.5-flash";
+  const model = normalizeModel(opts.model, "google/gemini-3-flash-preview");
   // OpenAI-compatible message shape (Lovable AI Gateway).
   const msgs: Array<{ role: string; content: string | Part[] }> = [];
   if (opts.system) msgs.push({ role: "system", content: opts.system });
@@ -83,7 +120,7 @@ export async function googleImage(opts: {
   refImages?: string[];
   model?: string;
 }): Promise<{ base64: string; mimeType: string } | null> {
-  const model = opts.model ?? "google/gemini-2.5-flash-image-preview";
+  const model = normalizeModel(opts.model, "google/gemini-2.5-flash-image-preview");
   const j = await callBank({
     kind: "image",
     model,
