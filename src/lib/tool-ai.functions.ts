@@ -2,6 +2,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { BUILTIN_AI_TOOLS, type SeedTool } from "@/data/aiToolsSeed";
+import { AI_KEYS, googleChat, googleImage } from "./google-ai";
 
 type ToolKind = "ai_prompt" | "ai_image" | "api_call";
 
