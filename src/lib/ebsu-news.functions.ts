@@ -380,6 +380,107 @@ export const deleteNewsArticle = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// ---------- REMAKE existing article with updated AI features ----------
+export const regenerateEbsuNews = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; extraInstruction?: string }) =>
+    z.object({ id: z.string().uuid(), extraInstruction: z.string().max(1000).optional() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: roles } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!roles) throw new Error("admin only");
+
+    const { data: art, error: loadErr } = await supabaseAdmin
+      .from("news_articles")
+      .select("id, title, summary, body, source_urls, image_url, status")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (loadErr) throw loadErr;
+    if (!art) throw new Error("article not found");
+
+    const savedUrls = Array.isArray(art.source_urls)
+      ? (art.source_urls as unknown[]).filter((u): u is string => typeof u === "string")
+      : [];
+
+    // Build a topic that pins the AI to the same story but lets it rewrite fully.
+    const originalNote = `REMAKE MODE: You are rewriting an existing EBSU Plug News article using the updated news AI. Keep the same underlying story, but produce a fresh, sharper, better-structured article. Do NOT copy sentences verbatim from the original body.
+
+Original headline: ${art.title}
+${art.summary ? `Original summary: ${art.summary}\n` : ""}Original body (reference only — rewrite, do not repeat):
+"""
+${String(art.body).slice(0, 5000)}
+"""
+${data.extraInstruction ? `\nEXTRA EDITOR INSTRUCTION:\n${data.extraInstruction}\n` : ""}`;
+
+    const scraped = savedUrls.length
+      ? (await Promise.all(savedUrls.map(async (u) => ({ url: u, text: await fetchPageText(u) })))).filter(
+          (s) => s.text.length > 200,
+        )
+      : [];
+
+    const sourcedRules = `ACCURACY RULES (non-negotiable):
+1. Use ONLY facts that appear verbatim in the supplied sources or the original article body. Do NOT invent dates, names, fees, deadlines, statistics, course codes, or quotes.
+2. If a key detail is missing or ambiguous, write the article without it — never guess.
+3. Do not fabricate quotes.
+4. List the source URLs you actually used in "sources_used".`;
+
+    const briefRules = `REMAKE-FROM-ORIGINAL MODE (no external sources fetched):
+1. Base the new article strictly on the original body supplied. Do not invent new facts.
+2. Improve structure, clarity, headings, and hook. Add "what this means for students" framing where natural.
+3. Leave "sources_used" as an empty array [].`;
+
+    const system = `You are the editor of "EBSU Plug News" — a sharp, student-first news desk covering Ebonyi State University. You are REMAKING an existing article to a higher standard using the updated AI features.
+
+${scraped.length > 0 ? sourcedRules : briefRules}
+
+BODY STYLE RULES (non-negotiable):
+- DO NOT mention, link to, name, or reference source websites, blogs, or publications anywhere in the body or summary. No inline URLs or footnote markers.
+- DO NOT include a "Sources" or "References" section — the site renders that automatically.
+- Write as ORIGINAL EBSU Plug News reporting, in your own words, fully self-contained.
+- Use ## subheadings, tight paragraphs, and end with a short "Bottom line" line.
+
+Return STRICT JSON:
+{
+  "title": "punchy headline under 80 chars",
+  "summary": "1-2 sentence hook under 200 chars",
+  "body": "full article in markdown",
+  "image_prompt": "short visual prompt for cover photo, no text or logos",
+  "sources_used": ["https://..."],
+  "skip": false
+}`;
+
+    const userPrompt = scraped.length
+      ? `${originalNote}\n\nFresh source scrapes (prefer these facts over the original body when they conflict):\n\n${scraped
+          .map((s, i) => `[${i + 1}] ${s.url}\n${s.text}`)
+          .join("\n\n---\n\n")}`
+      : originalNote;
+
+    const j = await aiJSON(userPrompt, system);
+    if (j.skip) throw new Error(`AI skipped remake: ${j.reason || "no content"}`);
+    if (!j.title || !j.body) throw new Error("AI returned incomplete article");
+
+    const imageUrl = await generateCover(j.image_prompt || j.title, []);
+
+    const { error: updErr } = await supabaseAdmin
+      .from("news_articles")
+      .update({
+        title: String(j.title).slice(0, 200),
+        summary: j.summary ? String(j.summary).slice(0, 300) : null,
+        body: String(j.body),
+        image_url: imageUrl ?? art.image_url,
+        source_urls: scraped.length ? scraped.map((s) => s.url) : savedUrls,
+      })
+      .eq("id", data.id);
+    if (updErr) throw updErr;
+
+    return { id: data.id, image_url: imageUrl ?? art.image_url };
+  });
+
 // internal helper for cron
 export async function _autoGenerateForCron() {
   const { data: saved } = await supabaseAdmin

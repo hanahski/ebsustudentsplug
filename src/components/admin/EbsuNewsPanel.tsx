@@ -9,12 +9,13 @@ import {
   deleteSource,
   generateEbsuNews,
   deleteNewsArticle,
+  regenerateEbsuNews,
 } from "@/lib/ebsu-news.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, Sparkles, Newspaper, ExternalLink, RotateCw } from "lucide-react";
+import { Loader2, Plus, Trash2, Sparkles, Newspaper, ExternalLink, RotateCw, Wand2 } from "lucide-react";
 
 export function EbsuNewsPanel() {
   const qc = useQueryClient();
@@ -23,6 +24,9 @@ export function EbsuNewsPanel() {
   const del = useServerFn(deleteSource);
   const gen = useServerFn(generateEbsuNews);
   const delArt = useServerFn(deleteNewsArticle);
+  const remakeArt = useServerFn(regenerateEbsuNews);
+  const [remakingId, setRemakingId] = useState<string | null>(null);
+  const [remakingAll, setRemakingAll] = useState(false);
 
   const { data: sources = [], isLoading: srcLoading } = useQuery({
     queryKey: ["ebsu-sources"],
@@ -103,6 +107,40 @@ export function EbsuNewsPanel() {
     qc.invalidateQueries({ queryKey: ["ebsu-news-articles"] });
   }
 
+  async function remakeOne(id: string) {
+    setRemakingId(id);
+    try {
+      await remakeArt({ data: { id } });
+      toast.success("Article remade with updated AI");
+      qc.invalidateQueries({ queryKey: ["ebsu-news-articles"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Remake failed");
+    } finally {
+      setRemakingId(null);
+    }
+  }
+
+  async function remakeAll() {
+    if (!articles.length) return;
+    if (!confirm(`Remake all ${articles.length} EBSU articles with the updated AI? This rewrites bodies and generates new cover images.`)) return;
+    setRemakingAll(true);
+    let ok = 0, fail = 0;
+    for (const a of articles as any[]) {
+      setRemakingId(a.id);
+      try {
+        await remakeArt({ data: { id: a.id } });
+        ok++;
+      } catch (e: any) {
+        fail++;
+        console.error("remake failed", a.id, e);
+      }
+    }
+    setRemakingId(null);
+    setRemakingAll(false);
+    qc.invalidateQueries({ queryKey: ["ebsu-news-articles"] });
+    toast[fail ? "warning" : "success"](`Remade ${ok}/${articles.length}${fail ? ` (${fail} failed)` : ""}`);
+  }
+
   return (
     <div className="space-y-5">
       {/* Composer */}
@@ -177,12 +215,21 @@ export function EbsuNewsPanel() {
 
       {/* Articles */}
       <div className="bg-card border rounded-3xl p-5 shadow-card">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
           <h2 className="font-bold font-display text-lg flex items-center gap-2"><Newspaper className="w-5 h-5" />Recent EBSU Articles</h2>
-          <Button size="sm" variant="ghost" onClick={() => qc.invalidateQueries({ queryKey: ["ebsu-news-articles"] })}>
-            <RotateCw className="w-3.5 h-3.5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={remakeAll} disabled={remakingAll || articles.length === 0}>
+              {remakingAll ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Wand2 className="w-3.5 h-3.5 mr-1" />}
+              Remake all
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => qc.invalidateQueries({ queryKey: ["ebsu-news-articles"] })}>
+              <RotateCw className="w-3.5 h-3.5" />
+            </Button>
+          </div>
         </div>
+        <p className="text-xs text-muted-foreground mb-3">
+          Remake rewrites the article body, summary, and cover image using the current news AI (fresh source scrape when sources are set, brand-watermarked cover). The slug and publish date stay the same.
+        </p>
         <ul className="space-y-2">
           {articles.map((a: any) => (
             <li key={a.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/40">
@@ -193,7 +240,15 @@ export function EbsuNewsPanel() {
                   {a.status} · {new Date(a.published_at).toLocaleString()}
                 </div>
               </div>
-              <button onClick={() => removeArticle(a.id)} className="text-muted-foreground hover:text-destructive p-1"><Trash2 className="w-4 h-4" /></button>
+              <button
+                onClick={() => remakeOne(a.id)}
+                disabled={remakingId === a.id || remakingAll}
+                className="text-muted-foreground hover:text-primary p-1 disabled:opacity-50"
+                title="Remake with updated AI"
+              >
+                {remakingId === a.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+              </button>
+              <button onClick={() => removeArticle(a.id)} disabled={remakingAll} className="text-muted-foreground hover:text-destructive p-1 disabled:opacity-50"><Trash2 className="w-4 h-4" /></button>
             </li>
           ))}
           {articles.length === 0 && <p className="text-sm text-muted-foreground">No EBSU articles yet — generate one above.</p>}
