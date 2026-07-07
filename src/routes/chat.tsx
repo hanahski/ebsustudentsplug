@@ -1506,6 +1506,7 @@ function PlugAiPane({ meId, onBack }: { meId: string; onBack: () => void }) {
     const imgs = pendingImages;
     setText("");
     setPendingImages([]);
+    try { playPlugSend(); } catch {}
     const userMsg: AiMsg = {
       id: `u-${Date.now()}`,
       role: "user",
