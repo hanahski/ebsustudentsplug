@@ -125,9 +125,47 @@ function ApplyBadgePage() {
           </div>
         </div>
 
+        {/* Explainer: every special badge, what it unlocks, and how to earn it */}
+        <div className="bg-card border rounded-2xl p-4 space-y-3">
+          <div>
+            <h2 className="font-bold font-display">All special badges</h2>
+            <p className="text-xs text-muted-foreground">Tap one to apply for it. Each badge unlocks different perks — admin approves after review.</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(Object.keys(BADGES) as BadgeKind[]).map((k) => {
+              const b = BADGES[k];
+              const B = b.icon;
+              const active = badge === k;
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setBadge(k)}
+                  className={`text-left rounded-2xl border p-3 transition ${active ? "border-primary ring-2 ring-primary/30 bg-primary/5" : "hover:border-primary/50"}`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`w-8 h-8 rounded-lg grid place-items-center bg-gradient-to-br ${b.tone} text-white`}>
+                      <B className="w-4 h-4" />
+                    </span>
+                    <span className="font-semibold text-sm">{b.label}</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mb-2">{b.blurb}</p>
+                  <div className="text-[11px] space-y-0.5">
+                    <p className="font-semibold text-foreground">What it unlocks:</p>
+                    <ul className="list-disc pl-4 text-muted-foreground space-y-0.5">
+                      {b.uses.slice(0, 3).map((u, i) => <li key={i}>{u}</li>)}
+                    </ul>
+                  </div>
+                  <p className="text-[11px] mt-2"><span className="font-semibold text-foreground">How to get it:</span> <span className="text-muted-foreground">{b.access}</span></p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <form onSubmit={submit} className="bg-card border rounded-2xl p-5 space-y-4">
           <div>
-            <Label>Which badge?</Label>
+            <Label>Applying for</Label>
             <Select value={badge} onValueChange={(v) => setBadge(v as BadgeKind)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -136,7 +174,18 @@ function ApplyBadgePage() {
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground mt-1">{BADGES[badge].blurb}</p>
+            <div className="mt-2 rounded-xl border bg-muted/30 p-3 text-xs space-y-1.5">
+              <p className="font-semibold text-foreground flex items-center gap-1.5">
+                <Icon className="w-3.5 h-3.5" /> {BADGES[badge].label} — {BADGES[badge].blurb}
+              </p>
+              <div>
+                <p className="font-semibold text-foreground">Perks you'll unlock:</p>
+                <ul className="list-disc pl-4 text-muted-foreground">
+                  {BADGES[badge].uses.map((u, i) => <li key={i}>{u}</li>)}
+                </ul>
+              </div>
+              <p><span className="font-semibold text-foreground">How to qualify:</span> <span className="text-muted-foreground">{BADGES[badge].access}</span></p>
+            </div>
           </div>
 
           <div>
