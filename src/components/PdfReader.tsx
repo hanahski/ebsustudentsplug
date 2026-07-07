@@ -1,7 +1,11 @@
 // Fullscreen, in-app PDF reader powered by pdf.js.
 // Renders one page at a time onto a canvas, supports zoom, page nav, fullscreen
 // toggle, keyboard shortcuts and a Download button.
+// The overlay is portaled to document.body so ancestor transforms (e.g. the
+// hover:-translate on book cards) cannot trap the fixed overlay or swallow the
+// Exit button click.
 import { useEffect, useRef, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import {
   X,
