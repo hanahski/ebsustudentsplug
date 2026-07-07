@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { Swords, ArrowLeft, ScanLine, Coins, Trophy, Shield, Zap } from "lucide-react";
+import { Swords, ArrowLeft, Coins, Trophy, Shield, Zap, Hash, Grid3x3, Dices, Puzzle, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
