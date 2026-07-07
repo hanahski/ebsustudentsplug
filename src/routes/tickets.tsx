@@ -12,9 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { encodePlugShare } from "@/components/PlugShareActions";
 import { toast } from "sonner";
-import { Ticket, Upload, QrCode, Lock, Loader2, Download, Megaphone } from "lucide-react";
-import QRCode from "qrcode";
-import { composeTicketImage, downloadTicketPdf } from "@/lib/ticket-composer";
+import { Ticket, Upload, QrCode, Lock, Loader2, Download, Megaphone, Eye, EyeOff, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { composeTicketImage, downloadTicketPdf, ticketFilename, composeVerifiedQr } from "@/lib/ticket-composer";
 import { getIsAdminUser } from "@/lib/admin-role";
 
 export const Route = createFileRoute("/tickets")({ component: TicketsPage });
