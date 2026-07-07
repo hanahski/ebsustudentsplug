@@ -66,10 +66,12 @@ function QrScanner() {
             const reason = (data as any)?.reason;
             const msg = reason === "not_found"
               ? "Invalid QR — this ticket is not in our system or the code is wrong."
-              : "Ticket could not be verified. Try again or contact the seller.";
+              : reason === "already_used"
+                ? `Ticket already used${(data as any)?.used_at ? ` at ${new Date((data as any).used_at).toLocaleString()}` : ""}. Entry denied.`
+                : "Ticket could not be verified. Try again or contact the seller.";
             setFailFlash(msg);
             toast.error(msg);
-            setTimeout(() => setFailFlash(null), 2200);
+            setTimeout(() => setFailFlash(null), 2600);
           }
         },
         () => {},
