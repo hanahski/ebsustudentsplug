@@ -1697,13 +1697,14 @@ function PlugAiPane({ meId, onBack }: { meId: string; onBack: () => void }) {
           e.preventDefault();
           void send();
         }}
-        className="border-t p-2 flex gap-2 bg-card items-center"
+        className="border-t p-2 flex gap-2 bg-card items-center relative
+          focus-within:shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--primary)_45%,transparent),0_0_24px_-8px_color-mix(in_oklab,var(--primary)_55%,transparent)]
+          transition-shadow"
       >
         <input
           ref={imgInputRef}
           type="file"
           accept="image/*"
-          
           className="hidden"
           onChange={(e) => { void pickImages(e.target.files); e.target.value = ""; }}
         />
@@ -1726,8 +1727,13 @@ function PlugAiPane({ meId, onBack }: { meId: string; onBack: () => void }) {
           enterKeyHint="send"
           disabled={thinking}
         />
-        <Button type="submit" disabled={(!text.trim() && pendingImages.length === 0) || thinking}>
-          <Send className="w-4 h-4" />
+        <Button
+          type="submit"
+          disabled={(!text.trim() && pendingImages.length === 0) || thinking}
+          className="relative overflow-hidden transition-transform active:scale-95 hover:scale-105
+            shadow-[0_0_16px_-4px_color-mix(in_oklab,var(--primary)_60%,transparent)]"
+        >
+          <Send className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
         </Button>
       </form>
     </div>
