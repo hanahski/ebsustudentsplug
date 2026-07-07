@@ -83,6 +83,7 @@ import { Route as GamesEightballRouteImport } from './routes/games.eightball'
 import { Route as FacultyIdRouteImport } from './routes/faculty.$id'
 import { Route as EarnCreditsWatchRouteImport } from './routes/earn-credits.watch'
 import { Route as EarnCreditsTournamentRouteImport } from './routes/earn-credits.tournament'
+import { Route as EarnCreditsBattleRouteImport } from './routes/earn-credits.battle'
 import { Route as DepartmentIdRouteImport } from './routes/department.$id'
 import { Route as CoursesIdRouteImport } from './routes/courses.$id'
 import { Route as CourseIdRouteImport } from './routes/course.$id'
@@ -493,6 +494,11 @@ const EarnCreditsTournamentRoute = EarnCreditsTournamentRouteImport.update({
   path: '/earn-credits/tournament',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EarnCreditsBattleRoute = EarnCreditsBattleRouteImport.update({
+  id: '/earn-credits/battle',
+  path: '/earn-credits/battle',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DepartmentIdRoute = DepartmentIdRouteImport.update({
   id: '/department/$id',
   path: '/department/$id',
@@ -569,9 +575,9 @@ const ToolsAiSlugRoute = ToolsAiSlugRouteImport.update({
   getParentRoute: () => ToolsRoute,
 } as any)
 const EarnCreditsBattleScanRoute = EarnCreditsBattleScanRouteImport.update({
-  id: '/earn-credits/battle/scan',
-  path: '/earn-credits/battle/scan',
-  getParentRoute: () => rootRouteImport,
+  id: '/scan',
+  path: '/scan',
+  getParentRoute: () => EarnCreditsBattleRoute,
 } as any)
 const CourseNameNameRoute = CourseNameNameRouteImport.update({
   id: '/course/name/$name',
@@ -625,9 +631,9 @@ const ApiNewsReadRoute = ApiNewsReadRouteImport.update({
 } as any)
 const EarnCreditsBattlePlayMatchIdRoute =
   EarnCreditsBattlePlayMatchIdRouteImport.update({
-    id: '/earn-credits/battle/play/$matchId',
-    path: '/earn-credits/battle/play/$matchId',
-    getParentRoute: () => rootRouteImport,
+    id: '/play/$matchId',
+    path: '/play/$matchId',
+    getParentRoute: () => EarnCreditsBattleRoute,
   } as any)
 const ApiPublicHooksSyncOpenstaxRoute =
   ApiPublicHooksSyncOpenstaxRouteImport.update({
@@ -746,6 +752,7 @@ export interface FileRoutesByFullPath {
   '/course/$id': typeof CourseIdRoute
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
+  '/earn-credits/battle': typeof EarnCreditsBattleRouteWithChildren
   '/earn-credits/tournament': typeof EarnCreditsTournamentRoute
   '/earn-credits/watch': typeof EarnCreditsWatchRoute
   '/faculty/$id': typeof FacultyIdRoute
@@ -859,6 +866,7 @@ export interface FileRoutesByTo {
   '/course/$id': typeof CourseIdRoute
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
+  '/earn-credits/battle': typeof EarnCreditsBattleRouteWithChildren
   '/earn-credits/tournament': typeof EarnCreditsTournamentRoute
   '/earn-credits/watch': typeof EarnCreditsWatchRoute
   '/faculty/$id': typeof FacultyIdRoute
@@ -975,6 +983,7 @@ export interface FileRoutesById {
   '/course/$id': typeof CourseIdRoute
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
+  '/earn-credits/battle': typeof EarnCreditsBattleRouteWithChildren
   '/earn-credits/tournament': typeof EarnCreditsTournamentRoute
   '/earn-credits/watch': typeof EarnCreditsWatchRoute
   '/faculty/$id': typeof FacultyIdRoute
@@ -1092,6 +1101,7 @@ export interface FileRouteTypes {
     | '/course/$id'
     | '/courses/$id'
     | '/department/$id'
+    | '/earn-credits/battle'
     | '/earn-credits/tournament'
     | '/earn-credits/watch'
     | '/faculty/$id'
@@ -1205,6 +1215,7 @@ export interface FileRouteTypes {
     | '/course/$id'
     | '/courses/$id'
     | '/department/$id'
+    | '/earn-credits/battle'
     | '/earn-credits/tournament'
     | '/earn-credits/watch'
     | '/faculty/$id'
@@ -1320,6 +1331,7 @@ export interface FileRouteTypes {
     | '/course/$id'
     | '/courses/$id'
     | '/department/$id'
+    | '/earn-credits/battle'
     | '/earn-credits/tournament'
     | '/earn-credits/watch'
     | '/faculty/$id'
@@ -1436,6 +1448,7 @@ export interface RootRouteChildren {
   CourseIdRoute: typeof CourseIdRoute
   CoursesIdRoute: typeof CoursesIdRoute
   DepartmentIdRoute: typeof DepartmentIdRoute
+  EarnCreditsBattleRoute: typeof EarnCreditsBattleRouteWithChildren
   EarnCreditsTournamentRoute: typeof EarnCreditsTournamentRoute
   EarnCreditsWatchRoute: typeof EarnCreditsWatchRoute
   FacultyIdRoute: typeof FacultyIdRoute
@@ -1465,7 +1478,6 @@ export interface RootRouteChildren {
   BooksPreviewTokenRoute: typeof BooksPreviewTokenRoute
   BooksReadIdRoute: typeof BooksReadIdRoute
   CourseNameNameRoute: typeof CourseNameNameRoute
-  EarnCreditsBattleScanRoute: typeof EarnCreditsBattleScanRoute
   ApiPublicHooksAdminAiPulseRoute: typeof ApiPublicHooksAdminAiPulseRoute
   ApiPublicHooksAdminResetPasswordRoute: typeof ApiPublicHooksAdminResetPasswordRoute
   ApiPublicHooksAutoEbsuNewsRoute: typeof ApiPublicHooksAutoEbsuNewsRoute
@@ -1478,7 +1490,6 @@ export interface RootRouteChildren {
   ApiPublicHooksSyncLibrarySourcesRoute: typeof ApiPublicHooksSyncLibrarySourcesRoute
   ApiPublicHooksSyncObookoRoute: typeof ApiPublicHooksSyncObookoRoute
   ApiPublicHooksSyncOpenstaxRoute: typeof ApiPublicHooksSyncOpenstaxRoute
-  EarnCreditsBattlePlayMatchIdRoute: typeof EarnCreditsBattlePlayMatchIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2001,6 +2012,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EarnCreditsTournamentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/earn-credits/battle': {
+      id: '/earn-credits/battle'
+      path: '/earn-credits/battle'
+      fullPath: '/earn-credits/battle'
+      preLoaderRoute: typeof EarnCreditsBattleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/department/$id': {
       id: '/department/$id'
       path: '/department/$id'
@@ -2108,10 +2126,10 @@ declare module '@tanstack/react-router' {
     }
     '/earn-credits/battle/scan': {
       id: '/earn-credits/battle/scan'
-      path: '/earn-credits/battle/scan'
+      path: '/scan'
       fullPath: '/earn-credits/battle/scan'
       preLoaderRoute: typeof EarnCreditsBattleScanRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof EarnCreditsBattleRoute
     }
     '/course/name/$name': {
       id: '/course/name/$name'
@@ -2185,10 +2203,10 @@ declare module '@tanstack/react-router' {
     }
     '/earn-credits/battle/play/$matchId': {
       id: '/earn-credits/battle/play/$matchId'
-      path: '/earn-credits/battle/play/$matchId'
+      path: '/play/$matchId'
       fullPath: '/earn-credits/battle/play/$matchId'
       preLoaderRoute: typeof EarnCreditsBattlePlayMatchIdRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof EarnCreditsBattleRoute
     }
     '/api/public/hooks/sync-openstax': {
       id: '/api/public/hooks/sync-openstax'
@@ -2384,6 +2402,19 @@ const BooksComposerRouteWithChildren = BooksComposerRoute._addFileChildren(
   BooksComposerRouteChildren,
 )
 
+interface EarnCreditsBattleRouteChildren {
+  EarnCreditsBattleScanRoute: typeof EarnCreditsBattleScanRoute
+  EarnCreditsBattlePlayMatchIdRoute: typeof EarnCreditsBattlePlayMatchIdRoute
+}
+
+const EarnCreditsBattleRouteChildren: EarnCreditsBattleRouteChildren = {
+  EarnCreditsBattleScanRoute: EarnCreditsBattleScanRoute,
+  EarnCreditsBattlePlayMatchIdRoute: EarnCreditsBattlePlayMatchIdRoute,
+}
+
+const EarnCreditsBattleRouteWithChildren =
+  EarnCreditsBattleRoute._addFileChildren(EarnCreditsBattleRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
@@ -2428,6 +2459,7 @@ const rootRouteChildren: RootRouteChildren = {
   CourseIdRoute: CourseIdRoute,
   CoursesIdRoute: CoursesIdRoute,
   DepartmentIdRoute: DepartmentIdRoute,
+  EarnCreditsBattleRoute: EarnCreditsBattleRouteWithChildren,
   EarnCreditsTournamentRoute: EarnCreditsTournamentRoute,
   EarnCreditsWatchRoute: EarnCreditsWatchRoute,
   FacultyIdRoute: FacultyIdRoute,
@@ -2457,7 +2489,6 @@ const rootRouteChildren: RootRouteChildren = {
   BooksPreviewTokenRoute: BooksPreviewTokenRoute,
   BooksReadIdRoute: BooksReadIdRoute,
   CourseNameNameRoute: CourseNameNameRoute,
-  EarnCreditsBattleScanRoute: EarnCreditsBattleScanRoute,
   ApiPublicHooksAdminAiPulseRoute: ApiPublicHooksAdminAiPulseRoute,
   ApiPublicHooksAdminResetPasswordRoute: ApiPublicHooksAdminResetPasswordRoute,
   ApiPublicHooksAutoEbsuNewsRoute: ApiPublicHooksAutoEbsuNewsRoute,
@@ -2470,7 +2501,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksSyncLibrarySourcesRoute: ApiPublicHooksSyncLibrarySourcesRoute,
   ApiPublicHooksSyncObookoRoute: ApiPublicHooksSyncObookoRoute,
   ApiPublicHooksSyncOpenstaxRoute: ApiPublicHooksSyncOpenstaxRoute,
-  EarnCreditsBattlePlayMatchIdRoute: EarnCreditsBattlePlayMatchIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
