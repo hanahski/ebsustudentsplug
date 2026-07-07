@@ -7,7 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ArrowLeft, Ticket as TicketIcon, ShoppingCart, CheckCircle2, Download, Loader2 } from "lucide-react";
-import { composeTicketImage, downloadTicketPdf } from "@/lib/ticket-composer";
+import { composeTicketImage, downloadTicketPdf, ticketFilename } from "@/lib/ticket-composer";
 
 export const Route = createFileRoute("/tickets/$id")({ component: TicketDetail });
 
