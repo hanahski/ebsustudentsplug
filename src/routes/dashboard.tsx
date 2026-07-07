@@ -200,8 +200,15 @@ function DashboardPage() {
             desc={payout?.account_number ? "Update your bank account" : "Add before requesting cash"}
             tone="from-amber-500 to-orange-600"
             onClick={() => setPayoutOpen(true)}
+          <ActionCard
+            icon={ShieldCheck}
+            title="Special badges"
+            desc="See all badges, perks & how to apply"
+            tone="from-violet-500 to-indigo-600"
+            to="/apply-badge"
           />
         </div>
+
 
         <div className="rounded-2xl border bg-muted/30 p-4 text-xs text-muted-foreground space-y-1.5">
           <div className="font-semibold text-foreground text-sm">How credits & naira work</div>
