@@ -149,10 +149,8 @@ function WatchEarnPage() {
 
     // Safety timer — if VAST never responds within 8s, fall back cleanly.
     const bootTimeout = window.setTimeout(() => {
-      if (phase === "holding" || videoBooting) {
-        // ad kept us hanging — give the user the credit path anyway
-        setVideoBooting(false);
-      }
+      // if the VAST callbacks never fire, unstick the "loading ad…" overlay
+      setVideoBooting(false);
     }, 8000);
 
     try {
