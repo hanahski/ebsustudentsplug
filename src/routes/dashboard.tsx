@@ -24,7 +24,7 @@ const NAIRA_PER_CREDIT_SELL = 1 / CREDITS_PER_NAIRA_SELL; // ≈ ₦0.333
 const CREDITS_PER_NAIRA_BUY = 2; // ₦1 buys 2 credits
 const WITHDRAWAL_FEE_PCT = 0.10;
 const WITHDRAWAL_FEE_FLAT = 150;
-const MIN_SWAP_CREDITS = 900; // ~₦300 gross, so payout is meaningful after fees
+const MIN_SWAP_CREDITS = 30_000; // ₦10,000 gross at 3 credits = ₦1
 
 const BUY_PACKAGES: Array<{ naira: number; credits: number; label?: string }> = [
   { naira: 1150, credits: 2300, label: "Starter" },

@@ -14,11 +14,59 @@ import { Star, ShieldCheck, Sparkles, Plug, ArrowLeft, Clock3, CheckCircle2, XCi
 
 type BadgeKind = "star" | "legit" | "sure_plug" | "verified";
 
-const BADGES: Record<BadgeKind, { label: string; icon: typeof Star; blurb: string }> = {
-  star:      { label: "Star",            icon: Star,        blurb: "Highlighted member badge. Required (with Authentication) to sell tickets." },
-  legit:     { label: "Legit",           icon: ShieldCheck, blurb: "Trusted contributor — vouched by the community." },
-  sure_plug: { label: "Sure Plug",       icon: Plug,        blurb: "Professional plug, verified reliable seller." },
-  verified:  { label: "Authentication",  icon: Sparkles,    blurb: "Official EBSU student / staff authentication badge." },
+const BADGES: Record<
+  BadgeKind,
+  { label: string; icon: typeof Star; blurb: string; uses: string[]; access: string; tone: string }
+> = {
+  verified: {
+    label: "Authentication",
+    icon: Sparkles,
+    blurb: "Official EBSU student / staff authentication badge.",
+    uses: [
+      "Blue check next to your name across the app",
+      "Required (with Star) to sell event tickets",
+      "Higher trust score on your posts & market listings",
+      "Priority in search & department pages",
+    ],
+    access: "Submit your EBSU registration number and a short reason. Admin verifies you're a real student/staff before approving.",
+    tone: "from-sky-500 to-indigo-600",
+  },
+  star: {
+    label: "Star",
+    icon: Star,
+    blurb: "Highlighted member badge for active contributors.",
+    uses: [
+      "Gold star next to your name",
+      "Required (with Authentication) to sell event tickets",
+      "Featured on department leaderboards",
+    ],
+    access: "Be consistently active — post, comment, help others. Then apply with examples of your contribution.",
+    tone: "from-amber-500 to-orange-600",
+  },
+  legit: {
+    label: "Legit",
+    icon: ShieldCheck,
+    blurb: "Trusted contributor — vouched by the community.",
+    uses: [
+      "Green shield badge signals safe to deal with",
+      "Buyers see 'Legit' tag on your market listings",
+      "Fewer friction checks when creating posts",
+    ],
+    access: "Have a clean record, positive feedback, and at least a few completed transactions or approved posts.",
+    tone: "from-emerald-500 to-teal-600",
+  },
+  sure_plug: {
+    label: "Sure Plug",
+    icon: Plug,
+    blurb: "Professional plug — verified reliable seller.",
+    uses: [
+      "Purple plug badge — top-tier seller status",
+      "Your listings pinned higher in the marketplace",
+      "Eligible for the Sure Plug directory & recommendations",
+    ],
+    access: "For serious sellers with proven track record. Provide business details, contact, and sample listings.",
+    tone: "from-fuchsia-500 to-purple-600",
+  },
 };
 
 export const Route = createFileRoute("/apply-badge")({
