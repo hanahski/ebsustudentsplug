@@ -530,6 +530,15 @@ function ReadBookPage() {
           </p>
         </DialogContent>
       </Dialog>
+
+      {pdfReaderOpen && cachedPdfUrl && book && (
+        <PdfReader
+          url={cachedPdfUrl}
+          title={book.title}
+          downloadName={book.title}
+          onClose={() => setPdfReaderOpen(false)}
+        />
+      )}
     </AppShell>
   );
 }
