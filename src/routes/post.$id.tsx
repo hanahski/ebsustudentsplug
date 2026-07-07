@@ -164,22 +164,30 @@ function PostPage() {
           </div>
         ) : (
           <>
-            {post.body && (
-              post.post_type === "past_question" ? (
-                <PastQuestionArticle
-                  note={{
-                    title: post.title,
-                    body: post.body,
-                    created_at: post.created_at,
-                    course: post.course ? { code: post.course.code, title: post.course.title } : null,
-                    faculty: null,
-                    department: null,
-                  }}
-                />
-              ) : (
-                <MathText>{post.body}</MathText>
-              )
-            )}
+            {post.body && (() => {
+              const { share, body: displayBody } = extractPlugShare(post.body);
+              return (
+                <>
+                  {displayBody && (
+                    post.post_type === "past_question" ? (
+                      <PastQuestionArticle
+                        note={{
+                          title: post.title,
+                          body: displayBody,
+                          created_at: post.created_at,
+                          course: post.course ? { code: post.course.code, title: post.course.title } : null,
+                          faculty: null,
+                          department: null,
+                        }}
+                      />
+                    ) : (
+                      <MathText>{displayBody}</MathText>
+                    )
+                  )}
+                  {share && <PlugShareActions share={share} authorLabel={post.author?.display_name} />}
+                </>
+              );
+            })()}
 
             {(post.media_url || post.link_url) && (
               <div className="mt-6 space-y-4">
