@@ -263,7 +263,7 @@ function Catalogue() {
                           {name}
                         </div>
                         <div className="text-[11px] text-muted-foreground">
-                          Programme · EBSU
+                          {mode === "courses" ? "Course · EBSU" : "Department · EBSU"}
                         </div>
                       </div>
                       <svg
