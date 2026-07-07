@@ -2,16 +2,67 @@
 // holder name and a footer bar, like a real printed ticket.
 import QRCode from "qrcode";
 
+export function ticketFilename(title: string, buyerIndex?: number | null): string {
+  const slug = (title || "ticket")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48) || "ticket";
+  const suffix = buyerIndex && buyerIndex > 0 ? `-buyer-${buyerIndex}` : "";
+  return `${slug}${suffix}.pdf`;
+}
+
+/** Renders a QR with a Sure Plug "verified" badge in the centre. */
+export async function composeVerifiedQr(qrToken: string, size = 320): Promise<string> {
+  const dataUrl = await QRCode.toDataURL(`SP-TICKET:${qrToken}`, {
+    width: size,
+    margin: 1,
+    errorCorrectionLevel: "H",
+    color: { dark: "#0a0a0a", light: "#ffffff" },
+  });
+  const qrImg = await loadImage(dataUrl);
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(qrImg, 0, 0, size, size);
+  drawVerifiedBadge(ctx, size / 2, size / 2, size * 0.16);
+  return canvas.toDataURL("image/png");
+}
+
+function drawVerifiedBadge(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + 6, 0, Math.PI * 2);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+  const g = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
+  g.addColorStop(0, "#2563eb");
+  g.addColorStop(1, "#7c3aed");
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = Math.max(2, r * 0.22);
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  ctx.moveTo(cx - r * 0.42, cy + r * 0.02);
+  ctx.lineTo(cx - r * 0.08, cy + r * 0.38);
+  ctx.lineTo(cx + r * 0.5, cy - r * 0.35);
+  ctx.stroke();
+}
+
 export async function composeTicketImage(opts: {
   photoUrl: string;
   qrToken: string;
   title: string;
   holder: string;
+  buyerIndex?: number | null;
 }): Promise<string> {
-  const { photoUrl, qrToken, title, holder } = opts;
+  const { photoUrl, qrToken, title, holder, buyerIndex } = opts;
   const img = await loadImage(photoUrl);
 
-  // Target width 1200, keep aspect; add 200px footer bar.
   const W = 1200;
   const scale = W / img.width;
   const H = Math.round(img.height * scale);
@@ -25,7 +76,6 @@ export async function composeTicketImage(opts: {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(img, 0, 0, W, H);
 
-  // QR card in bottom-right of the photo
   const qrSize = 260;
   const pad = 20;
   const qrCard = qrSize + pad * 2;
@@ -35,11 +85,10 @@ export async function composeTicketImage(opts: {
   ctx.fillStyle = "rgba(255,255,255,0.96)";
   ctx.fill();
 
-  const qrDataUrl = await QRCode.toDataURL(`SP-TICKET:${qrToken}`, { width: qrSize, margin: 0, color: { dark: "#0a0a0a", light: "#ffffff" } });
-  const qrImg = await loadImage(qrDataUrl);
+  const verifiedQr = await composeVerifiedQr(qrToken, qrSize);
+  const qrImg = await loadImage(verifiedQr);
   ctx.drawImage(qrImg, cardX + pad, cardY + pad, qrSize, qrSize);
 
-  // Footer strip
   const grad = ctx.createLinearGradient(0, H, W, H + footer);
   grad.addColorStop(0, "#6d28d9");
   grad.addColorStop(1, "#db2777");
@@ -53,10 +102,12 @@ export async function composeTicketImage(opts: {
 
   ctx.font = "30px system-ui, sans-serif";
   ctx.fillStyle = "rgba(255,255,255,0.92)";
-  ctx.fillText(`Holder: ${truncate(holder, 32)}`, 40, H + 108);
+  const holderLabel = buyerIndex && buyerIndex > 0
+    ? `Buyer #${buyerIndex} · ${truncate(holder, 28)}`
+    : `Holder: ${truncate(holder, 32)}`;
+  ctx.fillText(holderLabel, 40, H + 108);
   ctx.fillText("Scan with Sure Plug · Ticket QR Scanner", 40, H + 154);
 
-  // bar code style ticks across the bottom edge
   const tickY = H + footer - 24;
   ctx.fillStyle = "rgba(255,255,255,0.85)";
   for (let x = 40, i = 0; x < W - 40; x += 8, i++) {
