@@ -35,7 +35,9 @@ import { formatDistanceToNow } from "date-fns";
 import { getOrCreateDmThread } from "@/lib/dm";
 import { CampusLocationView } from "@/components/CampusLocationView";
 import { plugAiChat } from "@/lib/plug-ai.functions";
-import { Sparkles, ImagePlus } from "lucide-react";
+import { ImagePlus } from "lucide-react";
+import { PlugAiAvatar } from "@/components/PlugAiAvatar";
+import { GeneratingLoader } from "@/components/ui/GeneratingLoader";
 import { useServerFn } from "@tanstack/react-start";
 import { RichText } from "@/components/RichText";
 import { playNewMessageTone } from "@/lib/sounds";
@@ -507,8 +509,8 @@ function DmsView({ meId, activeThread, initialNewGroup, initialGroupName }: { me
               activeThread === PLUG_AI_THREAD_ID ? "bg-muted" : ""
             }`}
           >
-            <div className="w-[42px] h-[42px] rounded-full bg-gradient-to-br from-primary via-primary to-accent text-primary-foreground flex items-center justify-center shrink-0 shadow-glow">
-              <Sparkles className="w-5 h-5" />
+            <div className="shrink-0">
+              <PlugAiAvatar size={42} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
@@ -1565,8 +1567,8 @@ function PlugAiPane({ meId, onBack }: { meId: string; onBack: () => void }) {
         <button onClick={onBack} className="md:hidden p-1 -ml-1 rounded hover:bg-muted">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary via-primary to-accent text-primary-foreground flex items-center justify-center shrink-0 shadow-glow">
-          <Sparkles className="w-5 h-5" />
+        <div className="shrink-0">
+          <PlugAiAvatar size={36} pulsing />
         </div>
         <div className="min-w-0 flex-1">
           <div className="font-semibold text-sm truncate flex items-center gap-1.5">
@@ -1584,13 +1586,20 @@ function PlugAiPane({ meId, onBack }: { meId: string; onBack: () => void }) {
         )}
       </header>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-muted/30 p-3 space-y-2">
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto p-3 space-y-2 relative"
+        style={{
+          background:
+            "radial-gradient(120% 60% at 50% 0%, color-mix(in oklab, var(--primary) 10%, transparent) 0%, transparent 60%), radial-gradient(80% 50% at 100% 100%, color-mix(in oklab, var(--accent) 10%, transparent) 0%, transparent 55%), var(--muted, transparent)",
+        }}
+      >
         {msgs.length === 0 && (
           <div className="text-center py-8 px-4">
-            <Sparkles className="w-10 h-10 mx-auto text-primary mb-2" />
+            <div className="flex justify-center mb-3"><PlugAiAvatar size={64} pulsing /></div>
             <h3 className="font-display font-bold text-lg">Hi, I'm Plug AI 👋</h3>
             <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-              Ask me anything — homework, code, exam prep, essays, life advice. Attach up to 25 images and I'll read them too.
+              Ask me anything — homework, code, exam prep, essays, life advice. I can also read images you attach.
             </p>
             <div className="flex flex-wrap gap-2 justify-center mt-4">
               {[
@@ -1615,8 +1624,8 @@ function PlugAiPane({ meId, onBack }: { meId: string; onBack: () => void }) {
           return (
             <div key={m.id} className={`flex gap-2 ${mine ? "justify-end" : "justify-start"}`}>
               {!mine && (
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary via-primary to-accent text-primary-foreground flex items-center justify-center shrink-0 mt-auto">
-                  <Sparkles className="w-3.5 h-3.5" />
+                <div className="shrink-0 mt-auto">
+                  <PlugAiAvatar size={28} />
                 </div>
               )}
               <div className="max-w-[82%] space-y-1.5">
@@ -1644,15 +1653,11 @@ function PlugAiPane({ meId, onBack }: { meId: string; onBack: () => void }) {
         })}
         {thinking && (
           <div className="flex gap-2 justify-start">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary via-primary to-accent text-primary-foreground flex items-center justify-center shrink-0 mt-auto">
-              <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+            <div className="shrink-0 mt-auto">
+              <PlugAiAvatar size={28} pulsing />
             </div>
-            <div className="px-3 py-2 rounded-2xl bg-card border rounded-bl-sm">
-              <span className="inline-flex gap-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse [animation-delay:150ms]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse [animation-delay:300ms]" />
-              </span>
+            <div className="px-3 py-2 rounded-2xl bg-card border rounded-bl-sm shadow-[0_0_20px_-6px_color-mix(in_oklab,var(--primary)_50%,transparent)]">
+              <GeneratingLoader label="Thinking" />
             </div>
           </div>
         )}
