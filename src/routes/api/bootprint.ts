@@ -27,7 +27,7 @@ export const Route = createFileRoute("/api/bootprint")({
         const imagePath = url.searchParams.get("image");
         if (imagePath) {
           // Only allow paths like "mars/4.png" — no protocol, no traversal.
-          if (!/^[a-z0-9_-]+\/[a-z0-9_.-]+\.(png|jpg|jpeg|webp)$/i.test(imagePath)) {
+          if (!/^[a-z0-9/_.-]+\.(png|jpg|jpeg|webp)$/i.test(imagePath) || imagePath.includes("..")) {
             return json({ error: "Invalid image path" }, 400);
           }
           try {

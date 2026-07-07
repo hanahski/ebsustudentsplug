@@ -186,7 +186,9 @@ function ReadBookPage() {
   // The moment a user owns a non-Gutenberg book, mirror to Cloud and open the reader.
   // 45-second client timeout so the UI never stays stuck on "Preparing…".
   useEffect(() => {
-    if (!book || !owned || !shouldCachePdf || cachedPdfUrl) return;
+    // Skip cloud cache entirely when we already have a direct PDF URL — the
+    // in-app reader can load it straight from the source (openstax, libretexts…).
+    if (!book || !owned || !shouldCachePdf || cachedPdfUrl || detected.pdfUrl) return;
     if (preparingBookId.current === book.id) return;
     preparingBookId.current = book.id;
     let cancelled = false;
