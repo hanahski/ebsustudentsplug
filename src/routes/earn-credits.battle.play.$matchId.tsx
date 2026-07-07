@@ -4,7 +4,6 @@ import { ArrowLeft, Trophy, Coins, Loader2, X, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getDeviceHash } from "@/lib/device-hash";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -101,27 +100,6 @@ function PlayPage() {
 
   const myTurn = m?.status === "active" && m.current_turn === uid;
 
-  async function respond(accept: boolean) {
-    if (!m) return;
-    setBusy(true);
-    try {
-      const { error } = await supabase.rpc("battle_respond", {
-        _match_id: matchId,
-        _accept: accept,
-        _device_hash: getDeviceHash(),
-      });
-      if (error) throw error;
-      if (!accept) {
-        toast("Challenge declined");
-        nav({ to: "/earn-credits/battle" });
-      }
-    } catch (e: any) {
-      toast.error(String(e?.message ?? e));
-    } finally {
-      setBusy(false);
-    }
-  }
-
   async function pickSide(choice: "heads" | "tails") {
     setBusy(true);
     try {
@@ -206,31 +184,15 @@ function PlayPage() {
           />
         </div>
 
-        {/* Stage: pending challenge */}
+        {/* Stage: waiting queue */}
         {m.status === "pending" && (
           <div className="bg-card border rounded-2xl p-6 text-center space-y-4">
-            {isB ? (
-              <>
-                <h2 className="font-bold font-display text-lg">
-                  ⚔️ Challenge from {profiles[m.player_a]?.display_name || "a player"}
-                </h2>
-                <p className="text-sm text-muted-foreground">Stake: {m.stake} PC each. Winner takes {m.stake * 2}.</p>
-                <div className="flex gap-2 justify-center">
-                  <Button disabled={busy} onClick={() => respond(true)}>Accept</Button>
-                  <Button variant="outline" disabled={busy} onClick={() => respond(false)}>Decline</Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-                <p className="text-sm text-muted-foreground">
-                  {m.mode === "challenge"
-                    ? "Waiting for " + opponentName + " to accept…"
-                    : "Waiting for an opponent to join…"}
-                </p>
-                <Button variant="outline" size="sm" onClick={cancel}>Cancel</Button>
-              </>
-            )}
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+            <h2 className="font-bold font-display text-lg">Scanning for battle…</h2>
+            <p className="text-sm text-muted-foreground">
+              You are in the random queue. Once another player is selected, coin flip opens automatically.
+            </p>
+            <Button variant="outline" size="sm" onClick={cancel}>Cancel scan</Button>
           </div>
         )}
 
@@ -238,11 +200,11 @@ function PlayPage() {
         {m.status === "coin_flip" && (
           <div className="bg-card border rounded-2xl p-6 text-center space-y-4">
             <h2 className="font-bold font-display">Coin flip — pick a side</h2>
-            <div className="mx-auto w-28 h-28 relative">
+            <div className="mx-auto w-28 h-28 relative perspective-1000">
               <div
                 className={cn(
-                  "w-full h-full rounded-full bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-700 border-4 border-amber-200 shadow-glow flex items-center justify-center text-2xl font-black text-amber-900",
-                  flipping && "animate-spin",
+                  "w-full h-full rounded-full bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-700 border-4 border-amber-200 shadow-glow flex items-center justify-center text-2xl font-black text-amber-900 transition-transform duration-700",
+                  flipping && "animate-[spin_0.7s_linear_2]",
                 )}
               >
                 PC
@@ -276,7 +238,7 @@ function PlayPage() {
               </div>
             )}
 
-            <div className="mx-auto grid grid-cols-3 gap-2 max-w-xs relative">
+            <div className="mx-auto grid grid-cols-3 gap-2 max-w-xs relative rounded-3xl bg-gradient-to-br from-primary/15 via-card to-red-500/10 p-3 shadow-card border">
               {m.board.map((cell, i) => {
                 const takenBy = cell as string | null;
                 const isMine = takenBy && takenBy === uid;
@@ -288,14 +250,14 @@ function PlayPage() {
                     disabled={!myTurn || !!cell || m.status !== "active" || busy}
                     onClick={() => move(i)}
                     className={cn(
-                      "aspect-square rounded-2xl border-2 flex items-center justify-center bg-card transition-all",
-                      myTurn && !cell && "hover:border-primary hover:shadow-glow cursor-pointer",
+                      "aspect-square rounded-2xl border-2 flex items-center justify-center bg-background transition-all duration-200 shadow-sm",
+                      myTurn && !cell && "hover:border-primary hover:shadow-glow hover:scale-[1.03] cursor-pointer",
                       !myTurn && "cursor-not-allowed",
                       highlight && "bg-primary/20 border-primary",
                     )}
                   >
-                    {isMine && <X className="w-12 h-12 text-primary" strokeWidth={3} />}
-                    {isOpp && <Circle className="w-10 h-10 text-red-500" strokeWidth={3} />}
+                    {isMine && <X className="w-12 h-12 text-primary animate-in zoom-in duration-200" strokeWidth={3} />}
+                    {isOpp && <Circle className="w-10 h-10 text-red-500 animate-in zoom-in duration-200" strokeWidth={3} />}
                   </button>
                 );
               })}

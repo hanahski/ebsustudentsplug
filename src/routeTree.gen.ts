@@ -97,6 +97,7 @@ import { Route as ApiFreegamesRouteImport } from './routes/api/freegames'
 import { Route as ApiEightballRouteImport } from './routes/api/eightball'
 import { Route as ApiDictionaryRouteImport } from './routes/api/dictionary'
 import { Route as ApiBootprintRouteImport } from './routes/api/bootprint'
+import { Route as EarnCreditsBattleIndexRouteImport } from './routes/earn-credits.battle.index'
 import { Route as BooksComposerIndexRouteImport } from './routes/books_.composer.index'
 import { Route as ToolsAiSlugRouteImport } from './routes/tools.ai.$slug'
 import { Route as EarnCreditsBattleScanRouteImport } from './routes/earn-credits.battle.scan'
@@ -564,6 +565,11 @@ const ApiBootprintRoute = ApiBootprintRouteImport.update({
   path: '/api/bootprint',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EarnCreditsBattleIndexRoute = EarnCreditsBattleIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => EarnCreditsBattleRoute,
+} as any)
 const BooksComposerIndexRoute = BooksComposerIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -810,6 +816,7 @@ export interface FileRoutesByFullPath {
   '/earn-credits/battle/scan': typeof EarnCreditsBattleScanRoute
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books/composer/': typeof BooksComposerIndexRoute
+  '/earn-credits/battle/': typeof EarnCreditsBattleIndexRoute
   '/api/public/hooks/admin-ai-pulse': typeof ApiPublicHooksAdminAiPulseRoute
   '/api/public/hooks/admin-reset-password': typeof ApiPublicHooksAdminResetPasswordRoute
   '/api/public/hooks/auto-ebsu-news': typeof ApiPublicHooksAutoEbsuNewsRoute
@@ -866,7 +873,6 @@ export interface FileRoutesByTo {
   '/course/$id': typeof CourseIdRoute
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
-  '/earn-credits/battle': typeof EarnCreditsBattleRouteWithChildren
   '/earn-credits/tournament': typeof EarnCreditsTournamentRoute
   '/earn-credits/watch': typeof EarnCreditsWatchRoute
   '/faculty/$id': typeof FacultyIdRoute
@@ -924,6 +930,7 @@ export interface FileRoutesByTo {
   '/earn-credits/battle/scan': typeof EarnCreditsBattleScanRoute
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books/composer': typeof BooksComposerIndexRoute
+  '/earn-credits/battle': typeof EarnCreditsBattleIndexRoute
   '/api/public/hooks/admin-ai-pulse': typeof ApiPublicHooksAdminAiPulseRoute
   '/api/public/hooks/admin-reset-password': typeof ApiPublicHooksAdminResetPasswordRoute
   '/api/public/hooks/auto-ebsu-news': typeof ApiPublicHooksAutoEbsuNewsRoute
@@ -1041,6 +1048,7 @@ export interface FileRoutesById {
   '/earn-credits/battle/scan': typeof EarnCreditsBattleScanRoute
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books_/composer/': typeof BooksComposerIndexRoute
+  '/earn-credits/battle/': typeof EarnCreditsBattleIndexRoute
   '/api/public/hooks/admin-ai-pulse': typeof ApiPublicHooksAdminAiPulseRoute
   '/api/public/hooks/admin-reset-password': typeof ApiPublicHooksAdminResetPasswordRoute
   '/api/public/hooks/auto-ebsu-news': typeof ApiPublicHooksAutoEbsuNewsRoute
@@ -1159,6 +1167,7 @@ export interface FileRouteTypes {
     | '/earn-credits/battle/scan'
     | '/tools/ai/$slug'
     | '/books/composer/'
+    | '/earn-credits/battle/'
     | '/api/public/hooks/admin-ai-pulse'
     | '/api/public/hooks/admin-reset-password'
     | '/api/public/hooks/auto-ebsu-news'
@@ -1215,7 +1224,6 @@ export interface FileRouteTypes {
     | '/course/$id'
     | '/courses/$id'
     | '/department/$id'
-    | '/earn-credits/battle'
     | '/earn-credits/tournament'
     | '/earn-credits/watch'
     | '/faculty/$id'
@@ -1273,6 +1281,7 @@ export interface FileRouteTypes {
     | '/earn-credits/battle/scan'
     | '/tools/ai/$slug'
     | '/books/composer'
+    | '/earn-credits/battle'
     | '/api/public/hooks/admin-ai-pulse'
     | '/api/public/hooks/admin-reset-password'
     | '/api/public/hooks/auto-ebsu-news'
@@ -1389,6 +1398,7 @@ export interface FileRouteTypes {
     | '/earn-credits/battle/scan'
     | '/tools/ai/$slug'
     | '/books_/composer/'
+    | '/earn-credits/battle/'
     | '/api/public/hooks/admin-ai-pulse'
     | '/api/public/hooks/admin-reset-password'
     | '/api/public/hooks/auto-ebsu-news'
@@ -2110,6 +2120,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiBootprintRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/earn-credits/battle/': {
+      id: '/earn-credits/battle/'
+      path: '/'
+      fullPath: '/earn-credits/battle/'
+      preLoaderRoute: typeof EarnCreditsBattleIndexRouteImport
+      parentRoute: typeof EarnCreditsBattleRoute
+    }
     '/books_/composer/': {
       id: '/books_/composer/'
       path: '/'
@@ -2404,11 +2421,13 @@ const BooksComposerRouteWithChildren = BooksComposerRoute._addFileChildren(
 
 interface EarnCreditsBattleRouteChildren {
   EarnCreditsBattleScanRoute: typeof EarnCreditsBattleScanRoute
+  EarnCreditsBattleIndexRoute: typeof EarnCreditsBattleIndexRoute
   EarnCreditsBattlePlayMatchIdRoute: typeof EarnCreditsBattlePlayMatchIdRoute
 }
 
 const EarnCreditsBattleRouteChildren: EarnCreditsBattleRouteChildren = {
   EarnCreditsBattleScanRoute: EarnCreditsBattleScanRoute,
+  EarnCreditsBattleIndexRoute: EarnCreditsBattleIndexRoute,
   EarnCreditsBattlePlayMatchIdRoute: EarnCreditsBattlePlayMatchIdRoute,
 }
 
