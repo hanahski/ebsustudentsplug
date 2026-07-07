@@ -21,6 +21,7 @@ import { PastQuestionArticle } from "@/components/PastQuestionArticle";
 import { MediaPlayer } from "@/components/MediaPlayer";
 import { PdfReader } from "@/components/PdfReader";
 import { VerifyStudentDialog } from "@/components/VerifyStudentDialog";
+import { PlugShareActions, extractPlugShare } from "@/components/PlugShareActions";
 
 
 export const Route = createFileRoute("/post/$id")({ component: PostPage });
