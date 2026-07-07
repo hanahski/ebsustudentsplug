@@ -236,7 +236,7 @@ function ComposerEditorPage() {
           title: meta.title || "Untitled",
           subtitle: meta.subtitle || null,
           description: meta.description || null,
-          price_credits: Math.max(0, Math.floor(meta.price_credits || 0)),
+          price_credits: Math.max(0, Math.round((meta.price_credits || 0) * 1000) / 1000),
         })
         .eq("id", bookId);
       if (error) throw error;
@@ -759,6 +759,7 @@ function ComposerEditorPage() {
               <Input
                 type="number"
                 min={0}
+                step={0.001}
                 value={meta.price_credits}
                 onChange={(e) => setMeta((m) => ({ ...m, price_credits: Number(e.target.value) }))}
                 className="w-32"
