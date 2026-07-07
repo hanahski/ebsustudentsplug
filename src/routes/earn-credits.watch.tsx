@@ -130,8 +130,15 @@ function WatchEarnPage() {
 
   const startVideoAd = () => {
     if (capped || phase !== "idle") return;
-    if (!fluidReady || !window.fluidPlayer || !videoRef.current) {
-      toast.info("Video player still loading, hang on…");
+    if (!videoRef.current) {
+      toast.error("Video slot not ready — reload the page and try again.");
+      return;
+    }
+    if (!fluidReady || !window.fluidPlayer) {
+      toast.info("Ad player still loading — switching to Pop-under.");
+      setMode("popunder");
+      // give React a tick to swap the UI, then start pop-under
+      setTimeout(() => startPopunder(), 50);
       return;
     }
     setFlagged(false);
@@ -139,6 +146,14 @@ function WatchEarnPage() {
     clickTimeRef.current = Date.now();
 
     try { fluidInstanceRef.current?.destroy?.(); } catch { /* no-op */ }
+
+    // Safety timer — if VAST never responds within 8s, fall back cleanly.
+    const bootTimeout = window.setTimeout(() => {
+      if (phase === "holding" || videoBooting) {
+        // ad kept us hanging — give the user the credit path anyway
+        setVideoBooting(false);
+      }
+    }, 8000);
 
     try {
       const player = window.fluidPlayer(videoRef.current, {
@@ -169,11 +184,19 @@ function WatchEarnPage() {
           showPlayButton: true,
           maxAllowedVastTagRedirects: 5,
           vastAdvanced: {
-            vastLoadedCallback: () => setVideoBooting(false),
-            noVastVideoCallback: () => {
+            vastLoadedCallback: () => {
+              window.clearTimeout(bootTimeout);
               setVideoBooting(false);
-              toast.info("No video ad available right now — try the Pop-under tab.");
+            },
+            noVastVideoCallback: () => {
+              window.clearTimeout(bootTimeout);
+              setVideoBooting(false);
+              toast.info("No video ad available — switching to Pop-under.");
+              try { fluidInstanceRef.current?.destroy?.(); } catch { /* no-op */ }
+              fluidInstanceRef.current = null;
               setPhase("idle");
+              setMode("popunder");
+              setTimeout(() => startPopunder(), 50);
             },
             vastVideoSkippedCallback: () => {
               // Skipped ads still count toward hold.
@@ -188,7 +211,6 @@ function WatchEarnPage() {
       fluidInstanceRef.current = player;
       setVideoAdPlaying(true);
 
-      // Kick off hold timer as a fallback (in case the ad callback never fires).
       setPhase("holding");
       setHoldRemaining(Math.ceil(HOLD_MS / 1000));
       const startedAt = Date.now();
@@ -202,9 +224,12 @@ function WatchEarnPage() {
         }
       }, 250);
     } catch (e: any) {
+      window.clearTimeout(bootTimeout);
       setVideoBooting(false);
-      toast.error("Couldn't start the video ad — try the Pop-under tab.");
+      toast.error("Couldn't start the video ad — switching to Pop-under.");
       setPhase("idle");
+      setMode("popunder");
+      setTimeout(() => startPopunder(), 50);
     }
   };
 
