@@ -362,6 +362,16 @@ function ReadBookPage() {
                       </Button>
                     </>
                   )}
+                  {canReadEpub && epubUrl && (
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => setEpubReaderOpen(true)}
+                      title="Read EPUB in the in-app reader"
+                    >
+                      <BookOpen className="w-3.5 h-3.5 mr-1" /> Read EPUB
+                    </Button>
+                  )}
                   {epubUrl && (
                     <Button size="sm" variant="outline" asChild>
                       <a href={epubUrl} download>
