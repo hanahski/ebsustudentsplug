@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { BookCover } from "@/components/BookCover";
 import { SwipeBookReader } from "@/components/SwipeBookReader";
 import { PdfReader } from "@/components/PdfReader";
+import { EpubReader } from "@/components/EpubReader";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/books_/read/$id")({ component: ReadBookPage });
@@ -23,6 +24,29 @@ function parseGutenbergId(
   if (k) return k[1];
   const u = book.read_url?.match(/gutenberg\.org\/(?:cache\/epub|files|ebooks)\/(\d+)/i);
   return u ? u[1] : null;
+}
+
+const KINDLE_EXT = /\.(mobi|azw3?|kfx)(\?|#|$)/i;
+const EPUB_EXT = /\.epub(\?|#|$)/i;
+const PDF_EXT = /\.pdf(\?|#|$)/i;
+
+function detectFormats(book: any): {
+  epubUrl: string | null;
+  pdfUrl: string | null;
+  kindleUrl: string | null;
+  kindleOnly: boolean;
+} {
+  const formats: Record<string, string> = book?.download_formats ?? {};
+  const dl: string | null = book?.download_url ?? null;
+  const epubUrl =
+    formats.epub || (dl && EPUB_EXT.test(dl) ? dl : null) || null;
+  const pdfUrl =
+    formats.pdf || (dl && PDF_EXT.test(dl) ? dl : null) || null;
+  const kindleUrl =
+    formats.kindle || formats.mobi || formats.azw3 || formats.azw ||
+    (dl && KINDLE_EXT.test(dl) ? dl : null) || null;
+  const kindleOnly = !!kindleUrl && !epubUrl && !pdfUrl;
+  return { epubUrl, pdfUrl, kindleUrl, kindleOnly };
 }
 
 function ReadBookPage() {
@@ -39,6 +63,7 @@ function ReadBookPage() {
   const [chooserOpen, setChooserOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"read" | "download" | null>(null);
   const [pdfReaderOpen, setPdfReaderOpen] = useState(false);
+  const [epubReaderOpen, setEpubReaderOpen] = useState(false);
   const chooserSeenKey = `book-chooser-seen:${id}`;
 
   const { data: book, isLoading } = useQuery({
@@ -125,13 +150,17 @@ function ReadBookPage() {
   });
 
   const gid = useMemo(() => parseGutenbergId(book), [book]);
-  // Gutenberg books render via embedded HTML reader; everything else is cached as PDF.
-  const shouldCachePdf = !!book && !gid && !userBookId;
+  const detected = useMemo(() => detectFormats(book), [book]);
+  // Gutenberg → embedded reader. User books → chapters. Kindle-only → no PDF
+  // caching (unreadable inline). Everything else → cache as PDF.
+  const shouldCachePdf = !!book && !gid && !userBookId && !detected.kindleOnly;
   const embedUrl = gid ? `https://www.gutenberg.org/cache/epub/${gid}/pg${gid}-images.html` : null;
-  const epubUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}.epub3.images` : null;
+  const epubUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}.epub3.images` : detected.epubUrl;
   const txtUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}.txt.utf-8` : null;
-  const kindleUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}.kf8.images` : null;
+  const kindleUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}.kf8.images` : detected.kindleUrl;
   const detailsUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}` : (book?.read_url ?? null);
+  const canReadEpub = !!epubUrl && !gid; // Gutenberg still uses HTML embed
+
   const [cacheError, setCacheError] = useState<string | null>(null);
 
   const cachedPdfStorageKey = `book-reader-pdf:${id}`;
@@ -333,6 +362,16 @@ function ReadBookPage() {
                       </Button>
                     </>
                   )}
+                  {canReadEpub && epubUrl && (
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => setEpubReaderOpen(true)}
+                      title="Read EPUB in the in-app reader"
+                    >
+                      <BookOpen className="w-3.5 h-3.5 mr-1" /> Read EPUB
+                    </Button>
+                  )}
                   {epubUrl && (
                     <Button size="sm" variant="outline" asChild>
                       <a href={epubUrl} download>
@@ -458,6 +497,27 @@ function ReadBookPage() {
                       </div>
                     )}
                   </div>
+                ) : canReadEpub && epubUrl ? (
+                  <div className="p-8 text-center space-y-3">
+                    <BookOpen className="w-8 h-8 mx-auto text-primary" />
+                    <p className="text-sm">This book is available in EPUB — read it right here.</p>
+                    <Button onClick={() => setEpubReaderOpen(true)}>
+                      <BookOpen className="w-4 h-4 mr-1" /> Read EPUB in app
+                    </Button>
+                  </div>
+                ) : detected.kindleOnly && kindleUrl ? (
+                  <div className="p-8 text-center space-y-3">
+                    <Download className="w-8 h-8 mx-auto text-primary" />
+                    <p className="text-sm">This book is only offered in Kindle format.</p>
+                    <Button asChild>
+                      <a href={kindleUrl} download>
+                        <Download className="w-4 h-4 mr-1" /> Download Kindle file
+                      </a>
+                    </Button>
+                    <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                      Open with the free Kindle app (iOS / Android / desktop) or send to your Kindle device.
+                    </p>
+                  </div>
                 ) : (
                   <div className="p-8 text-center text-muted-foreground">
                     <p>No readable source available for this book.</p>
@@ -537,6 +597,15 @@ function ReadBookPage() {
           title={book.title}
           downloadName={book.title}
           onClose={() => setPdfReaderOpen(false)}
+        />
+      )}
+
+      {epubReaderOpen && epubUrl && book && (
+        <EpubReader
+          url={epubUrl}
+          title={book.title}
+          bookId={book.id}
+          onClose={() => setEpubReaderOpen(false)}
         />
       )}
     </AppShell>
