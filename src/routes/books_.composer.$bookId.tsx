@@ -759,6 +759,7 @@ function ComposerEditorPage() {
               <Input
                 type="number"
                 min={0}
+                step={0.001}
                 value={meta.price_credits}
                 onChange={(e) => setMeta((m) => ({ ...m, price_credits: Number(e.target.value) }))}
                 className="w-32"
