@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { Swords, ArrowLeft, ScanLine, Coins, Trophy, Shield, Zap } from "lucide-react";
+import { Swords, ArrowLeft, Coins, Trophy, Shield, Zap, Hash, Grid3x3, Dices, Puzzle, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -80,23 +80,54 @@ function BattlePage() {
           </div>
         </header>
 
-        <Link
-          to="/earn-credits/battle/scan"
-          className="group block relative overflow-hidden rounded-3xl border p-6 bg-gradient-to-br from-primary/15 via-card to-card shadow-card hover:shadow-glow hover:-translate-y-0.5 transition-all"
-        >
-          <div className="absolute inset-0 -z-0 opacity-40 [background:radial-gradient(circle_at_20%_20%,hsl(var(--primary)/0.25),transparent_60%),radial-gradient(circle_at_80%_80%,hsl(var(--accent)/0.25),transparent_60%)]" />
-          <div className="relative flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/50 text-primary-foreground flex items-center justify-center shadow-glow">
-              <ScanLine className="w-7 h-7" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-primary">Scan for Battle</div>
-              <div className="font-bold font-display text-lg">Find a random opponent →</div>
-              <div className="text-xs text-muted-foreground">Or challenge a specific player by name.</div>
-            </div>
-            <Coins className="w-6 h-6 text-primary opacity-70 group-hover:scale-110 transition-transform" />
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Choose a game</h2>
+            <span className="text-[10px] text-muted-foreground">More coming soon</span>
           </div>
-        </Link>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { key: "ttt", label: "Tic-Tac-Toe", desc: "Classic 3-in-a-row · 10 PC", icon: Hash, tone: "from-red-500 to-orange-600", live: true },
+              { key: "connect4", label: "Connect Four", desc: "Coming soon", icon: Grid3x3, tone: "from-blue-500 to-indigo-600", live: false },
+              { key: "dice", label: "Dice Duel", desc: "Coming soon", icon: Dices, tone: "from-emerald-500 to-teal-600", live: false },
+              { key: "puzzle", label: "Speed Puzzle", desc: "Coming soon", icon: Puzzle, tone: "from-fuchsia-500 to-pink-600", live: false },
+            ].map((g) => {
+              const inner = (
+                <>
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${g.tone} text-white flex items-center justify-center shadow mb-3`}>
+                    <g.icon className="w-6 h-6" />
+                  </div>
+                  <div className="font-bold font-display flex items-center gap-1.5">
+                    {g.label}
+                    {!g.live && <Lock className="w-3 h-3 text-muted-foreground" />}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">{g.desc}</div>
+                  {g.live && (
+                    <div className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-primary">
+                      <Coins className="w-3 h-3" /> Play now →
+                    </div>
+                  )}
+                </>
+              );
+              return g.live ? (
+                <Link
+                  key={g.key}
+                  to="/earn-credits/battle/scan"
+                  className="group relative overflow-hidden rounded-2xl border p-4 bg-card hover:shadow-glow hover:-translate-y-0.5 transition-all"
+                >
+                  {inner}
+                </Link>
+              ) : (
+                <div
+                  key={g.key}
+                  className="relative overflow-hidden rounded-2xl border p-4 bg-card/50 opacity-70 cursor-not-allowed"
+                >
+                  {inner}
+                </div>
+              );
+            })}
+          </div>
+        </section>
 
         {matches.length > 0 && (
           <section className="space-y-2">
