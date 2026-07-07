@@ -45,6 +45,13 @@ function DashboardPage() {
   const { user, profile, loading, refreshProfile } = useAuth();
   const nav = useNavigate();
   useEffect(() => { if (!loading && !user) nav({ to: "/login" }); }, [user, loading]);
+  // Credits are stored as numeric in Postgres, which PostgREST returns as a
+  // string. Coerce to a real number so math/formatting always work.
+  const creditBalance = Number(profile?.credits ?? 0) || 0;
+  // Refresh once on mount so freshly-granted welcome credits / rewards land
+  // even if the realtime UPDATE fired before this page subscribed.
+  useEffect(() => { if (user) refreshProfile(); }, [user?.id]);
+
 
   const [payoutOpen, setPayoutOpen] = useState(false);
   const [swapOpen, setSwapOpen] = useState(false);
