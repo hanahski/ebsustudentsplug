@@ -561,10 +561,10 @@ function ReadBookPage() {
                 setViewMode("read");
                 setChooserOpen(false);
                 try { window.localStorage.setItem(chooserSeenKey, "1"); } catch { /* no-op */ }
-                // Open the in-app PDF reader if we already have the cached PDF.
-                // Otherwise the effect above will finish preparing it and the
-                // user can hit "Read in app" again from the toolbar.
-                if (cachedPdfUrl) setPdfReaderOpen(true);
+                // Prefer EPUB reader if the book is an EPUB; otherwise open the
+                // in-app PDF reader (once the cached PDF is ready).
+                if (canReadEpub && epubUrl) setEpubReaderOpen(true);
+                else if (cachedPdfUrl) setPdfReaderOpen(true);
                 else if (!cacheLoading) toast.info("Preparing your book… we'll open it in a second.");
               }}
               className="rounded-2xl border p-4 text-left hover:border-primary hover:shadow-glow transition group"
