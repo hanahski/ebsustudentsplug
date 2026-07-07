@@ -7,6 +7,7 @@ import { NetworkStatus } from "@/components/NetworkStatus";
 import { AppBridgeMount } from "@/components/AppBridgeMount";
 import { VideoSWRegister } from "@/components/VideoSWRegister";
 import { KeyboardAware } from "@/components/KeyboardAware";
+import { GoogleTranslateBridge } from "@/components/GoogleTranslateBridge";
 
 import appCss from "../styles.css?url";
 import brandLogoUrl from "@/assets/brand-logo.png";
@@ -144,6 +145,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           <AppBridgeMount />
           <VideoSWRegister />
           <KeyboardAware />
+          <GoogleTranslateBridge />
           <AuthStatusBanner />
           <RouteLoadingIndicator />
           
