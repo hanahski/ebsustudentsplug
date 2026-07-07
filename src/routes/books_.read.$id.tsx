@@ -294,22 +294,35 @@ function ReadBookPage() {
               <>
                 <div className="px-4 py-3 flex flex-wrap gap-2 border-b bg-muted/30">
                   {shouldCachePdf && (
-                    <Button
-                      size="sm"
-                      onClick={downloadPdf}
-                      disabled={!cachedPdfUrl || downloadLoading}
-                    >
-                      {cacheLoading || downloadLoading ? (
-                        <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
-                      ) : (
-                        <Download className="w-3.5 h-3.5 mr-1" />
-                      )}
-                      {cacheLoading
-                        ? "Preparing PDF…"
-                        : downloadLoading
-                          ? "Downloading…"
-                          : "Download PDF"}
-                    </Button>
+                    <>
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => cachedPdfUrl && setPdfReaderOpen(true)}
+                        disabled={!cachedPdfUrl || cacheLoading}
+                        title="Read in the in-app PDF reader"
+                      >
+                        {cacheLoading ? (
+                          <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                        ) : (
+                          <BookOpen className="w-3.5 h-3.5 mr-1" />
+                        )}
+                        {cacheLoading ? "Preparing…" : "Read in app"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={downloadPdf}
+                        disabled={!cachedPdfUrl || downloadLoading}
+                      >
+                        {downloadLoading ? (
+                          <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                        ) : (
+                          <Download className="w-3.5 h-3.5 mr-1" />
+                        )}
+                        {downloadLoading ? "Downloading…" : "Download PDF"}
+                      </Button>
+                    </>
                   )}
                   {epubUrl && (
                     <Button size="sm" variant="outline" asChild>
