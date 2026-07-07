@@ -24,6 +24,7 @@ import { AUDIO_ANIMATIONS, AudioAnimation, type AudioAnimationId } from "@/compo
 import { VideoTrimmer } from "@/components/VideoTrimmer";
 import { withTimeFragment, type TimeRange } from "@/lib/trim";
 import { useDraft } from "@/hooks/use-draft";
+import { safeUserUpload, friendlyUploadError, resolveAuthUid } from "@/lib/safe-upload";
 
 
 
@@ -184,16 +185,27 @@ function NewPostPage() {
     if (!title.trim()) { toast.error("Title is required"); return; }
     setBusy(true);
     try {
+      // Re-check the session against Supabase Auth BEFORE any upload.
+      // A cached user.id from React context can be stale (token expired,
+      // account switch in another tab) which trips the storage RLS check
+      // "auth.uid() = folder-prefix" and surfaces as "policy violation".
+      const authUid = await resolveAuthUid();
+      if (!authUid) {
+        toast.error("Your session expired. Please sign in again.");
+        nav({ to: "/login", search: { redirect: "/post/new" } });
+        return;
+      }
+
       // PDF upload (private bucket)
       let file_url: string | null = null;
       let file_name: string | null = null;
       if (pdfFile) {
-        const safe = pdfFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-        const path = `${user.id}/${Date.now()}-${safe}`;
-        const { error: upErr } = await supabase.storage
-          .from("post-files")
-          .upload(path, pdfFile, { contentType: pdfFile.type || "application/pdf", upsert: false });
-        if (upErr) throw upErr;
+        const { path } = await safeUserUpload({
+          bucket: "post-files",
+          file: pdfFile,
+          filename: pdfFile.name,
+          contentType: pdfFile.type || "application/pdf",
+        });
         file_url = path;
         file_name = pdfFile.name;
       }
@@ -214,12 +226,12 @@ function NewPostPage() {
             toast.dismiss(t);
             if (toUpload !== mediaFile) toast.success("Image enhanced");
           }
-          const safe = toUpload.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-          const path = `${user.id}/${Date.now()}-${safe}`;
-          const { error: upErr } = await supabase.storage
-            .from("post-media")
-            .upload(path, toUpload, { contentType: toUpload.type, upsert: false });
-          if (upErr) throw upErr;
+          const { path } = await safeUserUpload({
+            bucket: "post-media",
+            file: toUpload,
+            filename: toUpload.name,
+            contentType: toUpload.type,
+          });
           let publicUrl = supabase.storage.from("post-media").getPublicUrl(path).data.publicUrl;
           if (k === "audio") publicUrl = `${publicUrl}#anim=${audioAnim}`;
           if (k === "video" && videoTrim) publicUrl = withTimeFragment(publicUrl, videoTrim);
@@ -230,7 +242,7 @@ function NewPostPage() {
 
 
       const payload: any = {
-        author_id: user.id,
+        author_id: authUid,
         post_type: type,
         title: title.trim(),
         body: body.trim() || null,
@@ -248,7 +260,7 @@ function NewPostPage() {
       nav({ to: "/post/$id", params: { id: data.id } });
     } catch (err: any) {
       console.error("post submit failed", err);
-      toast.error(err?.message || "Could not publish. Please try again.");
+      toast.error(friendlyUploadError(err));
     } finally {
       setBusy(false);
     }
