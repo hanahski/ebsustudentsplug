@@ -152,8 +152,10 @@ function ReadBookPage() {
   const gid = useMemo(() => parseGutenbergId(book), [book]);
   const detected = useMemo(() => detectFormats(book), [book]);
   // Gutenberg → embedded reader. User books → chapters. Kindle-only → no PDF
-  // caching (unreadable inline). Everything else → cache as PDF.
-  const shouldCachePdf = !!book && !gid && !userBookId && !detected.kindleOnly;
+  // caching (unreadable inline). Direct EPUB → in-app EPUB reader (no PDF cache).
+  // Everything else → cache as PDF so it opens in the in-app PDF reader.
+  const shouldCachePdf =
+    !!book && !gid && !userBookId && !detected.kindleOnly && !detected.epubUrl;
   const embedUrl = gid ? `https://www.gutenberg.org/cache/epub/${gid}/pg${gid}-images.html` : null;
   const epubUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}.epub3.images` : detected.epubUrl;
   const txtUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}.txt.utf-8` : null;
