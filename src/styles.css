@@ -742,3 +742,13 @@ html.in-app .route-loader-dot { display: none !important; }
   pointer-events: none;
   animation: av-heart-float 1.4s ease-out forwards;
 }
+
+/* Keyboard-aware: hide fixed bottom nav while typing so the on-screen keyboard
+   doesn't collide with the mobile tab bar and shove content around. */
+body.keyboard-open nav[aria-label="Mobile navigation"] {
+  transform: translateY(120%);
+  pointer-events: none;
+}
+nav[aria-label="Mobile navigation"] {
+  transition: transform 180ms ease;
+}
