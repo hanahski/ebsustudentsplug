@@ -497,6 +497,27 @@ function ReadBookPage() {
                       </div>
                     )}
                   </div>
+                ) : canReadEpub && epubUrl ? (
+                  <div className="p-8 text-center space-y-3">
+                    <BookOpen className="w-8 h-8 mx-auto text-primary" />
+                    <p className="text-sm">This book is available in EPUB — read it right here.</p>
+                    <Button onClick={() => setEpubReaderOpen(true)}>
+                      <BookOpen className="w-4 h-4 mr-1" /> Read EPUB in app
+                    </Button>
+                  </div>
+                ) : detected.kindleOnly && kindleUrl ? (
+                  <div className="p-8 text-center space-y-3">
+                    <Download className="w-8 h-8 mx-auto text-primary" />
+                    <p className="text-sm">This book is only offered in Kindle format.</p>
+                    <Button asChild>
+                      <a href={kindleUrl} download>
+                        <Download className="w-4 h-4 mr-1" /> Download Kindle file
+                      </a>
+                    </Button>
+                    <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                      Open with the free Kindle app (iOS / Android / desktop) or send to your Kindle device.
+                    </p>
+                  </div>
                 ) : (
                   <div className="p-8 text-center text-muted-foreground">
                     <p>No readable source available for this book.</p>
