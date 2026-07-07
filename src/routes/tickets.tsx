@@ -103,7 +103,7 @@ function BrowseTickets() {
   const [buyingId, setBuyingId] = useState<string | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ["tickets-browse"],
-    queryFn: async () => (await supabase.from("tickets").select("*").eq("is_sold", false).order("created_at", { ascending: false }).limit(60)).data ?? [],
+    queryFn: async () => (await supabase.from("tickets").select("*").order("created_at", { ascending: false }).limit(60)).data ?? [],
   });
 
   const buyAndDownload = async (ticket: any) => {
