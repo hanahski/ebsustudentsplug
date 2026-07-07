@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Moon, Sun } from "lucide-react";
+import { ThemeSwitch } from "@/components/ui/ThemeSwitch";
 
 const STORAGE_KEY = "sp-theme";
 type Theme = "light" | "dark";
@@ -65,15 +65,5 @@ export function useTheme() {
 }
 
 export function ThemeToggle({ className = "" }: { className?: string }) {
-  const { theme, toggle } = useTheme();
-  return (
-    <button
-      type="button"
-      onClick={toggle}
-      className={`inline-flex items-center justify-center w-10 h-10 rounded-full border bg-card hover:bg-accent transition shadow-card ${className}`}
-      aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-    >
-      {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-    </button>
-  );
+  return <ThemeSwitch className={className} />;
 }
