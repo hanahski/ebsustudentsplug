@@ -186,10 +186,9 @@ export async function createTicketPdfBlob(dataUrl: string): Promise<Blob> {
   return pdf.output("blob");
 }
 
-export async function downloadTicketPdf(dataUrl: string, filename: string, openedWindow?: Window | null) {
+export async function downloadTicketPdf(dataUrl: string, filename: string, _openedWindow?: Window | null) {
   const blob = await createTicketPdfBlob(dataUrl);
   const url = URL.createObjectURL(blob);
-
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
@@ -197,14 +196,6 @@ export async function downloadTicketPdf(dataUrl: string, filename: string, opene
   document.body.appendChild(a);
   a.click();
   a.remove();
-
-  // Best-effort: if a tab was pre-opened (desktop), point it at the PDF.
-  // On mobile this window is often blocked or closed already; ignore failures.
-  try {
-    if (openedWindow && !openedWindow.closed) openedWindow.location.href = url;
-    else openedWindow?.close?.();
-  } catch { /* popup blocked — download still succeeded */ }
-
   setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }
 
