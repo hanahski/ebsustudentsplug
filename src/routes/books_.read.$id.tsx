@@ -63,6 +63,7 @@ function ReadBookPage() {
   const [chooserOpen, setChooserOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"read" | "download" | null>(null);
   const [pdfReaderOpen, setPdfReaderOpen] = useState(false);
+  const [epubReaderOpen, setEpubReaderOpen] = useState(false);
   const chooserSeenKey = `book-chooser-seen:${id}`;
 
   const { data: book, isLoading } = useQuery({
