@@ -419,7 +419,7 @@ function WatchEarnPage() {
           {phase === "idle" && (
             <Button
               className="w-full h-12 text-base"
-              disabled={capped || loading || (mode === "video" && !fluidReady)}
+              disabled={capped || loading}
               onClick={startCurrent}
             >
               <PlayCircle className="w-5 h-5 mr-2" />
