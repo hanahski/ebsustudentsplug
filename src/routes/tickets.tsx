@@ -12,9 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { encodePlugShare } from "@/components/PlugShareActions";
 import { toast } from "sonner";
-import { Ticket, Upload, QrCode, Lock, Loader2, Download, Megaphone } from "lucide-react";
-import QRCode from "qrcode";
-import { composeTicketImage, downloadTicketPdf } from "@/lib/ticket-composer";
+import { Ticket, Upload, QrCode, Lock, Loader2, Download, Megaphone, Eye, EyeOff, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { composeTicketImage, downloadTicketPdf, ticketFilename, composeVerifiedQr } from "@/lib/ticket-composer";
 import { getIsAdminUser } from "@/lib/admin-role";
 
 export const Route = createFileRoute("/tickets")({ component: TicketsPage });
@@ -104,7 +103,7 @@ function BrowseTickets() {
   const [buyingId, setBuyingId] = useState<string | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ["tickets-browse"],
-    queryFn: async () => (await supabase.from("tickets").select("*").eq("is_sold", false).order("created_at", { ascending: false }).limit(60)).data ?? [],
+    queryFn: async () => (await supabase.from("tickets").select("*").order("created_at", { ascending: false }).limit(60)).data ?? [],
   });
 
   const buyAndDownload = async (ticket: any) => {
@@ -112,21 +111,20 @@ function BrowseTickets() {
     const pdfWindow = window.open("", "_blank");
     setBuyingId(ticket.id);
     try {
-      const { error } = await supabase.rpc("buy_ticket", { _ticket_id: ticket.id });
+      const { data: buyRes, error } = await supabase.rpc("buy_ticket", { _ticket_id: ticket.id });
       if (error) throw error;
-
-      const { data: freshTicket, error: refreshError } = await supabase.from("tickets").select("*").eq("id", ticket.id).maybeSingle();
-      if (refreshError) throw refreshError;
-      if (!freshTicket?.qr_token) throw new Error("Ticket QR is not ready yet");
+      const buyerIndex = (buyRes as any)?.buyer_index as number | undefined;
+      const qrToken = (buyRes as any)?.qr_token as string | undefined;
 
       const stampedTicket = await composeTicketImage({
-        photoUrl: freshTicket.photo_url,
-        qrToken: freshTicket.qr_token,
-        title: freshTicket.title,
+        photoUrl: ticket.photo_url,
+        qrToken: qrToken ?? "",
+        title: ticket.title,
         holder: profile?.display_name || user.email || "Holder",
+        buyerIndex,
       });
 
-      await downloadTicketPdf(stampedTicket, `ticket-${freshTicket.id}.pdf`, pdfWindow);
+      await downloadTicketPdf(stampedTicket, ticketFilename(ticket.title, buyerIndex), pdfWindow);
       toast.success("Ticket PDF downloaded");
       qc.invalidateQueries({ queryKey: ["tickets-browse"] });
       qc.invalidateQueries({ queryKey: ["my-tickets", user.id] });
@@ -303,7 +301,13 @@ function PurchasedTicket({ p }: { p: any }) {
   const { user, profile } = useAuth();
   const [qr, setQr] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
-  useEffect(() => { QRCode.toDataURL(`SP-TICKET:${p.qr_token}`, { width: 320 }).then(setQr); }, [p.qr_token]);
+  const [revealed, setRevealed] = useState(false);
+  const scanned = !!p.used_at;
+  const buyerIndex = p.buyer_index as number | undefined;
+
+  useEffect(() => {
+    composeVerifiedQr(p.qr_token, 320).then(setQr);
+  }, [p.qr_token]);
 
   const downloadPurchasedTicket = async () => {
     const pdfWindow = window.open("", "_blank");
@@ -314,8 +318,9 @@ function PurchasedTicket({ p }: { p: any }) {
         qrToken: p.qr_token,
         title: p.ticket?.title ?? "Ticket",
         holder: profile?.display_name || user?.email || "Holder",
+        buyerIndex,
       });
-      await downloadTicketPdf(stampedTicket, `ticket-${p.ticket_id}.pdf`, pdfWindow);
+      await downloadTicketPdf(stampedTicket, ticketFilename(p.ticket?.title ?? "ticket", buyerIndex), pdfWindow);
       toast.success("Ticket PDF downloaded");
     } catch (err: any) {
       pdfWindow?.close();
@@ -327,14 +332,68 @@ function PurchasedTicket({ p }: { p: any }) {
 
   return (
     <div className="bg-card border rounded-2xl p-4 shadow-card">
-      <h3 className="font-semibold">{p.ticket?.title}</h3>
-      <p className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleString()}</p>
-      {qr && <img src={qr} alt="QR" className="mt-3 mx-auto w-72 h-72" />}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h3 className="font-semibold truncate">{p.ticket?.title}</h3>
+          <p className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleString()}</p>
+        </div>
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          {buyerIndex ? (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold">
+              Buyer #{buyerIndex}
+            </span>
+          ) : null}
+          {scanned ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold">
+              <CheckCircle2 className="w-3 h-3" /> Scanned
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[11px] font-bold">
+              <ShieldCheck className="w-3 h-3" /> Unused
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="relative mt-3 mx-auto w-72 h-72 rounded-xl overflow-hidden bg-white flex items-center justify-center">
+        {qr && (
+          <img
+            src={qr}
+            alt="Ticket QR"
+            className={`w-full h-full transition ${revealed && !scanned ? "" : "blur-2xl scale-110"}`}
+          />
+        )}
+        {scanned && (
+          <div className="absolute inset-0 flex items-center justify-center bg-emerald-500/20 backdrop-blur-sm">
+            <div className="text-center">
+              <CheckCircle2 className="w-10 h-10 mx-auto text-emerald-600" />
+              <p className="text-sm font-bold text-emerald-700 mt-1">Scanned & used</p>
+              <p className="text-[10px] text-emerald-700/80">{new Date(p.used_at).toLocaleString()}</p>
+            </div>
+          </div>
+        )}
+        {!scanned && (
+          <button
+            type="button"
+            onClick={() => setRevealed((v) => !v)}
+            className="absolute bottom-2 right-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/70 text-white text-[11px] font-semibold backdrop-blur"
+            aria-label={revealed ? "Hide QR" : "Reveal QR"}
+          >
+            {revealed ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+            {revealed ? "Hide" : "Reveal"}
+          </button>
+        )}
+      </div>
+      {!scanned && (
+        <p className="text-[11px] text-center text-muted-foreground mt-1">
+          QR stays blurred — only unblur when you're at the gate.
+        </p>
+      )}
+
       <Button type="button" onClick={downloadPurchasedTicket} disabled={downloading || !p.ticket?.photo_url} className="mt-3 w-full">
         {downloading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Download className="w-4 h-4 mr-1" />}
         {downloading ? "Downloading PDF…" : "Download ticket PDF"}
       </Button>
-      <p className="text-xs text-center text-muted-foreground mt-2 break-all">{p.qr_token}</p>
     </div>
   );
 }

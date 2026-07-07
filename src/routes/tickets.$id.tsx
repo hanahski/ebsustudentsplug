@@ -7,7 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ArrowLeft, Ticket as TicketIcon, ShoppingCart, CheckCircle2, Download, Loader2 } from "lucide-react";
-import { composeTicketImage, downloadTicketPdf } from "@/lib/ticket-composer";
+import { composeTicketImage, downloadTicketPdf, ticketFilename } from "@/lib/ticket-composer";
 
 export const Route = createFileRoute("/tickets/$id")({ component: TicketDetail });
 
@@ -25,22 +25,32 @@ function TicketDetail() {
     queryFn: async () => (await supabase.from("tickets").select("*, uploader:profiles!tickets_uploader_id_fkey(display_name)").eq("id", id).maybeSingle()).data,
   });
 
-  const composeAndDownload = async (ticket: any, openedWindow?: Window | null) => {
-    if (!ticket?.qr_token) throw new Error("Ticket QR is not ready yet");
+  const composeAndDownload = async (ticket: any, buyerIndex: number | undefined, qrToken: string, openedWindow?: Window | null) => {
+    if (!qrToken) throw new Error("Ticket QR is not ready yet");
     const stampedTicket = await composeTicketImage({
       photoUrl: ticket.photo_url,
-      qrToken: ticket.qr_token,
+      qrToken,
       title: ticket.title,
       holder: profile?.display_name || user?.email || "Holder",
+      buyerIndex,
     });
     setComposed(stampedTicket);
-    await downloadTicketPdf(stampedTicket, `ticket-${ticket.id}.pdf`, openedWindow);
+    await downloadTicketPdf(stampedTicket, ticketFilename(ticket.title, buyerIndex), openedWindow);
   };
 
   const downloadOwnedTicket = async () => {
     const pdfWindow = window.open("", "_blank");
     try {
-      await composeAndDownload(t, pdfWindow);
+      // Pull the latest purchase for this user + ticket for filename numbering
+      const { data: myPurchases } = await supabase
+        .from("ticket_purchases")
+        .select("buyer_index, qr_token")
+        .eq("ticket_id", id)
+        .eq("buyer_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      const latest = myPurchases?.[0];
+      await composeAndDownload(t, latest?.buyer_index ?? undefined, latest?.qr_token ?? t?.qr_token ?? "", pdfWindow);
       toast.success("Ticket PDF downloaded");
     } catch (err: any) {
       pdfWindow?.close();
@@ -48,7 +58,6 @@ function TicketDetail() {
     }
   };
 
-  // Build the stamped ticket preview as soon as we know the buyer owns it.
   useEffect(() => {
     let cancelled = false;
     if (t?.qr_token && t?.buyer_id === user?.id && !composed && !composing) {
@@ -73,18 +82,17 @@ function TicketDetail() {
     if (!user) { nav({ to: "/login" }); return; }
     const pdfWindow = window.open("", "_blank");
     setBusy(true);
-    const { error } = await supabase.rpc("buy_ticket", { _ticket_id: id });
+    const { data: buyRes, error } = await supabase.rpc("buy_ticket", { _ticket_id: id });
     if (error) {
       pdfWindow?.close();
       setBusy(false);
       return toast.error(error.message);
     }
-    toast.success("Ticket purchased! Downloading your QR ticket PDF…");
+    const buyerIndex = (buyRes as any)?.buyer_index as number | undefined;
+    const qrToken = (buyRes as any)?.qr_token as string | undefined;
+    toast.success(`Ticket purchased! You're buyer #${buyerIndex ?? "—"}. Downloading PDF…`);
     try {
-      const fresh = await supabase.from("tickets").select("*, uploader:profiles!tickets_uploader_id_fkey(display_name)").eq("id", id).maybeSingle();
-      if (fresh.error) throw fresh.error;
-      if (fresh.data) qc.setQueryData(["ticket", id], fresh.data);
-      await composeAndDownload(fresh.data, pdfWindow);
+      await composeAndDownload(t, buyerIndex, qrToken ?? "", pdfWindow);
       toast.success("Ticket PDF downloaded");
     } catch {
       pdfWindow?.close();
@@ -116,9 +124,6 @@ function TicketDetail() {
             <p className="text-sm text-muted-foreground whitespace-pre-wrap">{t.description}</p>
             <p className="text-xs text-muted-foreground">Sold by {(t as any).uploader?.display_name ?? "—"}</p>
 
-            {t.is_sold && !ownsIt && (
-              <div className="bg-muted rounded-xl p-3 text-sm text-center">This ticket has been sold.</div>
-            )}
             {ownsIt && (
               <div className="bg-success/10 border border-success/40 rounded-2xl p-4 space-y-3">
                 <div className="flex items-center justify-center gap-2 font-bold text-success"><CheckCircle2 className="w-5 h-5" />You own this ticket</div>
@@ -136,15 +141,13 @@ function TicketDetail() {
                 )}
               </div>
             )}
-            {!t.is_sold && (
-              t.pay_mode === "contact" ? (
-                <>
-                  <Button onClick={buy} disabled={busy} className="w-full"><TicketIcon className="w-4 h-4 mr-1" />{busy ? "Downloading PDF…" : "Reserve & download QR ticket PDF"}</Button>
-                  {t.contact && <p className="text-xs text-center text-muted-foreground">Then pay seller via: <strong>{t.contact}</strong></p>}
-                </>
-              ) : (
-                <Button onClick={buy} disabled={busy} className="w-full"><ShoppingCart className="w-4 h-4 mr-1" />{busy ? "Downloading PDF…" : `Buy with ${t.price} credits & download PDF`}</Button>
-              )
+            {t.pay_mode === "contact" ? (
+              <>
+                <Button onClick={buy} disabled={busy} className="w-full"><TicketIcon className="w-4 h-4 mr-1" />{busy ? "Downloading PDF…" : ownsIt ? "Buy another copy & download PDF" : "Reserve & download QR ticket PDF"}</Button>
+                {t.contact && <p className="text-xs text-center text-muted-foreground">Then pay seller via: <strong>{t.contact}</strong></p>}
+              </>
+            ) : (
+              <Button onClick={buy} disabled={busy} className="w-full"><ShoppingCart className="w-4 h-4 mr-1" />{busy ? "Downloading PDF…" : ownsIt ? `Buy another for ${t.price} cr` : `Buy with ${t.price} credits & download PDF`}</Button>
             )}
           </div>
         </div>

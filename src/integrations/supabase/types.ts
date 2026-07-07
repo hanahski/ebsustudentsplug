@@ -1782,27 +1782,36 @@ export type Database = {
       ticket_purchases: {
         Row: {
           buyer_id: string
+          buyer_index: number | null
           created_at: string
           id: string
           price_paid: number
           qr_token: string | null
+          scanned_by: string | null
           ticket_id: string
+          used_at: string | null
         }
         Insert: {
           buyer_id: string
+          buyer_index?: number | null
           created_at?: string
           id?: string
           price_paid?: number
           qr_token?: string | null
+          scanned_by?: string | null
           ticket_id: string
+          used_at?: string | null
         }
         Update: {
           buyer_id?: string
+          buyer_index?: number | null
           created_at?: string
           id?: string
           price_paid?: number
           qr_token?: string | null
+          scanned_by?: string | null
           ticket_id?: string
+          used_at?: string | null
         }
         Relationships: [
           {
