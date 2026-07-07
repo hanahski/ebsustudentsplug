@@ -255,33 +255,39 @@ function Catalogue() {
               <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {items.map((name) => {
                   const id = idByName.get(name.toLowerCase().trim());
+                  const isOpenable = mode === "courses";
                   const inner = (
-                    <div className="group h-full flex items-center gap-3 bg-card border rounded-2xl p-3 pr-4 shadow-card hover:shadow-glow hover:-translate-y-0.5 transition-all">
+                    <div className={`group h-full flex items-center gap-3 bg-card border rounded-2xl p-3 pr-4 shadow-card transition-all ${isOpenable ? "hover:shadow-glow hover:-translate-y-0.5 cursor-pointer" : "opacity-95"}`}>
                       <DeptGlyph name={name} />
                       <div className="min-w-0 flex-1">
-                        <div className="font-semibold text-sm leading-snug group-hover:text-primary truncate">
+                        <div className={`font-semibold text-sm leading-snug truncate ${isOpenable ? "group-hover:text-primary" : ""}`}>
                           {name}
                         </div>
                         <div className="text-[11px] text-muted-foreground">
-                          {mode === "courses" ? "Course · EBSU" : "Department · EBSU"}
+                          {isOpenable ? "Course · EBSU · Tap to open" : "Department · EBSU"}
                         </div>
                       </div>
-                      <svg
-                        viewBox="0 0 24 24"
-                        className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition"
-                        fill="none" stroke="currentColor" strokeWidth="2"
-                        strokeLinecap="round" strokeLinejoin="round"
-                      >
-                        <path d="M9 6l6 6-6 6" />
-                      </svg>
+                      {isOpenable && (
+                        <svg
+                          viewBox="0 0 24 24"
+                          className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition"
+                          fill="none" stroke="currentColor" strokeWidth="2"
+                          strokeLinecap="round" strokeLinejoin="round"
+                        >
+                          <path d="M9 6l6 6-6 6" />
+                        </svg>
+                      )}
                     </div>
                   );
                   return (
                     <li key={name}>
-                      {id ? (
+                      {isOpenable ? (
+                        <Link to="/course/name/$name" params={{ name }}>{inner}</Link>
+                      ) : id ? (
                         <Link to="/department/$id" params={{ id }}>{inner}</Link>
                       ) : (
-                        <Link to="/search" search={{ q: name } as any}>{inner}</Link>
+                        // Non-course departments are informational only.
+                        <div>{inner}</div>
                       )}
                     </li>
                   );

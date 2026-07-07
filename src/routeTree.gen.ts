@@ -83,9 +83,11 @@ import { Route as GamesEightballRouteImport } from './routes/games.eightball'
 import { Route as FacultyIdRouteImport } from './routes/faculty.$id'
 import { Route as EarnCreditsWatchRouteImport } from './routes/earn-credits.watch'
 import { Route as EarnCreditsTournamentRouteImport } from './routes/earn-credits.tournament'
+import { Route as EarnCreditsBattleRouteImport } from './routes/earn-credits.battle'
 import { Route as DepartmentIdRouteImport } from './routes/department.$id'
 import { Route as CoursesIdRouteImport } from './routes/courses.$id'
 import { Route as CourseIdRouteImport } from './routes/course.$id'
+import { Route as BooksSearchRouteImport } from './routes/books_.search'
 import { Route as BooksComposerRouteImport } from './routes/books_.composer'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as ApiYoutubeRouteImport } from './routes/api/youtube'
@@ -97,6 +99,7 @@ import { Route as ApiDictionaryRouteImport } from './routes/api/dictionary'
 import { Route as ApiBootprintRouteImport } from './routes/api/bootprint'
 import { Route as BooksComposerIndexRouteImport } from './routes/books_.composer.index'
 import { Route as ToolsAiSlugRouteImport } from './routes/tools.ai.$slug'
+import { Route as CourseNameNameRouteImport } from './routes/course.name.$name'
 import { Route as BooksReadIdRouteImport } from './routes/books_.read.$id'
 import { Route as BooksPreviewTokenRouteImport } from './routes/books_.preview.$token'
 import { Route as BooksComposerBookIdRouteImport } from './routes/books_.composer.$bookId'
@@ -489,6 +492,11 @@ const EarnCreditsTournamentRoute = EarnCreditsTournamentRouteImport.update({
   path: '/tournament',
   getParentRoute: () => EarnCreditsRoute,
 } as any)
+const EarnCreditsBattleRoute = EarnCreditsBattleRouteImport.update({
+  id: '/battle',
+  path: '/battle',
+  getParentRoute: () => EarnCreditsRoute,
+} as any)
 const DepartmentIdRoute = DepartmentIdRouteImport.update({
   id: '/department/$id',
   path: '/department/$id',
@@ -502,6 +510,11 @@ const CoursesIdRoute = CoursesIdRouteImport.update({
 const CourseIdRoute = CourseIdRouteImport.update({
   id: '/course/$id',
   path: '/course/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BooksSearchRoute = BooksSearchRouteImport.update({
+  id: '/books_/search',
+  path: '/books/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BooksComposerRoute = BooksComposerRouteImport.update({
@@ -558,6 +571,11 @@ const ToolsAiSlugRoute = ToolsAiSlugRouteImport.update({
   id: '/ai/$slug',
   path: '/ai/$slug',
   getParentRoute: () => ToolsRoute,
+} as any)
+const CourseNameNameRoute = CourseNameNameRouteImport.update({
+  id: '/course/name/$name',
+  path: '/course/name/$name',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const BooksReadIdRoute = BooksReadIdRouteImport.update({
   id: '/books_/read/$id',
@@ -718,9 +736,11 @@ export interface FileRoutesByFullPath {
   '/api/youtube': typeof ApiYoutubeRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/books/composer': typeof BooksComposerRouteWithChildren
+  '/books/search': typeof BooksSearchRoute
   '/course/$id': typeof CourseIdRoute
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
+  '/earn-credits/battle': typeof EarnCreditsBattleRoute
   '/earn-credits/tournament': typeof EarnCreditsTournamentRoute
   '/earn-credits/watch': typeof EarnCreditsWatchRoute
   '/faculty/$id': typeof FacultyIdRoute
@@ -773,6 +793,7 @@ export interface FileRoutesByFullPath {
   '/books/composer/$bookId': typeof BooksComposerBookIdRoute
   '/books/preview/$token': typeof BooksPreviewTokenRoute
   '/books/read/$id': typeof BooksReadIdRoute
+  '/course/name/$name': typeof CourseNameNameRoute
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books/composer/': typeof BooksComposerIndexRoute
   '/api/public/hooks/admin-ai-pulse': typeof ApiPublicHooksAdminAiPulseRoute
@@ -827,9 +848,11 @@ export interface FileRoutesByTo {
   '/api/riddle': typeof ApiRiddleRoute
   '/api/youtube': typeof ApiYoutubeRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/books/search': typeof BooksSearchRoute
   '/course/$id': typeof CourseIdRoute
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
+  '/earn-credits/battle': typeof EarnCreditsBattleRoute
   '/earn-credits/tournament': typeof EarnCreditsTournamentRoute
   '/earn-credits/watch': typeof EarnCreditsWatchRoute
   '/faculty/$id': typeof FacultyIdRoute
@@ -882,6 +905,7 @@ export interface FileRoutesByTo {
   '/books/composer/$bookId': typeof BooksComposerBookIdRoute
   '/books/preview/$token': typeof BooksPreviewTokenRoute
   '/books/read/$id': typeof BooksReadIdRoute
+  '/course/name/$name': typeof CourseNameNameRoute
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books/composer': typeof BooksComposerIndexRoute
   '/api/public/hooks/admin-ai-pulse': typeof ApiPublicHooksAdminAiPulseRoute
@@ -939,9 +963,11 @@ export interface FileRoutesById {
   '/api/youtube': typeof ApiYoutubeRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/books_/composer': typeof BooksComposerRouteWithChildren
+  '/books_/search': typeof BooksSearchRoute
   '/course/$id': typeof CourseIdRoute
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
+  '/earn-credits/battle': typeof EarnCreditsBattleRoute
   '/earn-credits/tournament': typeof EarnCreditsTournamentRoute
   '/earn-credits/watch': typeof EarnCreditsWatchRoute
   '/faculty/$id': typeof FacultyIdRoute
@@ -994,6 +1020,7 @@ export interface FileRoutesById {
   '/books_/composer/$bookId': typeof BooksComposerBookIdRoute
   '/books_/preview/$token': typeof BooksPreviewTokenRoute
   '/books_/read/$id': typeof BooksReadIdRoute
+  '/course/name/$name': typeof CourseNameNameRoute
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books_/composer/': typeof BooksComposerIndexRoute
   '/api/public/hooks/admin-ai-pulse': typeof ApiPublicHooksAdminAiPulseRoute
@@ -1052,9 +1079,11 @@ export interface FileRouteTypes {
     | '/api/youtube'
     | '/blog/$slug'
     | '/books/composer'
+    | '/books/search'
     | '/course/$id'
     | '/courses/$id'
     | '/department/$id'
+    | '/earn-credits/battle'
     | '/earn-credits/tournament'
     | '/earn-credits/watch'
     | '/faculty/$id'
@@ -1107,6 +1136,7 @@ export interface FileRouteTypes {
     | '/books/composer/$bookId'
     | '/books/preview/$token'
     | '/books/read/$id'
+    | '/course/name/$name'
     | '/tools/ai/$slug'
     | '/books/composer/'
     | '/api/public/hooks/admin-ai-pulse'
@@ -1161,9 +1191,11 @@ export interface FileRouteTypes {
     | '/api/riddle'
     | '/api/youtube'
     | '/blog/$slug'
+    | '/books/search'
     | '/course/$id'
     | '/courses/$id'
     | '/department/$id'
+    | '/earn-credits/battle'
     | '/earn-credits/tournament'
     | '/earn-credits/watch'
     | '/faculty/$id'
@@ -1216,6 +1248,7 @@ export interface FileRouteTypes {
     | '/books/composer/$bookId'
     | '/books/preview/$token'
     | '/books/read/$id'
+    | '/course/name/$name'
     | '/tools/ai/$slug'
     | '/books/composer'
     | '/api/public/hooks/admin-ai-pulse'
@@ -1272,9 +1305,11 @@ export interface FileRouteTypes {
     | '/api/youtube'
     | '/blog/$slug'
     | '/books_/composer'
+    | '/books_/search'
     | '/course/$id'
     | '/courses/$id'
     | '/department/$id'
+    | '/earn-credits/battle'
     | '/earn-credits/tournament'
     | '/earn-credits/watch'
     | '/faculty/$id'
@@ -1327,6 +1362,7 @@ export interface FileRouteTypes {
     | '/books_/composer/$bookId'
     | '/books_/preview/$token'
     | '/books_/read/$id'
+    | '/course/name/$name'
     | '/tools/ai/$slug'
     | '/books_/composer/'
     | '/api/public/hooks/admin-ai-pulse'
@@ -1384,6 +1420,7 @@ export interface RootRouteChildren {
   ApiYoutubeRoute: typeof ApiYoutubeRoute
   BlogSlugRoute: typeof BlogSlugRoute
   BooksComposerRoute: typeof BooksComposerRouteWithChildren
+  BooksSearchRoute: typeof BooksSearchRoute
   CourseIdRoute: typeof CourseIdRoute
   CoursesIdRoute: typeof CoursesIdRoute
   DepartmentIdRoute: typeof DepartmentIdRoute
@@ -1412,6 +1449,7 @@ export interface RootRouteChildren {
   ApiPublicVoiceCloneRoute: typeof ApiPublicVoiceCloneRoute
   BooksPreviewTokenRoute: typeof BooksPreviewTokenRoute
   BooksReadIdRoute: typeof BooksReadIdRoute
+  CourseNameNameRoute: typeof CourseNameNameRoute
   ApiPublicHooksAdminAiPulseRoute: typeof ApiPublicHooksAdminAiPulseRoute
   ApiPublicHooksAdminResetPasswordRoute: typeof ApiPublicHooksAdminResetPasswordRoute
   ApiPublicHooksAutoEbsuNewsRoute: typeof ApiPublicHooksAutoEbsuNewsRoute
@@ -1946,6 +1984,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EarnCreditsTournamentRouteImport
       parentRoute: typeof EarnCreditsRoute
     }
+    '/earn-credits/battle': {
+      id: '/earn-credits/battle'
+      path: '/battle'
+      fullPath: '/earn-credits/battle'
+      preLoaderRoute: typeof EarnCreditsBattleRouteImport
+      parentRoute: typeof EarnCreditsRoute
+    }
     '/department/$id': {
       id: '/department/$id'
       path: '/department/$id'
@@ -1965,6 +2010,13 @@ declare module '@tanstack/react-router' {
       path: '/course/$id'
       fullPath: '/course/$id'
       preLoaderRoute: typeof CourseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/books_/search': {
+      id: '/books_/search'
+      path: '/books/search'
+      fullPath: '/books/search'
+      preLoaderRoute: typeof BooksSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/books_/composer': {
@@ -2043,6 +2095,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/tools/ai/$slug'
       preLoaderRoute: typeof ToolsAiSlugRouteImport
       parentRoute: typeof ToolsRoute
+    }
+    '/course/name/$name': {
+      id: '/course/name/$name'
+      path: '/course/name/$name'
+      fullPath: '/course/name/$name'
+      preLoaderRoute: typeof CourseNameNameRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/books_/read/$id': {
       id: '/books_/read/$id'
@@ -2195,11 +2254,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface EarnCreditsRouteChildren {
+  EarnCreditsBattleRoute: typeof EarnCreditsBattleRoute
   EarnCreditsTournamentRoute: typeof EarnCreditsTournamentRoute
   EarnCreditsWatchRoute: typeof EarnCreditsWatchRoute
 }
 
 const EarnCreditsRouteChildren: EarnCreditsRouteChildren = {
+  EarnCreditsBattleRoute: EarnCreditsBattleRoute,
   EarnCreditsTournamentRoute: EarnCreditsTournamentRoute,
   EarnCreditsWatchRoute: EarnCreditsWatchRoute,
 }
@@ -2356,6 +2417,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiYoutubeRoute: ApiYoutubeRoute,
   BlogSlugRoute: BlogSlugRoute,
   BooksComposerRoute: BooksComposerRouteWithChildren,
+  BooksSearchRoute: BooksSearchRoute,
   CourseIdRoute: CourseIdRoute,
   CoursesIdRoute: CoursesIdRoute,
   DepartmentIdRoute: DepartmentIdRoute,
@@ -2384,6 +2446,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicVoiceCloneRoute: ApiPublicVoiceCloneRoute,
   BooksPreviewTokenRoute: BooksPreviewTokenRoute,
   BooksReadIdRoute: BooksReadIdRoute,
+  CourseNameNameRoute: CourseNameNameRoute,
   ApiPublicHooksAdminAiPulseRoute: ApiPublicHooksAdminAiPulseRoute,
   ApiPublicHooksAdminResetPasswordRoute: ApiPublicHooksAdminResetPasswordRoute,
   ApiPublicHooksAutoEbsuNewsRoute: ApiPublicHooksAutoEbsuNewsRoute,

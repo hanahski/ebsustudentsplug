@@ -1,7 +1,11 @@
 // Fullscreen, in-app PDF reader powered by pdf.js.
 // Renders one page at a time onto a canvas, supports zoom, page nav, fullscreen
 // toggle, keyboard shortcuts and a Download button.
+// The overlay is portaled to document.body so ancestor transforms (e.g. the
+// hover:-translate on book cards) cannot trap the fixed overlay or swallow the
+// Exit button click.
 import { useEffect, useRef, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import {
   X,
@@ -168,10 +172,10 @@ export function PdfReader({ url, title, onClose, downloadName }: Props) {
     }
   };
 
-  return (
+  const overlay = (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-[120] bg-background flex flex-col"
+      className="fixed inset-0 z-[2147483000] bg-background flex flex-col"
       role="dialog"
       aria-label={`Reading ${title}`}
     >
@@ -180,23 +184,31 @@ export function PdfReader({ url, title, onClose, downloadName }: Props) {
         <FileText className="w-4 h-4 text-primary shrink-0" />
         <h2 className="text-sm font-semibold truncate flex-1 min-w-0">{title}</h2>
         <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground mr-2">
-          <Button size="icon" variant="ghost" onClick={() => setScale((s) => Math.max(s - 0.15, 0.5))} aria-label="Zoom out">
+          <Button type="button" size="icon" variant="ghost" onClick={() => setScale((s) => Math.max(s - 0.15, 0.5))} aria-label="Zoom out">
             <ZoomOut className="w-4 h-4" />
           </Button>
           <span className="w-12 text-center tabular-nums">{Math.round(scale * 100)}%</span>
-          <Button size="icon" variant="ghost" onClick={() => setScale((s) => Math.min(s + 0.15, 3))} aria-label="Zoom in">
+          <Button type="button" size="icon" variant="ghost" onClick={() => setScale((s) => Math.min(s + 0.15, 3))} aria-label="Zoom in">
             <ZoomIn className="w-4 h-4" />
           </Button>
         </div>
-        <Button size="sm" variant="outline" onClick={download} aria-label="Download PDF">
+        <Button type="button" size="sm" variant="outline" onClick={download} aria-label="Download PDF">
           <Download className="w-4 h-4 sm:mr-1" />
           <span className="hidden sm:inline">Download</span>
         </Button>
-        <Button size="icon" variant="ghost" onClick={toggleFull} aria-label={isFull ? "Exit fullscreen" : "Fullscreen"}>
+        <Button type="button" size="icon" variant="ghost" onClick={toggleFull} aria-label={isFull ? "Exit fullscreen" : "Fullscreen"}>
           {isFull ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
         </Button>
-        <Button size="icon" variant="ghost" onClick={onClose} aria-label="Close">
-          <X className="w-4 h-4" />
+        <Button
+          type="button"
+          size="sm"
+          variant="destructive"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClose(); }}
+          aria-label="Exit reader"
+          className="ml-1"
+        >
+          <X className="w-4 h-4 sm:mr-1" />
+          <span className="hidden sm:inline">Exit</span>
         </Button>
       </header>
 
@@ -264,4 +276,7 @@ export function PdfReader({ url, title, onClose, downloadName }: Props) {
       <span className="hidden">{fitScale}</span>
     </div>
   );
+
+  if (typeof document === "undefined") return overlay;
+  return createPortal(overlay, document.body);
 }
