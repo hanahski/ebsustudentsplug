@@ -196,9 +196,9 @@ function MarketPage() {
             ))}
           </div>
 
-          <div className="mt-5 flex gap-2 flex-wrap items-center">
+          <div className="relative mt-5 flex gap-2 flex-wrap items-center">
             <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <Input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
@@ -216,10 +216,11 @@ function MarketPage() {
               Show sold
             </label>
           </div>
-          <div className="mt-3 flex gap-2 flex-wrap">
+          <div className="relative mt-3 flex gap-2 flex-wrap">
             {KIND_FILTERS.map((c) => (
               <button
                 key={c}
+                type="button"
                 onClick={() => setKind(c)}
                 className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition ${kind === c ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"}`}
               >
