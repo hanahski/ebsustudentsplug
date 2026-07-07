@@ -86,6 +86,7 @@ import { Route as EarnCreditsTournamentRouteImport } from './routes/earn-credits
 import { Route as DepartmentIdRouteImport } from './routes/department.$id'
 import { Route as CoursesIdRouteImport } from './routes/courses.$id'
 import { Route as CourseIdRouteImport } from './routes/course.$id'
+import { Route as BooksSearchRouteImport } from './routes/books_.search'
 import { Route as BooksComposerRouteImport } from './routes/books_.composer'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as ApiYoutubeRouteImport } from './routes/api/youtube'
@@ -504,6 +505,11 @@ const CourseIdRoute = CourseIdRouteImport.update({
   path: '/course/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BooksSearchRoute = BooksSearchRouteImport.update({
+  id: '/books_/search',
+  path: '/books/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BooksComposerRoute = BooksComposerRouteImport.update({
   id: '/books_/composer',
   path: '/books/composer',
@@ -718,6 +724,7 @@ export interface FileRoutesByFullPath {
   '/api/youtube': typeof ApiYoutubeRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/books/composer': typeof BooksComposerRouteWithChildren
+  '/books/search': typeof BooksSearchRoute
   '/course/$id': typeof CourseIdRoute
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
@@ -827,6 +834,7 @@ export interface FileRoutesByTo {
   '/api/riddle': typeof ApiRiddleRoute
   '/api/youtube': typeof ApiYoutubeRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/books/search': typeof BooksSearchRoute
   '/course/$id': typeof CourseIdRoute
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
@@ -939,6 +947,7 @@ export interface FileRoutesById {
   '/api/youtube': typeof ApiYoutubeRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/books_/composer': typeof BooksComposerRouteWithChildren
+  '/books_/search': typeof BooksSearchRoute
   '/course/$id': typeof CourseIdRoute
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
@@ -1052,6 +1061,7 @@ export interface FileRouteTypes {
     | '/api/youtube'
     | '/blog/$slug'
     | '/books/composer'
+    | '/books/search'
     | '/course/$id'
     | '/courses/$id'
     | '/department/$id'
@@ -1161,6 +1171,7 @@ export interface FileRouteTypes {
     | '/api/riddle'
     | '/api/youtube'
     | '/blog/$slug'
+    | '/books/search'
     | '/course/$id'
     | '/courses/$id'
     | '/department/$id'
@@ -1272,6 +1283,7 @@ export interface FileRouteTypes {
     | '/api/youtube'
     | '/blog/$slug'
     | '/books_/composer'
+    | '/books_/search'
     | '/course/$id'
     | '/courses/$id'
     | '/department/$id'
@@ -1384,6 +1396,7 @@ export interface RootRouteChildren {
   ApiYoutubeRoute: typeof ApiYoutubeRoute
   BlogSlugRoute: typeof BlogSlugRoute
   BooksComposerRoute: typeof BooksComposerRouteWithChildren
+  BooksSearchRoute: typeof BooksSearchRoute
   CourseIdRoute: typeof CourseIdRoute
   CoursesIdRoute: typeof CoursesIdRoute
   DepartmentIdRoute: typeof DepartmentIdRoute
@@ -1967,6 +1980,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CourseIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/books_/search': {
+      id: '/books_/search'
+      path: '/books/search'
+      fullPath: '/books/search'
+      preLoaderRoute: typeof BooksSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/books_/composer': {
       id: '/books_/composer'
       path: '/books/composer'
@@ -2356,6 +2376,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiYoutubeRoute: ApiYoutubeRoute,
   BlogSlugRoute: BlogSlugRoute,
   BooksComposerRoute: BooksComposerRouteWithChildren,
+  BooksSearchRoute: BooksSearchRoute,
   CourseIdRoute: CourseIdRoute,
   CoursesIdRoute: CoursesIdRoute,
   DepartmentIdRoute: DepartmentIdRoute,
@@ -2400,13 +2421,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
