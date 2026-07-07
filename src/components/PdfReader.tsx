@@ -276,4 +276,7 @@ export function PdfReader({ url, title, onClose, downloadName }: Props) {
       <span className="hidden">{fitScale}</span>
     </div>
   );
+
+  if (typeof document === "undefined") return overlay;
+  return createPortal(overlay, document.body);
 }
