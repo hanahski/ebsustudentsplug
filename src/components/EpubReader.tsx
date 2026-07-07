@@ -50,7 +50,7 @@ export function EpubReader({
       <div className="flex-1 relative">
         <ReactReader
           url={url}
-          location={location ?? undefined}
+          location={location}
           locationChanged={(loc: string) => {
             setLocation(loc);
             try { window.localStorage.setItem(locKey, loc); } catch { /* ignore */ }
