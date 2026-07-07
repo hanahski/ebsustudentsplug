@@ -1,12 +1,9 @@
-import brandLogo from "@/assets/brand-logo.png";
-
 /**
- * Professional branded loader.
- * - Opaque, always on top (z-index max) so it never sits behind app chrome.
- * - Uses raw CSS custom properties (oklch) — no hsl() wrapping that would
- *   silently invalidate colors with this design system's tokens.
- * - Composition: soft radial aura, dual conic progress rings (counter-rotating),
- *   crisp arc sweep, breathing logo core, and a shimmer wordmark.
+ * Fullscreen branded loader for first-time users.
+ * Interior animation is the Uiverse "pencil" SVG (by @gustavofusco), re-tinted
+ * to the StudentsPlug design tokens so it stays on-brand in light + dark mode.
+ * Kept the surrounding aura + wordmark shimmer so the surface still feels like
+ * StudentsPlug, not a generic widget.
  */
 export function BrandLoader({ label = "StudentsPlug" }: { label?: string }) {
   return (
@@ -31,110 +28,153 @@ export function BrandLoader({ label = "StudentsPlug" }: { label?: string }) {
         }}
       />
 
-      <div className="sp-loader" aria-hidden>
-        {/* Outer conic ring */}
-        <div className="sp-ring sp-ring--outer" />
-        {/* Inner conic ring, reversed */}
-        <div className="sp-ring sp-ring--inner" />
-        {/* Crisp sweeping arc */}
-        <svg className="sp-arc" viewBox="0 0 100 100">
-          <defs>
-            <linearGradient id="spArcGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="var(--primary)" stopOpacity="0" />
-              <stop offset="100%" stopColor="var(--primary)" stopOpacity="1" />
-            </linearGradient>
-          </defs>
-          <circle
-            cx="50"
-            cy="50"
-            r="46"
-            fill="none"
-            stroke="url(#spArcGrad)"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeDasharray="80 210"
-          />
-        </svg>
+      {/* Pencil (Uiverse.io / gustavofusco) — re-tinted to our tokens */}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        height="180"
+        width="180"
+        viewBox="0 0 200 200"
+        className="sp-pencil"
+        aria-hidden
+      >
+        <defs>
+          <clipPath id="sp-pencil-eraser">
+            <rect height="30" width="30" ry="5" rx="5" />
+          </clipPath>
+        </defs>
+        <circle
+          transform="rotate(-113,100,100)"
+          strokeLinecap="round"
+          strokeDashoffset="439.82"
+          strokeDasharray="439.82 439.82"
+          strokeWidth="2"
+          stroke="var(--primary)"
+          fill="none"
+          r="70"
+          className="sp-pencil__stroke"
+        />
+        <g transform="translate(100,100)" className="sp-pencil__rotate">
+          <g fill="none">
+            <circle
+              transform="rotate(-90)"
+              strokeDashoffset="402"
+              strokeDasharray="402.12 402.12"
+              strokeWidth="30"
+              stroke="var(--primary)"
+              r="64"
+              className="sp-pencil__body1"
+            />
+            <circle
+              transform="rotate(-90)"
+              strokeDashoffset="465"
+              strokeDasharray="464.96 464.96"
+              strokeWidth="10"
+              stroke="color-mix(in oklab, var(--primary) 70%, var(--background))"
+              r="74"
+              className="sp-pencil__body2"
+            />
+            <circle
+              transform="rotate(-90)"
+              strokeDashoffset="339"
+              strokeDasharray="339.29 339.29"
+              strokeWidth="10"
+              stroke="color-mix(in oklab, var(--primary) 55%, var(--foreground))"
+              r="54"
+              className="sp-pencil__body3"
+            />
+          </g>
+          <g transform="rotate(-90) translate(49,0)" className="sp-pencil__eraser">
+            <g className="sp-pencil__eraser-skew">
+              <rect
+                height="30"
+                width="30"
+                ry="5"
+                rx="5"
+                fill="color-mix(in oklab, var(--accent) 85%, var(--background))"
+              />
+              <rect
+                clipPath="url(#sp-pencil-eraser)"
+                height="30"
+                width="5"
+                fill="color-mix(in oklab, var(--accent) 65%, var(--foreground))"
+              />
+              <rect height="20" width="30" fill="color-mix(in oklab, var(--foreground) 8%, var(--background))" />
+              <rect height="20" width="15" fill="color-mix(in oklab, var(--foreground) 28%, var(--background))" />
+              <rect height="20" width="5" fill="color-mix(in oklab, var(--foreground) 18%, var(--background))" />
+              <rect height="2" width="30" y="6" fill="color-mix(in oklab, var(--foreground) 20%, transparent)" />
+              <rect height="2" width="30" y="13" fill="color-mix(in oklab, var(--foreground) 20%, transparent)" />
+            </g>
+          </g>
+          <g transform="rotate(-90) translate(49,-30)" className="sp-pencil__point">
+            <polygon points="15 0,30 30,0 30" fill="color-mix(in oklab, var(--accent) 75%, var(--background))" />
+            <polygon points="15 0,6 30,0 30" fill="var(--accent)" />
+            <polygon points="15 0,20 10,10 10" fill="var(--foreground)" />
+          </g>
+        </g>
+      </svg>
 
-        {/* Logo core */}
-        <div className="sp-core">
-          <img src={brandLogo} alt="" width={72} height={72} draggable={false} />
-        </div>
-      </div>
-
-      <div className="sp-word font-display mt-7" aria-hidden>
+      <div className="sp-word font-display mt-6" aria-hidden>
         {label}
       </div>
       <div className="sp-caption">preparing your workspace</div>
 
       <style>{`
-        .sp-loader {
-          position: relative;
-          width: 152px;
-          height: 152px;
-          display: grid;
-          place-items: center;
+        .sp-pencil {
+          filter: drop-shadow(0 8px 24px color-mix(in oklab, var(--primary) 40%, transparent));
         }
-        .sp-ring {
-          position: absolute;
-          inset: 0;
-          border-radius: 9999px;
-          padding: 2px;
-          -webkit-mask:
-            linear-gradient(#000 0 0) content-box,
-            linear-gradient(#000 0 0);
-          -webkit-mask-composite: xor;
-                  mask-composite: exclude;
+        .sp-pencil__stroke {
+          animation: spPencilStroke 3s ease-in-out infinite;
+          transform-origin: 100px 100px;
         }
-        .sp-ring--outer {
-          background: conic-gradient(from 0deg,
-            transparent 0deg,
-            color-mix(in oklab, var(--primary) 80%, transparent) 140deg,
-            var(--primary) 220deg,
-            transparent 360deg);
-          animation: spSpin 2.2s linear infinite;
-          filter: drop-shadow(0 0 10px color-mix(in oklab, var(--primary) 55%, transparent));
+        .sp-pencil__rotate {
+          animation: spPencilRotate 3s linear infinite;
+          transform-origin: 100px 100px;
         }
-        .sp-ring--inner {
-          inset: 14px;
-          background: conic-gradient(from 180deg,
-            transparent 0deg,
-            color-mix(in oklab, var(--accent) 70%, transparent) 160deg,
-            var(--accent) 240deg,
-            transparent 360deg);
-          animation: spSpin 3.4s linear infinite reverse;
-          opacity: 0.85;
+        .sp-pencil__body1 { animation: spPencilBody1 3s ease-in-out infinite; }
+        .sp-pencil__body2 { animation: spPencilBody2 3s ease-in-out infinite; }
+        .sp-pencil__body3 { animation: spPencilBody3 3s ease-in-out infinite; }
+        .sp-pencil__eraser {
+          animation: spPencilEraser 3s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+          transform: rotate(-90deg) translate(49px, 0);
         }
-        .sp-arc {
-          position: absolute;
-          inset: 0;
-          width: 100%;
-          height: 100%;
-          animation: spSpin 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
-        }
-        .sp-core {
-          position: relative;
-          width: 82px;
-          height: 82px;
-          border-radius: 9999px;
-          display: grid;
-          place-items: center;
-          background: var(--background);
-          box-shadow:
-            0 10px 30px -10px color-mix(in oklab, var(--primary) 55%, transparent),
-            inset 0 0 0 1px color-mix(in oklab, var(--foreground) 8%, transparent);
-          animation: spBreathe 2.4s ease-in-out infinite;
-        }
-        .sp-core img {
-          width: 72px;
-          height: 72px;
-          object-fit: contain;
+        .sp-pencil__eraser-skew { animation: spPencilEraserSkew 3s ease-in-out infinite; }
+        .sp-pencil__point {
+          animation: spPencilPoint 3s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+          transform: rotate(-90deg) translate(49px, -30px);
         }
 
-        @keyframes spSpin { to { transform: rotate(360deg); } }
-        @keyframes spBreathe {
-          0%, 100% { transform: scale(1); }
-          50%      { transform: scale(1.05); }
+        @keyframes spPencilStroke {
+          0%   { stroke-dashoffset: 439.82; transform: rotate(-113deg); }
+          50%  { stroke-dashoffset: 219.91; transform: rotate(-113deg); }
+          100% { stroke-dashoffset: 439.82; transform: rotate(247deg); }
+        }
+        @keyframes spPencilRotate {
+          0%   { transform: rotate(0deg); }
+          100% { transform: rotate(720deg); }
+        }
+        @keyframes spPencilBody1 {
+          0%,100% { stroke-dashoffset: 402.12; }
+          50%     { stroke-dashoffset: 0; }
+        }
+        @keyframes spPencilBody2 {
+          0%,100% { stroke-dashoffset: 464.96; }
+          50%     { stroke-dashoffset: 0; }
+        }
+        @keyframes spPencilBody3 {
+          0%,100% { stroke-dashoffset: 339.29; }
+          50%     { stroke-dashoffset: 0; }
+        }
+        @keyframes spPencilEraser {
+          0%,100% { transform: rotate(-45deg) translate(49px, 0); }
+          50%     { transform: rotate(0deg)  translate(49px, 0); }
+        }
+        @keyframes spPencilEraserSkew {
+          0%,100% { transform: skewX(0); }
+          50%     { transform: skewX(30deg); }
+        }
+        @keyframes spPencilPoint {
+          0%,100% { transform: rotate(-45deg) translate(49px, -30px); }
+          50%     { transform: rotate(0deg)  translate(49px, -30px); }
         }
 
         .sp-word {
@@ -153,8 +193,8 @@ export function BrandLoader({ label = "StudentsPlug" }: { label?: string }) {
           animation: spShimmer 3.2s ease-in-out infinite;
         }
         @keyframes spShimmer {
-          0%, 100% { background-position: 0% 50%; }
-          50%      { background-position: 100% 50%; }
+          0%,100% { background-position: 0% 50%; }
+          50%     { background-position: 100% 50%; }
         }
         .sp-caption {
           margin-top: 0.5rem;
@@ -165,7 +205,12 @@ export function BrandLoader({ label = "StudentsPlug" }: { label?: string }) {
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .sp-ring, .sp-arc, .sp-core, .sp-word { animation: none !important; }
+          .sp-pencil__stroke, .sp-pencil__rotate,
+          .sp-pencil__body1, .sp-pencil__body2, .sp-pencil__body3,
+          .sp-pencil__eraser, .sp-pencil__eraser-skew, .sp-pencil__point,
+          .sp-word {
+            animation: none !important;
+          }
         }
       `}</style>
     </div>
