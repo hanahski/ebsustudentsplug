@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sparkles, RefreshCw, Globe2, X, Maximize2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
