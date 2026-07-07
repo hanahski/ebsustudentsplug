@@ -98,6 +98,7 @@ import { Route as ApiDictionaryRouteImport } from './routes/api/dictionary'
 import { Route as ApiBootprintRouteImport } from './routes/api/bootprint'
 import { Route as BooksComposerIndexRouteImport } from './routes/books_.composer.index'
 import { Route as ToolsAiSlugRouteImport } from './routes/tools.ai.$slug'
+import { Route as CourseNameNameRouteImport } from './routes/course.name.$name'
 import { Route as BooksReadIdRouteImport } from './routes/books_.read.$id'
 import { Route as BooksPreviewTokenRouteImport } from './routes/books_.preview.$token'
 import { Route as BooksComposerBookIdRouteImport } from './routes/books_.composer.$bookId'
@@ -565,6 +566,11 @@ const ToolsAiSlugRoute = ToolsAiSlugRouteImport.update({
   path: '/ai/$slug',
   getParentRoute: () => ToolsRoute,
 } as any)
+const CourseNameNameRoute = CourseNameNameRouteImport.update({
+  id: '/course/name/$name',
+  path: '/course/name/$name',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BooksReadIdRoute = BooksReadIdRouteImport.update({
   id: '/books_/read/$id',
   path: '/books/read/$id',
@@ -780,6 +786,7 @@ export interface FileRoutesByFullPath {
   '/books/composer/$bookId': typeof BooksComposerBookIdRoute
   '/books/preview/$token': typeof BooksPreviewTokenRoute
   '/books/read/$id': typeof BooksReadIdRoute
+  '/course/name/$name': typeof CourseNameNameRoute
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books/composer/': typeof BooksComposerIndexRoute
   '/api/public/hooks/admin-ai-pulse': typeof ApiPublicHooksAdminAiPulseRoute
@@ -890,6 +897,7 @@ export interface FileRoutesByTo {
   '/books/composer/$bookId': typeof BooksComposerBookIdRoute
   '/books/preview/$token': typeof BooksPreviewTokenRoute
   '/books/read/$id': typeof BooksReadIdRoute
+  '/course/name/$name': typeof CourseNameNameRoute
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books/composer': typeof BooksComposerIndexRoute
   '/api/public/hooks/admin-ai-pulse': typeof ApiPublicHooksAdminAiPulseRoute
@@ -1003,6 +1011,7 @@ export interface FileRoutesById {
   '/books_/composer/$bookId': typeof BooksComposerBookIdRoute
   '/books_/preview/$token': typeof BooksPreviewTokenRoute
   '/books_/read/$id': typeof BooksReadIdRoute
+  '/course/name/$name': typeof CourseNameNameRoute
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books_/composer/': typeof BooksComposerIndexRoute
   '/api/public/hooks/admin-ai-pulse': typeof ApiPublicHooksAdminAiPulseRoute
@@ -1117,6 +1126,7 @@ export interface FileRouteTypes {
     | '/books/composer/$bookId'
     | '/books/preview/$token'
     | '/books/read/$id'
+    | '/course/name/$name'
     | '/tools/ai/$slug'
     | '/books/composer/'
     | '/api/public/hooks/admin-ai-pulse'
@@ -1227,6 +1237,7 @@ export interface FileRouteTypes {
     | '/books/composer/$bookId'
     | '/books/preview/$token'
     | '/books/read/$id'
+    | '/course/name/$name'
     | '/tools/ai/$slug'
     | '/books/composer'
     | '/api/public/hooks/admin-ai-pulse'
@@ -1339,6 +1350,7 @@ export interface FileRouteTypes {
     | '/books_/composer/$bookId'
     | '/books_/preview/$token'
     | '/books_/read/$id'
+    | '/course/name/$name'
     | '/tools/ai/$slug'
     | '/books_/composer/'
     | '/api/public/hooks/admin-ai-pulse'
@@ -1425,6 +1437,7 @@ export interface RootRouteChildren {
   ApiPublicVoiceCloneRoute: typeof ApiPublicVoiceCloneRoute
   BooksPreviewTokenRoute: typeof BooksPreviewTokenRoute
   BooksReadIdRoute: typeof BooksReadIdRoute
+  CourseNameNameRoute: typeof CourseNameNameRoute
   ApiPublicHooksAdminAiPulseRoute: typeof ApiPublicHooksAdminAiPulseRoute
   ApiPublicHooksAdminResetPasswordRoute: typeof ApiPublicHooksAdminResetPasswordRoute
   ApiPublicHooksAutoEbsuNewsRoute: typeof ApiPublicHooksAutoEbsuNewsRoute
@@ -2064,6 +2077,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ToolsAiSlugRouteImport
       parentRoute: typeof ToolsRoute
     }
+    '/course/name/$name': {
+      id: '/course/name/$name'
+      path: '/course/name/$name'
+      fullPath: '/course/name/$name'
+      preLoaderRoute: typeof CourseNameNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/books_/read/$id': {
       id: '/books_/read/$id'
       path: '/books/read/$id'
@@ -2405,6 +2425,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicVoiceCloneRoute: ApiPublicVoiceCloneRoute,
   BooksPreviewTokenRoute: BooksPreviewTokenRoute,
   BooksReadIdRoute: BooksReadIdRoute,
+  CourseNameNameRoute: CourseNameNameRoute,
   ApiPublicHooksAdminAiPulseRoute: ApiPublicHooksAdminAiPulseRoute,
   ApiPublicHooksAdminResetPasswordRoute: ApiPublicHooksAdminResetPasswordRoute,
   ApiPublicHooksAutoEbsuNewsRoute: ApiPublicHooksAutoEbsuNewsRoute,
