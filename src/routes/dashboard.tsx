@@ -104,7 +104,7 @@ function DashboardPage() {
     if (!profile) return;
     if (!payout?.account_number) return toast.error("Connect a payout account first");
     if (swapAmount < MIN_SWAP_CREDITS) return toast.error(`Minimum swap is ${MIN_SWAP_CREDITS.toLocaleString()} credits`);
-    if ((profile.credits ?? 0) < swapAmount) return toast.error("Not enough credits");
+    if (creditBalance < swapAmount) return toast.error("Not enough credits");
     const { net } = computeWithdrawal(swapAmount);
     if (net <= 0) return toast.error("Amount too low after the withdrawal fee");
     toast.success(`Payout of ₦${net.toLocaleString(undefined, { maximumFractionDigits: 2 })} requested — you'll receive it within 24h.`);
@@ -113,7 +113,7 @@ function DashboardPage() {
 
   if (loading || !profile) return <AppShell><div className="py-10 text-center text-muted-foreground">Loading…</div></AppShell>;
 
-  const nairaValue = (profile.credits ?? 0) * NAIRA_PER_CREDIT_SELL;
+  const nairaValue = creditBalance * NAIRA_PER_CREDIT_SELL;
   const swapPreview = computeWithdrawal(swapAmount);
 
   return (
@@ -124,7 +124,7 @@ function DashboardPage() {
             <div>
               <div className="text-sm opacity-90">Your credits</div>
               <div className="text-5xl sm:text-6xl font-extrabold font-display mt-2 tracking-tight">
-                {(profile.credits ?? 0).toLocaleString()}
+                {creditBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
               </div>
               <div className="text-sm opacity-90 mt-1">
                 Cash value ≈ ₦{nairaValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}
