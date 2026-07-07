@@ -599,6 +599,15 @@ function ReadBookPage() {
           onClose={() => setPdfReaderOpen(false)}
         />
       )}
+
+      {epubReaderOpen && epubUrl && book && (
+        <EpubReader
+          url={epubUrl}
+          title={book.title}
+          bookId={book.id}
+          onClose={() => setEpubReaderOpen(false)}
+        />
+      )}
     </AppShell>
   );
 }
