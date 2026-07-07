@@ -235,7 +235,7 @@ function Catalogue() {
         {/* Groups */}
         {grouped.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
-            No department matches "{q}".
+            No {mode === "courses" ? "course" : "department"} matches "{q}".
           </div>
         ) : (
           grouped.map(([letter, items]) => (
