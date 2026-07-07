@@ -26,6 +26,29 @@ function parseGutenbergId(
   return u ? u[1] : null;
 }
 
+const KINDLE_EXT = /\.(mobi|azw3?|kfx)(\?|#|$)/i;
+const EPUB_EXT = /\.epub(\?|#|$)/i;
+const PDF_EXT = /\.pdf(\?|#|$)/i;
+
+function detectFormats(book: any): {
+  epubUrl: string | null;
+  pdfUrl: string | null;
+  kindleUrl: string | null;
+  kindleOnly: boolean;
+} {
+  const formats: Record<string, string> = book?.download_formats ?? {};
+  const dl: string | null = book?.download_url ?? null;
+  const epubUrl =
+    formats.epub || (dl && EPUB_EXT.test(dl) ? dl : null) || null;
+  const pdfUrl =
+    formats.pdf || (dl && PDF_EXT.test(dl) ? dl : null) || null;
+  const kindleUrl =
+    formats.kindle || formats.mobi || formats.azw3 || formats.azw ||
+    (dl && KINDLE_EXT.test(dl) ? dl : null) || null;
+  const kindleOnly = !!kindleUrl && !epubUrl && !pdfUrl;
+  return { epubUrl, pdfUrl, kindleUrl, kindleOnly };
+}
+
 function ReadBookPage() {
   const { id } = Route.useParams();
   const router = useRouter();
