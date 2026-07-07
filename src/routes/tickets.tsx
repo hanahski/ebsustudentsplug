@@ -108,7 +108,7 @@ function BrowseTickets() {
 
   const buyAndDownload = async (ticket: any) => {
     if (!user) { nav({ to: "/login" }); return; }
-    const pdfWindow = window.open("", "_blank");
+    // download runs in background — no popup
     setBuyingId(ticket.id);
     try {
       const { data: buyRes, error } = await supabase.rpc("buy_ticket", { _ticket_id: ticket.id });
@@ -124,12 +124,12 @@ function BrowseTickets() {
         buyerIndex,
       });
 
-      await downloadTicketPdf(stampedTicket, ticketFilename(ticket.title, buyerIndex), pdfWindow);
+      await downloadTicketPdf(stampedTicket, ticketFilename(ticket.title, buyerIndex));
       toast.success("Ticket PDF downloaded");
       qc.invalidateQueries({ queryKey: ["tickets-browse"] });
       qc.invalidateQueries({ queryKey: ["my-tickets", user.id] });
     } catch (err: any) {
-      pdfWindow?.close();
+      // no popup to close
       toast.error(err.message ?? "PDF download failed");
     } finally {
       setBuyingId(null);
@@ -310,7 +310,7 @@ function PurchasedTicket({ p }: { p: any }) {
   }, [p.qr_token]);
 
   const downloadPurchasedTicket = async () => {
-    const pdfWindow = window.open("", "_blank");
+    // download runs in background — no popup
     setDownloading(true);
     try {
       const stampedTicket = await composeTicketImage({
@@ -320,10 +320,10 @@ function PurchasedTicket({ p }: { p: any }) {
         holder: profile?.display_name || user?.email || "Holder",
         buyerIndex,
       });
-      await downloadTicketPdf(stampedTicket, ticketFilename(p.ticket?.title ?? "ticket", buyerIndex), pdfWindow);
+      await downloadTicketPdf(stampedTicket, ticketFilename(p.ticket?.title ?? "ticket", buyerIndex));
       toast.success("Ticket PDF downloaded");
     } catch (err: any) {
-      pdfWindow?.close();
+      // no popup to close
       toast.error(err.message ?? "PDF download failed");
     } finally {
       setDownloading(false);
