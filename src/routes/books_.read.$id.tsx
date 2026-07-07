@@ -178,6 +178,11 @@ function ReadBookPage() {
     } catch {}
   }, [cachedPdfStorageKey]);
 
+  // Direct PDF link (no caching needed) — feed it straight to the reader.
+  useEffect(() => {
+    if (detected.pdfUrl && !cachedPdfUrl) setCachedPdfUrl(detected.pdfUrl);
+  }, [detected.pdfUrl, cachedPdfUrl]);
+
   // The moment a user owns a non-Gutenberg book, mirror to Cloud and open the reader.
   // 45-second client timeout so the UI never stays stuck on "Preparing…".
   useEffect(() => {
