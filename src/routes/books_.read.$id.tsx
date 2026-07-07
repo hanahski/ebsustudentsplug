@@ -150,13 +150,17 @@ function ReadBookPage() {
   });
 
   const gid = useMemo(() => parseGutenbergId(book), [book]);
-  // Gutenberg books render via embedded HTML reader; everything else is cached as PDF.
-  const shouldCachePdf = !!book && !gid && !userBookId;
+  const detected = useMemo(() => detectFormats(book), [book]);
+  // Gutenberg → embedded reader. User books → chapters. Kindle-only → no PDF
+  // caching (unreadable inline). Everything else → cache as PDF.
+  const shouldCachePdf = !!book && !gid && !userBookId && !detected.kindleOnly;
   const embedUrl = gid ? `https://www.gutenberg.org/cache/epub/${gid}/pg${gid}-images.html` : null;
-  const epubUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}.epub3.images` : null;
+  const epubUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}.epub3.images` : detected.epubUrl;
   const txtUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}.txt.utf-8` : null;
-  const kindleUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}.kf8.images` : null;
+  const kindleUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}.kf8.images` : detected.kindleUrl;
   const detailsUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}` : (book?.read_url ?? null);
+  const canReadEpub = !!epubUrl && !gid; // Gutenberg still uses HTML embed
+
   const [cacheError, setCacheError] = useState<string | null>(null);
 
   const cachedPdfStorageKey = `book-reader-pdf:${id}`;
