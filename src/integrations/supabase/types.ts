@@ -279,6 +279,111 @@ export type Database = {
         }
         Relationships: []
       }
+      battle_flags: {
+        Row: {
+          created_at: string
+          id: string
+          opponent_id: string
+          reason: string
+          total: number
+          user_id: string
+          wins: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          opponent_id: string
+          reason: string
+          total?: number
+          user_id: string
+          wins?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          opponent_id?: string
+          reason?: string
+          total?: number
+          user_id?: string
+          wins?: number
+        }
+        Relationships: []
+      }
+      battle_matches: {
+        Row: {
+          a_choice: string | null
+          b_choice: string | null
+          board: Json
+          coin_result: string | null
+          created_at: string
+          current_turn: string | null
+          device_hash_a: string | null
+          device_hash_b: string | null
+          escrowed: boolean
+          finished_at: string | null
+          first_player: string | null
+          id: string
+          is_draw: boolean
+          last_activity_at: string
+          mode: string
+          moves_count: number
+          player_a: string
+          player_b: string | null
+          stake: number
+          started_at: string | null
+          status: Database["public"]["Enums"]["battle_status"]
+          winner: string | null
+        }
+        Insert: {
+          a_choice?: string | null
+          b_choice?: string | null
+          board?: Json
+          coin_result?: string | null
+          created_at?: string
+          current_turn?: string | null
+          device_hash_a?: string | null
+          device_hash_b?: string | null
+          escrowed?: boolean
+          finished_at?: string | null
+          first_player?: string | null
+          id?: string
+          is_draw?: boolean
+          last_activity_at?: string
+          mode?: string
+          moves_count?: number
+          player_a: string
+          player_b?: string | null
+          stake?: number
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["battle_status"]
+          winner?: string | null
+        }
+        Update: {
+          a_choice?: string | null
+          b_choice?: string | null
+          board?: Json
+          coin_result?: string | null
+          created_at?: string
+          current_turn?: string | null
+          device_hash_a?: string | null
+          device_hash_b?: string | null
+          escrowed?: boolean
+          finished_at?: string | null
+          first_player?: string | null
+          id?: string
+          is_draw?: boolean
+          last_activity_at?: string
+          mode?: string
+          moves_count?: number
+          player_a?: string
+          player_b?: string | null
+          stake?: number
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["battle_status"]
+          winner?: string | null
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           author_name: string
@@ -2211,6 +2316,10 @@ export type Database = {
     }
     Functions: {
       _agent_exec_sql: { Args: { sql: string }; Returns: undefined }
+      _battle_check_win: {
+        Args: { _board: Json; _uid: string }
+        Returns: boolean
+      }
       add_dm_group_member: {
         Args: { _member_id: string; _thread_id: string }
         Returns: undefined
@@ -2253,6 +2362,21 @@ export type Database = {
       }
       admin_set_user_status: {
         Args: { _status: string; _user_id: string }
+        Returns: undefined
+      }
+      battle_cancel: { Args: { _match_id: string }; Returns: undefined }
+      battle_challenge: {
+        Args: { _device_hash: string; _opponent: string }
+        Returns: string
+      }
+      battle_matchmake: { Args: { _device_hash: string }; Returns: string }
+      battle_move: { Args: { _cell: number; _match_id: string }; Returns: Json }
+      battle_pick_side: {
+        Args: { _choice: string; _match_id: string }
+        Returns: Json
+      }
+      battle_respond: {
+        Args: { _accept: boolean; _device_hash: string; _match_id: string }
         Returns: undefined
       }
       buy_ticket: { Args: { _ticket_id: string }; Returns: Json }
@@ -2347,6 +2471,13 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      battle_status:
+        | "pending"
+        | "coin_flip"
+        | "active"
+        | "finished"
+        | "cancelled"
+        | "declined"
       news_category: "ebsu" | "other"
       news_status: "draft" | "published"
       profile_status: "active" | "blocked" | "deactivated"
@@ -2479,6 +2610,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      battle_status: [
+        "pending",
+        "coin_flip",
+        "active",
+        "finished",
+        "cancelled",
+        "declined",
+      ],
       news_category: ["ebsu", "other"],
       news_status: ["draft", "published"],
       profile_status: ["active", "blocked", "deactivated"],
