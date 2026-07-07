@@ -24,7 +24,7 @@ const NAIRA_PER_CREDIT_SELL = 1 / CREDITS_PER_NAIRA_SELL; // ≈ ₦0.333
 const CREDITS_PER_NAIRA_BUY = 2; // ₦1 buys 2 credits
 const WITHDRAWAL_FEE_PCT = 0.10;
 const WITHDRAWAL_FEE_FLAT = 150;
-const MIN_SWAP_CREDITS = 900; // ~₦300 gross, so payout is meaningful after fees
+const MIN_SWAP_CREDITS = 30_000; // ₦10,000 gross at 3 credits = ₦1
 
 const BUY_PACKAGES: Array<{ naira: number; credits: number; label?: string }> = [
   { naira: 1150, credits: 2300, label: "Starter" },
@@ -201,7 +201,15 @@ function DashboardPage() {
             tone="from-amber-500 to-orange-600"
             onClick={() => setPayoutOpen(true)}
           />
+          <ActionCard
+            icon={ShieldCheck}
+            title="Special badges"
+            desc="See all badges, perks & how to apply"
+            tone="from-violet-500 to-indigo-600"
+            to="/apply-badge"
+          />
         </div>
+
 
         <div className="rounded-2xl border bg-muted/30 p-4 text-xs text-muted-foreground space-y-1.5">
           <div className="font-semibold text-foreground text-sm">How credits & naira work</div>

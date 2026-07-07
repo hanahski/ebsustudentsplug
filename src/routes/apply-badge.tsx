@@ -14,11 +14,59 @@ import { Star, ShieldCheck, Sparkles, Plug, ArrowLeft, Clock3, CheckCircle2, XCi
 
 type BadgeKind = "star" | "legit" | "sure_plug" | "verified";
 
-const BADGES: Record<BadgeKind, { label: string; icon: typeof Star; blurb: string }> = {
-  star:      { label: "Star",            icon: Star,        blurb: "Highlighted member badge. Required (with Authentication) to sell tickets." },
-  legit:     { label: "Legit",           icon: ShieldCheck, blurb: "Trusted contributor — vouched by the community." },
-  sure_plug: { label: "Sure Plug",       icon: Plug,        blurb: "Professional plug, verified reliable seller." },
-  verified:  { label: "Authentication",  icon: Sparkles,    blurb: "Official EBSU student / staff authentication badge." },
+const BADGES: Record<
+  BadgeKind,
+  { label: string; icon: typeof Star; blurb: string; uses: string[]; access: string; tone: string }
+> = {
+  verified: {
+    label: "Authentication",
+    icon: Sparkles,
+    blurb: "Official EBSU student / staff authentication badge.",
+    uses: [
+      "Blue check next to your name across the app",
+      "Required (with Star) to sell event tickets",
+      "Higher trust score on your posts & market listings",
+      "Priority in search & department pages",
+    ],
+    access: "Submit your EBSU registration number and a short reason. Admin verifies you're a real student/staff before approving.",
+    tone: "from-sky-500 to-indigo-600",
+  },
+  star: {
+    label: "Star",
+    icon: Star,
+    blurb: "Highlighted member badge for active contributors.",
+    uses: [
+      "Gold star next to your name",
+      "Required (with Authentication) to sell event tickets",
+      "Featured on department leaderboards",
+    ],
+    access: "Be consistently active — post, comment, help others. Then apply with examples of your contribution.",
+    tone: "from-amber-500 to-orange-600",
+  },
+  legit: {
+    label: "Legit",
+    icon: ShieldCheck,
+    blurb: "Trusted contributor — vouched by the community.",
+    uses: [
+      "Green shield badge signals safe to deal with",
+      "Buyers see 'Legit' tag on your market listings",
+      "Fewer friction checks when creating posts",
+    ],
+    access: "Have a clean record, positive feedback, and at least a few completed transactions or approved posts.",
+    tone: "from-emerald-500 to-teal-600",
+  },
+  sure_plug: {
+    label: "Sure Plug",
+    icon: Plug,
+    blurb: "Professional plug — verified reliable seller.",
+    uses: [
+      "Purple plug badge — top-tier seller status",
+      "Your listings pinned higher in the marketplace",
+      "Eligible for the Sure Plug directory & recommendations",
+    ],
+    access: "For serious sellers with proven track record. Provide business details, contact, and sample listings.",
+    tone: "from-fuchsia-500 to-purple-600",
+  },
 };
 
 export const Route = createFileRoute("/apply-badge")({
@@ -77,9 +125,47 @@ function ApplyBadgePage() {
           </div>
         </div>
 
+        {/* Explainer: every special badge, what it unlocks, and how to earn it */}
+        <div className="bg-card border rounded-2xl p-4 space-y-3">
+          <div>
+            <h2 className="font-bold font-display">All special badges</h2>
+            <p className="text-xs text-muted-foreground">Tap one to apply for it. Each badge unlocks different perks — admin approves after review.</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(Object.keys(BADGES) as BadgeKind[]).map((k) => {
+              const b = BADGES[k];
+              const B = b.icon;
+              const active = badge === k;
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setBadge(k)}
+                  className={`text-left rounded-2xl border p-3 transition ${active ? "border-primary ring-2 ring-primary/30 bg-primary/5" : "hover:border-primary/50"}`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`w-8 h-8 rounded-lg grid place-items-center bg-gradient-to-br ${b.tone} text-white`}>
+                      <B className="w-4 h-4" />
+                    </span>
+                    <span className="font-semibold text-sm">{b.label}</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mb-2">{b.blurb}</p>
+                  <div className="text-[11px] space-y-0.5">
+                    <p className="font-semibold text-foreground">What it unlocks:</p>
+                    <ul className="list-disc pl-4 text-muted-foreground space-y-0.5">
+                      {b.uses.slice(0, 3).map((u, i) => <li key={i}>{u}</li>)}
+                    </ul>
+                  </div>
+                  <p className="text-[11px] mt-2"><span className="font-semibold text-foreground">How to get it:</span> <span className="text-muted-foreground">{b.access}</span></p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <form onSubmit={submit} className="bg-card border rounded-2xl p-5 space-y-4">
           <div>
-            <Label>Which badge?</Label>
+            <Label>Applying for</Label>
             <Select value={badge} onValueChange={(v) => setBadge(v as BadgeKind)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -88,7 +174,18 @@ function ApplyBadgePage() {
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground mt-1">{BADGES[badge].blurb}</p>
+            <div className="mt-2 rounded-xl border bg-muted/30 p-3 text-xs space-y-1.5">
+              <p className="font-semibold text-foreground flex items-center gap-1.5">
+                <Icon className="w-3.5 h-3.5" /> {BADGES[badge].label} — {BADGES[badge].blurb}
+              </p>
+              <div>
+                <p className="font-semibold text-foreground">Perks you'll unlock:</p>
+                <ul className="list-disc pl-4 text-muted-foreground">
+                  {BADGES[badge].uses.map((u, i) => <li key={i}>{u}</li>)}
+                </ul>
+              </div>
+              <p><span className="font-semibold text-foreground">How to qualify:</span> <span className="text-muted-foreground">{BADGES[badge].access}</span></p>
+            </div>
           </div>
 
           <div>
