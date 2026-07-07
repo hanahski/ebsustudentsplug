@@ -4,7 +4,6 @@ import { ArrowLeft, Trophy, Coins, Loader2, X, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getDeviceHash } from "@/lib/device-hash";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -100,27 +99,6 @@ function PlayPage() {
   const oppChoice = m ? (isA ? m.b_choice : m.a_choice) : null;
 
   const myTurn = m?.status === "active" && m.current_turn === uid;
-
-  async function respond(accept: boolean) {
-    if (!m) return;
-    setBusy(true);
-    try {
-      const { error } = await supabase.rpc("battle_respond", {
-        _match_id: matchId,
-        _accept: accept,
-        _device_hash: getDeviceHash(),
-      });
-      if (error) throw error;
-      if (!accept) {
-        toast("Challenge declined");
-        nav({ to: "/earn-credits/battle" });
-      }
-    } catch (e: any) {
-      toast.error(String(e?.message ?? e));
-    } finally {
-      setBusy(false);
-    }
-  }
 
   async function pickSide(choice: "heads" | "tails") {
     setBusy(true);
