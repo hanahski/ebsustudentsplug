@@ -162,28 +162,51 @@ function Catalogue() {
                 <Sparkles className="w-3 h-3" /> Catalogue
               </div>
               <h1 className="mt-1 text-2xl md:text-3xl font-bold font-display leading-tight">
-                Departments,{" "}
+                EBSU{" "}
                 <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-                  A&nbsp;to&nbsp;Z
+                  Catalogue
                 </span>
               </h1>
               <p className="text-sm text-muted-foreground mt-0.5">
-                {DEPARTMENTS.length} programmes at Ebonyi State University.
+                {deptCount} departments · {courseCount} courses.
               </p>
             </div>
           </div>
 
+          {/* Category tabs */}
+          <div className="relative mt-5 inline-flex p-1 rounded-full bg-muted/60 border shadow-sm">
+            {([
+              { key: "departments", label: "Departments", count: deptCount, hint: "See what EBSU offers" },
+              { key: "courses", label: "Courses", count: courseCount, hint: "Where the real magic happens" },
+            ] as const).map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setMode(t.key)}
+                className={`px-4 h-9 rounded-full text-xs font-bold transition ${
+                  mode === t.key
+                    ? "bg-primary text-primary-foreground shadow"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                title={t.hint}
+              >
+                {t.label}
+                <span className="ml-1.5 opacity-70">{t.count}</span>
+              </button>
+            ))}
+          </div>
+
           {/* Search + A–Z rail */}
-          <div className="relative mt-5 space-y-3">
+          <div className="relative mt-4 space-y-3">
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Search a department (e.g. Computer Science)"
+                placeholder={mode === "courses" ? "Search a course (e.g. Education Biology)" : "Search a department (e.g. Computer Science)"}
                 className="pl-9 h-11 rounded-full bg-background/70 backdrop-blur"
               />
             </div>
+
             <nav
               aria-label="Jump to letter"
               className="flex flex-wrap gap-1 text-[11px] font-bold"
