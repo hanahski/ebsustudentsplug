@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { CheckSquare, Trophy, PlayCircle, Swords } from "lucide-react";
 
-export const Route = createFileRoute("/earn-credits")({
+export const Route = createFileRoute("/earn-credits/")({
   component: EarnCreditsPage,
   head: () => ({ meta: [{ title: "Earn Plug Credits — StudentsPlug" }] }),
 });
