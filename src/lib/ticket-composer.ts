@@ -1,6 +1,7 @@
 // Compose a downloadable ticket image: the original photo with a QR stamp,
 // holder name and a footer bar, like a real printed ticket.
 import QRCode from "qrcode";
+import brandLogoUrl from "@/assets/brand-logo.png";
 
 export function ticketFilename(title: string, buyerIndex?: number | null): string {
   const slug = (title || "ticket")
@@ -12,7 +13,18 @@ export function ticketFilename(title: string, buyerIndex?: number | null): strin
   return `${slug}${suffix}.pdf`;
 }
 
-/** Renders a QR with a Sure Plug "verified" badge in the centre. */
+let _brandLogoPromise: Promise<HTMLImageElement> | null = null;
+function getBrandLogo(): Promise<HTMLImageElement> {
+  if (!_brandLogoPromise) _brandLogoPromise = loadImage(brandLogoUrl);
+  return _brandLogoPromise;
+}
+
+/**
+ * Renders a QR code with a bold, transparent brand-logo watermark tiled across
+ * the whole code. High error-correction keeps it scannable even with the
+ * watermark on top. No badge is drawn in the middle anymore — the verified
+ * check now lives beside the buyer number.
+ */
 export async function composeVerifiedQr(qrToken: string, size = 320): Promise<string> {
   const dataUrl = await QRCode.toDataURL(`SP-TICKET:${qrToken}`, {
     width: size,
@@ -26,31 +38,67 @@ export async function composeVerifiedQr(qrToken: string, size = 320): Promise<st
   canvas.height = size;
   const ctx = canvas.getContext("2d")!;
   ctx.drawImage(qrImg, 0, 0, size, size);
-  drawVerifiedBadge(ctx, size / 2, size / 2, size * 0.16);
+  try {
+    const logo = await getBrandLogo();
+    stampLogoPattern(ctx, logo, size, size, { tile: size / 3.2, alpha: 0.14, rotate: -22 });
+  } catch { /* ignore — QR still valid */ }
   return canvas.toDataURL("image/png");
 }
 
-function drawVerifiedBadge(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
+/** Facebook-blue verified check — drawn as vector paths so it stays crisp. */
+function drawFacebookVerified(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(r / 12, r / 12); // path designed on a 24-unit canvas centred at 0
+  // Star-burst badge outline (12-point rounded star)
+  const points = 12;
+  const outer = 12;
+  const inner = 10.4;
   ctx.beginPath();
-  ctx.arc(cx, cy, r + 6, 0, Math.PI * 2);
-  ctx.fillStyle = "#ffffff";
+  for (let i = 0; i < points * 2; i++) {
+    const rad = i % 2 === 0 ? outer : inner;
+    const a = (i * Math.PI) / points - Math.PI / 2;
+    const x = Math.cos(a) * rad;
+    const y = Math.sin(a) * rad;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = "#1D9BF0"; // Facebook / X verified blue
   ctx.fill();
-  const g = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
-  g.addColorStop(0, "#2563eb");
-  g.addColorStop(1, "#7c3aed");
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.fillStyle = g;
-  ctx.fill();
+  // White check
   ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = Math.max(2, r * 0.22);
+  ctx.lineWidth = 2.4;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   ctx.beginPath();
-  ctx.moveTo(cx - r * 0.42, cy + r * 0.02);
-  ctx.lineTo(cx - r * 0.08, cy + r * 0.38);
-  ctx.lineTo(cx + r * 0.5, cy - r * 0.35);
+  ctx.moveTo(-4.6, 0.4);
+  ctx.lineTo(-1.2, 3.8);
+  ctx.lineTo(5.2, -3.4);
   ctx.stroke();
+  ctx.restore();
+}
+
+/** Tile the brand mark across an area at low opacity — the "you can't recreate this" watermark. */
+function stampLogoPattern(
+  ctx: CanvasRenderingContext2D,
+  logo: HTMLImageElement,
+  w: number,
+  h: number,
+  opts: { tile: number; alpha: number; rotate: number },
+) {
+  const { tile, alpha, rotate } = opts;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(w / 2, h / 2);
+  ctx.rotate((rotate * Math.PI) / 180);
+  const diag = Math.ceil(Math.hypot(w, h)) + tile;
+  const step = tile * 1.15;
+  for (let y = -diag; y < diag; y += step) {
+    for (let x = -diag; x < diag; x += step) {
+      ctx.drawImage(logo, x, y, tile, tile);
+    }
+  }
+  ctx.restore();
 }
 
 export async function composeTicketImage(opts: {
@@ -62,11 +110,12 @@ export async function composeTicketImage(opts: {
 }): Promise<string> {
   const { photoUrl, qrToken, title, holder, buyerIndex } = opts;
   const img = await loadImage(photoUrl);
+  const brand = await getBrandLogo().catch(() => null);
 
   const W = 1200;
   const scale = W / img.width;
   const H = Math.round(img.height * scale);
-  const footer = 240;
+  const footer = 260;
 
   const canvas = document.createElement("canvas");
   canvas.width = W;
@@ -75,6 +124,11 @@ export async function composeTicketImage(opts: {
   ctx.fillStyle = "#0a0a0a";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(img, 0, 0, W, H);
+
+  // Bold logo watermark tiled across the WHOLE ticket (photo + footer).
+  if (brand) {
+    stampLogoPattern(ctx, brand, W, H + footer, { tile: 190, alpha: 0.09, rotate: -22 });
+  }
 
   const qrSize = 260;
   const pad = 20;
@@ -95,18 +149,32 @@ export async function composeTicketImage(opts: {
   ctx.fillStyle = grad;
   ctx.fillRect(0, H, W, footer);
 
+  // Re-stamp watermark on the footer so it shows over the gradient too.
+  if (brand) {
+    stampLogoPattern(ctx, brand, W, footer, { tile: 170, alpha: 0.11, rotate: -22 });
+    // (the second call above was drawn at 0,0 of the whole canvas — reset origin properly)
+  }
+
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 56px system-ui, sans-serif";
   ctx.textBaseline = "top";
   ctx.fillText(truncate(title, 28), 40, H + 36);
 
+  // Buyer line with the verified badge sitting right next to the buyer number.
   ctx.font = "30px system-ui, sans-serif";
-  ctx.fillStyle = "rgba(255,255,255,0.92)";
-  const holderLabel = buyerIndex && buyerIndex > 0
-    ? `Buyer #${buyerIndex} · ${truncate(holder, 28)}`
-    : `Holder: ${truncate(holder, 32)}`;
-  ctx.fillText(holderLabel, 40, H + 108);
-  ctx.fillText("Scan with Sure Plug · Ticket QR Scanner", 40, H + 154);
+  ctx.fillStyle = "rgba(255,255,255,0.96)";
+  const buyerLabel = buyerIndex && buyerIndex > 0
+    ? `Buyer #${buyerIndex}`
+    : "Holder";
+  const y = H + 112;
+  ctx.fillText(buyerLabel, 40, y);
+  const labelWidth = ctx.measureText(buyerLabel).width;
+  drawFacebookVerified(ctx, 40 + labelWidth + 30, y + 18, 22);
+  ctx.fillText(`· ${truncate(holder, 28)}`, 40 + labelWidth + 62, y);
+
+  ctx.font = "24px system-ui, sans-serif";
+  ctx.fillStyle = "rgba(255,255,255,0.85)";
+  ctx.fillText("Scan with StudentsPlug · Ticket QR Scanner", 40, H + 168);
 
   const tickY = H + footer - 24;
   ctx.fillStyle = "rgba(255,255,255,0.85)";
@@ -172,16 +240,29 @@ function truncate(s: string, n: number) { return s.length > n ? s.slice(0, n - 1
 
 export async function createTicketPdfBlob(dataUrl: string): Promise<Blob> {
   const { jsPDF } = await import("jspdf");
-  // Get image dimensions from the data URL
   const img = await loadImage(dataUrl);
   const ratio = img.height / img.width;
-  // Use A4-ish portrait, fit image to page width with margin
   const pageW = 595; // pt (A4 width)
   const margin = 24;
   const imgW = pageW - margin * 2;
   const imgH = imgW * ratio;
   const pageH = imgH + margin * 2;
   const pdf = new jsPDF({ unit: "pt", format: [pageW, pageH], orientation: "portrait" });
+
+  // Extra brand-watermark layer painted onto a full-page canvas, so the PDF
+  // page itself carries the anti-forgery pattern even in the margin areas.
+  try {
+    const brand = await getBrandLogo();
+    const wmCanvas = document.createElement("canvas");
+    wmCanvas.width = Math.round(pageW * 2);
+    wmCanvas.height = Math.round(pageH * 2);
+    const wctx = wmCanvas.getContext("2d")!;
+    wctx.scale(2, 2);
+    stampLogoPattern(wctx, brand, pageW, pageH, { tile: 90, alpha: 0.06, rotate: -22 });
+    const wmUrl = wmCanvas.toDataURL("image/png");
+    pdf.addImage(wmUrl, "PNG", 0, 0, pageW, pageH, undefined, "FAST");
+  } catch { /* watermark is decorative — never block the download */ }
+
   pdf.addImage(dataUrl, "PNG", margin, margin, imgW, imgH, undefined, "FAST");
   return pdf.output("blob");
 }
