@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { BookCover } from "@/components/BookCover";
 import { SwipeBookReader } from "@/components/SwipeBookReader";
 import { PdfReader } from "@/components/PdfReader";
+import { EpubReader } from "@/components/EpubReader";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/books_/read/$id")({ component: ReadBookPage });
