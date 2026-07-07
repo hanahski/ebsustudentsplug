@@ -111,21 +111,20 @@ function BrowseTickets() {
     const pdfWindow = window.open("", "_blank");
     setBuyingId(ticket.id);
     try {
-      const { error } = await supabase.rpc("buy_ticket", { _ticket_id: ticket.id });
+      const { data: buyRes, error } = await supabase.rpc("buy_ticket", { _ticket_id: ticket.id });
       if (error) throw error;
-
-      const { data: freshTicket, error: refreshError } = await supabase.from("tickets").select("*").eq("id", ticket.id).maybeSingle();
-      if (refreshError) throw refreshError;
-      if (!freshTicket?.qr_token) throw new Error("Ticket QR is not ready yet");
+      const buyerIndex = (buyRes as any)?.buyer_index as number | undefined;
+      const qrToken = (buyRes as any)?.qr_token as string | undefined;
 
       const stampedTicket = await composeTicketImage({
-        photoUrl: freshTicket.photo_url,
-        qrToken: freshTicket.qr_token,
-        title: freshTicket.title,
+        photoUrl: ticket.photo_url,
+        qrToken: qrToken ?? "",
+        title: ticket.title,
         holder: profile?.display_name || user.email || "Holder",
+        buyerIndex,
       });
 
-      await downloadTicketPdf(stampedTicket, `ticket-${freshTicket.id}.pdf`, pdfWindow);
+      await downloadTicketPdf(stampedTicket, ticketFilename(ticket.title, buyerIndex), pdfWindow);
       toast.success("Ticket PDF downloaded");
       qc.invalidateQueries({ queryKey: ["tickets-browse"] });
       qc.invalidateQueries({ queryKey: ["my-tickets", user.id] });
