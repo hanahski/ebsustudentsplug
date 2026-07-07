@@ -101,6 +101,7 @@ function slugify(s: string) {
 
 function Catalogue() {
   const [q, setQ] = useState("");
+  const [mode, setMode] = useState<"departments" | "courses">("departments");
 
   // Map department name → real DB id when it exists, so cards deep-link.
   const { data: dbDepts } = useQuery({
@@ -115,12 +116,21 @@ function Catalogue() {
     return m;
   }, [dbDepts]);
 
+  // Any programme whose name contains "Education" is a teaching/course
+  // programme — split them from pure departments.
+  const isCourse = (name: string) => /\beducation\b/i.test(name);
+  const source = useMemo(
+    () => DEPARTMENTS.filter((d) => (mode === "courses" ? isCourse(d) : !isCourse(d))),
+    [mode],
+  );
+
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
-    return DEPARTMENTS.filter((d) => !query || d.toLowerCase().includes(query))
+    return source
+      .filter((d) => !query || d.toLowerCase().includes(query))
       .slice()
       .sort((a, b) => a.localeCompare(b));
-  }, [q]);
+  }, [q, source]);
 
   const grouped = useMemo(() => {
     const buckets: Record<string, string[]> = {};
@@ -132,6 +142,9 @@ function Catalogue() {
   }, [filtered]);
 
   const letters = grouped.map(([l]) => l);
+  const deptCount = DEPARTMENTS.filter((d) => !isCourse(d)).length;
+  const courseCount = DEPARTMENTS.filter(isCourse).length;
+
 
   return (
     <AppShell>
