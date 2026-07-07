@@ -10,6 +10,7 @@ import { BookOpen, Loader2, Download, ExternalLink, Coins, ArrowLeft } from "luc
 import { toast } from "sonner";
 import { BookCover } from "@/components/BookCover";
 import { SwipeBookReader } from "@/components/SwipeBookReader";
+import { PdfReader } from "@/components/PdfReader";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/books_/read/$id")({ component: ReadBookPage });
@@ -37,6 +38,7 @@ function ReadBookPage() {
   // "How do you want to enjoy this book?" chooser — shown once per owned book.
   const [chooserOpen, setChooserOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"read" | "download" | null>(null);
+  const [pdfReaderOpen, setPdfReaderOpen] = useState(false);
   const chooserSeenKey = `book-chooser-seen:${id}`;
 
   const { data: book, isLoading } = useQuery({
@@ -220,6 +222,15 @@ function ReadBookPage() {
     }
   };
 
+  // If the user chose "Read in app" before the cached PDF finished preparing,
+  // auto-open the reader the moment the cached URL is ready.
+  useEffect(() => {
+    if (viewMode === "read" && cachedPdfUrl && !pdfReaderOpen) {
+      setPdfReaderOpen(true);
+    }
+  }, [viewMode, cachedPdfUrl, pdfReaderOpen]);
+
+
   return (
     <AppShell>
       <div className="space-y-4">
@@ -292,22 +303,35 @@ function ReadBookPage() {
               <>
                 <div className="px-4 py-3 flex flex-wrap gap-2 border-b bg-muted/30">
                   {shouldCachePdf && (
-                    <Button
-                      size="sm"
-                      onClick={downloadPdf}
-                      disabled={!cachedPdfUrl || downloadLoading}
-                    >
-                      {cacheLoading || downloadLoading ? (
-                        <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
-                      ) : (
-                        <Download className="w-3.5 h-3.5 mr-1" />
-                      )}
-                      {cacheLoading
-                        ? "Preparing PDF…"
-                        : downloadLoading
-                          ? "Downloading…"
-                          : "Download PDF"}
-                    </Button>
+                    <>
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => cachedPdfUrl && setPdfReaderOpen(true)}
+                        disabled={!cachedPdfUrl || cacheLoading}
+                        title="Read in the in-app PDF reader"
+                      >
+                        {cacheLoading ? (
+                          <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                        ) : (
+                          <BookOpen className="w-3.5 h-3.5 mr-1" />
+                        )}
+                        {cacheLoading ? "Preparing…" : "Read in app"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={downloadPdf}
+                        disabled={!cachedPdfUrl || downloadLoading}
+                      >
+                        {downloadLoading ? (
+                          <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                        ) : (
+                          <Download className="w-3.5 h-3.5 mr-1" />
+                        )}
+                        {downloadLoading ? "Downloading…" : "Download PDF"}
+                      </Button>
+                    </>
                   )}
                   {epubUrl && (
                     <Button size="sm" variant="outline" asChild>
@@ -324,11 +348,16 @@ function ReadBookPage() {
                     </Button>
                   )}
                   {kindleUrl && (
-                    <Button size="sm" variant="outline" asChild>
-                      <a href={kindleUrl} download>
-                        <Download className="w-3.5 h-3.5 mr-1" /> Kindle
-                      </a>
-                    </Button>
+                    <div className="flex flex-col items-start gap-1">
+                      <Button size="sm" variant="outline" asChild>
+                        <a href={kindleUrl} download>
+                          <Download className="w-3.5 h-3.5 mr-1" /> Kindle
+                        </a>
+                      </Button>
+                      <p className="text-[10px] text-muted-foreground max-w-[220px] leading-snug">
+                        Open with the free Kindle app (iOS / Android / desktop) or send to your Kindle device.
+                      </p>
+                    </div>
                   )}
                   {detailsUrl && gid && (
                     <Button size="sm" variant="ghost" asChild>
@@ -465,6 +494,11 @@ function ReadBookPage() {
                 setViewMode("read");
                 setChooserOpen(false);
                 try { window.localStorage.setItem(chooserSeenKey, "1"); } catch { /* no-op */ }
+                // Open the in-app PDF reader if we already have the cached PDF.
+                // Otherwise the effect above will finish preparing it and the
+                // user can hit "Read in app" again from the toolbar.
+                if (cachedPdfUrl) setPdfReaderOpen(true);
+                else if (!cacheLoading) toast.info("Preparing your book… we'll open it in a second.");
               }}
               className="rounded-2xl border p-4 text-left hover:border-primary hover:shadow-glow transition group"
             >
@@ -496,6 +530,15 @@ function ReadBookPage() {
           </p>
         </DialogContent>
       </Dialog>
+
+      {pdfReaderOpen && cachedPdfUrl && book && (
+        <PdfReader
+          url={cachedPdfUrl}
+          title={book.title}
+          downloadName={book.title}
+          onClose={() => setPdfReaderOpen(false)}
+        />
+      )}
     </AppShell>
   );
 }

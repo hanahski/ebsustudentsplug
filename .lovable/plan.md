@@ -1,90 +1,63 @@
+# Plan: Big UI/UX + Plug AI upgrade
 
-## 1. Obooko novels (link-out only)
+This is a large batch of changes. Grouping into 5 workstreams so we ship without breaking anything. I'll match everything to the existing StudentsPlug design tokens (`--primary`, `--accent`, `--background`, `--foreground`, oklch) — no hardcoded colors, no purple gradients.
 
-Add a scraper that indexes obooko.com's public catalog, storing metadata + cover in `library_books`, with "Read/Download" opening obooko.com in a new tab (no rehosting).
+## 1. Welcome loader (new-user full screen)
 
-- New server helper `src/lib/obooko-sync.server.ts`:
-  - Crawl obooko category index pages (Fiction, Romance, Sci-Fi, Mystery, Thriller, Horror, Fantasy, Children, Non-fiction, Poetry, Short Stories).
-  - Per book: extract title, author, description, cover image URL, star rating (e.g. `4.0`), and detail-page URL.
-  - Map to `library_books` row:
-    - `openlibrary_key = "obooko-<slug>"`
-    - `source = "obooko"`, `source_url = detail page`, `read_url = detail page` (link-out)
-    - `cover_url = <obooko cover>` (cached later by existing `generate-book-covers` hook if needed)
-    - `category = "novel"` (or `poetry`/`comics` when the section matches)
-    - `price_credits = rating` stored as numeric (e.g. `4.0`). If rating missing, default `3.0`.
-    - `description`, `author` populated from page.
-  - Concurrency-limited fetch, upsert in batches of 200.
-- New public cron hook `src/routes/api/public/hooks/sync-obooko.ts` (bearer `CRON_SECRET`, GET/POST), calls the sync and returns counts.
-- Add "Obooko" to the multi-source sync runner (`sync-library-sources.ts`) so it's included in the nightly job.
-- Trigger a one-time import so books show up immediately.
-- `price_credits` on `library_books` is already numeric — no schema change needed; existing purchase flow already reads it.
+- Replace the current pencil/logo loader inside `src/components/BrandLoader.tsx` (the one shown in the new-user welcome overlay) with the Uiverse pencil SVG you provided.
+- Rework it so `currentColor` and the hardcoded `hsl(223,90%,50%)` values map to our semantic tokens (`text-primary`, `--primary`, `--accent`) — keeps it on-brand in light + dark mode.
+- Keep the surrounding shell (aura, wordmark shimmer, "preparing your workspace" caption) so it still feels like StudentsPlug, not a generic Uiverse widget.
+- Keep `prefers-reduced-motion` support.
 
-Note: obooko requires a free account to actually download the PDF. Because we're link-out only, users click through and complete the download on obooko; we don't touch their files.
+## 2. Plug AI upgrade (smarter + more "alive" UX)
 
-## 2. JAMB registration lock at signup
+Backend / brains:
+- Widen the Plug AI system prompt so it's genuinely general-purpose (math, coding, life advice, science, casual chat) while still knowing it's StudentsPlug and preferring school-relevant answers when the question is school-shaped.
+- Keep the AI Bank auto-switch behavior untouched.
 
-One JAMB reg number = one account, forever, cannot be reused.
+Chat UI (`src/routes/chat.tsx` + related):
+- New Plug AI avatar/logo (generated image, not Sparkles) — soft glowing orb that reads as "AI".
+- Chat background: subtle animated aura using our tokens (radial gradient + slow drift) so it feels ambient, not busy.
+- Message typography bumped for readability; assistant messages sit on the page (no bubble), user messages get a high-contrast `primary` bubble.
+- Replace the "typing…" indicator with the Uiverse `Generating…` loader (letters + spinning ring), retinted to our palette.
+- Sounds: replace/augment the existing send/receive tick with a short futuristic low-bass "whoosh" (WebAudio-generated so no new asset needed). Keeps user's existing sound-off preference.
+- Aura on the composer: soft glowing ring around the prompt input while the AI is thinking.
 
-**Schema (migration):**
-```sql
-ALTER TABLE public.profiles
-  ADD COLUMN jamb_number text;
+## 3. Theme toggle
 
-CREATE UNIQUE INDEX profiles_jamb_number_unique
-  ON public.profiles (upper(jamb_number))
-  WHERE jamb_number IS NOT NULL;
+- Swap the current `ThemeToggle` for the Uiverse animated sun/moon switch.
+- Wire the checkbox to the existing `next-themes` (or current theme hook) so nothing else changes — only the visual control.
+- Keep accessibility: real `<label>`+`<input type="checkbox">`, `aria-label`, keyboard toggle.
 
--- Prevent changing/clearing a JAMB number once set
-CREATE OR REPLACE FUNCTION public.lock_jamb_number()
-RETURNS trigger LANGUAGE plpgsql AS $$
-BEGIN
-  IF OLD.jamb_number IS NOT NULL
-     AND NEW.jamb_number IS DISTINCT FROM OLD.jamb_number THEN
-    RAISE EXCEPTION 'JAMB number cannot be changed once set';
-  END IF;
-  RETURN NEW;
-END $$;
+## 4. Book composer + reader UI/UX
 
-CREATE TRIGGER profiles_lock_jamb
-  BEFORE UPDATE ON public.profiles
-  FOR EACH ROW EXECUTE FUNCTION public.lock_jamb_number();
-```
+Composer (`books_.composer.*`):
+- Nicer section cards, refined toolbar, better empty states.
+- Writer "loading → written" state uses the Uiverse typewriter animation while the AI is generating a chapter.
+- Better primary Download button (icon + subtle gradient using our tokens, hover lift, progress state during export).
 
-**Signup UX (`src/routes/login.tsx` signup form):**
-- Add required "JAMB registration number" field (format: 8 digits + 2 letters, e.g. `20123456AB`) with client-side regex validation.
-- Before calling `supabase.auth.signUp`, call a new server fn `checkJambAvailable({ jamb })` that hits `profiles` via server publishable client with a narrow `TO anon` SELECT policy on `jamb_number` only, returning `{ available: boolean }`.
-- On successful signup, immediately upsert the JAMB number onto the new user's profile (server fn `claimJambNumber` using `requireSupabaseAuth`). Uniqueness index enforces "cannot be reused"; trigger enforces "cannot be changed".
-- Existing users with no JAMB set: on next login, show a one-time modal on `/me` requiring them to claim their JAMB before continuing to use paid actions. (Non-blocking for read-only browsing.)
-- Admin `/admin` gets a small "Reset JAMB for user" action that calls a security-definer function (`admin_reset_jamb`) — only path to clear it, gated by `is_admin`.
+Composer Book Viewer (Read vs Download):
+- Detect file type from extension + mimetype.
+- **PDF** → "Read" opens the existing in-app `PdfReader` (already uses pdf.js). Fix the current fallback that downloads instead of opening.
+- **EPUB** → install `epubjs` + `react-reader`, open in a full-screen reader modal with chapter nav; persist last location in `localStorage` under `epub-loc:{bookId}` (and to Supabase profile row if we already track reading progress).
+- **MOBI / AZW / AZW3 / KFX** → hide/disable "Read". Show only "Download" with helper text: *"Open with the free Kindle app (iOS/Android/desktop) or send to your Kindle device."*
+- Download button behavior unchanged for every format.
 
-## 3. Admin-editable News API key
+## 5. Small polish
 
-Replace hardcoded/env news key with a `platform_settings` entry the admin can edit live.
+- New loader letters component (`GeneratingLoader`) reusable anywhere we currently show "Loading…" for AI output.
+- Audit book reader/composer for hardcoded colors and route them through tokens.
 
-- `platform_settings` table already exists. Store key as `news_api_key`.
-- Server route `src/routes/api/news.ts` already reads the key — switch it to `readPlatformSetting("news_api_key")` (falls back to `process.env.NEWS_API_KEY` if unset, so nothing breaks during rollout).
-- Same swap for `src/routes/api/public/hooks/auto-ebsu-news.ts` and any `ebsu_news_sources` fetch that uses the key.
-- Admin panel: add a "News API" card in `src/components/admin/AdminIntegrations.tsx` with:
-  - Masked text input showing current value (last 4 chars).
-  - "Save" button → calls new admin-only server fn `setPlatformSetting({ key: "news_api_key", value })` (verifies `is_admin` then upserts into `platform_settings`).
-  - "Test" button → pings the news API with the saved key and shows OK / error inline.
+## Technical notes
 
-## Technical details
+- New deps: `epubjs`, `react-reader` (installed with `bun add`).
+- New files: `src/components/ui/GeneratingLoader.tsx`, `src/components/ui/ThemeSwitch.tsx`, `src/components/ui/TypewriterLoader.tsx`, `src/components/EpubReader.tsx`, new Plug AI avatar asset.
+- Edited: `BrandLoader.tsx`, `ThemeToggle.tsx`, `chat.tsx`, `books_.composer.*`, composer viewer component, Plug AI system prompt in `plug-ai.ts` / `google-ai.ts`.
+- No DB schema changes required (localStorage is enough for reading position; optional Supabase column can come later if you want cross-device sync).
+- Every Uiverse snippet re-tinted to semantic tokens; no `text-white`/`bg-[#hex]` in components.
 
-- `library_books.price_credits` is already `numeric`, so storing `4.0` works with no schema change.
-- Obooko has no public API — we parse HTML. If they add rate limiting or Cloudflare, the scraper degrades gracefully (logs errors, keeps prior rows). Cover images are hotlinked initially, then the existing `generate-book-covers` job caches them into the `book-covers` bucket like other sources.
-- JAMB uniqueness uses `upper(jamb_number)` so case doesn't create duplicates. The trigger blocks even admins from silently changing a number; admins use `admin_reset_jamb` which nulls it (auditable via `credit_transactions`-style log entry if desired later).
-- Public-anon SELECT on `profiles.jamb_number` is scoped by a view: `create view public.jamb_availability as select upper(jamb_number) as jamb from public.profiles where jamb_number is not null` with `grant select ... to anon` — avoids exposing the full profile row.
-- News key stays server-side; the admin form never renders the raw value in the DOM after load — only masked.
+## What I need from you
 
-## Files to add / change
-
-- add: `src/lib/obooko-sync.server.ts`, `src/routes/api/public/hooks/sync-obooko.ts`
-- add: `src/lib/jamb.functions.ts` (checkJambAvailable, claimJambNumber, adminResetJamb)
-- add: `src/lib/platform-settings-admin.functions.ts` (getPlatformSetting, setPlatformSetting — admin only)
-- edit: `src/lib/library-multi-sync.server.ts` + `src/routes/api/public/hooks/sync-library-sources.ts` (include obooko)
-- edit: `src/routes/login.tsx` (JAMB field + availability check)
-- edit: `src/routes/me.tsx` (one-time JAMB claim modal for legacy users)
-- edit: `src/routes/api/news.ts`, `src/routes/api/public/hooks/auto-ebsu-news.ts` (read from platform_settings)
-- edit: `src/components/admin/AdminIntegrations.tsx` (News API card)
-- migration: profiles.jamb_number + unique index + lock trigger + jamb_availability view + admin_reset_jamb function
+1. **Scope confirm** — ship all 5 workstreams in one go, or start with #1 + #4 (loaders + Read/Download fix) and do Plug AI polish in a second pass?
+2. **Cross-device reading progress for EPUB** — localStorage only (fast, no schema change), or add a `reading_progress` table now?
+3. **Plug AI "sound with bass"** — WebAudio-generated (no asset, ships now) or should I generate a real short mp3 asset for a richer sound?
