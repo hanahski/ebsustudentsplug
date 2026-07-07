@@ -752,3 +752,12 @@ body.keyboard-open nav[aria-label="Mobile navigation"] {
 nav[aria-label="Mobile navigation"] {
   transition: transform 180ms ease;
 }
+
+/* Hide Google Translate injected UI — we only use it as a translation engine. */
+.goog-te-banner-frame.skiptranslate,
+.goog-te-gadget,
+#goog-gt-tt,
+.goog-te-balloon-frame { display: none !important; }
+body { top: 0 !important; }
+.skiptranslate iframe { visibility: hidden !important; }
+font.goog-text-highlight { background: transparent !important; box-shadow: none !important; }
