@@ -252,7 +252,7 @@ function UploadTicket({ userId }: { userId?: string }) {
       <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ticket title (e.g. EBSU Cultural Night)" required maxLength={120} />
       <Textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Event details, date, venue, seat info…" rows={3} maxLength={1000} />
       <div className="grid grid-cols-2 gap-3">
-        <Input type="number" min="0" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Price" required />
+        <Input type="number" min="0" step="0.001" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Price (e.g. 0.1)" required />
         <Select value={payMode} onValueChange={(v) => setPayMode(v as any)}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
