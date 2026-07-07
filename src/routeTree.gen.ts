@@ -99,6 +99,7 @@ import { Route as ApiDictionaryRouteImport } from './routes/api/dictionary'
 import { Route as ApiBootprintRouteImport } from './routes/api/bootprint'
 import { Route as BooksComposerIndexRouteImport } from './routes/books_.composer.index'
 import { Route as ToolsAiSlugRouteImport } from './routes/tools.ai.$slug'
+import { Route as EarnCreditsBattleScanRouteImport } from './routes/earn-credits.battle.scan'
 import { Route as CourseNameNameRouteImport } from './routes/course.name.$name'
 import { Route as BooksReadIdRouteImport } from './routes/books_.read.$id'
 import { Route as BooksPreviewTokenRouteImport } from './routes/books_.preview.$token'
@@ -109,6 +110,7 @@ import { Route as ApiPublicVocalSplitRouteImport } from './routes/api/public/voc
 import { Route as ApiPublicVirtualNumberRouteImport } from './routes/api/public/virtual-number'
 import { Route as ApiPublicPlugAiRouteImport } from './routes/api/public/plug-ai'
 import { Route as ApiNewsReadRouteImport } from './routes/api/news.read'
+import { Route as EarnCreditsBattlePlayMatchIdRouteImport } from './routes/earn-credits.battle.play.$matchId'
 import { Route as ApiPublicHooksSyncOpenstaxRouteImport } from './routes/api/public/hooks/sync-openstax'
 import { Route as ApiPublicHooksSyncObookoRouteImport } from './routes/api/public/hooks/sync-obooko'
 import { Route as ApiPublicHooksSyncLibrarySourcesRouteImport } from './routes/api/public/hooks/sync-library-sources'
@@ -572,6 +574,11 @@ const ToolsAiSlugRoute = ToolsAiSlugRouteImport.update({
   path: '/ai/$slug',
   getParentRoute: () => ToolsRoute,
 } as any)
+const EarnCreditsBattleScanRoute = EarnCreditsBattleScanRouteImport.update({
+  id: '/scan',
+  path: '/scan',
+  getParentRoute: () => EarnCreditsBattleRoute,
+} as any)
 const CourseNameNameRoute = CourseNameNameRouteImport.update({
   id: '/course/name/$name',
   path: '/course/name/$name',
@@ -622,6 +629,12 @@ const ApiNewsReadRoute = ApiNewsReadRouteImport.update({
   path: '/read',
   getParentRoute: () => ApiNewsRoute,
 } as any)
+const EarnCreditsBattlePlayMatchIdRoute =
+  EarnCreditsBattlePlayMatchIdRouteImport.update({
+    id: '/play/$matchId',
+    path: '/play/$matchId',
+    getParentRoute: () => EarnCreditsBattleRoute,
+  } as any)
 const ApiPublicHooksSyncOpenstaxRoute =
   ApiPublicHooksSyncOpenstaxRouteImport.update({
     id: '/api/public/hooks/sync-openstax',
@@ -740,7 +753,7 @@ export interface FileRoutesByFullPath {
   '/course/$id': typeof CourseIdRoute
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
-  '/earn-credits/battle': typeof EarnCreditsBattleRoute
+  '/earn-credits/battle': typeof EarnCreditsBattleRouteWithChildren
   '/earn-credits/tournament': typeof EarnCreditsTournamentRoute
   '/earn-credits/watch': typeof EarnCreditsWatchRoute
   '/faculty/$id': typeof FacultyIdRoute
@@ -794,6 +807,7 @@ export interface FileRoutesByFullPath {
   '/books/preview/$token': typeof BooksPreviewTokenRoute
   '/books/read/$id': typeof BooksReadIdRoute
   '/course/name/$name': typeof CourseNameNameRoute
+  '/earn-credits/battle/scan': typeof EarnCreditsBattleScanRoute
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books/composer/': typeof BooksComposerIndexRoute
   '/api/public/hooks/admin-ai-pulse': typeof ApiPublicHooksAdminAiPulseRoute
@@ -808,6 +822,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/sync-library-sources': typeof ApiPublicHooksSyncLibrarySourcesRoute
   '/api/public/hooks/sync-obooko': typeof ApiPublicHooksSyncObookoRoute
   '/api/public/hooks/sync-openstax': typeof ApiPublicHooksSyncOpenstaxRoute
+  '/earn-credits/battle/play/$matchId': typeof EarnCreditsBattlePlayMatchIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -852,7 +867,7 @@ export interface FileRoutesByTo {
   '/course/$id': typeof CourseIdRoute
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
-  '/earn-credits/battle': typeof EarnCreditsBattleRoute
+  '/earn-credits/battle': typeof EarnCreditsBattleRouteWithChildren
   '/earn-credits/tournament': typeof EarnCreditsTournamentRoute
   '/earn-credits/watch': typeof EarnCreditsWatchRoute
   '/faculty/$id': typeof FacultyIdRoute
@@ -906,6 +921,7 @@ export interface FileRoutesByTo {
   '/books/preview/$token': typeof BooksPreviewTokenRoute
   '/books/read/$id': typeof BooksReadIdRoute
   '/course/name/$name': typeof CourseNameNameRoute
+  '/earn-credits/battle/scan': typeof EarnCreditsBattleScanRoute
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books/composer': typeof BooksComposerIndexRoute
   '/api/public/hooks/admin-ai-pulse': typeof ApiPublicHooksAdminAiPulseRoute
@@ -920,6 +936,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/sync-library-sources': typeof ApiPublicHooksSyncLibrarySourcesRoute
   '/api/public/hooks/sync-obooko': typeof ApiPublicHooksSyncObookoRoute
   '/api/public/hooks/sync-openstax': typeof ApiPublicHooksSyncOpenstaxRoute
+  '/earn-credits/battle/play/$matchId': typeof EarnCreditsBattlePlayMatchIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -967,7 +984,7 @@ export interface FileRoutesById {
   '/course/$id': typeof CourseIdRoute
   '/courses/$id': typeof CoursesIdRoute
   '/department/$id': typeof DepartmentIdRoute
-  '/earn-credits/battle': typeof EarnCreditsBattleRoute
+  '/earn-credits/battle': typeof EarnCreditsBattleRouteWithChildren
   '/earn-credits/tournament': typeof EarnCreditsTournamentRoute
   '/earn-credits/watch': typeof EarnCreditsWatchRoute
   '/faculty/$id': typeof FacultyIdRoute
@@ -1021,6 +1038,7 @@ export interface FileRoutesById {
   '/books_/preview/$token': typeof BooksPreviewTokenRoute
   '/books_/read/$id': typeof BooksReadIdRoute
   '/course/name/$name': typeof CourseNameNameRoute
+  '/earn-credits/battle/scan': typeof EarnCreditsBattleScanRoute
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books_/composer/': typeof BooksComposerIndexRoute
   '/api/public/hooks/admin-ai-pulse': typeof ApiPublicHooksAdminAiPulseRoute
@@ -1035,6 +1053,7 @@ export interface FileRoutesById {
   '/api/public/hooks/sync-library-sources': typeof ApiPublicHooksSyncLibrarySourcesRoute
   '/api/public/hooks/sync-obooko': typeof ApiPublicHooksSyncObookoRoute
   '/api/public/hooks/sync-openstax': typeof ApiPublicHooksSyncOpenstaxRoute
+  '/earn-credits/battle/play/$matchId': typeof EarnCreditsBattlePlayMatchIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1137,6 +1156,7 @@ export interface FileRouteTypes {
     | '/books/preview/$token'
     | '/books/read/$id'
     | '/course/name/$name'
+    | '/earn-credits/battle/scan'
     | '/tools/ai/$slug'
     | '/books/composer/'
     | '/api/public/hooks/admin-ai-pulse'
@@ -1151,6 +1171,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/sync-library-sources'
     | '/api/public/hooks/sync-obooko'
     | '/api/public/hooks/sync-openstax'
+    | '/earn-credits/battle/play/$matchId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1249,6 +1270,7 @@ export interface FileRouteTypes {
     | '/books/preview/$token'
     | '/books/read/$id'
     | '/course/name/$name'
+    | '/earn-credits/battle/scan'
     | '/tools/ai/$slug'
     | '/books/composer'
     | '/api/public/hooks/admin-ai-pulse'
@@ -1263,6 +1285,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/sync-library-sources'
     | '/api/public/hooks/sync-obooko'
     | '/api/public/hooks/sync-openstax'
+    | '/earn-credits/battle/play/$matchId'
   id:
     | '__root__'
     | '/'
@@ -1363,6 +1386,7 @@ export interface FileRouteTypes {
     | '/books_/preview/$token'
     | '/books_/read/$id'
     | '/course/name/$name'
+    | '/earn-credits/battle/scan'
     | '/tools/ai/$slug'
     | '/books_/composer/'
     | '/api/public/hooks/admin-ai-pulse'
@@ -1377,6 +1401,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/sync-library-sources'
     | '/api/public/hooks/sync-obooko'
     | '/api/public/hooks/sync-openstax'
+    | '/earn-credits/battle/play/$matchId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -2096,6 +2121,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ToolsAiSlugRouteImport
       parentRoute: typeof ToolsRoute
     }
+    '/earn-credits/battle/scan': {
+      id: '/earn-credits/battle/scan'
+      path: '/scan'
+      fullPath: '/earn-credits/battle/scan'
+      preLoaderRoute: typeof EarnCreditsBattleScanRouteImport
+      parentRoute: typeof EarnCreditsBattleRoute
+    }
     '/course/name/$name': {
       id: '/course/name/$name'
       path: '/course/name/$name'
@@ -2165,6 +2197,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/news/read'
       preLoaderRoute: typeof ApiNewsReadRouteImport
       parentRoute: typeof ApiNewsRoute
+    }
+    '/earn-credits/battle/play/$matchId': {
+      id: '/earn-credits/battle/play/$matchId'
+      path: '/play/$matchId'
+      fullPath: '/earn-credits/battle/play/$matchId'
+      preLoaderRoute: typeof EarnCreditsBattlePlayMatchIdRouteImport
+      parentRoute: typeof EarnCreditsBattleRoute
     }
     '/api/public/hooks/sync-openstax': {
       id: '/api/public/hooks/sync-openstax'
@@ -2253,14 +2292,27 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface EarnCreditsBattleRouteChildren {
+  EarnCreditsBattleScanRoute: typeof EarnCreditsBattleScanRoute
+  EarnCreditsBattlePlayMatchIdRoute: typeof EarnCreditsBattlePlayMatchIdRoute
+}
+
+const EarnCreditsBattleRouteChildren: EarnCreditsBattleRouteChildren = {
+  EarnCreditsBattleScanRoute: EarnCreditsBattleScanRoute,
+  EarnCreditsBattlePlayMatchIdRoute: EarnCreditsBattlePlayMatchIdRoute,
+}
+
+const EarnCreditsBattleRouteWithChildren =
+  EarnCreditsBattleRoute._addFileChildren(EarnCreditsBattleRouteChildren)
+
 interface EarnCreditsRouteChildren {
-  EarnCreditsBattleRoute: typeof EarnCreditsBattleRoute
+  EarnCreditsBattleRoute: typeof EarnCreditsBattleRouteWithChildren
   EarnCreditsTournamentRoute: typeof EarnCreditsTournamentRoute
   EarnCreditsWatchRoute: typeof EarnCreditsWatchRoute
 }
 
 const EarnCreditsRouteChildren: EarnCreditsRouteChildren = {
-  EarnCreditsBattleRoute: EarnCreditsBattleRoute,
+  EarnCreditsBattleRoute: EarnCreditsBattleRouteWithChildren,
   EarnCreditsTournamentRoute: EarnCreditsTournamentRoute,
   EarnCreditsWatchRoute: EarnCreditsWatchRoute,
 }
