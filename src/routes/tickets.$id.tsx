@@ -124,9 +124,6 @@ function TicketDetail() {
             <p className="text-sm text-muted-foreground whitespace-pre-wrap">{t.description}</p>
             <p className="text-xs text-muted-foreground">Sold by {(t as any).uploader?.display_name ?? "—"}</p>
 
-            {t.is_sold && !ownsIt && (
-              <div className="bg-muted rounded-xl p-3 text-sm text-center">This ticket has been sold.</div>
-            )}
             {ownsIt && (
               <div className="bg-success/10 border border-success/40 rounded-2xl p-4 space-y-3">
                 <div className="flex items-center justify-center gap-2 font-bold text-success"><CheckCircle2 className="w-5 h-5" />You own this ticket</div>
@@ -144,15 +141,13 @@ function TicketDetail() {
                 )}
               </div>
             )}
-            {!t.is_sold && (
-              t.pay_mode === "contact" ? (
-                <>
-                  <Button onClick={buy} disabled={busy} className="w-full"><TicketIcon className="w-4 h-4 mr-1" />{busy ? "Downloading PDF…" : "Reserve & download QR ticket PDF"}</Button>
-                  {t.contact && <p className="text-xs text-center text-muted-foreground">Then pay seller via: <strong>{t.contact}</strong></p>}
-                </>
-              ) : (
-                <Button onClick={buy} disabled={busy} className="w-full"><ShoppingCart className="w-4 h-4 mr-1" />{busy ? "Downloading PDF…" : `Buy with ${t.price} credits & download PDF`}</Button>
-              )
+            {t.pay_mode === "contact" ? (
+              <>
+                <Button onClick={buy} disabled={busy} className="w-full"><TicketIcon className="w-4 h-4 mr-1" />{busy ? "Downloading PDF…" : ownsIt ? "Buy another copy & download PDF" : "Reserve & download QR ticket PDF"}</Button>
+                {t.contact && <p className="text-xs text-center text-muted-foreground">Then pay seller via: <strong>{t.contact}</strong></p>}
+              </>
+            ) : (
+              <Button onClick={buy} disabled={busy} className="w-full"><ShoppingCart className="w-4 h-4 mr-1" />{busy ? "Downloading PDF…" : ownsIt ? `Buy another for ${t.price} cr` : `Buy with ${t.price} credits & download PDF`}</Button>
             )}
           </div>
         </div>
