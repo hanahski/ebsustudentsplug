@@ -50,7 +50,7 @@ function TicketDetail() {
         .order("created_at", { ascending: false })
         .limit(1);
       const latest = myPurchases?.[0];
-      await composeAndDownload(t, latest?.buyer_index ?? undefined, latest?.qr_token ?? t.qr_token, pdfWindow);
+      await composeAndDownload(t, latest?.buyer_index ?? undefined, latest?.qr_token ?? t?.qr_token ?? "", pdfWindow);
       toast.success("Ticket PDF downloaded");
     } catch (err: any) {
       pdfWindow?.close();
