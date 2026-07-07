@@ -222,6 +222,15 @@ function ReadBookPage() {
     }
   };
 
+  // If the user chose "Read in app" before the cached PDF finished preparing,
+  // auto-open the reader the moment the cached URL is ready.
+  useEffect(() => {
+    if (viewMode === "read" && cachedPdfUrl && !pdfReaderOpen) {
+      setPdfReaderOpen(true);
+    }
+  }, [viewMode, cachedPdfUrl, pdfReaderOpen]);
+
+
   return (
     <AppShell>
       <div className="space-y-4">
