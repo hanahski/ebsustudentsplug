@@ -39,7 +39,7 @@ function TicketDetail() {
   };
 
   const downloadOwnedTicket = async () => {
-    const pdfWindow = window.open("", "_blank");
+    // download runs in background — no popup
     try {
       // Pull the latest purchase for this user + ticket for filename numbering
       const { data: myPurchases } = await supabase
@@ -50,10 +50,10 @@ function TicketDetail() {
         .order("created_at", { ascending: false })
         .limit(1);
       const latest = myPurchases?.[0];
-      await composeAndDownload(t, latest?.buyer_index ?? undefined, latest?.qr_token ?? t?.qr_token ?? "", pdfWindow);
+      await composeAndDownload(t, latest?.buyer_index ?? undefined, latest?.qr_token ?? t?.qr_token ?? "");
       toast.success("Ticket PDF downloaded");
     } catch (err: any) {
-      pdfWindow?.close();
+      // no popup to close
       toast.error(err.message ?? "PDF download failed");
     }
   };
@@ -80,11 +80,11 @@ function TicketDetail() {
 
   const buy = async () => {
     if (!user) { nav({ to: "/login" }); return; }
-    const pdfWindow = window.open("", "_blank");
+    // download runs in background — no popup
     setBusy(true);
     const { data: buyRes, error } = await supabase.rpc("buy_ticket", { _ticket_id: id });
     if (error) {
-      pdfWindow?.close();
+      // no popup to close
       setBusy(false);
       return toast.error(error.message);
     }
@@ -92,10 +92,10 @@ function TicketDetail() {
     const qrToken = (buyRes as any)?.qr_token as string | undefined;
     toast.success(`Ticket purchased! You're buyer #${buyerIndex ?? "—"}. Downloading PDF…`);
     try {
-      await composeAndDownload(t, buyerIndex, qrToken ?? "", pdfWindow);
+      await composeAndDownload(t, buyerIndex, qrToken ?? "");
       toast.success("Ticket PDF downloaded");
     } catch {
-      pdfWindow?.close();
+      // no popup to close
       toast.error("PDF download failed — use the download button below");
     } finally {
       setBusy(false);
