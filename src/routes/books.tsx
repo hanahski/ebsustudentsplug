@@ -30,6 +30,18 @@ import {
 import { toast } from "sonner";
 import { SaveButton } from "@/components/SaveButton";
 import { BookCover } from "@/components/BookCover";
+import { PdfReader } from "@/components/PdfReader";
+
+const MAX_INAPP_PDF_BYTES = 8 * 1024 * 1024; // 8MB
+
+async function pdfSizeBytes(url: string): Promise<number | null> {
+  try {
+    const r = await fetch(url, { method: "HEAD", mode: "cors" });
+    const len = r.headers.get("content-length");
+    if (len) return Number(len);
+  } catch {}
+  return null;
+}
 
 export const Route = createFileRoute("/books")({ component: BooksPage });
 
