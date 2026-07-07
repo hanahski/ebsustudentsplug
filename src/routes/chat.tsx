@@ -1622,10 +1622,12 @@ function PlugAiPane({ meId, onBack }: { meId: string; onBack: () => void }) {
             </div>
           </div>
         )}
-        {msgs.map((m) => {
+        {msgs.map((m, idx) => {
           const mine = m.role === "user";
+          const isLatestAssistant =
+            !mine && idx === msgs.length - 1 && m.id.startsWith("a-");
           return (
-            <div key={m.id} className={`flex gap-2 ${mine ? "justify-end" : "justify-start"}`}>
+            <div key={m.id} className={`flex gap-2 animate-fade-in ${mine ? "justify-end" : "justify-start"}`}>
               {!mine && (
                 <div className="shrink-0 mt-auto">
                   <PlugAiAvatar size={28} />
@@ -1646,7 +1648,13 @@ function PlugAiPane({ meId, onBack }: { meId: string; onBack: () => void }) {
                     </div>
                   ) : (
                     <div className="px-3 py-2 rounded-2xl text-sm break-words bg-card border rounded-bl-sm">
-                      <RichText>{m.content}</RichText>
+                      {isLatestAssistant ? (
+                        <TypewriterReveal text={m.content}>
+                          <RichText>{m.content}</RichText>
+                        </TypewriterReveal>
+                      ) : (
+                        <RichText>{m.content}</RichText>
+                      )}
                     </div>
                   )
                 )}
