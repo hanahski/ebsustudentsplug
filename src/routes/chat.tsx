@@ -1540,7 +1540,7 @@ function PlugAiPane({ meId, onBack }: { meId: string; onBack: () => void }) {
           created_at: new Date().toISOString(),
         },
       ]);
-      try { playNewMessageTone(); } catch {}
+      try { playPlugReply(); } catch {}
     } catch (e: any) {
       toast.error(e?.message ?? "Plug AI failed");
       setMsgs((prev) => [
