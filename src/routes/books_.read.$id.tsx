@@ -10,6 +10,7 @@ import { BookOpen, Loader2, Download, ExternalLink, Coins, ArrowLeft } from "luc
 import { toast } from "sonner";
 import { BookCover } from "@/components/BookCover";
 import { SwipeBookReader } from "@/components/SwipeBookReader";
+import { PdfReader } from "@/components/PdfReader";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/books_/read/$id")({ component: ReadBookPage });
@@ -37,6 +38,7 @@ function ReadBookPage() {
   // "How do you want to enjoy this book?" chooser — shown once per owned book.
   const [chooserOpen, setChooserOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"read" | "download" | null>(null);
+  const [pdfReaderOpen, setPdfReaderOpen] = useState(false);
   const chooserSeenKey = `book-chooser-seen:${id}`;
 
   const { data: book, isLoading } = useQuery({
@@ -465,6 +467,11 @@ function ReadBookPage() {
                 setViewMode("read");
                 setChooserOpen(false);
                 try { window.localStorage.setItem(chooserSeenKey, "1"); } catch { /* no-op */ }
+                // Open the in-app PDF reader if we already have the cached PDF.
+                // Otherwise the effect above will finish preparing it and the
+                // user can hit "Read in app" again from the toolbar.
+                if (cachedPdfUrl) setPdfReaderOpen(true);
+                else if (!cacheLoading) toast.info("Preparing your book… we'll open it in a second.");
               }}
               className="rounded-2xl border p-4 text-left hover:border-primary hover:shadow-glow transition group"
             >
