@@ -339,11 +339,16 @@ function ReadBookPage() {
                     </Button>
                   )}
                   {kindleUrl && (
-                    <Button size="sm" variant="outline" asChild>
-                      <a href={kindleUrl} download>
-                        <Download className="w-3.5 h-3.5 mr-1" /> Kindle
-                      </a>
-                    </Button>
+                    <div className="flex flex-col items-start gap-1">
+                      <Button size="sm" variant="outline" asChild>
+                        <a href={kindleUrl} download>
+                          <Download className="w-3.5 h-3.5 mr-1" /> Kindle
+                        </a>
+                      </Button>
+                      <p className="text-[10px] text-muted-foreground max-w-[220px] leading-snug">
+                        Open with the free Kindle app (iOS / Android / desktop) or send to your Kindle device.
+                      </p>
+                    </div>
                   )}
                   {detailsUrl && gid && (
                     <Button size="sm" variant="ghost" asChild>
