@@ -408,6 +408,31 @@ function BookCard({
   const source = SOURCE_META[book.source]?.label;
   const isEbsu = book.source === "user";
 
+  const [readerUrl, setReaderUrl] = useState<string | null>(null);
+  const [openingReader, setOpeningReader] = useState(false);
+
+  const openPdfInReader = async (url: string) => {
+    setOpeningReader(true);
+    const t = toast.loading("Opening reader…");
+    try {
+      const size = await pdfSizeBytes(url);
+      if (size && size > MAX_INAPP_PDF_BYTES) {
+        toast.dismiss(t);
+        toast.info(`File is ${(size / (1024 * 1024)).toFixed(1)}MB — downloading instead of opening in reader.`);
+        await silentDownload(url, `${book.title}.pdf`.replace(/[^\w\d.\-]+/g, "_"));
+      } else {
+        setReaderUrl(url);
+        toast.dismiss(t);
+      }
+    } catch {
+      toast.dismiss(t);
+      toast.error("Couldn't open reader — downloading instead.");
+      await silentDownload(url, `${book.title}.pdf`.replace(/[^\w\d.\-]+/g, "_"));
+    } finally {
+      setOpeningReader(false);
+    }
+  };
+
   return (
     <div className="group relative bg-card border rounded-2xl overflow-hidden shadow-card flex flex-col hover:shadow-lg hover:-translate-y-0.5 transition-all">
       <SaveButton
@@ -474,7 +499,26 @@ function BookCard({
               </Link>
             </Button>
           ) : hasFormats ? (
-            <DownloadPicker formats={formats} keys={orderedKeys} />
+            <div className="flex flex-col gap-2">
+              {formats.pdf && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={openingReader}
+                  onClick={() => openPdfInReader(formats.pdf)}
+                  className="w-full"
+                >
+                  {openingReader ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <>
+                      <BookOpen className="w-3.5 h-3.5 mr-1" /> Read PDF
+                    </>
+                  )}
+                </Button>
+              )}
+              <DownloadPicker formats={formats} keys={orderedKeys} />
+            </div>
           ) : (
             <Button size="sm" variant="outline" asChild className="w-full">
               <a href={book.source_url ?? book.download_url ?? "#"} target="_blank" rel="noopener">
@@ -494,6 +538,14 @@ function BookCard({
           </Button>
         )}
       </div>
+      {readerUrl && (
+        <PdfReader
+          url={readerUrl}
+          title={book.title}
+          downloadName={book.title}
+          onClose={() => setReaderUrl(null)}
+        />
+      )}
     </div>
   );
 }
