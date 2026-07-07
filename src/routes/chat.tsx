@@ -38,6 +38,8 @@ import { plugAiChat } from "@/lib/plug-ai.functions";
 import { ImagePlus } from "lucide-react";
 import { PlugAiAvatar } from "@/components/PlugAiAvatar";
 import { GeneratingLoader } from "@/components/ui/GeneratingLoader";
+import { TypewriterReveal } from "@/components/ui/TypewriterReveal";
+import { playPlugSend, playPlugReply } from "@/lib/plug-ai-sfx";
 import { useServerFn } from "@tanstack/react-start";
 import { RichText } from "@/components/RichText";
 import { playNewMessageTone } from "@/lib/sounds";
