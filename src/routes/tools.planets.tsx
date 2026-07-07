@@ -41,6 +41,9 @@ function PlanetsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<"closed" | "open" | "full">("closed");
+  // Guards against race conditions when the user rapidly switches planets:
+  // only the newest request is allowed to update the UI.
+  const reqIdRef = useRef(0);
 
   useEffect(() => {
     if (lightbox === "closed") return;
@@ -55,19 +58,23 @@ function PlanetsPage() {
   }, [lightbox]);
 
   const fetchOne = async (which: PlanetKey | "random") => {
+    const myId = ++reqIdRef.current;
     setLoading(true);
     setError(null);
     try {
       const res = await fetch(`/api/bootprint?object=${which}`);
       const json = await res.json();
+      if (myId !== reqIdRef.current) return; // a newer request superseded this one
       if (!res.ok) throw new Error(json?.error || "Failed");
       setData(json);
     } catch (e) {
+      if (myId !== reqIdRef.current) return;
       setError((e as Error).message);
     } finally {
-      setLoading(false);
+      if (myId === reqIdRef.current) setLoading(false);
     }
   };
+
 
   useEffect(() => { fetchOne(selected); /* eslint-disable-line */ }, []);
 
