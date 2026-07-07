@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Bell, Globe, Eye, Trash2, Download, Palette } from "lucide-react";
+import { applyLanguage } from "@/components/GoogleTranslateBridge";
 
 export const Route = createFileRoute("/settings")({
   component: SettingsPage,
@@ -35,7 +36,13 @@ function SettingsPage() {
   };
 
   const saveNotifs = (v: boolean) => { setNotifs(v); localStorage.setItem("sp:notifs", v ? "1" : "0"); };
-  const saveLang = (v: string) => { setLang(v); localStorage.setItem("sp:lang", v); toast.success("Language preference saved"); };
+  const saveLang = (v: string) => {
+    setLang(v);
+    localStorage.setItem("sp:lang", v);
+    toast.success("Applying language…");
+    // Small delay so the toast paints before reload.
+    setTimeout(() => applyLanguage(v), 250);
+  };
 
   const exportData = async () => {
     if (!user) return;
