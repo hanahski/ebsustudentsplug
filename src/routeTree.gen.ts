@@ -29,7 +29,6 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as GetCreditsRouteImport } from './routes/get-credits'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as FacultiesRouteImport } from './routes/faculties'
-import { Route as EarnCreditsRouteImport } from './routes/earn-credits'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ChatRouteImport } from './routes/chat'
@@ -42,6 +41,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NotesIndexRouteImport } from './routes/notes.index'
 import { Route as MarketIndexRouteImport } from './routes/market.index'
+import { Route as EarnCreditsIndexRouteImport } from './routes/earn-credits.index'
 import { Route as CoursesIndexRouteImport } from './routes/courses.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as WatchIdRouteImport } from './routes/watch.$id'
@@ -224,11 +224,6 @@ const FacultiesRoute = FacultiesRouteImport.update({
   path: '/faculties',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EarnCreditsRoute = EarnCreditsRouteImport.update({
-  id: '/earn-credits',
-  path: '/earn-credits',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -288,6 +283,11 @@ const MarketIndexRoute = MarketIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => MarketRoute,
+} as any)
+const EarnCreditsIndexRoute = EarnCreditsIndexRouteImport.update({
+  id: '/earn-credits/',
+  path: '/earn-credits/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CoursesIndexRoute = CoursesIndexRouteImport.update({
   id: '/courses/',
@@ -485,19 +485,19 @@ const FacultyIdRoute = FacultyIdRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const EarnCreditsWatchRoute = EarnCreditsWatchRouteImport.update({
-  id: '/watch',
-  path: '/watch',
-  getParentRoute: () => EarnCreditsRoute,
+  id: '/earn-credits/watch',
+  path: '/earn-credits/watch',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const EarnCreditsTournamentRoute = EarnCreditsTournamentRouteImport.update({
-  id: '/tournament',
-  path: '/tournament',
-  getParentRoute: () => EarnCreditsRoute,
+  id: '/earn-credits/tournament',
+  path: '/earn-credits/tournament',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const EarnCreditsBattleRoute = EarnCreditsBattleRouteImport.update({
-  id: '/battle',
-  path: '/battle',
-  getParentRoute: () => EarnCreditsRoute,
+  id: '/earn-credits/battle',
+  path: '/earn-credits/battle',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const DepartmentIdRoute = DepartmentIdRouteImport.update({
   id: '/department/$id',
@@ -719,7 +719,6 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
-  '/earn-credits': typeof EarnCreditsRouteWithChildren
   '/faculties': typeof FacultiesRoute
   '/games': typeof GamesRouteWithChildren
   '/get-credits': typeof GetCreditsRoute
@@ -795,6 +794,7 @@ export interface FileRoutesByFullPath {
   '/watch/$id': typeof WatchIdRoute
   '/blog/': typeof BlogIndexRoute
   '/courses/': typeof CoursesIndexRoute
+  '/earn-credits/': typeof EarnCreditsIndexRoute
   '/market/': typeof MarketIndexRoute
   '/notes/': typeof NotesIndexRoute
   '/api/news/read': typeof ApiNewsReadRoute
@@ -835,7 +835,6 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
-  '/earn-credits': typeof EarnCreditsRouteWithChildren
   '/faculties': typeof FacultiesRoute
   '/games': typeof GamesRouteWithChildren
   '/get-credits': typeof GetCreditsRoute
@@ -909,6 +908,7 @@ export interface FileRoutesByTo {
   '/watch/$id': typeof WatchIdRoute
   '/blog': typeof BlogIndexRoute
   '/courses': typeof CoursesIndexRoute
+  '/earn-credits': typeof EarnCreditsIndexRoute
   '/market': typeof MarketIndexRoute
   '/notes': typeof NotesIndexRoute
   '/api/news/read': typeof ApiNewsReadRoute
@@ -950,7 +950,6 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
-  '/earn-credits': typeof EarnCreditsRouteWithChildren
   '/faculties': typeof FacultiesRoute
   '/games': typeof GamesRouteWithChildren
   '/get-credits': typeof GetCreditsRoute
@@ -1026,6 +1025,7 @@ export interface FileRoutesById {
   '/watch/$id': typeof WatchIdRoute
   '/blog/': typeof BlogIndexRoute
   '/courses/': typeof CoursesIndexRoute
+  '/earn-credits/': typeof EarnCreditsIndexRoute
   '/market/': typeof MarketIndexRoute
   '/notes/': typeof NotesIndexRoute
   '/api/news/read': typeof ApiNewsReadRoute
@@ -1068,7 +1068,6 @@ export interface FileRouteTypes {
     | '/chat'
     | '/contact'
     | '/dashboard'
-    | '/earn-credits'
     | '/faculties'
     | '/games'
     | '/get-credits'
@@ -1144,6 +1143,7 @@ export interface FileRouteTypes {
     | '/watch/$id'
     | '/blog/'
     | '/courses/'
+    | '/earn-credits/'
     | '/market/'
     | '/notes/'
     | '/api/news/read'
@@ -1184,7 +1184,6 @@ export interface FileRouteTypes {
     | '/chat'
     | '/contact'
     | '/dashboard'
-    | '/earn-credits'
     | '/faculties'
     | '/games'
     | '/get-credits'
@@ -1258,6 +1257,7 @@ export interface FileRouteTypes {
     | '/watch/$id'
     | '/blog'
     | '/courses'
+    | '/earn-credits'
     | '/market'
     | '/notes'
     | '/api/news/read'
@@ -1298,7 +1298,6 @@ export interface FileRouteTypes {
     | '/chat'
     | '/contact'
     | '/dashboard'
-    | '/earn-credits'
     | '/faculties'
     | '/games'
     | '/get-credits'
@@ -1374,6 +1373,7 @@ export interface FileRouteTypes {
     | '/watch/$id'
     | '/blog/'
     | '/courses/'
+    | '/earn-credits/'
     | '/market/'
     | '/notes/'
     | '/api/news/read'
@@ -1415,7 +1415,6 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   ContactRoute: typeof ContactRoute
   DashboardRoute: typeof DashboardRoute
-  EarnCreditsRoute: typeof EarnCreditsRouteWithChildren
   FacultiesRoute: typeof FacultiesRoute
   GamesRoute: typeof GamesRouteWithChildren
   GetCreditsRoute: typeof GetCreditsRoute
@@ -1449,6 +1448,9 @@ export interface RootRouteChildren {
   CourseIdRoute: typeof CourseIdRoute
   CoursesIdRoute: typeof CoursesIdRoute
   DepartmentIdRoute: typeof DepartmentIdRoute
+  EarnCreditsBattleRoute: typeof EarnCreditsBattleRouteWithChildren
+  EarnCreditsTournamentRoute: typeof EarnCreditsTournamentRoute
+  EarnCreditsWatchRoute: typeof EarnCreditsWatchRoute
   FacultyIdRoute: typeof FacultyIdRoute
   GuidesEbsuFeesRoute: typeof GuidesEbsuFeesRoute
   ICodeRoute: typeof ICodeRoute
@@ -1466,6 +1468,7 @@ export interface RootRouteChildren {
   WatchIdRoute: typeof WatchIdRoute
   BlogIndexRoute: typeof BlogIndexRoute
   CoursesIndexRoute: typeof CoursesIndexRoute
+  EarnCreditsIndexRoute: typeof EarnCreditsIndexRoute
   NotesIndexRoute: typeof NotesIndexRoute
   ApiPublicPlugAiRoute: typeof ApiPublicPlugAiRoute
   ApiPublicVirtualNumberRoute: typeof ApiPublicVirtualNumberRoute
@@ -1631,13 +1634,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FacultiesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/earn-credits': {
-      id: '/earn-credits'
-      path: '/earn-credits'
-      fullPath: '/earn-credits'
-      preLoaderRoute: typeof EarnCreditsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -1721,6 +1717,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/market/'
       preLoaderRoute: typeof MarketIndexRouteImport
       parentRoute: typeof MarketRoute
+    }
+    '/earn-credits/': {
+      id: '/earn-credits/'
+      path: '/earn-credits'
+      fullPath: '/earn-credits/'
+      preLoaderRoute: typeof EarnCreditsIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/courses/': {
       id: '/courses/'
@@ -1997,24 +2000,24 @@ declare module '@tanstack/react-router' {
     }
     '/earn-credits/watch': {
       id: '/earn-credits/watch'
-      path: '/watch'
+      path: '/earn-credits/watch'
       fullPath: '/earn-credits/watch'
       preLoaderRoute: typeof EarnCreditsWatchRouteImport
-      parentRoute: typeof EarnCreditsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/earn-credits/tournament': {
       id: '/earn-credits/tournament'
-      path: '/tournament'
+      path: '/earn-credits/tournament'
       fullPath: '/earn-credits/tournament'
       preLoaderRoute: typeof EarnCreditsTournamentRouteImport
-      parentRoute: typeof EarnCreditsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/earn-credits/battle': {
       id: '/earn-credits/battle'
-      path: '/battle'
+      path: '/earn-credits/battle'
       fullPath: '/earn-credits/battle'
       preLoaderRoute: typeof EarnCreditsBattleRouteImport
-      parentRoute: typeof EarnCreditsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/department/$id': {
       id: '/department/$id'
@@ -2292,35 +2295,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface EarnCreditsBattleRouteChildren {
-  EarnCreditsBattleScanRoute: typeof EarnCreditsBattleScanRoute
-  EarnCreditsBattlePlayMatchIdRoute: typeof EarnCreditsBattlePlayMatchIdRoute
-}
-
-const EarnCreditsBattleRouteChildren: EarnCreditsBattleRouteChildren = {
-  EarnCreditsBattleScanRoute: EarnCreditsBattleScanRoute,
-  EarnCreditsBattlePlayMatchIdRoute: EarnCreditsBattlePlayMatchIdRoute,
-}
-
-const EarnCreditsBattleRouteWithChildren =
-  EarnCreditsBattleRoute._addFileChildren(EarnCreditsBattleRouteChildren)
-
-interface EarnCreditsRouteChildren {
-  EarnCreditsBattleRoute: typeof EarnCreditsBattleRouteWithChildren
-  EarnCreditsTournamentRoute: typeof EarnCreditsTournamentRoute
-  EarnCreditsWatchRoute: typeof EarnCreditsWatchRoute
-}
-
-const EarnCreditsRouteChildren: EarnCreditsRouteChildren = {
-  EarnCreditsBattleRoute: EarnCreditsBattleRouteWithChildren,
-  EarnCreditsTournamentRoute: EarnCreditsTournamentRoute,
-  EarnCreditsWatchRoute: EarnCreditsWatchRoute,
-}
-
-const EarnCreditsRouteWithChildren = EarnCreditsRoute._addFileChildren(
-  EarnCreditsRouteChildren,
-)
-
 interface GamesRouteChildren {
   GamesEightballRoute: typeof GamesEightballRoute
   GamesFreegamesRoute: typeof GamesFreegamesRoute
@@ -2428,6 +2402,19 @@ const BooksComposerRouteWithChildren = BooksComposerRoute._addFileChildren(
   BooksComposerRouteChildren,
 )
 
+interface EarnCreditsBattleRouteChildren {
+  EarnCreditsBattleScanRoute: typeof EarnCreditsBattleScanRoute
+  EarnCreditsBattlePlayMatchIdRoute: typeof EarnCreditsBattlePlayMatchIdRoute
+}
+
+const EarnCreditsBattleRouteChildren: EarnCreditsBattleRouteChildren = {
+  EarnCreditsBattleScanRoute: EarnCreditsBattleScanRoute,
+  EarnCreditsBattlePlayMatchIdRoute: EarnCreditsBattlePlayMatchIdRoute,
+}
+
+const EarnCreditsBattleRouteWithChildren =
+  EarnCreditsBattleRoute._addFileChildren(EarnCreditsBattleRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
@@ -2439,7 +2426,6 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   ContactRoute: ContactRoute,
   DashboardRoute: DashboardRoute,
-  EarnCreditsRoute: EarnCreditsRouteWithChildren,
   FacultiesRoute: FacultiesRoute,
   GamesRoute: GamesRouteWithChildren,
   GetCreditsRoute: GetCreditsRoute,
@@ -2473,6 +2459,9 @@ const rootRouteChildren: RootRouteChildren = {
   CourseIdRoute: CourseIdRoute,
   CoursesIdRoute: CoursesIdRoute,
   DepartmentIdRoute: DepartmentIdRoute,
+  EarnCreditsBattleRoute: EarnCreditsBattleRouteWithChildren,
+  EarnCreditsTournamentRoute: EarnCreditsTournamentRoute,
+  EarnCreditsWatchRoute: EarnCreditsWatchRoute,
   FacultyIdRoute: FacultyIdRoute,
   GuidesEbsuFeesRoute: GuidesEbsuFeesRoute,
   ICodeRoute: ICodeRoute,
@@ -2490,6 +2479,7 @@ const rootRouteChildren: RootRouteChildren = {
   WatchIdRoute: WatchIdRoute,
   BlogIndexRoute: BlogIndexRoute,
   CoursesIndexRoute: CoursesIndexRoute,
+  EarnCreditsIndexRoute: EarnCreditsIndexRoute,
   NotesIndexRoute: NotesIndexRoute,
   ApiPublicPlugAiRoute: ApiPublicPlugAiRoute,
   ApiPublicVirtualNumberRoute: ApiPublicVirtualNumberRoute,
@@ -2515,13 +2505,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
