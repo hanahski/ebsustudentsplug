@@ -200,6 +200,7 @@ function DashboardPage() {
             desc={payout?.account_number ? "Update your bank account" : "Add before requesting cash"}
             tone="from-amber-500 to-orange-600"
             onClick={() => setPayoutOpen(true)}
+          />
           <ActionCard
             icon={ShieldCheck}
             title="Special badges"
