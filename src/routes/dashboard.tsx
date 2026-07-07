@@ -120,7 +120,10 @@ function DashboardPage() {
                 {(profile.credits ?? 0).toLocaleString()}
               </div>
               <div className="text-sm opacity-90 mt-1">
-                ≈ ₦{nairaValue.toLocaleString(undefined, { maximumFractionDigits: 2 })} · 3 credits = ₦1
+                Cash value ≈ ₦{nairaValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+              </div>
+              <div className="text-[11px] opacity-80 mt-0.5">
+                Every 3 credits = ₦1 when you cash out
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button asChild variant="secondary" size="sm">
@@ -180,7 +183,7 @@ function DashboardPage() {
           <ActionCard
             icon={Banknote}
             title="Swap credits to cash"
-            desc={`3 credits → ₦1 · min ${MIN_SWAP_CREDITS.toLocaleString()}`}
+            desc={`Turn credits into naira · 3 credits = ₦1 · minimum ${MIN_SWAP_CREDITS.toLocaleString()} credits`}
             tone="from-fuchsia-500 to-rose-600"
             onClick={() => setSwapOpen(true)}
           />
@@ -193,11 +196,12 @@ function DashboardPage() {
           />
         </div>
 
-        <div className="rounded-2xl border bg-muted/30 p-4 text-xs text-muted-foreground space-y-1">
-          <div className="font-semibold text-foreground text-sm">How the credit economy works</div>
-          <div>• Buy rate: <span className="font-semibold text-foreground">₦1 = {CREDITS_PER_NAIRA_BUY} credits</span> (₦0.50/credit)</div>
-          <div>• Redeem rate: <span className="font-semibold text-foreground">3 credits = ₦1</span> (≈ ₦0.33/credit)</div>
-          <div>• Withdrawal fee: <span className="font-semibold text-foreground">10% + ₦150 flat</span></div>
+        <div className="rounded-2xl border bg-muted/30 p-4 text-xs text-muted-foreground space-y-1.5">
+          <div className="font-semibold text-foreground text-sm">How credits & naira work</div>
+          <div>• <span className="font-semibold text-foreground">Buying credits:</span> pay ₦1, get {CREDITS_PER_NAIRA_BUY} credits (₦0.50 per credit)</div>
+          <div>• <span className="font-semibold text-foreground">Cashing out:</span> every 3 credits become ₦1 (about ₦0.33 per credit)</div>
+          <div>• <span className="font-semibold text-foreground">Minimum cash-out:</span> {MIN_SWAP_CREDITS.toLocaleString()} credits</div>
+          <div>• <span className="font-semibold text-foreground">Withdrawal fee:</span> 10% of the amount + ₦150 flat</div>
         </div>
 
         <div className="text-center">
