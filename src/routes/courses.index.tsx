@@ -6,6 +6,8 @@ import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { GraduationCap, Loader2, RefreshCw, BookOpen } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/auth";
+import { getIsAdminUser } from "@/lib/admin-role";
 
 export const Route = createFileRoute("/courses/")({
   component: CoursesPage,
@@ -37,6 +39,12 @@ function CoursesPage() {
   const [subject, setSubject] = useState<string>("all");
   const [source, setSource] = useState<string>("all");
   const [q, setQ] = useState("");
+  const { user } = useAuth();
+  const { data: isAdmin } = useQuery({
+    queryKey: ["is-admin", user?.id],
+    queryFn: () => getIsAdminUser(user?.id),
+    enabled: !!user?.id,
+  });
 
   const {
     data: items,
@@ -70,7 +78,12 @@ function CoursesPage() {
 
   const sync = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/public/hooks/sync-courses", { method: "POST" });
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      const res = await fetch("/api/public/hooks/sync-courses", {
+        method: "POST",
+        headers: token ? { authorization: `Bearer ${token}` } : {},
+      });
       if (!res.ok) throw new Error("Sync failed");
       return res.json();
     },
