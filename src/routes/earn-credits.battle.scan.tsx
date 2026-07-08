@@ -129,10 +129,13 @@ function ScanPage() {
       const id = data as unknown as string;
       const { data: m } = await supabase.from("battle_matches").select("status,player_b").eq("id", id).maybeSingle();
       if (m && (m.status === "coin_flip" || m.status === "active")) {
+        // Matched immediately — clear ref so unmount cleanup can't cancel it.
+        matchIdRef.current = null;
         nav({ to: "/earn-credits/battle/play/$matchId", params: { matchId: id } });
         return;
       }
       setMatchId(id);
+
     } catch (e: any) {
       const msg = String(e?.message ?? e);
       if (msg.includes("INSUFFICIENT_CREDITS")) toast.error("You need at least 10 PC to battle.");
