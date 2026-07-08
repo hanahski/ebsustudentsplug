@@ -74,6 +74,8 @@ function ScanPage() {
         (payload: any) => {
           const s = payload.new?.status;
           if (s === "coin_flip" || s === "active") {
+            // Clear ref FIRST so the unmount cleanup doesn't cancel the live match.
+            matchIdRef.current = null;
             nav({ to: "/earn-credits/battle/play/$matchId", params: { matchId } });
           }
         },
@@ -85,10 +87,12 @@ function ScanPage() {
   }, [matchId, nav]);
 
   // On unmount while still searching, cancel my pending match so it doesn't
-  // linger in the queue.
+  // linger in the queue. Ref is cleared before navigation, so live matches
+  // are never cancelled here.
   useEffect(() => {
     matchIdRef.current = matchId;
   }, [matchId]);
+
   useEffect(() => {
     return () => {
       const id = matchIdRef.current;
