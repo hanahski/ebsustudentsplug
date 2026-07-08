@@ -180,10 +180,12 @@ function CoursesPage() {
         {!isLoading && (items?.length ?? 0) === 0 && (
           <div className="text-center py-16 text-muted-foreground bg-card border rounded-2xl">
             <BookOpen className="w-12 h-12 mx-auto mb-2 opacity-30" />
-            <p>No courses yet. Tap Refresh to fetch the catalog.</p>
-            <Button className="mt-4" onClick={() => sync.mutate()} disabled={sync.isPending}>
-              {sync.isPending ? "Fetching…" : "Fetch catalog"}
-            </Button>
+            <p>No courses yet — check back soon.</p>
+            {isAdmin && (
+              <Button className="mt-4" onClick={() => sync.mutate()} disabled={sync.isPending}>
+                {sync.isPending ? "Fetching…" : "Fetch catalog"}
+              </Button>
+            )}
           </div>
         )}
 
