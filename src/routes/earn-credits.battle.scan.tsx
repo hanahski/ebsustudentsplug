@@ -74,6 +74,8 @@ function ScanPage() {
         (payload: any) => {
           const s = payload.new?.status;
           if (s === "coin_flip" || s === "active") {
+            // Clear ref FIRST so the unmount cleanup doesn't cancel the live match.
+            matchIdRef.current = null;
             nav({ to: "/earn-credits/battle/play/$matchId", params: { matchId } });
           }
         },
@@ -85,10 +87,12 @@ function ScanPage() {
   }, [matchId, nav]);
 
   // On unmount while still searching, cancel my pending match so it doesn't
-  // linger in the queue.
+  // linger in the queue. Ref is cleared before navigation, so live matches
+  // are never cancelled here.
   useEffect(() => {
     matchIdRef.current = matchId;
   }, [matchId]);
+
   useEffect(() => {
     return () => {
       const id = matchIdRef.current;
@@ -125,10 +129,13 @@ function ScanPage() {
       const id = data as unknown as string;
       const { data: m } = await supabase.from("battle_matches").select("status,player_b").eq("id", id).maybeSingle();
       if (m && (m.status === "coin_flip" || m.status === "active")) {
+        // Matched immediately — clear ref so unmount cleanup can't cancel it.
+        matchIdRef.current = null;
         nav({ to: "/earn-credits/battle/play/$matchId", params: { matchId: id } });
         return;
       }
       setMatchId(id);
+
     } catch (e: any) {
       const msg = String(e?.message ?? e);
       if (msg.includes("INSUFFICIENT_CREDITS")) toast.error("You need at least 10 PC to battle.");
