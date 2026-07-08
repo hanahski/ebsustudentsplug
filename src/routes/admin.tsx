@@ -54,6 +54,7 @@ function AdminPanel() {
   const tabs: { k: Tab; label: string; icon: any }[] = [
     { k: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { k: "ai", label: "Admin AI", icon: Sparkles },
+    { k: "aibank", label: "AI Bank", icon: Plug },
     { k: "toolai", label: "Tool AI", icon: Wand2 },
     { k: "ebsunews", label: "EBSU News AI", icon: Newspaper },
     { k: "users", label: "Users", icon: Users },
