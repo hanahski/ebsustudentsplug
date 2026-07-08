@@ -19,6 +19,7 @@ import { ToolEditor } from "@/components/admin/ToolEditor";
 import { ToolPricesPanel } from "@/components/admin/ToolPricesPanel";
 import { TaskComposerPanel } from "@/components/admin/TaskComposerPanel";
 import { AdminAiPanel } from "@/components/admin/AdminAiPanel";
+import { AdminAiBankPanel } from "@/components/admin/AdminAiBankPanel";
 import { ToolAiPanel } from "@/components/admin/ToolAiPanel";
 import { EbsuNewsPanel } from "@/components/admin/EbsuNewsPanel";
 import { AdminIntegrations } from "@/components/admin/AdminIntegrations";
