@@ -48,7 +48,7 @@ function relTime(iso: string | null) {
 }
 
 export function AdminAiBankPanel() {
-  const fetchStatus = useServerFnTS(aiBankStatus);
+  const fetchStatus = useServerFn(aiBankStatus);
   const [muted, setMuted] = useState<Record<string, boolean>>({});
   const [autoRefresh, setAutoRefresh] = useState<boolean>(() => localStorage.getItem(REFRESH_KEY) !== "off");
   const [query, setQuery] = useState("");
@@ -58,9 +58,9 @@ export function AdminAiBankPanel() {
   useEffect(() => { setMuted(loadMuted()); }, []);
   useEffect(() => { localStorage.setItem(REFRESH_KEY, autoRefresh ? "on" : "off"); }, [autoRefresh]);
 
-  const { data, isFetching, refetch, dataUpdatedAt } = useQuery({
+  const { data, isFetching, refetch } = useQuery<{ sources: BankSource[]; probedAt: string; roundTripMs: number }>({
     queryKey: ["ai-bank-status"],
-    queryFn: () => fetchStatus({}),
+    queryFn: () => fetchStatus({}) as any,
     refetchInterval: autoRefresh ? 10_000 : false,
   });
 
