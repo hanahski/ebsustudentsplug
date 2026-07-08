@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { BookCover } from "@/components/BookCover";
 import { BookOpen, Loader2, ChevronLeft, ChevronRight, Lock } from "lucide-react";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 
 type PreviewBook = {
   id: string;

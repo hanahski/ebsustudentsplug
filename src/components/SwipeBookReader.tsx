@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import pageFlipAsset from "@/assets/page-flip.mp3.asset.json";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 
 type Chapter = { id: string; idx: number; title: string; content: string | null };
 
