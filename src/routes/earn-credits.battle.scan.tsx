@@ -400,11 +400,15 @@ const scannerCss = `
   animation: expand-light 3s infinite linear;
 }
 .candle-stage .candle2__fire {
-  position: absolute; top: 50%; left: 40%;
-  width: 16px; height: 20px;
+  position: absolute; top: 0; left: 50%;
+  width: 14px; height: 22px;
   border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-  background: #ff9800; transform: translate(-50%, -50%);
+  background: #ff9800;
+  box-shadow: 0 0 18px 4px rgba(255,152,0,0.65), 0 0 40px 10px rgba(255,87,34,0.35);
+  transform: translate(-50%, calc(-100% - 12px));
+  transform-origin: bottom center;
   animation: dance-fire 3s infinite linear;
+  z-index: 3;
 }
 @keyframes blink-eyes {
   0%,35% { opacity:1; transform: translate(-70%,0%); }
