@@ -114,7 +114,7 @@ function PreviewPage() {
                   <h2 className="font-display text-2xl font-bold mb-4">{active.title}</h2>
                   <div
                     className="prose prose-sm dark:prose-invert max-w-none"
-                    dangerouslySetInnerHTML={{ __html: active.content || "<p><em>Empty chapter.</em></p>" }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(active.content) || "<p><em>Empty chapter.</em></p>" }}
                   />
                   <div className="mt-8 pt-4 border-t flex items-center justify-between">
                     <button

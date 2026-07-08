@@ -162,7 +162,7 @@ export function SwipeBookReader({
           className={`prose prose-sm md:prose-base dark:prose-invert max-w-none book-page ${flipDir === "next" ? "book-page-flip-next" : flipDir === "prev" ? "book-page-flip-prev" : ""}`}
         >
           {currentBlocks.map((i) => (
-            <div key={i} dangerouslySetInnerHTML={{ __html: blocks[i].html }} />
+            <div key={i} dangerouslySetInnerHTML={{ __html: sanitizeHtml(blocks[i].html) }} />
           ))}
         </article>
       </div>
