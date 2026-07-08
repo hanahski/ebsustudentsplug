@@ -12,70 +12,43 @@ export const Route = createFileRoute("/earn-credits/battle/scan")({
   head: () => ({ meta: [{ title: "Scan for Battle" }] }),
 });
 
-type Searcher = {
-  match_id: string;
-  user_id: string;
-  display_name: string | null;
-  avatar_key: string | null;
-};
-
 function ScanPage() {
   const nav = useNavigate();
   const [uid, setUid] = useState<string | null>(null);
+  const [profile, setProfile] = useState<{ display_name: string | null; avatar_key: string | null } | null>(null);
   const [searching, setSearching] = useState(false);
   const [matchId, setMatchId] = useState<string | null>(null);
-  const [searchers, setSearchers] = useState<Searcher[]>([]);
-  const cancelRef = useRef<() => void>(() => {});
+  const startingRef = useRef(false);
+  const matchIdRef = useRef<string | null>(null);
 
+  // Cancel any leftover pending random matches I own (from a previous session /
+  // hard-refresh / accidental double-tap). Runs once on mount.
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUid(data.user?.id ?? null));
-  }, []);
-
-  // Load + subscribe to everyone currently waiting for a random match.
-  useEffect(() => {
-    let alive = true;
-    async function load() {
-      const { data } = await supabase
-        .from("battle_matches")
-        .select("id, player_a")
-        .eq("status", "pending")
-        .eq("mode", "random")
-        .order("created_at", { ascending: false })
-        .limit(24);
-      const rows = (data ?? []) as { id: string; player_a: string }[];
-      const ids = Array.from(new Set(rows.map((r) => r.player_a)));
-      if (!ids.length) {
-        if (alive) setSearchers([]);
-        return;
-      }
-      const { data: profs } = await supabase
+    let cancelled = false;
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      const me = auth.user?.id;
+      if (!me || cancelled) return;
+      setUid(me);
+      const { data: prof } = await supabase
         .from("profiles")
-        .select("id, display_name, avatar_key")
-        .in("id", ids);
-      const pmap = new Map<string, { display_name: string | null; avatar_key: string | null }>();
-      (profs ?? []).forEach((p: any) => pmap.set(p.id, { display_name: p.display_name, avatar_key: p.avatar_key }));
-      if (!alive) return;
-      setSearchers(
-        rows.map((r) => ({
-          match_id: r.id,
-          user_id: r.player_a,
-          display_name: pmap.get(r.player_a)?.display_name ?? null,
-          avatar_key: pmap.get(r.player_a)?.avatar_key ?? null,
-        })),
-      );
-    }
-    load();
-    const ch = supabase
-      .channel("battle-searchers")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "battle_matches" },
-        () => load(),
-      )
-      .subscribe();
+        .select("display_name, avatar_key")
+        .eq("id", me)
+        .maybeSingle();
+      if (!cancelled) setProfile(prof ?? null);
+
+      const { data: mine } = await supabase
+        .from("battle_matches")
+        .select("id")
+        .eq("player_a", me)
+        .eq("status", "pending")
+        .eq("mode", "random");
+      for (const row of mine ?? []) {
+        await supabase.rpc("battle_cancel", { _match_id: (row as any).id });
+      }
+    })();
     return () => {
-      alive = false;
-      supabase.removeChannel(ch);
+      cancelled = true;
     };
   }, []);
 
@@ -95,16 +68,44 @@ function ScanPage() {
         },
       )
       .subscribe();
-    cancelRef.current = () => supabase.removeChannel(ch);
     return () => {
       supabase.removeChannel(ch);
     };
   }, [matchId, nav]);
 
+  // On unmount while still searching, cancel my pending match so it doesn't
+  // linger in the queue.
+  useEffect(() => {
+    matchIdRef.current = matchId;
+  }, [matchId]);
+  useEffect(() => {
+    return () => {
+      const id = matchIdRef.current;
+      if (id) {
+        supabase.rpc("battle_cancel", { _match_id: id }).then(() => {});
+      }
+    };
+  }, []);
+
   async function startRandom() {
-    if (searching) return;
+    if (startingRef.current || searching) return;
+    startingRef.current = true;
     setSearching(true);
     try {
+      // Belt-and-braces: cancel any stray pending match I might already have
+      // before creating a new one (prevents double-profile in the queue).
+      if (uid) {
+        const { data: mine } = await supabase
+          .from("battle_matches")
+          .select("id")
+          .eq("player_a", uid)
+          .eq("status", "pending")
+          .eq("mode", "random");
+        for (const row of mine ?? []) {
+          await supabase.rpc("battle_cancel", { _match_id: (row as any).id });
+        }
+      }
+
       const { data, error } = await supabase.rpc("battle_matchmake", { _device_hash: getDeviceHash() });
       if (error) throw error;
       const id = data as unknown as string;
@@ -119,20 +120,19 @@ function ScanPage() {
       if (msg.includes("INSUFFICIENT_CREDITS")) toast.error("You need at least 10 PC to battle.");
       else toast.error(msg);
       setSearching(false);
+    } finally {
+      startingRef.current = false;
     }
   }
 
   async function cancelSearch() {
-    if (matchId) {
-      await supabase.rpc("battle_cancel", { _match_id: matchId });
-    }
+    const id = matchId;
     setMatchId(null);
     setSearching(false);
+    if (id) {
+      await supabase.rpc("battle_cancel", { _match_id: id });
+    }
   }
-
-  // Responsive avatar sizing based on how many people are in queue.
-  const count = Math.max(searchers.length, 1);
-  const avatarSize = count <= 4 ? 56 : count <= 8 ? 44 : count <= 14 ? 36 : 28;
 
   return (
     <div className="fixed inset-0 bg-white text-[#2a1e2a] overflow-hidden flex flex-col z-0">
@@ -147,57 +147,41 @@ function ScanPage() {
           <ArrowLeft className="w-3.5 h-3.5" /> Battle
         </Link>
         <div className="text-[11px] font-semibold text-[#673c63] bg-white/70 backdrop-blur px-3 py-1.5 rounded-full border border-[#673c63]/20">
-          {searchers.length} {searchers.length === 1 ? "player" : "players"} in queue
+          Tic-Tac-Toe · 2 players
         </div>
       </div>
 
-      {/* Scanner strip — top only, does not cover the whole background */}
-      <div className="relative z-20 mt-4 mx-3 rounded-3xl border border-[#673c63]/25 bg-white/60 backdrop-blur-md shadow-[0_10px_30px_-15px_rgba(103,60,99,0.4)] overflow-hidden">
+      {/* Scanner card — just YOU. Tic-tac-toe is a 2-player random match, so
+          we don't show a live queue of other searchers here. */}
+      <div className="relative z-20 mt-6 mx-3 rounded-3xl border border-[#673c63]/25 bg-white/60 backdrop-blur-md shadow-[0_10px_30px_-15px_rgba(103,60,99,0.4)] overflow-hidden">
         <div className="flex items-center gap-2 px-4 pt-3">
           <ScanLine className="w-4 h-4 text-[#673c63]" />
           <span className="text-[11px] font-bold uppercase tracking-wider text-[#673c63]">
-            {searching ? "Scanning queue…" : "Live queue"}
+            {searching ? "Scanning for opponent…" : "Ready to scan"}
           </span>
         </div>
 
-        <div className="relative px-3 py-4 min-h-[120px]">
-          {/* sweeping beam */}
-          <div className="scanner-beam" aria-hidden />
-
-          {/* users grid */}
-          {searchers.length === 0 ? (
-            <div className="text-center text-xs text-[#673c63]/70 py-6">
-              No one else searching right now. Tap start — the next player who joins gets paired with you at random.
+        <div className="relative px-3 py-8 min-h-[160px] flex items-center justify-center">
+          {searching && <div className="scanner-beam" aria-hidden />}
+          <div className="scanner-user flex flex-col items-center gap-2">
+            <div className="relative">
+              {searching && (
+                <>
+                  <div className="absolute inset-0 rounded-full ring-2 ring-[#673c63]/40 animate-ping [animation-duration:2.4s]" />
+                  <div className="absolute -inset-2 rounded-full ring-2 ring-[#673c63]/20 animate-ping [animation-duration:3s]" />
+                </>
+              )}
+              <div className="relative rounded-full ring-2 ring-[#673c63]/50 bg-white p-1">
+                <AvatarDisplay avatarKey={profile?.avatar_key ?? "boy-1"} size={72} />
+              </div>
+              <span className="absolute -top-1 -right-1 text-[9px] font-bold bg-[#673c63] text-white rounded-full px-1.5 py-0.5">
+                you
+              </span>
             </div>
-          ) : (
-            <div className="flex flex-wrap justify-center gap-3">
-              {searchers.map((s, i) => (
-                <div
-                  key={s.match_id}
-                  className="scanner-user flex flex-col items-center gap-1"
-                  style={{ animationDelay: (i * 0.15).toFixed(2) + "s" }}
-                >
-                  <div className="relative">
-                    <div className="absolute inset-0 rounded-full ring-2 ring-[#673c63]/40 animate-ping [animation-duration:2.4s]" />
-                    <div className="relative rounded-full ring-2 ring-[#673c63]/50 bg-white p-0.5">
-                      <AvatarDisplay avatarKey={s.avatar_key ?? "boy-1"} size={avatarSize} />
-                    </div>
-                    {s.user_id === uid && (
-                      <span className="absolute -top-1 -right-1 text-[9px] font-bold bg-[#673c63] text-white rounded-full px-1.5 py-0.5">
-                        you
-                      </span>
-                    )}
-                  </div>
-                  <div
-                    className="text-[10px] font-semibold text-[#2a1e2a] truncate text-center"
-                    style={{ maxWidth: avatarSize + 20 }}
-                  >
-                    {s.display_name || "Player"}
-                  </div>
-                </div>
-              ))}
+            <div className="text-xs font-semibold text-[#2a1e2a] truncate text-center max-w-[160px]">
+              {profile?.display_name || "You"}
             </div>
-          )}
+          </div>
         </div>
       </div>
 
@@ -208,8 +192,8 @@ function ScanPage() {
         </h1>
         <p className="text-xs text-[#673c63] mt-1 max-w-sm mx-auto">
           {searching
-            ? "You'll be randomly paired with another player in the queue. No picking sides — the match finds you."
-            : "Tap start to join the queue. When another player joins, you'll be randomly paired for a 10 PC battle."}
+            ? "You'll be randomly paired with another player. Then a coin flip decides who starts. Winner takes 20 PC, draw refunds both."
+            : "Random match only — no picking. 10 PC stake · Winner takes 20 PC · Draw refunds both."}
         </p>
         <div className="mt-4 flex justify-center">
           {!searching ? (
@@ -231,9 +215,6 @@ function ScanPage() {
             </Button>
           )}
         </div>
-        <p className="mt-3 text-[10px] text-[#673c63]/70 max-w-xs mx-auto">
-          Random pairing only. Repeat matches with the same opponent inside 24h are de-prioritised.
-        </p>
       </div>
 
       {/* Candle background — anchored to bottom, does not cover the scanner */}
