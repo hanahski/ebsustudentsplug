@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { Swords, ArrowLeft, Coins, Trophy, Shield, Zap, Hash, Grid3x3, Dices, Puzzle, Lock } from "lucide-react";
+import { Swords, ArrowLeft, Coins, Trophy, Shield, Zap, Hash, Dices, Puzzle, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,8 +21,8 @@ type Match = {
 };
 
 const GAMES = [
-  { key: "ttt", label: "Tic-Tac-Toe", desc: "Classic 3-in-a-row · 10 PC", icon: Hash, tone: "from-red-500 to-orange-600", live: true },
-  { key: "connect4", label: "Connect Four", desc: "Coming soon", icon: Grid3x3, tone: "from-blue-500 to-indigo-600", live: false },
+  { key: "tictactoe", label: "Tic-Tac-Toe", desc: "Classic 3-in-a-row · 10 PC", icon: Hash, tone: "from-red-500 to-orange-600", live: true },
+  { key: "mk", label: "Fighter Battle", desc: "1v1 mortal combat · 10 PC", icon: Swords, tone: "from-fuchsia-500 to-rose-700", live: true },
   { key: "dice", label: "Dice Duel", desc: "Coming soon", icon: Dices, tone: "from-emerald-500 to-teal-600", live: false },
   { key: "puzzle", label: "Speed Puzzle", desc: "Coming soon", icon: Puzzle, tone: "from-fuchsia-500 to-pink-600", live: false },
 ];
@@ -114,6 +114,7 @@ function BattleGamesPage() {
                 <Link
                   key={g.key}
                   to="/earn-credits/battle/scan"
+                  search={{ game: g.key === "mk" ? "mk" : "tictactoe" }}
                   className="group relative overflow-hidden rounded-2xl border p-4 bg-card hover:shadow-glow hover:-translate-y-0.5 transition-all"
                 >
                   {inner}

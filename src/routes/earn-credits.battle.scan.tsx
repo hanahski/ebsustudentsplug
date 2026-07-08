@@ -10,10 +10,21 @@ import { AvatarDisplay } from "@/components/AvatarDisplay";
 export const Route = createFileRoute("/earn-credits/battle/scan")({
   component: ScanPage,
   head: () => ({ meta: [{ title: "Scan for Battle" }] }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    game: (s.game as string) === "mk" ? "mk" : "tictactoe",
+  }),
 });
+
+type GameKey = "tictactoe" | "mk";
+const GAME_LABEL: Record<GameKey, string> = {
+  tictactoe: "Tic-Tac-Toe · 2 players",
+  mk: "Fighter Battle · 2 players",
+};
 
 function ScanPage() {
   const nav = useNavigate();
+  const { game } = Route.useSearch();
+  const gameKey = game as GameKey;
   const [uid, setUid] = useState<string | null>(null);
   const [profile, setProfile] = useState<{ display_name: string | null; avatar_key: string | null } | null>(null);
   const [searching, setSearching] = useState(false);
@@ -106,7 +117,10 @@ function ScanPage() {
         }
       }
 
-      const { data, error } = await supabase.rpc("battle_matchmake", { _device_hash: getDeviceHash() });
+      const { data, error } = await supabase.rpc("battle_matchmake", {
+        _device_hash: getDeviceHash(),
+        _game_type: gameKey,
+      });
       if (error) throw error;
       const id = data as unknown as string;
       const { data: m } = await supabase.from("battle_matches").select("status,player_b").eq("id", id).maybeSingle();
@@ -147,7 +161,7 @@ function ScanPage() {
           <ArrowLeft className="w-3.5 h-3.5" /> Battle
         </Link>
         <div className="text-[11px] font-semibold text-[#673c63] bg-white/70 backdrop-blur px-3 py-1.5 rounded-full border border-[#673c63]/20">
-          Tic-Tac-Toe · 2 players
+          {GAME_LABEL[gameKey]}
         </div>
       </div>
 

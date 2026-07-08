@@ -311,7 +311,9 @@ export type Database = {
       }
       battle_matches: {
         Row: {
+          a_character: string | null
           a_choice: string | null
+          b_character: string | null
           b_choice: string | null
           board: Json
           coin_result: string | null
@@ -322,6 +324,7 @@ export type Database = {
           escrowed: boolean
           finished_at: string | null
           first_player: string | null
+          game_type: string
           id: string
           is_draw: boolean
           last_activity_at: string
@@ -335,7 +338,9 @@ export type Database = {
           winner: string | null
         }
         Insert: {
+          a_character?: string | null
           a_choice?: string | null
+          b_character?: string | null
           b_choice?: string | null
           board?: Json
           coin_result?: string | null
@@ -346,6 +351,7 @@ export type Database = {
           escrowed?: boolean
           finished_at?: string | null
           first_player?: string | null
+          game_type?: string
           id?: string
           is_draw?: boolean
           last_activity_at?: string
@@ -359,7 +365,9 @@ export type Database = {
           winner?: string | null
         }
         Update: {
+          a_character?: string | null
           a_choice?: string | null
+          b_character?: string | null
           b_choice?: string | null
           board?: Json
           coin_result?: string | null
@@ -370,6 +378,7 @@ export type Database = {
           escrowed?: boolean
           finished_at?: string | null
           first_player?: string | null
+          game_type?: string
           id?: string
           is_draw?: boolean
           last_activity_at?: string
@@ -2369,7 +2378,20 @@ export type Database = {
         Args: { _device_hash: string; _opponent: string }
         Returns: string
       }
-      battle_matchmake: { Args: { _device_hash: string }; Returns: string }
+      battle_matchmake:
+        | { Args: { _device_hash: string }; Returns: string }
+        | {
+            Args: { _device_hash: string; _game_type?: string }
+            Returns: string
+          }
+      battle_mk_finish: {
+        Args: { _match_id: string; _winner: string }
+        Returns: Json
+      }
+      battle_mk_pick: {
+        Args: { _character: string; _match_id: string }
+        Returns: Json
+      }
       battle_move: { Args: { _cell: number; _match_id: string }; Returns: Json }
       battle_pick_side: {
         Args: { _choice: string; _match_id: string }

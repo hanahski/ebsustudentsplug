@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { MkPlay } from "@/components/MkPlay";
 
 export const Route = createFileRoute("/earn-credits/battle/play/$matchId")({
   component: PlayPage,
@@ -19,6 +20,7 @@ type Match = {
   player_b: string | null;
   stake: number;
   mode: string;
+  game_type?: string;
   a_choice: string | null;
   b_choice: string | null;
   coin_result: string | null;
@@ -142,6 +144,11 @@ function PlayPage() {
       </AppShell>
     );
   }
+
+  if (m.game_type === "mk") {
+    return <MkPlay matchId={matchId} uid={uid} />;
+  }
+
 
   if (!meIsPlayer) {
     return (

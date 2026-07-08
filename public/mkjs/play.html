@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=600, user-scalable=no" />
+  <title>mk.js — battle</title>
+  <link rel="stylesheet" href="/mkjs/styles/styles.css" />
+  <script src="/mkjs/src/movement.js"></script>
+  <script src="/mkjs/src/mk.js"></script>
+  <style>
+    html, body { margin:0; padding:0; background:#000; overflow:hidden; height:100%; }
+    #parent { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+    #arena { background:#000; }
+    #utils { position:absolute; left:0; right:0; top:0; padding:8px 10px; z-index:5;
+      display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:center;
+      color:#fff; font-family:system-ui,sans-serif; font-size:12px; font-weight:800;
+      text-shadow:0 1px 2px #000; }
+    .playerName { text-transform:uppercase; letter-spacing:.05em; }
+    .lifebar { grid-column:1/-1; display:grid; grid-template-columns:1fr auto 1fr; gap:8px; margin-top:2px; }
+    .life-shell { height:10px; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.4); border-radius:6px; overflow:hidden; }
+    .life-shell.right { direction:rtl; }
+    .life-bar { height:100%; background:linear-gradient(90deg,#f43f5e,#f59e0b); transition:width .12s linear; }
+    .vs { font-weight:900; color:#fbbf24; font-family:'Impact','Arial Black',sans-serif; }
+    #loading { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-family:system-ui,sans-serif; font-weight:700; background:#000; z-index:10; }
+    canvas { display:block; image-rendering:pixelated; }
+  </style>
+</head>
+<body>
+<main id="parent">
+  <div id="utils">
+    <div id="player1Name" class="playerName">Player 1</div>
+    <div class="vs">VS</div>
+    <div id="player2Name" class="playerName" style="text-align:right">Player 2</div>
+    <div class="lifebar">
+      <div class="life-shell"><div class="life-bar" id="p1life" style="width:100%"></div></div>
+      <div style="opacity:.6">100 | 100</div>
+      <div class="life-shell right"><div class="life-bar" id="p2life" style="width:100%"></div></div>
+    </div>
+  </div>
+  <div id="arena"></div>
+  <div id="loading">Loading fighters…</div>
+</main>
+<script>
+(function () {
+  mk.config.IMAGES = '/mkjs/images/';
+
+  var params = new URLSearchParams(location.search);
+  var p1 = (params.get('p1') || 'Subzero');
+  var p2 = (params.get('p2') || 'Kano');
+  var arenaKey = (params.get('arena') || 'THRONE_ROOM').toUpperCase();
+  var arena = mk.arenas.types[arenaKey] != null ? mk.arenas.types[arenaKey] : mk.arenas.types.THRONE_ROOM;
+
+  document.getElementById('player1Name').textContent = p1;
+  document.getElementById('player2Name').textContent = p2;
+
+  function post(type, data) {
+    try { parent.postMessage(Object.assign({ __mk: true, type: type }, data || {}), '*'); } catch (e) {}
+  }
+
+  var options = {
+    arena: { container: document.getElementById('arena'), arena: arena },
+    fighters: [{ name: p1 }, { name: p2 }],
+    callbacks: {
+      attack: function (attacker, opp) {
+        var life = opp.getLife();
+        var name = opp.getName().toLowerCase();
+        var p1Name = p1.toLowerCase();
+        var el = name === p1Name ? 'p1life' : 'p2life';
+        var bar = document.getElementById(el);
+        if (bar) bar.style.width = life + '%';
+        post('attack', { defender: name, life: life });
+      },
+      'game-end': function (winner) {
+        post('game-end', { winner: winner.getName() });
+      }
+    },
+    gameType: 'multiplayer'
+  };
+
+  // Bridge: parent sends {type:'press'|'release', player:0|1, key:'LEFT'}
+  // We route to the same _getMove path Multiplayer uses.
+  var pressed = { 0: {}, 1: {} };
+  function applyKey(playerIdx, keyName, down) {
+    if (!mk.game || !mk.game.fighters) return;
+    var kmap = playerIdx === 0 ? mk.controllers.keys.p1 : mk.controllers.keys.p2;
+    var code = kmap[keyName];
+    if (!code) return;
+    if (down) pressed[playerIdx][code] = true;
+    else delete pressed[playerIdx][code];
+    var move = mk.game._getMove(pressed[playerIdx], kmap, playerIdx);
+    if (move) mk.game.fighters[playerIdx].setMove(move);
+  }
+
+  window.addEventListener('message', function (ev) {
+    var d = ev.data;
+    if (!d || !d.__mkctl) return;
+    if (d.type === 'press') applyKey(d.player | 0, d.key, true);
+    else if (d.type === 'release') applyKey(d.player | 0, d.key, false);
+    else if (d.type === 'reset') location.reload();
+  });
+
+  // Suppress physical keyboard (we control via bridge only, and the reload-on-space).
+  document.addEventListener('keydown', function (e) { e.stopImmediatePropagation(); }, true);
+  document.addEventListener('keyup', function (e) { e.stopImmediatePropagation(); }, true);
+
+  mk.start(options).ready(function () {
+    document.getElementById('loading').style.display = 'none';
+    post('ready', {});
+  });
+
+  post('boot', {});
+})();
+</script>
+</body>
+</html>
