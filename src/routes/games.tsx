@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { Puzzle, Grid3x3, Sparkles, Gamepad2, Brain } from "lucide-react";
+import { Puzzle, Grid3x3, Sparkles, Gamepad2, Brain, Hash } from "lucide-react";
 
 export const Route = createFileRoute("/games")({ component: GamesPage });
 
@@ -34,6 +34,11 @@ function GamesPage() {
               <Brain className="w-10 h-10 text-primary mb-3" />
               <h2 className="font-bold text-lg group-hover:text-primary">Riddle Me</h2>
               <p className="text-sm text-muted-foreground mt-1">Type your answer, reveal & celebrate.</p>
+            </Link>
+            <Link to="/games/tictactoe" className="group bg-card border rounded-2xl p-6 shadow-card hover:shadow-glow hover:-translate-y-0.5 transition-all">
+              <Hash className="w-10 h-10 text-primary mb-3" />
+              <h2 className="font-bold text-lg group-hover:text-primary">Tic-Tac-Toe</h2>
+              <p className="text-sm text-muted-foreground mt-1">Play vs AI — easy or hard mode.</p>
             </Link>
             <div className="bg-card border-2 border-dashed rounded-2xl p-6 opacity-60">
               <Grid3x3 className="w-10 h-10 text-muted-foreground mb-3" />
