@@ -1,7 +1,7 @@
 // AI Bank status dashboard for admins — battery UI, health, latency, local mute toggles.
 import { useEffect, useMemo, useState } from "react";
-import { useQuery, useServerFn } from "@tanstack/react-query";
-import { useServerFn as useServerFnTS } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { aiBankStatus, type BankSource } from "@/lib/ai-bank-status.functions";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
