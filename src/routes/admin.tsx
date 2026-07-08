@@ -97,6 +97,7 @@ function AdminPanel() {
 
         {tab === "dashboard" && <AdminDashboard />}
         {tab === "ai" && <AdminAiPanel />}
+        {tab === "aibank" && <AdminAiBankPanel />}
         {tab === "toolai" && <ToolAiPanel />}
         {tab === "ebsunews" && <EbsuNewsPanel />}
         {tab === "users" && <AdminUsers />}
