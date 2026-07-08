@@ -76,6 +76,7 @@ import { Route as MarketNewRouteImport } from './routes/market.new'
 import { Route as MarketIdRouteImport } from './routes/market.$id'
 import { Route as ICodeRouteImport } from './routes/i.$code'
 import { Route as GuidesEbsuFeesRouteImport } from './routes/guides.ebsu-fees'
+import { Route as GamesTictactoeRouteImport } from './routes/games.tictactoe'
 import { Route as GamesRiddleRouteImport } from './routes/games.riddle'
 import { Route as GamesPuzzleRouteImport } from './routes/games.puzzle'
 import { Route as GamesFreegamesRouteImport } from './routes/games.freegames'
@@ -460,6 +461,11 @@ const GuidesEbsuFeesRoute = GuidesEbsuFeesRouteImport.update({
   path: '/guides/ebsu-fees',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GamesTictactoeRoute = GamesTictactoeRouteImport.update({
+  id: '/tictactoe',
+  path: '/tictactoe',
+  getParentRoute: () => GamesRoute,
+} as any)
 const GamesRiddleRoute = GamesRiddleRouteImport.update({
   id: '/riddle',
   path: '/riddle',
@@ -766,6 +772,7 @@ export interface FileRoutesByFullPath {
   '/games/freegames': typeof GamesFreegamesRoute
   '/games/puzzle': typeof GamesPuzzleRoute
   '/games/riddle': typeof GamesRiddleRoute
+  '/games/tictactoe': typeof GamesTictactoeRoute
   '/guides/ebsu-fees': typeof GuidesEbsuFeesRoute
   '/i/$code': typeof ICodeRoute
   '/market/$id': typeof MarketIdRoute
@@ -880,6 +887,7 @@ export interface FileRoutesByTo {
   '/games/freegames': typeof GamesFreegamesRoute
   '/games/puzzle': typeof GamesPuzzleRoute
   '/games/riddle': typeof GamesRiddleRoute
+  '/games/tictactoe': typeof GamesTictactoeRoute
   '/guides/ebsu-fees': typeof GuidesEbsuFeesRoute
   '/i/$code': typeof ICodeRoute
   '/market/$id': typeof MarketIdRoute
@@ -998,6 +1006,7 @@ export interface FileRoutesById {
   '/games/freegames': typeof GamesFreegamesRoute
   '/games/puzzle': typeof GamesPuzzleRoute
   '/games/riddle': typeof GamesRiddleRoute
+  '/games/tictactoe': typeof GamesTictactoeRoute
   '/guides/ebsu-fees': typeof GuidesEbsuFeesRoute
   '/i/$code': typeof ICodeRoute
   '/market/$id': typeof MarketIdRoute
@@ -1117,6 +1126,7 @@ export interface FileRouteTypes {
     | '/games/freegames'
     | '/games/puzzle'
     | '/games/riddle'
+    | '/games/tictactoe'
     | '/guides/ebsu-fees'
     | '/i/$code'
     | '/market/$id'
@@ -1231,6 +1241,7 @@ export interface FileRouteTypes {
     | '/games/freegames'
     | '/games/puzzle'
     | '/games/riddle'
+    | '/games/tictactoe'
     | '/guides/ebsu-fees'
     | '/i/$code'
     | '/market/$id'
@@ -1348,6 +1359,7 @@ export interface FileRouteTypes {
     | '/games/freegames'
     | '/games/puzzle'
     | '/games/riddle'
+    | '/games/tictactoe'
     | '/guides/ebsu-fees'
     | '/i/$code'
     | '/market/$id'
@@ -1973,6 +1985,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GuidesEbsuFeesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/games/tictactoe': {
+      id: '/games/tictactoe'
+      path: '/tictactoe'
+      fullPath: '/games/tictactoe'
+      preLoaderRoute: typeof GamesTictactoeRouteImport
+      parentRoute: typeof GamesRoute
+    }
     '/games/riddle': {
       id: '/games/riddle'
       path: '/riddle'
@@ -2317,6 +2336,7 @@ interface GamesRouteChildren {
   GamesFreegamesRoute: typeof GamesFreegamesRoute
   GamesPuzzleRoute: typeof GamesPuzzleRoute
   GamesRiddleRoute: typeof GamesRiddleRoute
+  GamesTictactoeRoute: typeof GamesTictactoeRoute
 }
 
 const GamesRouteChildren: GamesRouteChildren = {
@@ -2324,6 +2344,7 @@ const GamesRouteChildren: GamesRouteChildren = {
   GamesFreegamesRoute: GamesFreegamesRoute,
   GamesPuzzleRoute: GamesPuzzleRoute,
   GamesRiddleRoute: GamesRiddleRoute,
+  GamesTictactoeRoute: GamesTictactoeRoute,
 }
 
 const GamesRouteWithChildren = GamesRoute._addFileChildren(GamesRouteChildren)
@@ -2524,13 +2545,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

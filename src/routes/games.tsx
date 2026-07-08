@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { Puzzle, Grid3x3, Sparkles, Gamepad2, Brain } from "lucide-react";
+import { Puzzle, Grid3x3, Sparkles, Gamepad2, Brain, Hash } from "lucide-react";
 
 export const Route = createFileRoute("/games")({ component: GamesPage });
 
