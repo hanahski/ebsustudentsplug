@@ -301,29 +301,30 @@ const scannerCss = `
   height: 55%;
   pointer-events: none;
   z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .candle-stage .wrapper {
-  position: absolute;
-  left: 50%;
-  top: 70%;
+  position: relative;
   width: 250px;
-  height: 250px;
-  transform: translate(-50%, -50%) scale(1.4);
-  transform-origin: center center;
+  height: 200px;
+  transform: scale(1.3);
+  transform-origin: center bottom;
 }
 .candle-stage .floor {
-  position: absolute; left: 50%; top: 50%;
+  position: absolute; left: 50%; bottom: 40px;
   width: 350px; height: 5px; background: #673c63;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   box-shadow: 0px 2px 5px #111;
   z-index: 2;
 }
 .candle-stage .candles {
-  position: absolute; left: 50%; top: 50%;
+  position: absolute; left: 0; bottom: 45px;
   width: 250px; height: 150px;
-  transform: translate(-50%, -100%);
   z-index: 1;
 }
+
 .candle-stage .candle1 {
   position: absolute; left: 50%; top: 50%;
   width: 35px; height: 100px; background: #fff;
