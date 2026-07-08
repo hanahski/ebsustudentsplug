@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import pageFlipAsset from "@/assets/page-flip.mp3.asset.json";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 
 type Chapter = { id: string; idx: number; title: string; content: string | null };
 
@@ -162,7 +163,7 @@ export function SwipeBookReader({
           className={`prose prose-sm md:prose-base dark:prose-invert max-w-none book-page ${flipDir === "next" ? "book-page-flip-next" : flipDir === "prev" ? "book-page-flip-prev" : ""}`}
         >
           {currentBlocks.map((i) => (
-            <div key={i} dangerouslySetInnerHTML={{ __html: blocks[i].html }} />
+            <div key={i} dangerouslySetInnerHTML={{ __html: sanitizeHtml(blocks[i].html) }} />
           ))}
         </article>
       </div>

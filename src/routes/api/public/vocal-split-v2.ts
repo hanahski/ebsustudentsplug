@@ -12,6 +12,12 @@ const DEFAULT_HOST = "stemsplit-ai-audio-stem-separation-youtube-to-stems2.p.rap
 const DEFAULT_CREATE_PATH = "/youtube-jobs";
 const DEFAULT_STATUS_PATH = "/youtube-jobs/{id}";
 const TOOL_KEY = "vocal-yt";
+// SSRF guard: only allow the upstream stem CDN through the download proxy.
+// Extend this list if the RapidAPI provider ever returns another CDN host.
+const ALLOWED_PROXY_HOSTS = new Set([
+  "stems.songfinder.gg",
+  "stemsplit-ai-audio-stem-separation-youtube-to-stems2.p.rapidapi.com",
+]);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -147,8 +153,19 @@ export const Route = createFileRoute("/api/public/vocal-split-v2")({
         const name = url.searchParams.get("n") || "stem.mp3";
 
         if (dlUrl) {
-          if (!/^https?:\/\//i.test(dlUrl)) return json({ error: "Bad url" }, 400);
-          const upstream = await fetch(dlUrl);
+          let target: URL;
+          try {
+            target = new URL(dlUrl);
+          } catch {
+            return json({ error: "Bad url" }, 400);
+          }
+          if (target.protocol !== "https:" && target.protocol !== "http:") {
+            return json({ error: "Bad url" }, 400);
+          }
+          if (!ALLOWED_PROXY_HOSTS.has(target.hostname)) {
+            return json({ error: "Host not allowed" }, 400);
+          }
+          const upstream = await fetch(target.toString());
           if (!upstream.ok) {
             return json({ error: "Download failed" }, upstream.status);
           }

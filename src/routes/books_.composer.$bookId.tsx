@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RichTextEditor } from "@/components/RichTextEditor";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 import {
   ArrowLeft,
   BookOpen,
@@ -992,7 +993,7 @@ function ComposerEditorPage() {
               {(chapters ?? []).map((c, i) => (
                 <article key={c.id} className="prose prose-sm dark:prose-invert max-w-none border-t pt-4">
                   <h3 className="text-lg font-semibold">{i + 1}. {c.title || "Untitled"}</h3>
-                  <div dangerouslySetInnerHTML={{ __html: c.id === activeId ? chBuf.content : c.content }} />
+                  <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(c.id === activeId ? chBuf.content : c.content) }} />
                 </article>
               ))}
               {(chapters?.length ?? 0) === 0 && (

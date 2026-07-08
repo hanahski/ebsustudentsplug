@@ -1,6 +1,7 @@
 // Downloads an external PDF for a library_book and mirrors it to the book-pdfs bucket.
 // Idempotent: if the row already points at our bucket, we just return that URL.
 import { createFileRoute } from "@tanstack/react-router";
+import { requireCronSecret } from "@/lib/cron-auth.server";
 
 const BUCKET = "book-pdfs";
 
@@ -185,6 +186,8 @@ export const Route = createFileRoute("/api/public/hooks/cache-book-pdf")({
   server: {
     handlers: {
       GET: async ({ request }) => {
+        const unauthorized = requireCronSecret(request);
+        if (unauthorized) return unauthorized;
         const id = new URL(request.url).searchParams.get("id");
         if (!id) return Response.json({ ok: false, error: "missing id" }, { status: 400 });
         try {

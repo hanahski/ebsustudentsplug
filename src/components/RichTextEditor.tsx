@@ -3,6 +3,7 @@ import { Bold, Italic, Heading1, Heading2, Quote, List, ListOrdered, Image as Im
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 
 interface Props {
   value: string;
@@ -32,13 +33,13 @@ export function RichTextEditor({ value, onChange, placeholder, minHeight = 420 }
   const exec = useCallback((cmd: string, arg?: string) => {
     ref.current?.focus();
     document.execCommand(cmd, false, arg);
-    const html = ref.current?.innerHTML ?? "";
+    const html = sanitizeHtml(ref.current?.innerHTML ?? "");
     lastEmittedRef.current = html;
     onChange(html);
   }, [onChange]);
 
   const handleInput = () => {
-    const html = ref.current?.innerHTML ?? "";
+    const html = sanitizeHtml(ref.current?.innerHTML ?? "");
     lastEmittedRef.current = html;
     onChange(html);
   };

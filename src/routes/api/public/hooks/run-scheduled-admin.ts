@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { executeAdminTool, postAiMessage } from "@/lib/admin-ai.functions";
+import { requireCronSecret } from "@/lib/cron-auth.server";
 
 function describe(action: string, args: any, result: any): string {
   const u = result?.user;
@@ -87,6 +88,8 @@ export const Route = createFileRoute("/api/public/hooks/run-scheduled-admin")({
       // Each invocation runs as a ~25s mini-loop, polling every 5s.
       // With pg_cron firing every 30s, this gives ~5s effective resolution.
       POST: async ({ request }) => {
+        const unauthorized = requireCronSecret(request);
+        if (unauthorized) return unauthorized;
         const url = new URL(request.url);
         const tickMs = Math.max(500, Math.min(15000, Number(url.searchParams.get("tick") ?? 1000)));
         const windowMs = Math.max(tickMs, Math.min(50000, Number(url.searchParams.get("window") ?? 25000)));

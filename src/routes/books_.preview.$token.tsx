@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { BookCover } from "@/components/BookCover";
 import { BookOpen, Loader2, ChevronLeft, ChevronRight, Lock } from "lucide-react";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 
 type PreviewBook = {
   id: string;
@@ -114,7 +115,7 @@ function PreviewPage() {
                   <h2 className="font-display text-2xl font-bold mb-4">{active.title}</h2>
                   <div
                     className="prose prose-sm dark:prose-invert max-w-none"
-                    dangerouslySetInnerHTML={{ __html: active.content || "<p><em>Empty chapter.</em></p>" }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(active.content) || "<p><em>Empty chapter.</em></p>" }}
                   />
                   <div className="mt-8 pt-4 border-t flex items-center justify-between">
                     <button

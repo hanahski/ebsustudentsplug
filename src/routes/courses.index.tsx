@@ -6,6 +6,8 @@ import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { GraduationCap, Loader2, RefreshCw, BookOpen } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/auth";
+import { getIsAdminUser } from "@/lib/admin-role";
 
 export const Route = createFileRoute("/courses/")({
   component: CoursesPage,
@@ -37,6 +39,12 @@ function CoursesPage() {
   const [subject, setSubject] = useState<string>("all");
   const [source, setSource] = useState<string>("all");
   const [q, setQ] = useState("");
+  const { user } = useAuth();
+  const { data: isAdmin } = useQuery({
+    queryKey: ["is-admin", user?.id],
+    queryFn: () => getIsAdminUser(user?.id),
+    enabled: !!user?.id,
+  });
 
   const {
     data: items,
@@ -70,7 +78,12 @@ function CoursesPage() {
 
   const sync = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/public/hooks/sync-courses", { method: "POST" });
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      const res = await fetch("/api/public/hooks/sync-courses", {
+        method: "POST",
+        headers: token ? { authorization: `Bearer ${token}` } : {},
+      });
       if (!res.ok) throw new Error("Sync failed");
       return res.json();
     },
@@ -95,19 +108,21 @@ function CoursesPage() {
                 — all readable in-app
               </p>
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={sync.isPending}
-              onClick={() => sync.mutate()}
-            >
-              {sync.isPending ? (
-                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-              ) : (
-                <RefreshCw className="w-4 h-4 mr-1" />
-              )}
-              Refresh
-            </Button>
+            {isAdmin && (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={sync.isPending}
+                onClick={() => sync.mutate()}
+              >
+                {sync.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-4 h-4 mr-1" />
+                )}
+                Refresh
+              </Button>
+            )}
           </div>
 
           <input
@@ -165,10 +180,12 @@ function CoursesPage() {
         {!isLoading && (items?.length ?? 0) === 0 && (
           <div className="text-center py-16 text-muted-foreground bg-card border rounded-2xl">
             <BookOpen className="w-12 h-12 mx-auto mb-2 opacity-30" />
-            <p>No courses yet. Tap Refresh to fetch the catalog.</p>
-            <Button className="mt-4" onClick={() => sync.mutate()} disabled={sync.isPending}>
-              {sync.isPending ? "Fetching…" : "Fetch catalog"}
-            </Button>
+            <p>No courses yet — check back soon.</p>
+            {isAdmin && (
+              <Button className="mt-4" onClick={() => sync.mutate()} disabled={sync.isPending}>
+                {sync.isPending ? "Fetching…" : "Fetch catalog"}
+              </Button>
+            )}
           </div>
         )}
 

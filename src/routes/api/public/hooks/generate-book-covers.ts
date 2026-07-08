@@ -4,6 +4,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { AI_KEYS, googleImage } from "@/lib/google-ai";
+import { requireCronSecret } from "@/lib/cron-auth.server";
 
 type Book = { id: string; title: string; author: string | null; category: string };
 
@@ -80,6 +81,8 @@ export const Route = createFileRoute("/api/public/hooks/generate-book-covers")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const unauthorized = requireCronSecret(request);
+        if (unauthorized) return unauthorized;
         const url = new URL(request.url);
         const limit = Math.min(Math.max(parseInt(url.searchParams.get("limit") ?? "6", 10) || 6, 1), 12);
         try {
@@ -89,6 +92,8 @@ export const Route = createFileRoute("/api/public/hooks/generate-book-covers")({
         }
       },
       GET: async ({ request }) => {
+        const unauthorized = requireCronSecret(request);
+        if (unauthorized) return unauthorized;
         const url = new URL(request.url);
         const limit = Math.min(Math.max(parseInt(url.searchParams.get("limit") ?? "6", 10) || 6, 1), 12);
         const out = await run(limit);

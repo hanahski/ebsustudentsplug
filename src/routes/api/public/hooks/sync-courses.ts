@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { requireCronOrAdmin } from "@/lib/cron-auth.server";
 
 // Curated free, embeddable academic content.
 // Every source here serves PDF/HTML over HTTPS without X-Frame-Options DENY,
@@ -705,8 +706,16 @@ async function syncResponse(request: Request) {
 export const Route = createFileRoute("/api/public/hooks/sync-courses")({
   server: {
     handlers: {
-      GET: ({ request }) => syncResponse(request),
-      POST: async () => Response.json({ ok: true, results: await runSync() }),
+      GET: async ({ request }) => {
+        const unauthorized = await requireCronOrAdmin(request);
+        if (unauthorized) return unauthorized;
+        return syncResponse(request);
+      },
+      POST: async ({ request }) => {
+        const unauthorized = await requireCronOrAdmin(request);
+        if (unauthorized) return unauthorized;
+        return Response.json({ ok: true, results: await runSync() });
+      },
     },
   },
 });
