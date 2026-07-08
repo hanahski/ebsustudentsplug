@@ -3,6 +3,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { AI_KEYS, googleChat, googleImage } from "@/lib/google-ai";
+import { requireCronSecret } from "@/lib/cron-auth.server";
 
 const GENRES = [
   { genre: "campus romance", premise: "A first-year EBSU student falls for a final-year hostel rep amid a missing-textbook mystery." },
@@ -87,7 +88,9 @@ Return STRICT JSON only (no markdown fences) with keys:
 export const Route = createFileRoute("/api/public/hooks/generate-novel")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const unauthorized = requireCronSecret(request);
+        if (unauthorized) return unauthorized;
         try {
           const r = await generateOne();
           return new Response(JSON.stringify({ ok: true, ...r }), {
@@ -101,7 +104,11 @@ export const Route = createFileRoute("/api/public/hooks/generate-novel")({
           );
         }
       },
-      GET: async () => new Response("ok"),
+      GET: async ({ request }) => {
+        const unauthorized = requireCronSecret(request);
+        if (unauthorized) return unauthorized;
+        return new Response("ok");
+      },
     },
   },
 });

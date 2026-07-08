@@ -4,11 +4,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { postAiMessage } from "@/lib/admin-ai.functions";
+import { requireCronSecret } from "@/lib/cron-auth.server";
 
 export const Route = createFileRoute("/api/public/hooks/admin-ai-pulse")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const unauthorized = requireCronSecret(request);
+        if (unauthorized) return unauthorized;
         const { data: stateRow } = await supabaseAdmin.from("admin_ai_state").select("v").eq("k", "last_pulse").maybeSingle();
         const lastIso: string = (stateRow?.v as any)?.at ?? new Date(Date.now() - 5 * 60_000).toISOString();
         const nowIso = new Date().toISOString();
