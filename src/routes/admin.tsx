@@ -19,6 +19,7 @@ import { ToolEditor } from "@/components/admin/ToolEditor";
 import { ToolPricesPanel } from "@/components/admin/ToolPricesPanel";
 import { TaskComposerPanel } from "@/components/admin/TaskComposerPanel";
 import { AdminAiPanel } from "@/components/admin/AdminAiPanel";
+import { AdminAiBankPanel } from "@/components/admin/AdminAiBankPanel";
 import { ToolAiPanel } from "@/components/admin/ToolAiPanel";
 import { EbsuNewsPanel } from "@/components/admin/EbsuNewsPanel";
 import { AdminIntegrations } from "@/components/admin/AdminIntegrations";
@@ -27,7 +28,7 @@ import { claimSeedAdminRole, getIsAdminUser } from "@/lib/admin-role";
 
 export const Route = createFileRoute("/admin")({ component: AdminPanel });
 
-type Tab = "dashboard" | "ai" | "toolai" | "ebsunews" | "users" | "applications" | "verifications" | "posts" | "listings" | "tickets" | "scans" | "catalogue" | "marketcats" | "banners" | "tools" | "prices" | "tasks" | "integrations";
+type Tab = "dashboard" | "ai" | "aibank" | "toolai" | "ebsunews" | "users" | "applications" | "verifications" | "posts" | "listings" | "tickets" | "scans" | "catalogue" | "marketcats" | "banners" | "tools" | "prices" | "tasks" | "integrations";
 
 
 function AdminPanel() {
@@ -53,6 +54,7 @@ function AdminPanel() {
   const tabs: { k: Tab; label: string; icon: any }[] = [
     { k: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { k: "ai", label: "Admin AI", icon: Sparkles },
+    { k: "aibank", label: "AI Bank", icon: Plug },
     { k: "toolai", label: "Tool AI", icon: Wand2 },
     { k: "ebsunews", label: "EBSU News AI", icon: Newspaper },
     { k: "users", label: "Users", icon: Users },
@@ -95,6 +97,7 @@ function AdminPanel() {
 
         {tab === "dashboard" && <AdminDashboard />}
         {tab === "ai" && <AdminAiPanel />}
+        {tab === "aibank" && <AdminAiBankPanel />}
         {tab === "toolai" && <ToolAiPanel />}
         {tab === "ebsunews" && <EbsuNewsPanel />}
         {tab === "users" && <AdminUsers />}
