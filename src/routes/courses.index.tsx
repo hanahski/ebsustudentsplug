@@ -108,19 +108,21 @@ function CoursesPage() {
                 — all readable in-app
               </p>
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={sync.isPending}
-              onClick={() => sync.mutate()}
-            >
-              {sync.isPending ? (
-                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-              ) : (
-                <RefreshCw className="w-4 h-4 mr-1" />
-              )}
-              Refresh
-            </Button>
+            {isAdmin && (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={sync.isPending}
+                onClick={() => sync.mutate()}
+              >
+                {sync.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-4 h-4 mr-1" />
+                )}
+                Refresh
+              </Button>
+            )}
           </div>
 
           <input
