@@ -299,7 +299,10 @@ const scannerCss = `
   position: absolute;
   left: 50%;
   top: 70%;
-  transform: scale(1.4) translate(-50%, -50%);
+  width: 250px;
+  height: 250px;
+  transform: translate(-50%, -50%) scale(1.4);
+  transform-origin: center center;
 }
 .candle-stage .floor {
   position: absolute; left: 50%; top: 50%;
