@@ -188,54 +188,76 @@ function AdminDashboard() {
     if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
     return `${Math.floor(s / 86400)}d ago`;
   };
+  const rankTints: Record<string, string> = {
+    newbie: "admin-gradient-cool",
+    normal: "admin-gradient-primary",
+    active: "admin-gradient-success",
+    legend: "admin-gradient-warn",
+    pro: "admin-gradient-plum",
+  };
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <StatCard label="Online now" value={stats?.online_count} icon={Users} />
-        <StatCard label="Signups today" value={stats?.signups_today} icon={Sparkles} />
-        <StatCard label="Signups 7d" value={stats?.signups_7d} icon={Sparkles} />
-        <StatCard label="Total users" value={stats?.total_users} icon={Users} />
-        <StatCard label="Total posts" value={stats?.total_posts} icon={FileText} />
-        <StatCard label="Total listings" value={stats?.total_listings} icon={ShoppingBag} />
-        <StatCard label="Tickets sold" value={stats?.total_tickets_sold} icon={Ticket} />
-        <StatCard label="Pending badges" value={stats?.pending_applications} icon={Inbox} />
-        
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <StatCard label="Online now" value={stats?.online_count} icon={Users} tint="success" i={0} />
+        <StatCard label="Signups today" value={stats?.signups_today} icon={Sparkles} tint="warn" i={1} />
+        <StatCard label="Signups 7d" value={stats?.signups_7d} icon={Sparkles} tint="cool" i={2} />
+        <StatCard label="Total users" value={stats?.total_users} icon={Users} tint="primary" i={3} />
+        <StatCard label="Total posts" value={stats?.total_posts} icon={FileText} tint="plum" i={4} />
+        <StatCard label="Total listings" value={stats?.total_listings} icon={ShoppingBag} tint="danger" i={5} />
+        <StatCard label="Tickets sold" value={stats?.total_tickets_sold} icon={Ticket} tint="success" i={6} />
+        <StatCard label="Pending badges" value={stats?.pending_applications} icon={Inbox} tint="warn" i={7} />
       </div>
-      <div className="bg-card border rounded-2xl p-4">
-        <h3 className="font-semibold mb-2">Rank distribution</h3>
+
+      <div className="admin-glass p-4 a-fade-up">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="admin-section-title text-base">Rank distribution</h3>
+          <span className="admin-chip admin-chip-primary">{Object.values(ranks).reduce((a: number, b: any) => a + Number(b || 0), 0)} total</span>
+        </div>
         <div className="grid grid-cols-5 gap-2 text-center">
-          {["newbie", "normal", "active", "legend", "pro"].map((t) => (
-            <div key={t} className="bg-muted rounded-xl p-2">
-              <div className="text-xs text-muted-foreground capitalize">{t}</div>
-              <div className="text-lg font-bold">{ranks[t] ?? 0}</div>
+          {["newbie", "normal", "active", "legend", "pro"].map((t, idx) => (
+            <div key={t} className={`relative overflow-hidden rounded-xl p-3 text-white ${rankTints[t]} a-scale-in`} style={{ animationDelay: `${idx * 60}ms` }}>
+              <div className="text-[10px] uppercase tracking-wider opacity-90">{t}</div>
+              <div className="text-lg font-bold font-display a-count-up">{ranks[t] ?? 0}</div>
+              <div className="absolute inset-0 admin-grid-bg opacity-15 pointer-events-none" />
             </div>
           ))}
         </div>
       </div>
+
       <div className="grid sm:grid-cols-2 gap-3">
-        <div className="bg-card border rounded-2xl p-4">
-          <h3 className="font-semibold mb-2 flex items-center gap-2"><Users className="w-4 h-4 text-primary" />Recently active</h3>
-          <ul className="divide-y -mx-2">
-            {recentLogins.length === 0 && <li className="text-sm text-muted-foreground px-2 py-3">No activity yet.</li>}
-            {recentLogins.map((u) => (
-              <li key={u.id} className="flex items-center justify-between px-2 py-2 gap-2">
-                <Link to="/profile/$id" params={{ id: u.id }} className="text-sm font-medium hover:text-primary truncate">{u.display_name}</Link>
-                <span className="text-[10px] text-muted-foreground shrink-0">{timeAgo(u.last_seen_at)}</span>
+        <div className="admin-glass admin-glow-hover p-4 a-slide-in">
+          <h3 className="admin-section-title text-base mb-3 flex items-center gap-2">
+            <span className="admin-icon-tile w-8 h-8 admin-gradient-cool"><Users className="w-4 h-4" /></span>
+            Recently active
+          </h3>
+          <ul className="admin-timeline space-y-0.5">
+            {recentLogins.length === 0 && <li className="admin-empty">No activity yet.</li>}
+            {recentLogins.map((u, i) => (
+              <li key={u.id} className="admin-timeline-item a-fade-up" style={{ animationDelay: `${i * 30}ms` }}>
+                <div className="flex items-center justify-between gap-2">
+                  <Link to="/profile/$id" params={{ id: u.id }} className="text-sm font-medium hover:text-primary truncate">{u.display_name}</Link>
+                  <span className="admin-chip">{timeAgo(u.last_seen_at)}</span>
+                </div>
               </li>
             ))}
           </ul>
         </div>
-        <div className="bg-card border rounded-2xl p-4">
-          <h3 className="font-semibold mb-2 flex items-center gap-2"><Sparkles className="w-4 h-4 text-primary" />New users</h3>
-          <ul className="divide-y -mx-2">
-            {recentSignups.length === 0 && <li className="text-sm text-muted-foreground px-2 py-3">No signups yet.</li>}
-            {recentSignups.map((u) => (
-              <li key={u.id} className="flex items-center justify-between px-2 py-2 gap-2">
-                <div className="min-w-0">
-                  <Link to="/profile/$id" params={{ id: u.id }} className="block text-sm font-medium hover:text-primary truncate">{u.display_name}</Link>
-                  <p className="text-[10px] text-muted-foreground truncate">{u.email ?? "—"}</p>
+        <div className="admin-glass admin-glow-hover p-4 a-slide-in" style={{ animationDelay: "80ms" }}>
+          <h3 className="admin-section-title text-base mb-3 flex items-center gap-2">
+            <span className="admin-icon-tile w-8 h-8 admin-gradient-warn"><Sparkles className="w-4 h-4" /></span>
+            New users
+          </h3>
+          <ul className="admin-timeline space-y-0.5">
+            {recentSignups.length === 0 && <li className="admin-empty">No signups yet.</li>}
+            {recentSignups.map((u, i) => (
+              <li key={u.id} className="admin-timeline-item a-fade-up" style={{ animationDelay: `${i * 30}ms` }}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <Link to="/profile/$id" params={{ id: u.id }} className="block text-sm font-medium hover:text-primary truncate">{u.display_name}</Link>
+                    <p className="text-[10px] text-muted-foreground truncate">{u.email ?? "—"}</p>
+                  </div>
+                  <span className="admin-chip">{timeAgo(u.created_at)}</span>
                 </div>
-                <span className="text-[10px] text-muted-foreground shrink-0">{timeAgo(u.created_at)}</span>
               </li>
             ))}
           </ul>
