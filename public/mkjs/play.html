@@ -212,6 +212,8 @@
   function portraitUrl(name){ return '/mkjs/images/fighters/' + name.toLowerCase() + '/right/attractive-stand-up/0.png'; }
   document.getElementById('p1portrait').innerHTML = '<img src="'+portraitUrl(p1)+'" alt="">';
   document.getElementById('p2portrait').innerHTML = '<img src="'+portraitUrl(p2)+'" alt="">';
+  if (p1.toLowerCase() === 'omar') document.getElementById('p1portrait').classList.add('omar');
+  if (p2.toLowerCase() === 'omar') document.getElementById('p2portrait').classList.add('omar');
   if (isSpectator) document.getElementById('spectatorTag').style.display = 'flex';
 
   function post(type, data) {
