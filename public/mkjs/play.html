@@ -22,6 +22,10 @@
     .life-bar { height:100%; background:linear-gradient(90deg,#f43f5e,#f59e0b); transition:width .12s linear; }
     .vs { font-weight:900; color:#fbbf24; font-family:'Impact','Arial Black',sans-serif; }
     #loading { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-family:system-ui,sans-serif; font-weight:700; background:#000; z-index:10; }
+    #spectatorTag { position:absolute; bottom:6px; right:8px; z-index:6;
+      background:rgba(6,6,10,.75); color:#a5b4fc; font-family:system-ui,sans-serif; font-size:10px;
+      font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+      padding:3px 8px; border-radius:999px; border:1px solid rgba(165,180,252,.35); }
     canvas { display:block; image-rendering:pixelated; }
   </style>
 </head>
@@ -39,6 +43,7 @@
   </div>
   <div id="arena"></div>
   <div id="loading">Loading fighters…</div>
+  <div id="spectatorTag" style="display:none">Live spectator</div>
 </main>
 <script>
 (function () {
@@ -48,10 +53,13 @@
   var p1 = (params.get('p1') || 'Subzero');
   var p2 = (params.get('p2') || 'Kano');
   var arenaKey = (params.get('arena') || 'THRONE_ROOM').toUpperCase();
+  var mode = (params.get('mode') || 'host').toLowerCase(); // 'host' | 'spectator' | 'solo'
+  var isSpectator = mode === 'spectator';
   var arena = mk.arenas.types[arenaKey] != null ? mk.arenas.types[arenaKey] : mk.arenas.types.THRONE_ROOM;
 
   document.getElementById('player1Name').textContent = p1;
   document.getElementById('player2Name').textContent = p2;
+  if (isSpectator) document.getElementById('spectatorTag').style.display = 'block';
 
   function post(type, data) {
     try { parent.postMessage(Object.assign({ __mk: true, type: type }, data || {}), '*'); } catch (e) {}
@@ -68,19 +76,20 @@
         var el = name === p1Name ? 'p1life' : 'p2life';
         var bar = document.getElementById(el);
         if (bar) bar.style.width = life + '%';
-        post('attack', { defender: name, life: life });
+        if (!isSpectator) post('attack', { defender: name, life: life });
       },
       'game-end': function (winner) {
-        post('game-end', { winner: winner.getName() });
+        // Only the host reports the authoritative winner. Spectator suppresses.
+        if (!isSpectator) post('game-end', { winner: winner.getName() });
       }
     },
     gameType: 'multiplayer'
   };
 
-  // Bridge: parent sends {type:'press'|'release', player:0|1, key:'LEFT'}
-  // We route to the same _getMove path Multiplayer uses.
+  // Pad bridge (host only). Parent sends {type:'press'|'release', player:0|1, key:'LEFT'}
   var pressed = { 0: {}, 1: {} };
   function applyKey(playerIdx, keyName, down) {
+    if (isSpectator) return; // guest never simulates
     if (!mk.game || !mk.game.fighters) return;
     var kmap = playerIdx === 0 ? mk.controllers.keys.p1 : mk.controllers.keys.p2;
     var code = kmap[keyName];
@@ -91,24 +100,80 @@
     if (move) mk.game.fighters[playerIdx].setMove(move);
   }
 
+  // Spectator: apply authoritative snapshot from host.
+  // s = { p1:{x,y,life,move,o}, p2:{...}, done?:{winner} }
+  function applySnap(s) {
+    if (!mk.game || !mk.game.fighters || !s) return;
+    var f0 = mk.game.fighters[0], f1 = mk.game.fighters[1];
+    if (!f0 || !f1) return;
+    try {
+      if (typeof s.p1.x === 'number' && Math.abs(f0.getX() - s.p1.x) > 1) f0.setX(s.p1.x);
+      if (typeof s.p1.y === 'number' && Math.abs(f0.getY() - s.p1.y) > 1) f0.setY(s.p1.y);
+      if (s.p1.o && f0.getOrientation() !== s.p1.o) f0.setOrientation(s.p1.o);
+      if (typeof s.p1.life === 'number' && f0.getLife() !== s.p1.life) {
+        f0.setLife(s.p1.life);
+        var b1 = document.getElementById('p1life'); if (b1) b1.style.width = s.p1.life + '%';
+      }
+      if (s.p1.move && (!f0._currentMove || f0._currentMove.type !== s.p1.move)) {
+        try { f0.setMove(s.p1.move); } catch (e) {}
+      }
+      if (typeof s.p2.x === 'number' && Math.abs(f1.getX() - s.p2.x) > 1) f1.setX(s.p2.x);
+      if (typeof s.p2.y === 'number' && Math.abs(f1.getY() - s.p2.y) > 1) f1.setY(s.p2.y);
+      if (s.p2.o && f1.getOrientation() !== s.p2.o) f1.setOrientation(s.p2.o);
+      if (typeof s.p2.life === 'number' && f1.getLife() !== s.p2.life) {
+        f1.setLife(s.p2.life);
+        var b2 = document.getElementById('p2life'); if (b2) b2.style.width = s.p2.life + '%';
+      }
+      if (s.p2.move && (!f1._currentMove || f1._currentMove.type !== s.p2.move)) {
+        try { f1.setMove(s.p2.move); } catch (e) {}
+      }
+    } catch (e) {}
+  }
+
+  // Host: expose snapshot reader for parent to poll.
+  function snapshot() {
+    if (!mk.game || !mk.game.fighters) return null;
+    var f0 = mk.game.fighters[0], f1 = mk.game.fighters[1];
+    if (!f0 || !f1) return null;
+    return {
+      p1: { x: f0.getX(), y: f0.getY(), life: f0.getLife(), o: f0.getOrientation(),
+            move: f0._currentMove && f0._currentMove.type },
+      p2: { x: f1.getX(), y: f1.getY(), life: f1.getLife(), o: f1.getOrientation(),
+            move: f1._currentMove && f1._currentMove.type }
+    };
+  }
+
   window.addEventListener('message', function (ev) {
     var d = ev.data;
     if (!d || !d.__mkctl) return;
     if (d.type === 'press') applyKey(d.player | 0, d.key, true);
     else if (d.type === 'release') applyKey(d.player | 0, d.key, false);
     else if (d.type === 'reset') location.reload();
+    else if (d.type === 'spectate') applySnap(d.snap);
+    else if (d.type === 'snap-request') post('snap', { snap: snapshot() });
   });
 
-  // Suppress physical keyboard (we control via bridge only, and the reload-on-space).
+  // Suppress physical keyboard (we control via bridge only).
   document.addEventListener('keydown', function (e) { e.stopImmediatePropagation(); }, true);
   document.addEventListener('keyup', function (e) { e.stopImmediatePropagation(); }, true);
 
   mk.start(options).ready(function () {
     document.getElementById('loading').style.display = 'none';
-    post('ready', {});
+    // Spectator: neutralise stray fighter AI-ish keyboard binds (Basic controller may add them).
+    if (isSpectator && mk.game && mk.game._addHandlers) {
+      // no-op — Basic already added its handlers, but our capture-phase suppress kills them.
+    }
+    post('ready', { mode: mode });
+    // Host: publish snapshots at ~30Hz.
+    if (!isSpectator) {
+      setInterval(function () {
+        var s = snapshot();
+        if (s) post('snap', { snap: s });
+      }, 66); // 15Hz — plenty for a 2D fighter over Supabase broadcast
+    }
   });
 
-  post('boot', {});
+  post('boot', { mode: mode });
 })();
 </script>
 </body>
