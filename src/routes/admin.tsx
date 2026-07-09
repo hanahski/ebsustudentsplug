@@ -59,6 +59,7 @@ function AdminPanel() {
     { k: "ebsunews", label: "EBSU News AI", icon: Newspaper },
     { k: "users", label: "Users", icon: Users },
     { k: "applications", label: "Applications", icon: Inbox },
+    { k: "reports", label: "Reports", icon: Flag },
     { k: "verifications", label: "Verifications", icon: GraduationCap },
     
     { k: "posts", label: "Posts", icon: FileText },
