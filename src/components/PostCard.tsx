@@ -334,14 +334,13 @@ export function PostCard({ post, locked, prefetchNextVideoUrl }: { post: FeedPos
         const { share, body: displayBody } = extractPlugShare(post.body);
         return (
           <>
-            <Link to="/post/$id" params={{ id: post.id }}>
+            <Link to="/post/$id" params={{ id: post.id }} onClick={onMediaTap}>
               <h3 className={`font-display font-bold leading-tight mb-1 hover:text-primary ${isFeatured ? "text-2xl md:text-3xl" : "text-lg"}`}>{post.title}</h3>
               {post.image_url && (
                 <img
                   src={post.image_url}
                   alt={post.title}
-                 
-                  className={`mt-2 mb-2 w-full object-cover rounded-xl border ${isFeatured ? "aspect-[16/9] md:aspect-[2/1]" : "aspect-[16/10]"}`}
+                  className={`mt-2 mb-2 w-full object-cover rounded-xl border transition-transform duration-300 hover:scale-[1.01] ${isFeatured ? "aspect-[16/9] md:aspect-[2/1]" : "aspect-[16/10]"}`}
                 />
               )}
               {displayBody && (
