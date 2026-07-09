@@ -224,28 +224,22 @@ function LoginPage() {
 
     try {
       storeGoogleRedirect(redirect);
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/login`,
-        extraParams: { prompt: "select_account" },
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/login`,
+          queryParams: { prompt: "select_account" },
+        },
       });
-      console.log("[GoogleSignIn] result", {
-        redirected: (result as any)?.redirected,
-        hasError: !!(result as any)?.error,
-        errorName: (result as any)?.error?.name,
-        errorMessage: (result as any)?.error?.message,
-        errorCode: (result as any)?.error?.code ?? (result as any)?.error?.status,
-        errorStack: (result as any)?.error?.stack,
-        rawError: (result as any)?.error,
-        rawResult: result,
-      });
-      if (result.error) {
-        toast.error(`Google sign-in failed: ${result.error.message || "unknown error"}`);
+      if (error) {
+        console.error("[GoogleSignIn] supabase error", error);
+        toast.error(`Google sign-in failed: ${error.message || "unknown error"}`);
+        clearStoredGoogleRedirect();
         setBusy(false);
         return;
       }
-      if (result.redirected) return;
-      clearStoredGoogleRedirect();
-      await nav({ to: redirect });
+      // Browser is being redirected to Google — nothing else to do.
+      return;
     } catch (err: any) {
       console.error("[GoogleSignIn] threw", {
         name: err?.name,
