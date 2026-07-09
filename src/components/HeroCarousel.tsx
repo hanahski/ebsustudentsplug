@@ -182,6 +182,7 @@ export function HeroCarousel() {
             key={s.id ?? `default-${idx}`}
             slide={s}
             eager={idx === 0}
+            onImageLoad={() => setLoaded((prev) => (prev[idx] ? prev : { ...prev, [idx]: true }))}
             stopDragClick={(e) => {
               if (Math.abs(dx.current) > 10) { e.preventDefault(); e.stopPropagation(); }
               else if (s.id) logBannerEvent(s.id, "click");
@@ -208,10 +209,12 @@ function SlideView({
   slide: s,
   eager,
   stopDragClick,
+  onImageLoad,
 }: {
   slide: Slide;
   eager: boolean;
   stopDragClick: (e: React.MouseEvent) => void;
+  onImageLoad?: () => void;
 }) {
   const layout: Layout = s.layout ?? "image-bg";
   const variant = s.variant ?? "auto";
