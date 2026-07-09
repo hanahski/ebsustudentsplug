@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Camera, CheckCircle2, History, ScanLine, ShieldCheck, Sparkles, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { playTicketScanChime, playTicketScanFail } from "@/lib/sounds";
+import { playTicketScanChime, playTicketScanFail, stopTicketScanFail, playForeignQr } from "@/lib/sounds";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 
