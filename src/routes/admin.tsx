@@ -733,6 +733,7 @@ function AdminBanners() {
   const [variant, setVariant] = useState<BannerVariant>("auto");
   const [publishAt, setPublishAt] = useState("");
   const [expireAt, setExpireAt] = useState("");
+  const [rotationSeconds, setRotationSeconds] = useState<number>(6);
 
   const onPickFile = async (file: File | null) => {
     if (!file) return;
@@ -772,6 +773,7 @@ function AdminBanners() {
       variant,
       publish_at: publishAt ? new Date(publishAt).toISOString() : null,
       expire_at: expireAt ? new Date(expireAt).toISOString() : null,
+      rotation_seconds: Math.max(2, Math.min(30, Number(rotationSeconds) || 6)),
     } as any);
     if (error) toast.error(error.message);
     else {
@@ -779,7 +781,7 @@ function AdminBanners() {
       setTitle(""); setSubtitle(""); setImageUrl(""); setImagePath("");
       setLinkKind("none"); setLinkValue(""); setCtaLabel("");
       setPreviewRatio(null); setLayout("image-bg"); setVariant("auto");
-      setPublishAt(""); setExpireAt("");
+      setPublishAt(""); setExpireAt(""); setRotationSeconds(6);
       refetch();
     }
   };
