@@ -958,6 +958,23 @@ function AdminBanners() {
                   {b.expire_at && ` · until ${new Date(b.expire_at).toLocaleDateString()}`}
                 </p>
                 <p className="text-[11px] text-primary">{imp} impressions · {clk} clicks · {rate}% CTR</p>
+                <div className="mt-1 flex items-center gap-1.5">
+                  <label className="text-[11px] text-muted-foreground">Show for</label>
+                  <input
+                    type="number"
+                    min={2}
+                    max={30}
+                    defaultValue={Number(b.rotation_seconds) || 6}
+                    onBlur={async (e) => {
+                      const v = Math.max(2, Math.min(30, Number(e.target.value) || 6));
+                      if (v === (Number(b.rotation_seconds) || 6)) return;
+                      const { error } = await supabase.from("banner_slides").update({ rotation_seconds: v } as any).eq("id", b.id);
+                      if (error) toast.error(error.message); else { toast.success("Timing saved"); refetch(); }
+                    }}
+                    className="w-14 h-7 px-2 rounded border bg-background text-[11px]"
+                  />
+                  <span className="text-[11px] text-muted-foreground">seconds</span>
+                </div>
               </div>
               <Button size="sm" variant="outline" onClick={() => toggle(b.id, b.is_active)}>{b.is_active ? "Hide" : "Show"}</Button>
               <Button size="sm" variant="destructive" onClick={() => del(b.id)}><Trash2 className="w-4 h-4" /></Button>
