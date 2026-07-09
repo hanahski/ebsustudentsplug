@@ -325,7 +325,12 @@ function PurchasedTicket({ p }: { p: any }) {
         holder: profile?.display_name || user?.email || "Holder",
         buyerIndex,
       });
-      await downloadTicketPdf(stampedTicket, ticketFilename(p.ticket?.title ?? "ticket", buyerIndex));
+      await downloadTicketPdf(stampedTicket, ticketFilename(p.ticket?.title ?? "ticket", buyerIndex), null, {
+        title: p.ticket?.title ?? "Ticket",
+        holder: profile?.display_name || user?.email || "Holder",
+        buyerIndex,
+        qrToken: p.qr_token,
+      });
       toast.success("Ticket PDF downloaded");
     } catch (err: any) {
       // no popup to close
