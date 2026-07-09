@@ -379,24 +379,40 @@ export function PostCard({ post, locked, prefetchNextVideoUrl }: { post: FeedPos
       <footer className="mt-3 flex items-center gap-1 text-xs flex-wrap">
         <button
           onClick={toggleLike}
-          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full transition ${liked ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted"}`}
+          aria-pressed={liked}
+          aria-label={liked ? "Unlike post" : "Like post"}
+          className={`post-tap inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full transition ${liked ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted"}`}
         >
-          <Heart className={`w-3.5 h-3.5 ${liked ? "fill-current" : ""}`} /> {likeCount}
+          <span key={likePop} className={`inline-flex ${likePop > 0 ? "post-heart-pop" : ""}`}>
+            <Heart className={`w-3.5 h-3.5 ${liked ? "fill-current" : ""}`} />
+          </span>
+          <span className="tabular-nums">{formatCount(likeCount)}</span>
         </button>
         <button
           onClick={onToggleComments}
-          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full transition ${showComments ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted"}`}
+          aria-expanded={showComments}
+          aria-label="Toggle comments"
+          className={`post-tap inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full transition ${showComments ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted"}`}
         >
-          <MessageCircle className="w-3.5 h-3.5" /> {commentCount}
+          <MessageCircle className="w-3.5 h-3.5" /> <span className="tabular-nums">{formatCount(commentCount)}</span>
         </button>
         <button
           onClick={toggleRepost}
-          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full transition ${reposted ? "bg-success/15 text-success" : "text-muted-foreground hover:bg-muted"}`}
+          aria-pressed={reposted}
+          aria-label={reposted ? "Undo repost" : "Repost"}
+          className={`post-tap inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full transition ${reposted ? "bg-success/15 text-success" : "text-muted-foreground hover:bg-muted"}`}
         >
-          <Repeat2 className="w-3.5 h-3.5" /> {repostCount}
+          <Repeat2 className="w-3.5 h-3.5" /> <span className="tabular-nums">{formatCount(repostCount)}</span>
         </button>
-        <span className="inline-flex items-center gap-1 px-2 py-1 text-muted-foreground">
-          <Eye className="w-3.5 h-3.5" /> {post.view_count}
+        <button
+          onClick={onShare}
+          aria-label="Share post"
+          className="post-tap inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full transition text-muted-foreground hover:bg-muted"
+        >
+          <Share2 className="w-3.5 h-3.5" />
+        </button>
+        <span className="inline-flex items-center gap-1 px-2 py-1 text-muted-foreground" title={`${post.view_count} views`}>
+          <Eye className="w-3.5 h-3.5" /> <span className="tabular-nums">{formatCount(post.view_count)}</span>
         </span>
         {!locked && (
           <SaveButton
