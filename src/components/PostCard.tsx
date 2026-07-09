@@ -282,7 +282,13 @@ export function PostCard({ post, locked, prefetchNextVideoUrl }: { post: FeedPos
   }, [prefetchNextVideoUrl]);
 
   return (
-    <article ref={cardRef} className={`relative bg-card rounded-2xl shadow-card border hover:shadow-glow transition-shadow ${isFeatured ? "p-5 md:p-6" : "p-4"} ${post.is_official ? "ring-2 ring-primary/40 bg-gradient-to-br from-primary/5 to-transparent" : ""}`}>
+    <article ref={cardRef} className={`relative bg-card rounded-2xl shadow-card border post-lift transition-shadow overflow-hidden ${isFeatured ? "p-5 md:p-6" : "p-4"} ${post.is_official ? "ring-2 ring-primary/40 bg-gradient-to-br from-primary/5 to-transparent" : ""}`}>
+      {/* Double-tap heart burst overlay */}
+      {heartBurst > 0 && (
+        <span key={heartBurst} className="pointer-events-none absolute inset-0 flex items-center justify-center z-20">
+          <Heart className="w-24 h-24 text-primary fill-current drop-shadow-[0_6px_24px_rgba(0,0,0,.35)] post-heart-burst" />
+        </span>
+      )}
       {post.is_official && (
         <div className="absolute -top-3 right-3 z-10 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground text-[10px] font-bold shadow-glow">
           <ShieldCheck className="w-3 h-3" /> OFFICIAL
