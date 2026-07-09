@@ -630,7 +630,7 @@ export const adminAiChat = createServerFn({ method: "POST" })
     const { data: role } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", context.userId).eq("role", "admin").maybeSingle();
     if (!role) throw new Error("admin only");
 
-    const apiKey = process.env.LOVABLE_API_KEY;
+    const apiKey = process.env.ADMIN_AI_KEY || process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("AI not configured");
 
     const { data: me } = await supabaseAdmin.from("profiles").select("display_name,email").eq("id", context.userId).maybeSingle();
