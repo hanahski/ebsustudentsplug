@@ -195,14 +195,15 @@
   var lifeBar = { p1: document.getElementById('p1life'), p2: document.getElementById('p2life') };
   var chipBar = { p1: document.getElementById('p1chip'), p2: document.getElementById('p2chip') };
   var comboEl = { p1: document.getElementById('p1combo'), p2: document.getElementById('p2combo') };
-  var prevLife = { p1: 100, p2: 100 };
+  var MAX = { p1: p1.toLowerCase() === 'omar' ? 120 : 100,
+              p2: p2.toLowerCase() === 'omar' ? 120 : 100 };
+  var prevLife = { p1: MAX.p1, p2: MAX.p2 };
   var combo = { p1: { n:0, t:0 }, p2: { n:0, t:0 } };
   var COMBO_WINDOW = 1400;
 
   function setLife(who, life) {
-    var pct = Math.max(0, life) + '%';
+    var pct = Math.max(0, Math.min(100, (life / MAX[who]) * 100)) + '%';
     lifeBar[who].style.width = pct;
-    // chip trails after a short delay via CSS transition
     setTimeout(function(){ chipBar[who].style.width = pct; }, 30);
   }
 
