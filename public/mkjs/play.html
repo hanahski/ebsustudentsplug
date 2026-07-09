@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/mkjs/styles/styles.css" />
   <script src="/mkjs/src/movement.js"></script>
   <script src="/mkjs/src/mk.js"></script>
+  <script src="/mkjs/audio/sfx.js"></script>
   <style>
     html, body { margin:0; padding:0; background:#000; overflow:hidden; height:100%; }
     #parent { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
@@ -79,6 +80,7 @@
         if (!isSpectator) post('attack', { defender: name, life: life });
       },
       'game-end': function (winner) {
+        try { window.MKSFX && window.MKSFX.onGameEnd(); } catch (e) {}
         // Only the host reports the authoritative winner. Spectator suppresses.
         if (!isSpectator) post('game-end', { winner: winner.getName() });
       }
@@ -157,6 +159,24 @@
   document.addEventListener('keydown', function (e) { e.stopImmediatePropagation(); }, true);
   document.addEventListener('keyup', function (e) { e.stopImmediatePropagation(); }, true);
 
+  // Boot SFX engine (preloads samples). Actual playback waits for a user
+  // gesture — the parent MkPlay wrapper handles the tap-to-start UI.
+  try { window.MKSFX && window.MKSFX.load(); } catch (e) {}
+  var sfxStarted = false;
+  function startSfxOnce() {
+    if (sfxStarted) return; sfxStarted = true;
+    try { window.MKSFX && window.MKSFX.boot(); } catch (e) {}
+  }
+  ['pointerdown', 'keydown', 'touchstart'].forEach(function (ev) {
+    window.addEventListener(ev, startSfxOnce, { once: true, passive: true });
+  });
+
+  // Drive SFX from observed fighter state (works on host + spectator).
+  function tickSfx(s) {
+    if (!s || !window.MKSFX) return;
+    try { MKSFX.tick(0, s.p1, s.p2); MKSFX.tick(1, s.p2, s.p1); } catch (e) {}
+  }
+
   mk.start(options).ready(function () {
     document.getElementById('loading').style.display = 'none';
     // Spectator: neutralise stray fighter AI-ish keyboard binds (Basic controller may add them).
@@ -164,14 +184,18 @@
       // no-op — Basic already added its handlers, but our capture-phase suppress kills them.
     }
     post('ready', { mode: mode });
-    // Host: publish snapshots at ~30Hz.
+    // Host: publish snapshots at ~15Hz and drive local SFX from them.
     if (!isSpectator) {
       setInterval(function () {
         var s = snapshot();
-        if (s) post('snap', { snap: s });
-      }, 66); // 15Hz — plenty for a 2D fighter over Supabase broadcast
+        if (s) { post('snap', { snap: s }); tickSfx(s); }
+      }, 66);
     }
   });
+
+  // Spectator: also drive SFX from incoming snapshots.
+  var _origApplySnap = applySnap;
+  applySnap = function (s) { _origApplySnap(s); tickSfx(s); };
 
   post('boot', { mode: mode });
 })();
