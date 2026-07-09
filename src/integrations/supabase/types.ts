@@ -234,6 +234,7 @@ export type Database = {
           mux_playback_id: string | null
           mux_status: string | null
           publish_at: string | null
+          rotation_seconds: number
           sort_order: number
           subtitle: string | null
           title: string
@@ -253,6 +254,7 @@ export type Database = {
           mux_playback_id?: string | null
           mux_status?: string | null
           publish_at?: string | null
+          rotation_seconds?: number
           sort_order?: number
           subtitle?: string | null
           title: string
@@ -272,6 +274,7 @@ export type Database = {
           mux_playback_id?: string | null
           mux_status?: string | null
           publish_at?: string | null
+          rotation_seconds?: number
           sort_order?: number
           subtitle?: string | null
           title?: string
