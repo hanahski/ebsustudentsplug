@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import {
   Shield, Trash2, ShoppingBag, FileText, Users, LayoutDashboard,
   Inbox, Image as ImageIcon, BadgeCheck, Star, Sparkles, Plug, Ban, CheckCircle2,
-  BookOpen, ShieldCheck, Ticket, Wand2, Newspaper, Coins, ScanLine, Library, GraduationCap, Tag, KeyRound,
+  BookOpen, ShieldCheck, Ticket, Wand2, Newspaper, Coins, ScanLine, Library, GraduationCap, Tag, KeyRound, Flag,
 } from "lucide-react";
 import { ToolEditor } from "@/components/admin/ToolEditor";
 import { ToolPricesPanel } from "@/components/admin/ToolPricesPanel";
@@ -28,7 +28,7 @@ import { claimSeedAdminRole, getIsAdminUser } from "@/lib/admin-role";
 
 export const Route = createFileRoute("/admin")({ component: AdminPanel });
 
-type Tab = "dashboard" | "ai" | "aibank" | "toolai" | "ebsunews" | "users" | "applications" | "verifications" | "posts" | "listings" | "tickets" | "scans" | "catalogue" | "marketcats" | "banners" | "tools" | "prices" | "tasks" | "integrations";
+type Tab = "dashboard" | "ai" | "aibank" | "toolai" | "ebsunews" | "users" | "applications" | "reports" | "verifications" | "posts" | "listings" | "tickets" | "scans" | "catalogue" | "marketcats" | "banners" | "tools" | "prices" | "tasks" | "integrations";
 
 
 function AdminPanel() {
@@ -59,6 +59,7 @@ function AdminPanel() {
     { k: "ebsunews", label: "EBSU News AI", icon: Newspaper },
     { k: "users", label: "Users", icon: Users },
     { k: "applications", label: "Applications", icon: Inbox },
+    { k: "reports", label: "Reports", icon: Flag },
     { k: "verifications", label: "Verifications", icon: GraduationCap },
     
     { k: "posts", label: "Posts", icon: FileText },
@@ -102,6 +103,7 @@ function AdminPanel() {
         {tab === "ebsunews" && <EbsuNewsPanel />}
         {tab === "users" && <AdminUsers />}
         {tab === "applications" && <AdminApplications />}
+        {tab === "reports" && <AdminReports />}
         {tab === "verifications" && <AdminVerifications />}
         
         {tab === "posts" && <AdminPosts />}
@@ -332,6 +334,107 @@ function AdminApplications() {
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+
+function AdminReports() {
+  const [filter, setFilter] = useState<"pending" | "all">("pending");
+  const { data, refetch, isFetching } = useQuery({
+    queryKey: ["admin-reports", filter],
+    queryFn: async () => {
+      let q = supabase
+        .from("user_reports")
+        .select("*,reporter:reporter_id(display_name,email),target_user:target_user_id(display_name,email),target_post:target_post_id(id,title),target_listing:target_listing_id(id,title)")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (filter === "pending") q = q.eq("status", "pending");
+      const { data, error } = await q;
+      if (error) throw error;
+      return data ?? [];
+    },
+    refetchInterval: 30_000,
+  });
+
+  const setStatus = async (id: string, status: "resolved" | "dismissed") => {
+    const { error } = await supabase.from("user_reports").update({ status, reviewed_at: new Date().toISOString() }).eq("id", id);
+    if (error) toast.error(error.message); else { toast.success(`Report ${status}`); refetch(); }
+  };
+
+  const deletePost = async (postId: string, reportId: string) => {
+    if (!confirm("Delete the reported post?")) return;
+    const { error } = await supabase.from("posts").delete().eq("id", postId);
+    if (error) return toast.error(error.message);
+    await supabase.from("user_reports").update({ status: "resolved", reviewed_at: new Date().toISOString() }).eq("id", reportId);
+    toast.success("Post deleted, report resolved");
+    refetch();
+  };
+  const deleteListing = async (listingId: string, reportId: string) => {
+    if (!confirm("Delete the reported listing?")) return;
+    const { error } = await supabase.from("market_listings").delete().eq("id", listingId);
+    if (error) return toast.error(error.message);
+    await supabase.from("user_reports").update({ status: "resolved", reviewed_at: new Date().toISOString() }).eq("id", reportId);
+    toast.success("Listing deleted, report resolved");
+    refetch();
+  };
+
+  const rows = data ?? [];
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <Button size="sm" variant={filter === "pending" ? "default" : "outline"} onClick={() => setFilter("pending")}>Pending</Button>
+        <Button size="sm" variant={filter === "all" ? "default" : "outline"} onClick={() => setFilter("all")}>All</Button>
+        <span className="text-xs text-muted-foreground ml-auto">{isFetching ? "Refreshing…" : `${rows.length} report${rows.length === 1 ? "" : "s"}`}</span>
+      </div>
+      {rows.length === 0 && <p className="text-sm text-muted-foreground p-6 text-center">No reports.</p>}
+      {rows.map((r: any) => {
+        const target = r.target_post
+          ? { label: `Post: ${r.target_post.title ?? r.target_post.id}`, to: "/post/$id" as const, id: r.target_post.id }
+          : r.target_listing
+          ? { label: `Listing: ${r.target_listing.title ?? r.target_listing.id}`, to: "/market/$id" as const, id: r.target_listing.id }
+          : r.target_user
+          ? { label: `User: ${r.target_user.display_name ?? r.target_user.email ?? r.target_user_id}`, to: "/profile/$id" as const, id: r.target_user_id }
+          : null;
+        return (
+          <div key={r.id} className="bg-card border rounded-2xl p-3 space-y-2">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="min-w-0">
+                <p className="font-medium text-sm">
+                  <span className="text-muted-foreground">Category:</span> {r.category}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  From {r.reporter?.display_name ?? r.reporter?.email ?? "—"} · {new Date(r.created_at).toLocaleString()}
+                </p>
+              </div>
+              <span className={`text-xs px-2 py-0.5 rounded-full ${r.status === "pending" ? "bg-amber-500/20 text-amber-700 dark:text-amber-300" : r.status === "resolved" ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300" : "bg-muted text-muted-foreground"}`}>{r.status}</span>
+            </div>
+            {r.subject && <p className="text-sm font-medium">{r.subject}</p>}
+            {r.reason && <p className="text-sm whitespace-pre-wrap">{r.reason}</p>}
+            {target && (
+              <Link to={target.to} params={{ id: target.id }} className="inline-block text-xs text-primary hover:underline">
+                → {target.label}
+              </Link>
+            )}
+            {r.status === "pending" && (
+              <div className="flex gap-2 flex-wrap pt-1">
+                <Button size="sm" onClick={() => setStatus(r.id, "resolved")}>Mark resolved</Button>
+                <Button size="sm" variant="outline" onClick={() => setStatus(r.id, "dismissed")}>Dismiss</Button>
+                {r.target_post_id && (
+                  <Button size="sm" variant="destructive" onClick={() => deletePost(r.target_post_id, r.id)}>
+                    <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete post
+                  </Button>
+                )}
+                {r.target_listing_id && (
+                  <Button size="sm" variant="destructive" onClick={() => deleteListing(r.target_listing_id, r.id)}>
+                    <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete listing
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

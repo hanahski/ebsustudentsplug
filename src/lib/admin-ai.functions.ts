@@ -575,7 +575,7 @@ export async function executeAdminTool(name: string, args: any, actingUserId: st
       return { ok: true, file_url: out.url, filename: out.filename, size: out.size, mime: out.mime };
     }
     case "generate_image": {
-      const apiKey = process.env.LOVABLE_API_KEY;
+      const apiKey = process.env.ADMIN_AI_KEY || process.env.LOVABLE_API_KEY;
       if (!apiKey) throw new Error("AI not configured");
       const prompt = String(args.prompt || "").slice(0, 4000);
       if (!prompt) throw new Error("prompt required");
@@ -630,7 +630,7 @@ export const adminAiChat = createServerFn({ method: "POST" })
     const { data: role } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", context.userId).eq("role", "admin").maybeSingle();
     if (!role) throw new Error("admin only");
 
-    const apiKey = process.env.LOVABLE_API_KEY;
+    const apiKey = process.env.ADMIN_AI_KEY || process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("AI not configured");
 
     const { data: me } = await supabaseAdmin.from("profiles").select("display_name,email").eq("id", context.userId).maybeSingle();
