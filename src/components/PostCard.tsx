@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Eye, Heart, FileText, Lock, MessageCircle, Pencil, Repeat2, Trash2, ShieldCheck } from "lucide-react";
+import { Eye, Heart, FileText, Lock, MessageCircle, Pencil, Repeat2, Trash2, ShieldCheck, Share2 } from "lucide-react";
+import { formatCount } from "@/lib/format-count";
 import { ReportDialog } from "./ReportDialog";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
