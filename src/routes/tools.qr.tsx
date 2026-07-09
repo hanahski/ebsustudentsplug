@@ -43,17 +43,30 @@ function QrScanner() {
         { facingMode: "environment" },
         { fps: 10, qrbox: { width: 260, height: 260 } },
         async (decoded) => {
-          const token = decoded.startsWith("SP-TICKET:") ? decoded.slice("SP-TICKET:".length) : decoded;
-          // Double-scan guard: ignore the same token within 5 seconds so the
-          // success animation never re-triggers from a held-up phone.
+          const isSpTicket = decoded.startsWith("SP-TICKET:");
+          const token = isSpTicket ? decoded.slice("SP-TICKET:".length) : decoded;
+          // Double-scan guard: ignore the same code within 5 seconds so the
+          // success/fail animation never re-triggers from a held-up phone.
           const now = Date.now();
           const last = lastScanRef.current;
-          if (last && last.token === token && now - last.at < 5000) {
+          if (last && last.token === decoded && now - last.at < 5000) {
             return;
           }
-          lastScanRef.current = { token, at: now };
+          lastScanRef.current = { token: decoded, at: now };
           await teardown();
           setScanning(false);
+
+          // Not a StudentsPlug ticket at all → soft "wrong code" chirp, no alarm.
+          if (!isSpTicket) {
+            playForeignQr();
+            const msg = "Not a StudentsPlug QR code — this looks like a different link or code.";
+            setResult({ value: decoded, ok: false, meta: { reason: "foreign_qr" } });
+            setFailFlash(msg);
+            toast.error(msg);
+            setTimeout(() => setFailFlash(null), 2600);
+            return;
+          }
+
           const { data } = await supabase.rpc("verify_ticket", { _qr_token: token });
           const valid = (data as any)?.valid === true;
           setResult({ value: decoded, ok: valid, meta: data });
@@ -62,7 +75,8 @@ function QrScanner() {
             setCelebrate(true);
             setTimeout(() => setCelebrate(false), 1800);
           } else {
-            playTicketScanFail();
+            // Loud alarm — loops until operator taps "Stop sound".
+            playTicketScanFail({ loop: true });
             const reason = (data as any)?.reason;
             const msg = reason === "not_found"
               ? "Invalid QR — this ticket is not in our system or the code is wrong."
@@ -71,7 +85,6 @@ function QrScanner() {
                 : "Ticket could not be verified. Try again or contact the seller.";
             setFailFlash(msg);
             toast.error(msg);
-            setTimeout(() => setFailFlash(null), 2600);
           }
         },
         () => {},
