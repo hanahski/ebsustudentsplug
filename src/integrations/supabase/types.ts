@@ -1966,6 +1966,44 @@ export type Database = {
           },
         ]
       }
+      ticket_share_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          label: string | null
+          revoked_at: string | null
+          ticket_id: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          label?: string | null
+          revoked_at?: string | null
+          ticket_id: string
+          token: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          label?: string | null
+          revoked_at?: string | null
+          ticket_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_share_links_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tickets: {
         Row: {
           buyer_id: string | null
@@ -2373,6 +2411,7 @@ export type Database = {
         Args: { _status: string; _user_id: string }
         Returns: undefined
       }
+      admin_ticket_sales_overview: { Args: never; Returns: Json }
       battle_cancel: { Args: { _match_id: string }; Returns: undefined }
       battle_challenge: {
         Args: { _device_hash: string; _opponent: string }
@@ -2458,6 +2497,7 @@ export type Database = {
         }
       }
       get_my_ticket_qr: { Args: { _ticket_id: string }; Returns: string }
+      get_ticket_sales_by_token: { Args: { _token: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
