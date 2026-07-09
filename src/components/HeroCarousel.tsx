@@ -258,7 +258,7 @@ function SlideView({
         src={s.imageUrl}
         aria-hidden
         className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-70 hidden md:block"
-        loading={eager ? "eager" : "lazy"}
+        loading="eager"
         decoding="async"
         draggable={false}
       />
@@ -266,10 +266,12 @@ function SlideView({
         src={s.imageUrl}
         alt={s.title}
         className="relative w-full h-full object-cover md:object-contain"
-        loading={eager ? "eager" : "lazy"}
+        loading="eager"
         fetchPriority={eager ? "high" : "auto"}
         decoding="async"
         draggable={false}
+        onLoad={onImageLoad}
+        onError={onImageLoad}
       />
     </div>
   ) : null;
