@@ -355,6 +355,7 @@
           damageFloat(defWho, dmg, dmg >= 8);
           flash(); shake();
           bumpCombo(atkWho);
+          onOmarHit(atkWho);
         }
         if (!isSpectator) post('attack', { defender: name, life: life });
       },
