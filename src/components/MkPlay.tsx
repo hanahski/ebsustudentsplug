@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { ArrowLeft, Trophy, Coins, Loader2, RotateCw, Swords } from "lucide-react";
+import { ArrowLeft, Trophy, Coins, Loader2, RotateCw, Swords, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,12 +27,12 @@ const CHARACTERS = [
   { id: "Kano", label: "Kano", color: "from-red-500 to-rose-700", tag: "Blade" },
 ] as const;
 
-// Which pad keys the on-screen controls emit — must match mkjs bridge names.
 type PadKey = "LEFT" | "RIGHT" | "UP" | "DOWN" | "BLOCK" | "HP" | "LP" | "HK" | "LK";
 
 type BridgeMsg =
   | { __mkctl: true; type: "press"; player: 0 | 1; key: PadKey }
   | { __mkctl: true; type: "release"; player: 0 | 1; key: PadKey }
+  | { __mkctl: true; type: "spectate"; snap: unknown }
   | { __mkctl: true; type: "reset" };
 
 export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }) {
@@ -42,13 +42,14 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
   const [busy, setBusy] = useState(false);
   const [landscape, setLandscape] = useState(true);
   const [iframeReady, setIframeReady] = useState(false);
-  const [lives, setLives] = useState<{ p1: number; p2: number }>({ p1: 100, p2: 100 });
+  const [hostConnected, setHostConnected] = useState(false);
   const [localWinner, setLocalWinner] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const settledRef = useRef(false);
+  const lastSnapAtRef = useRef<number>(0);
 
-  // Load match
+  // Load match + subscribe
   useEffect(() => {
     let mounted = true;
     supabase.from("battle_matches").select("*").eq("id", matchId).maybeSingle().then(({ data }) => {
@@ -68,7 +69,6 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
     };
   }, [matchId]);
 
-  // Load profiles
   useEffect(() => {
     if (!m) return;
     const ids = [m.player_a, m.player_b].filter(Boolean) as string[];
@@ -84,75 +84,113 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
       });
   }, [m?.player_a, m?.player_b]);
 
-  const isA = uid && m?.player_a === uid;
-  const isB = uid && m?.player_b === uid;
-  const meIsPlayer = Boolean(isA || isB);
-  const opponentId = m ? (isA ? m.player_b : m.player_a) : null;
+  const isHost = !!uid && m?.player_a === uid;
+  const isGuest = !!uid && m?.player_b === uid;
+  const meIsPlayer = isHost || isGuest;
+  const opponentId = m ? (isHost ? m.player_b : m.player_a) : null;
   const opponentName = opponentId ? profiles[opponentId]?.display_name || "Opponent" : "…";
-  // I'm always player index 0 = "left" in my own iframe (visual convenience).
-  const myIdx = 0 as const;
-  const oppIdx = 1 as const;
-  const myChar = m ? (isA ? m.a_character : m.b_character) : null;
-  const oppChar = m ? (isA ? m.b_character : m.a_character) : null;
+  const myName = uid ? profiles[uid]?.display_name || "You" : "You";
 
-  // Realtime input channel — broadcast my pad presses to opponent.
+  // In every viewer, p1 = host (player_a), p2 = guest (player_b).
+  // My pad controls p1 if I'm host, else p2 (via broadcast).
+  const myPlayerIdx: 0 | 1 = isHost ? 0 : 1;
+  const aChar = m?.a_character || null;
+  const bChar = m?.b_character || null;
+  const myChar = isHost ? aChar : bChar;
+  const oppChar = isHost ? bChar : aChar;
+
+  // Broadcast channel: host publishes 'snap' + winner; guest publishes 'pad'.
   useEffect(() => {
     if (m?.status !== "active" || !uid) return;
-    const ch = supabase.channel(`mk-input-${matchId}`, { config: { broadcast: { self: false } } });
-    ch.on("broadcast", { event: "pad" }, ({ payload }) => {
-      // Payload arrives from opponent; apply to my iframe as player index 1.
-      const iframe = iframeRef.current;
-      if (!iframe?.contentWindow) return;
-      const msg: BridgeMsg = {
-        __mkctl: true,
-        type: payload.down ? "press" : "release",
-        player: oppIdx,
-        key: payload.key,
-      };
-      iframe.contentWindow.postMessage(msg, "*");
-    }).subscribe();
+    const ch = supabase.channel(`mk-net-${matchId}`, { config: { broadcast: { self: false } } });
+
+    if (isHost) {
+      // Receive guest pad input, apply to my iframe as player 1
+      ch.on("broadcast", { event: "pad" }, ({ payload }) => {
+        const iframe = iframeRef.current;
+        if (!iframe?.contentWindow) return;
+        const msg: BridgeMsg = {
+          __mkctl: true,
+          type: payload.down ? "press" : "release",
+          player: 1,
+          key: payload.key,
+        };
+        iframe.contentWindow.postMessage(msg, "*");
+      });
+    } else if (isGuest) {
+      // Receive host snapshots + apply to spectator iframe
+      ch.on("broadcast", { event: "snap" }, ({ payload }) => {
+        lastSnapAtRef.current = Date.now();
+        setHostConnected(true);
+        const iframe = iframeRef.current;
+        if (!iframe?.contentWindow) return;
+        const msg: BridgeMsg = { __mkctl: true, type: "spectate", snap: payload.snap };
+        iframe.contentWindow.postMessage(msg, "*");
+      });
+      // Host will also broadcast the authoritative winner for instant UI feedback
+      ch.on("broadcast", { event: "gameover" }, ({ payload }) => {
+        setLocalWinner(payload.winnerId ?? null);
+      });
+    }
+    ch.subscribe();
     channelRef.current = ch;
     return () => {
       supabase.removeChannel(ch);
       channelRef.current = null;
     };
-  }, [m?.status, matchId, uid, oppIdx]);
+  }, [m?.status, matchId, uid, isHost, isGuest]);
 
-  // Iframe boot/attack messages
+  // Watchdog: guest shows disconnect banner if no snapshot for 3s
+  useEffect(() => {
+    if (!isGuest || m?.status !== "active") return;
+    const t = setInterval(() => {
+      if (Date.now() - lastSnapAtRef.current > 3000) setHostConnected(false);
+    }, 1000);
+    return () => clearInterval(t);
+  }, [isGuest, m?.status]);
+
+  // Messages from iframe
   useEffect(() => {
     function onMsg(ev: MessageEvent) {
       const d = ev.data as any;
       if (!d || !d.__mk) return;
       if (d.type === "ready") setIframeReady(true);
-      else if (d.type === "attack") {
-        // d.defender is character lowercase, d.life is %
-        setLives((prev) => {
-          const key = String(d.defender).toLowerCase() === (myChar || "").toLowerCase() ? "p1" : "p2";
-          return { ...prev, [key]: d.life };
-        });
-      } else if (d.type === "game-end" && !settledRef.current) {
+      else if (d.type === "snap" && isHost) {
+        // Forward my snapshot to guest
+        const ch = channelRef.current;
+        if (ch) ch.send({ type: "broadcast", event: "snap", payload: { snap: d.snap } });
+      } else if (d.type === "game-end" && isHost && !settledRef.current) {
         settledRef.current = true;
-        const winnerChar = String(d.winner);
-        const winnerId = winnerChar.toLowerCase() === (myChar || "").toLowerCase() ? uid : opponentId;
+        const winnerChar = String(d.winner).toLowerCase();
+        const aCharLc = (aChar || "").toLowerCase();
+        const winnerId = winnerChar === aCharLc ? m?.player_a : m?.player_b;
         setLocalWinner(winnerId ?? null);
-        supabase.rpc("battle_mk_finish", { _match_id: matchId, _winner: winnerId ?? undefined as unknown as string }).then(({ error }) => {
-          if (error) toast.error(error.message);
-        });
+        const ch = channelRef.current;
+        if (ch) ch.send({ type: "broadcast", event: "gameover", payload: { winnerId } });
+        supabase
+          .rpc("battle_mk_finish", { _match_id: matchId, _winner: (winnerId ?? undefined) as unknown as string })
+          .then(({ error }) => {
+            if (error) toast.error(error.message);
+          });
       }
     }
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);
-  }, [myChar, opponentId, uid, matchId]);
+  }, [isHost, aChar, matchId, m?.player_a, m?.player_b]);
 
-  // Send a pad press: locally to iframe as player 0, plus broadcast to opponent.
+  // Send a pad press
   const send = (key: PadKey, down: boolean) => {
-    const iframe = iframeRef.current;
-    if (iframe?.contentWindow) {
-      const msg: BridgeMsg = { __mkctl: true, type: down ? "press" : "release", player: myIdx, key };
-      iframe.contentWindow.postMessage(msg, "*");
+    if (isHost) {
+      const iframe = iframeRef.current;
+      if (iframe?.contentWindow) {
+        const msg: BridgeMsg = { __mkctl: true, type: down ? "press" : "release", player: 0, key };
+        iframe.contentWindow.postMessage(msg, "*");
+      }
+    } else if (isGuest) {
+      const ch = channelRef.current;
+      if (ch) ch.send({ type: "broadcast", event: "pad", payload: { key, down } });
     }
-    const ch = channelRef.current;
-    if (ch) ch.send({ type: "broadcast", event: "pad", payload: { key, down } });
+    void myPlayerIdx;
   };
 
   async function pickCharacter(charId: string) {
@@ -172,16 +210,16 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
     nav({ to: "/earn-credits/battle" });
   }
 
-  // Iframe URL — always with ME on the left (p1) using my character.
+  // Iframe URL — same view for both clients (A on left, B on right).
   const iframeSrc = useMemo(() => {
-    if (m?.status !== "active" || !myChar || !oppChar) return null;
-    const arena = Math.random() < 0.5 ? "TOWER" : "THRONE_ROOM";
-    // Freeze arena per match so both clients agree; use match id as seed:
+    if (m?.status !== "active" || !aChar || !bChar) return null;
     const seed = matchId.charCodeAt(0) + matchId.charCodeAt(1);
-    const chosen = seed % 2 === 0 ? "THRONE_ROOM" : "TOWER";
-    void arena;
-    return `/mkjs/play.html?p1=${encodeURIComponent(myChar)}&p2=${encodeURIComponent(oppChar)}&arena=${chosen}`;
-  }, [m?.status, myChar, oppChar, matchId]);
+    const arena = seed % 2 === 0 ? "THRONE_ROOM" : "TOWER";
+    const mode = isHost ? "host" : "spectator";
+    return `/mkjs/play.html?p1=${encodeURIComponent(aChar)}&p2=${encodeURIComponent(bChar)}&arena=${arena}&mode=${mode}`;
+  }, [m?.status, aChar, bChar, matchId, isHost]);
+
+  const myChar_ = myChar; const oppChar_ = oppChar; // for badge display
 
   if (!m) {
     return (
@@ -204,9 +242,32 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
     );
   }
 
-  // Character select
+  // Waiting for opponent to join the queue
+  if (m.status === "pending" || (m.status === "coin_flip" && !m.player_b)) {
+    return (
+      <AppShell>
+        <div className="max-w-lg mx-auto space-y-5 py-6">
+          <Link to="/earn-credits/battle" className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1">
+            <ArrowLeft className="w-3.5 h-3.5" /> Battle
+          </Link>
+          <div className="rounded-3xl border bg-gradient-to-br from-red-500/15 via-card to-card p-8 text-center shadow-card space-y-4">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-red-500 to-orange-600 text-white grid place-items-center shadow-glow animate-pulse">
+              <Swords className="w-8 h-8" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold font-display">Scanning for an opponent…</h1>
+              <p className="text-sm text-muted-foreground mt-1">Match starts as soon as another fighter joins the queue.</p>
+            </div>
+            <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
+            <Button variant="outline" size="sm" onClick={cancel}>Cancel scan</Button>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
+
+  // Character select (both players present, choosing fighters)
   if (m.status === "coin_flip") {
-    const taken = new Set([m.a_character, m.b_character].filter(Boolean));
     return (
       <AppShell>
         <div className="max-w-lg mx-auto space-y-5">
@@ -220,7 +281,9 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
               </div>
               <div className="min-w-0">
                 <h1 className="text-xl font-bold font-display">Choose your fighter</h1>
-                <p className="text-xs text-muted-foreground">Random match · vs {opponentName} · Pot {m.stake * 2} PC</p>
+                <p className="text-xs text-muted-foreground">
+                  {isHost ? "You are host · " : "You are guest · "}vs {opponentName} · Pot {m.stake * 2} PC
+                </p>
               </div>
             </div>
           </header>
@@ -270,7 +333,6 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
     );
   }
 
-  // Cancelled / declined
   if (m.status === "cancelled" || m.status === "declined") {
     return (
       <AppShell>
@@ -286,16 +348,21 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
   const finished = m.status === "finished";
   const iWon = finished && winnerId === uid;
 
-  // Active / finished — arena + pad
   return (
     <div className="fixed inset-0 bg-black text-white flex flex-col z-[60] overflow-hidden">
-      {/* Top bar */}
       <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-b from-black/80 to-transparent">
         <Link to="/earn-credits/battle" className="text-[11px] inline-flex items-center gap-1 bg-white/10 px-2.5 py-1 rounded-full border border-white/10">
           <ArrowLeft className="w-3 h-3" /> Exit
         </Link>
-        <div className="flex items-center gap-1 text-[11px] font-bold">
-          <Coins className="w-3.5 h-3.5 text-amber-400" /> Pot {m.stake * 2}
+        <div className="flex items-center gap-2 text-[11px] font-bold">
+          <span className="inline-flex items-center gap-1"><Coins className="w-3.5 h-3.5 text-amber-400" /> Pot {m.stake * 2}</span>
+          {isGuest && (
+            <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border",
+              hostConnected ? "border-emerald-400/40 text-emerald-300" : "border-red-400/40 text-red-300")}>
+              {hostConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+              {hostConnected ? "Live" : "Reconnecting"}
+            </span>
+          )}
         </div>
         <button
           onClick={() => setLandscape((v) => !v)}
@@ -305,14 +372,8 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
         </button>
       </div>
 
-      {/* Arena stage */}
       <div className="flex-1 relative flex items-center justify-center overflow-hidden bg-neutral-950">
-        <div
-          className={cn(
-            "relative bg-black origin-center",
-            landscape ? "landscape-frame" : "portrait-frame",
-          )}
-        >
+        <div className={cn("relative bg-black origin-center", landscape ? "landscape-frame" : "portrait-frame")}>
           {iframeSrc ? (
             <iframe
               ref={iframeRef}
@@ -337,22 +398,23 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
         </div>
       </div>
 
-      {/* Life labels */}
       <div className="px-3 py-1 grid grid-cols-2 gap-2 text-[10px] font-bold uppercase tracking-wider bg-black/60">
-        <div className="truncate">YOU · {myChar}</div>
-        <div className="truncate text-right">{opponentName} · {oppChar}</div>
+        <div className="truncate">
+          {isHost ? "YOU (LEFT)" : `${profiles[m.player_a]?.display_name || "Host"} (LEFT)`} · {aChar}
+        </div>
+        <div className="truncate text-right">
+          {isGuest ? "YOU (RIGHT)" : `${opponentName} (RIGHT)`} · {bChar}
+        </div>
       </div>
 
-      {/* On-screen controller — only controls my fighter (player 0 in my iframe). */}
-      <ControlPad onKey={send} disabled={!iframeReady || finished} />
+      <ControlPad onKey={send} disabled={!iframeReady || finished || (isGuest && !hostConnected)} sideLabel={isHost ? "Left fighter" : "Right fighter"} />
 
-      {/* Result overlay */}
       {finished && (
         <div className="absolute inset-0 z-20 grid place-items-center bg-black/80 p-6">
           <div className="max-w-sm w-full bg-gradient-to-br from-neutral-900 to-neutral-800 border border-white/10 rounded-3xl p-6 text-center space-y-3">
             <Trophy className={cn("w-12 h-12 mx-auto", iWon ? "text-amber-400" : "text-white/40")} />
             <h2 className="text-lg font-bold font-display">
-              {m.is_draw ? "Draw — stakes refunded" : iWon ? `🏆 You won ${m.stake * 2} PC!` : `${opponentName} won this round`}
+              {m.is_draw ? "Draw — stakes refunded" : iWon ? `🏆 ${myName} won ${m.stake * 2} PC!` : `${opponentName} won this round`}
             </h2>
             <div className="flex justify-center gap-2">
               <Button asChild><Link to="/earn-credits/battle/scan" search={{ game: "mk" }}>Play again</Link></Button>
@@ -362,16 +424,18 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
         </div>
       )}
 
+      {/* silence unused warnings */}
+      <div className="hidden">{myChar_}{oppChar_}</div>
+
       <style>{`
         .landscape-frame { transform: none; }
         .portrait-frame { transform: rotate(90deg); }
-        /* Show placeholder to guide arena centered without overflow */
       `}</style>
     </div>
   );
 }
 
-function ControlPad({ onKey, disabled }: { onKey: (k: PadKey, down: boolean) => void; disabled: boolean }) {
+function ControlPad({ onKey, disabled, sideLabel }: { onKey: (k: PadKey, down: boolean) => void; disabled: boolean; sideLabel: string }) {
   const active = useRef<Set<PadKey>>(new Set());
 
   const bind = (k: PadKey) => ({
@@ -391,43 +455,40 @@ function ControlPad({ onKey, disabled }: { onKey: (k: PadKey, down: boolean) => 
       try { (e.target as HTMLElement).releasePointerCapture(e.pointerId); } catch {}
     },
     onPointerCancel: () => {
-      if (active.current.has(k)) {
-        active.current.delete(k);
-        onKey(k, false);
-      }
+      if (active.current.has(k)) { active.current.delete(k); onKey(k, false); }
     },
     onPointerLeave: () => {
-      if (active.current.has(k)) {
-        active.current.delete(k);
-        onKey(k, false);
-      }
+      if (active.current.has(k)) { active.current.delete(k); onKey(k, false); }
     },
   });
 
-  const dPad = "w-12 h-12 rounded-xl bg-white/10 border border-white/20 backdrop-blur active:bg-primary/60 active:scale-95 grid place-items-center text-white font-black select-none touch-none transition";
+  const dPad = "w-12 h-12 rounded-xl bg-white/10 border border-white/20 backdrop-blur active:bg-primary/60 active:scale-95 grid place-items-center text-white font-black select-none touch-none transition disabled:opacity-40";
   const btn = (color: string) =>
-    `w-14 h-14 rounded-full border-2 border-white/30 active:scale-95 grid place-items-center text-white font-black select-none touch-none shadow-lg ${color}`;
+    `w-14 h-14 rounded-full border-2 border-white/30 active:scale-95 grid place-items-center text-white font-black select-none touch-none shadow-lg disabled:opacity-40 ${color}`;
 
   return (
-    <div className="grid grid-cols-2 gap-4 px-4 py-4 bg-gradient-to-t from-black to-black/60 border-t border-white/10">
-      {/* D-Pad */}
-      <div className="flex flex-col items-center gap-1">
-        <button className={dPad} {...bind("UP")} aria-label="Up">↑</button>
-        <div className="flex gap-1">
-          <button className={dPad} {...bind("LEFT")} aria-label="Left">←</button>
-          <button className={cn(dPad, "opacity-40 pointer-events-none")}>·</button>
-          <button className={dPad} {...bind("RIGHT")} aria-label="Right">→</button>
-        </div>
-        <button className={dPad} {...bind("DOWN")} aria-label="Down">↓</button>
+    <div className="border-t border-white/10 bg-gradient-to-t from-black to-black/60">
+      <div className="text-center text-[10px] font-bold uppercase tracking-wider text-white/50 pt-2">
+        Controls: {sideLabel}
       </div>
+      <div className="grid grid-cols-2 gap-4 px-4 py-3">
+        <div className="flex flex-col items-center gap-1">
+          <button className={dPad} {...bind("UP")} aria-label="Up">↑</button>
+          <div className="flex gap-1">
+            <button className={dPad} {...bind("LEFT")} aria-label="Left">←</button>
+            <button className={cn(dPad, "opacity-40 pointer-events-none")}>·</button>
+            <button className={dPad} {...bind("RIGHT")} aria-label="Right">→</button>
+          </div>
+          <button className={dPad} {...bind("DOWN")} aria-label="Down">↓</button>
+        </div>
 
-      {/* Action buttons */}
-      <div className="grid grid-cols-2 gap-2 place-items-center">
-        <button className={btn("bg-yellow-500/90")} {...bind("HP")}>HP</button>
-        <button className={btn("bg-orange-500/90")} {...bind("LP")}>LP</button>
-        <button className={btn("bg-red-500/90")} {...bind("HK")}>HK</button>
-        <button className={btn("bg-pink-500/90")} {...bind("LK")}>LK</button>
-        <button className={btn("bg-sky-600/90 col-span-2 w-32 h-10 rounded-full")} {...bind("BLOCK")}>BLOCK</button>
+        <div className="grid grid-cols-2 gap-2 place-items-center">
+          <button className={btn("bg-yellow-500/90")} {...bind("HP")}>HP</button>
+          <button className={btn("bg-orange-500/90")} {...bind("LP")}>LP</button>
+          <button className={btn("bg-red-500/90")} {...bind("HK")}>HK</button>
+          <button className={btn("bg-pink-500/90")} {...bind("LK")}>LK</button>
+          <button className={btn("bg-sky-600/90 col-span-2 w-32 h-10 rounded-full")} {...bind("BLOCK")}>BLOCK</button>
+        </div>
       </div>
     </div>
   );
