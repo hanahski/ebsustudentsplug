@@ -276,6 +276,57 @@
     announcer.classList.add(hold ? 'hold' : 'show');
   }
 
+  // ---------- Omar signature FX ----------
+  var rosesEl = document.getElementById('roses');
+  var auraEl = document.getElementById('omarAura');
+  var roseBadgeEl = document.getElementById('roseBadge');
+  var omarSide = p1.toLowerCase() === 'omar' ? 'p1' : (p2.toLowerCase() === 'omar' ? 'p2' : null);
+  var omarHits = { p1: 0, p2: 0 };
+  function spawnPetals(who, count) {
+    var rect = arenaEl.getBoundingClientRect();
+    var ox = who === 'p1' ? rect.left + rect.width*0.32 : rect.left + rect.width*0.68;
+    var oy = rect.top + rect.height*0.55;
+    for (var i = 0; i < count; i++) {
+      var p = document.createElement('div');
+      p.className = 'petal';
+      var ang = Math.random() * Math.PI * 2;
+      var dist = 60 + Math.random() * 120;
+      var dx = Math.cos(ang) * dist;
+      var dy = Math.sin(ang) * dist - 30;
+      p.style.left = ox + 'px'; p.style.top = oy + 'px';
+      p.style.setProperty('--dx', dx.toFixed(0)+'px');
+      p.style.setProperty('--dy', dy.toFixed(0)+'px');
+      p.style.setProperty('--rot', (Math.random()*720 - 360).toFixed(0)+'deg');
+      rosesEl.appendChild(p);
+      // stagger flight
+      (function(el, d){ setTimeout(function(){ el.classList.add('go'); }, d); setTimeout(function(){ el.remove(); }, d + 1150); })(p, i * 25);
+    }
+  }
+  function flashAura(who) {
+    var rect = arenaEl.getBoundingClientRect();
+    var pct = who === 'p1' ? 32 : 68;
+    auraEl.style.setProperty('--ax', pct + '%');
+    auraEl.classList.add('on');
+    clearTimeout(flashAura._to);
+    flashAura._to = setTimeout(function(){ auraEl.classList.remove('on'); }, 420);
+  }
+  function roseFury(who) {
+    spawnPetals(who, 18);
+    flashAura(who);
+    roseBadgeEl.classList.remove('show'); void roseBadgeEl.offsetWidth; roseBadgeEl.classList.add('show');
+    try { window.MKSFX && MKSFX.play('uppercut', 1.0); } catch (e) {}
+    try { window.MKSFX && MKSFX.play('blockMetal', 0.6); } catch (e) {}
+    try { window.MKSFX && MKSFX.play('effort', 0.7); } catch (e) {}
+  }
+  function onOmarHit(atkWho) {
+    if (!omarSide || atkWho !== omarSide) return;
+    omarHits[atkWho]++;
+    // light petal puff on every landed hit
+    spawnPetals(atkWho, 4);
+    try { window.MKSFX && MKSFX.play('whoosh', 0.35); } catch (e) {}
+    if (omarHits[atkWho] % 3 === 0) roseFury(atkWho);
+  }
+
   // ---------- Round timer ----------
   var roundTime = 99, timerHandle = null, timerFrozen = true;
   function tickTimer() {
