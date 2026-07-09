@@ -733,6 +733,7 @@ function AdminBanners() {
   const [variant, setVariant] = useState<BannerVariant>("auto");
   const [publishAt, setPublishAt] = useState("");
   const [expireAt, setExpireAt] = useState("");
+  const [rotationSeconds, setRotationSeconds] = useState<number>(6);
 
   const onPickFile = async (file: File | null) => {
     if (!file) return;
@@ -772,6 +773,7 @@ function AdminBanners() {
       variant,
       publish_at: publishAt ? new Date(publishAt).toISOString() : null,
       expire_at: expireAt ? new Date(expireAt).toISOString() : null,
+      rotation_seconds: Math.max(2, Math.min(30, Number(rotationSeconds) || 6)),
     } as any);
     if (error) toast.error(error.message);
     else {
@@ -779,7 +781,7 @@ function AdminBanners() {
       setTitle(""); setSubtitle(""); setImageUrl(""); setImagePath("");
       setLinkKind("none"); setLinkValue(""); setCtaLabel("");
       setPreviewRatio(null); setLayout("image-bg"); setVariant("auto");
-      setPublishAt(""); setExpireAt("");
+      setPublishAt(""); setExpireAt(""); setRotationSeconds(6);
       refetch();
     }
   };
@@ -846,6 +848,19 @@ function AdminBanners() {
             <label className="block text-sm font-medium mb-1">Expire at (optional)</label>
             <input type="datetime-local" value={expireAt} onChange={(e) => setExpireAt(e.target.value)} className="w-full h-10 px-3 rounded-md border bg-background text-sm" />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Show for (seconds before swap)</label>
+          <input
+            type="number"
+            min={2}
+            max={30}
+            value={rotationSeconds}
+            onChange={(e) => setRotationSeconds(Number(e.target.value) || 6)}
+            className="w-full h-10 px-3 rounded-md border bg-background text-sm"
+          />
+          <p className="text-[11px] text-muted-foreground mt-1">Between 2 and 30 seconds. Default 6. The carousel waits for the image to load before it counts.</p>
         </div>
 
         <div>
@@ -943,6 +958,23 @@ function AdminBanners() {
                   {b.expire_at && ` · until ${new Date(b.expire_at).toLocaleDateString()}`}
                 </p>
                 <p className="text-[11px] text-primary">{imp} impressions · {clk} clicks · {rate}% CTR</p>
+                <div className="mt-1 flex items-center gap-1.5">
+                  <label className="text-[11px] text-muted-foreground">Show for</label>
+                  <input
+                    type="number"
+                    min={2}
+                    max={30}
+                    defaultValue={Number(b.rotation_seconds) || 6}
+                    onBlur={async (e) => {
+                      const v = Math.max(2, Math.min(30, Number(e.target.value) || 6));
+                      if (v === (Number(b.rotation_seconds) || 6)) return;
+                      const { error } = await supabase.from("banner_slides").update({ rotation_seconds: v } as any).eq("id", b.id);
+                      if (error) toast.error(error.message); else { toast.success("Timing saved"); refetch(); }
+                    }}
+                    className="w-14 h-7 px-2 rounded border bg-background text-[11px]"
+                  />
+                  <span className="text-[11px] text-muted-foreground">seconds</span>
+                </div>
               </div>
               <Button size="sm" variant="outline" onClick={() => toggle(b.id, b.is_active)}>{b.is_active ? "Hide" : "Show"}</Button>
               <Button size="sm" variant="destructive" onClick={() => del(b.id)}><Trash2 className="w-4 h-4" /></Button>

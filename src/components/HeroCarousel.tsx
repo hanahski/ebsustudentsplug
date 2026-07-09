@@ -21,6 +21,7 @@ type Slide = {
   layout?: Layout;
   accent?: string | null;
   variant?: "auto" | "light" | "dark";
+  rotationMs?: number;
 };
 
 const defaultSlides: Slide[] = [
@@ -108,6 +109,7 @@ export function HeroCarousel() {
     layout: (b.layout ?? "image-bg") as Layout,
     accent: b.accent ?? null,
     variant: (b.variant ?? "auto") as Slide["variant"],
+    rotationMs: Math.max(2000, Math.min(30000, (Number(b.rotation_seconds) || 6) * 1000)),
   }));
 
   const slides = [...adminSlides, ...defaultSlides];
@@ -118,21 +120,32 @@ export function HeroCarousel() {
   const dx = useRef(0);
   const [drag, setDrag] = useState(0);
   const impressionLogged = useRef<Set<string>>(new Set());
+  const [loaded, setLoaded] = useState<Record<number, boolean>>({});
 
+  // Advance only when the CURRENT slide's image has loaded (text-only slides
+  // are considered instantly loaded). This guarantees users never see the
+  // carousel swap to a blank slot before a banner has actually rendered.
+  // A 12s hard cap prevents a permanently broken image from freezing rotation.
   useEffect(() => {
     if (paused) return;
-    const t = setInterval(() => setI((v) => (v + 1) % slides.length), 5000);
-    return () => clearInterval(t);
-  }, [paused, slides.length]);
+    const current = slides[i];
+    const needsImage = !!current?.imageUrl;
+    const isReady = !needsImage || loaded[i] === true;
+    const interval = current?.rotationMs ?? 5000;
+    const wait = isReady ? interval : Math.min(12000, interval + 6000);
+    const t = setTimeout(() => setI((v) => (v + 1) % slides.length), wait);
+    return () => clearTimeout(t);
+  }, [paused, slides, i, loaded]);
 
-  // Log impression when a slide becomes the active one
+  // Log impression when a slide becomes the active one AND its image is ready
   useEffect(() => {
     const slide = slides[i];
-    if (slide?.id && !impressionLogged.current.has(slide.id)) {
-      impressionLogged.current.add(slide.id);
-      logBannerEvent(slide.id, "impression");
-    }
-  }, [i, slides]);
+    if (!slide?.id) return;
+    if (slide.imageUrl && !loaded[i]) return;
+    if (impressionLogged.current.has(slide.id)) return;
+    impressionLogged.current.add(slide.id);
+    logBannerEvent(slide.id, "impression");
+  }, [i, slides, loaded]);
 
   const onStart = (x: number) => { startX.current = x; setPaused(true); };
   const onMove = (x: number) => {
@@ -169,6 +182,7 @@ export function HeroCarousel() {
             key={s.id ?? `default-${idx}`}
             slide={s}
             eager={idx === 0}
+            onImageLoad={() => setLoaded((prev) => (prev[idx] ? prev : { ...prev, [idx]: true }))}
             stopDragClick={(e) => {
               if (Math.abs(dx.current) > 10) { e.preventDefault(); e.stopPropagation(); }
               else if (s.id) logBannerEvent(s.id, "click");
@@ -195,10 +209,12 @@ function SlideView({
   slide: s,
   eager,
   stopDragClick,
+  onImageLoad,
 }: {
   slide: Slide;
   eager: boolean;
   stopDragClick: (e: React.MouseEvent) => void;
+  onImageLoad?: () => void;
 }) {
   const layout: Layout = s.layout ?? "image-bg";
   const variant = s.variant ?? "auto";
@@ -242,7 +258,7 @@ function SlideView({
         src={s.imageUrl}
         aria-hidden
         className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-70 hidden md:block"
-        loading={eager ? "eager" : "lazy"}
+        loading="eager"
         decoding="async"
         draggable={false}
       />
@@ -250,10 +266,12 @@ function SlideView({
         src={s.imageUrl}
         alt={s.title}
         className="relative w-full h-full object-cover md:object-contain"
-        loading={eager ? "eager" : "lazy"}
+        loading="eager"
         fetchPriority={eager ? "high" : "auto"}
         decoding="async"
         draggable={false}
+        onLoad={onImageLoad}
+        onError={onImageLoad}
       />
     </div>
   ) : null;
