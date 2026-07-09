@@ -449,7 +449,8 @@
 
   mk.start(options).ready(function () {
     document.getElementById('loading').style.display = 'none';
-    setLife('p1', 100); setLife('p2', 100);
+    setLife('p1', MAX.p1); setLife('p2', MAX.p2);
+    if (omarSide) { setTimeout(function(){ roseFury(omarSide); }, 500); }
     announce('ROUND 1');
     setTimeout(function(){ announce('FIGHT!'); startTimer(); }, 1200);
     post('ready', { mode: mode });
