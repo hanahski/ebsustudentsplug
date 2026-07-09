@@ -71,6 +71,9 @@ export function PostCard({ post, locked, prefetchNextVideoUrl }: { post: FeedPos
   const [editTitle, setEditTitle] = useState(post.title);
   const [editBody, setEditBody] = useState(post.body ?? "");
   const [savingEdit, setSavingEdit] = useState(false);
+  const [heartBurst, setHeartBurst] = useState(0); // increments to retrigger animation
+  const [likePop, setLikePop] = useState(0);
+  const lastTapRef = useRef<number>(0);
 
   // FB-style: surface the most-liked (fallback newest) top-level comment.
   useEffect(() => {
