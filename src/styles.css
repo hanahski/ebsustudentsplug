@@ -1075,3 +1075,51 @@ font.goog-text-highlight { background: transparent !important; box-shadow: none 
   -ms-overflow-style: none; scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
 }
+
+/* ---- Post / feed micro-interactions ---- */
+@keyframes heart-burst {
+  0%   { transform: scale(.6); opacity: 0; }
+  35%  { transform: scale(1.35); opacity: 1; }
+  70%  { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.1); opacity: 0; }
+}
+@keyframes heart-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35); }
+  70%  { transform: scale(.92); }
+  100% { transform: scale(1); }
+}
+@keyframes float-up {
+  0%   { transform: translateY(0) scale(.8); opacity: 0; }
+  20%  { opacity: 1; }
+  100% { transform: translateY(-42px) scale(1.15); opacity: 0; }
+}
+@keyframes shimmer-x {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@utility post-heart-burst { animation: heart-burst .55s ease-out forwards; pointer-events: none; }
+@utility post-heart-pop   { animation: heart-pop .35s ease-out; }
+@utility post-float-up    { animation: float-up 1s ease-out forwards; pointer-events: none; }
+@utility post-shimmer {
+  background: linear-gradient(90deg,
+    color-mix(in oklab, var(--muted) 60%, transparent) 0%,
+    color-mix(in oklab, var(--muted) 90%, transparent) 50%,
+    color-mix(in oklab, var(--muted) 60%, transparent) 100%);
+  background-size: 200% 100%;
+  animation: shimmer-x 1.4s linear infinite;
+}
+@utility post-tap { transition: transform .12s ease; &:active { transform: scale(.94); } }
+@utility post-lift {
+  transition: transform .25s ease, box-shadow .25s ease;
+  &:hover { transform: translateY(-2px); box-shadow: 0 18px 40px -22px color-mix(in oklab, var(--primary) 40%, transparent); }
+}
+@utility pq-progress {
+  position: fixed; top: 0; left: 0; height: 3px; z-index: 60;
+  background: linear-gradient(90deg, var(--primary), color-mix(in oklab, var(--primary) 30%, oklch(0.72 0.18 320)));
+  box-shadow: 0 0 12px color-mix(in oklab, var(--primary) 60%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .post-heart-burst, .post-heart-pop, .post-float-up, .post-shimmer { animation: none !important; }
+}

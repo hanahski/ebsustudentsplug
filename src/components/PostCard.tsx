@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Eye, Heart, FileText, Lock, MessageCircle, Pencil, Repeat2, Trash2, ShieldCheck } from "lucide-react";
+import { Eye, Heart, FileText, Lock, MessageCircle, Pencil, Repeat2, Trash2, ShieldCheck, Share2 } from "lucide-react";
+import { formatCount } from "@/lib/format-count";
 import { ReportDialog } from "./ReportDialog";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -70,6 +71,9 @@ export function PostCard({ post, locked, prefetchNextVideoUrl }: { post: FeedPos
   const [editTitle, setEditTitle] = useState(post.title);
   const [editBody, setEditBody] = useState(post.body ?? "");
   const [savingEdit, setSavingEdit] = useState(false);
+  const [heartBurst, setHeartBurst] = useState(0); // increments to retrigger animation
+  const [likePop, setLikePop] = useState(0);
+  const lastTapRef = useRef<number>(0);
 
   // FB-style: surface the most-liked (fallback newest) top-level comment.
   useEffect(() => {
@@ -130,14 +134,23 @@ export function PostCard({ post, locked, prefetchNextVideoUrl }: { post: FeedPos
     nav({ to: "/login", search: { redirect: "/" } });
   };
 
-  const toggleLike = async (e: React.MouseEvent) => {
-    e.preventDefault(); e.stopPropagation();
+  const doLike = async (source: "button" | "double-tap") => {
     if (!user) return requireAuth("Sign in to like posts");
-    // Optimistic toggle — flip UI immediately, roll back on error.
+    // Double-tap on media/title should always LIKE (never unlike) — Instagram semantics.
+    if (source === "double-tap" && liked) {
+      setHeartBurst((n) => n + 1);
+      return;
+    }
     const wasLiked = liked;
     const prevCount = likeCount;
     setLiked(!wasLiked);
     setLikeCount((c) => Math.max(0, c + (wasLiked ? -1 : 1)));
+    if (!wasLiked) {
+      setHeartBurst((n) => n + 1);
+      setLikePop((n) => n + 1);
+      // Haptic tick on supporting devices.
+      try { (navigator as any).vibrate?.(12); } catch { /* noop */ }
+    }
     const { error } = wasLiked
       ? await supabase.from("post_likes").delete().eq("post_id", post.id).eq("user_id", user.id)
       : await supabase.from("post_likes").insert({ post_id: post.id, user_id: user.id });
@@ -146,6 +159,35 @@ export function PostCard({ post, locked, prefetchNextVideoUrl }: { post: FeedPos
       setLikeCount(prevCount);
       toast.error(wasLiked ? "Couldn't unlike" : "Couldn't like");
     }
+  };
+
+  const toggleLike = async (e: React.MouseEvent) => {
+    e.preventDefault(); e.stopPropagation();
+    doLike("button");
+  };
+
+  const onMediaTap = (e: React.MouseEvent) => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      e.preventDefault(); e.stopPropagation();
+      lastTapRef.current = 0;
+      doLike("double-tap");
+    } else {
+      lastTapRef.current = now;
+    }
+  };
+
+  const onShare = async (e: React.MouseEvent) => {
+    e.preventDefault(); e.stopPropagation();
+    const url = `${window.location.origin}/post/${post.id}`;
+    try {
+      if ((navigator as any).share) {
+        await (navigator as any).share({ title: post.title, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied");
+      }
+    } catch { /* user cancelled */ }
   };
 
   const toggleRepost = async (e: React.MouseEvent) => {
@@ -240,7 +282,13 @@ export function PostCard({ post, locked, prefetchNextVideoUrl }: { post: FeedPos
   }, [prefetchNextVideoUrl]);
 
   return (
-    <article ref={cardRef} className={`relative bg-card rounded-2xl shadow-card border hover:shadow-glow transition-shadow ${isFeatured ? "p-5 md:p-6" : "p-4"} ${post.is_official ? "ring-2 ring-primary/40 bg-gradient-to-br from-primary/5 to-transparent" : ""}`}>
+    <article ref={cardRef} className={`relative bg-card rounded-2xl shadow-card border post-lift transition-shadow overflow-hidden ${isFeatured ? "p-5 md:p-6" : "p-4"} ${post.is_official ? "ring-2 ring-primary/40 bg-gradient-to-br from-primary/5 to-transparent" : ""}`}>
+      {/* Double-tap heart burst overlay */}
+      {heartBurst > 0 && (
+        <span key={heartBurst} className="pointer-events-none absolute inset-0 flex items-center justify-center z-20">
+          <Heart className="w-24 h-24 text-primary fill-current drop-shadow-[0_6px_24px_rgba(0,0,0,.35)] post-heart-burst" />
+        </span>
+      )}
       {post.is_official && (
         <div className="absolute -top-3 right-3 z-10 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground text-[10px] font-bold shadow-glow">
           <ShieldCheck className="w-3 h-3" /> OFFICIAL
@@ -286,14 +334,13 @@ export function PostCard({ post, locked, prefetchNextVideoUrl }: { post: FeedPos
         const { share, body: displayBody } = extractPlugShare(post.body);
         return (
           <>
-            <Link to="/post/$id" params={{ id: post.id }}>
+            <Link to="/post/$id" params={{ id: post.id }} onClick={onMediaTap}>
               <h3 className={`font-display font-bold leading-tight mb-1 hover:text-primary ${isFeatured ? "text-2xl md:text-3xl" : "text-lg"}`}>{post.title}</h3>
               {post.image_url && (
                 <img
                   src={post.image_url}
                   alt={post.title}
-                 
-                  className={`mt-2 mb-2 w-full object-cover rounded-xl border ${isFeatured ? "aspect-[16/9] md:aspect-[2/1]" : "aspect-[16/10]"}`}
+                  className={`mt-2 mb-2 w-full object-cover rounded-xl border transition-transform duration-300 hover:scale-[1.01] ${isFeatured ? "aspect-[16/9] md:aspect-[2/1]" : "aspect-[16/10]"}`}
                 />
               )}
               {displayBody && (
@@ -332,24 +379,40 @@ export function PostCard({ post, locked, prefetchNextVideoUrl }: { post: FeedPos
       <footer className="mt-3 flex items-center gap-1 text-xs flex-wrap">
         <button
           onClick={toggleLike}
-          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full transition ${liked ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted"}`}
+          aria-pressed={liked}
+          aria-label={liked ? "Unlike post" : "Like post"}
+          className={`post-tap inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full transition ${liked ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted"}`}
         >
-          <Heart className={`w-3.5 h-3.5 ${liked ? "fill-current" : ""}`} /> {likeCount}
+          <span key={likePop} className={`inline-flex ${likePop > 0 ? "post-heart-pop" : ""}`}>
+            <Heart className={`w-3.5 h-3.5 ${liked ? "fill-current" : ""}`} />
+          </span>
+          <span className="tabular-nums">{formatCount(likeCount)}</span>
         </button>
         <button
           onClick={onToggleComments}
-          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full transition ${showComments ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted"}`}
+          aria-expanded={showComments}
+          aria-label="Toggle comments"
+          className={`post-tap inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full transition ${showComments ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted"}`}
         >
-          <MessageCircle className="w-3.5 h-3.5" /> {commentCount}
+          <MessageCircle className="w-3.5 h-3.5" /> <span className="tabular-nums">{formatCount(commentCount)}</span>
         </button>
         <button
           onClick={toggleRepost}
-          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full transition ${reposted ? "bg-success/15 text-success" : "text-muted-foreground hover:bg-muted"}`}
+          aria-pressed={reposted}
+          aria-label={reposted ? "Undo repost" : "Repost"}
+          className={`post-tap inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full transition ${reposted ? "bg-success/15 text-success" : "text-muted-foreground hover:bg-muted"}`}
         >
-          <Repeat2 className="w-3.5 h-3.5" /> {repostCount}
+          <Repeat2 className="w-3.5 h-3.5" /> <span className="tabular-nums">{formatCount(repostCount)}</span>
         </button>
-        <span className="inline-flex items-center gap-1 px-2 py-1 text-muted-foreground">
-          <Eye className="w-3.5 h-3.5" /> {post.view_count}
+        <button
+          onClick={onShare}
+          aria-label="Share post"
+          className="post-tap inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full transition text-muted-foreground hover:bg-muted"
+        >
+          <Share2 className="w-3.5 h-3.5" />
+        </button>
+        <span className="inline-flex items-center gap-1 px-2 py-1 text-muted-foreground" title={`${post.view_count} views`}>
+          <Eye className="w-3.5 h-3.5" /> <span className="tabular-nums">{formatCount(post.view_count)}</span>
         </span>
         {!locked && (
           <SaveButton
