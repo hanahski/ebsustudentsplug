@@ -134,14 +134,23 @@ export function PostCard({ post, locked, prefetchNextVideoUrl }: { post: FeedPos
     nav({ to: "/login", search: { redirect: "/" } });
   };
 
-  const toggleLike = async (e: React.MouseEvent) => {
-    e.preventDefault(); e.stopPropagation();
+  const doLike = async (source: "button" | "double-tap") => {
     if (!user) return requireAuth("Sign in to like posts");
-    // Optimistic toggle — flip UI immediately, roll back on error.
+    // Double-tap on media/title should always LIKE (never unlike) — Instagram semantics.
+    if (source === "double-tap" && liked) {
+      setHeartBurst((n) => n + 1);
+      return;
+    }
     const wasLiked = liked;
     const prevCount = likeCount;
     setLiked(!wasLiked);
     setLikeCount((c) => Math.max(0, c + (wasLiked ? -1 : 1)));
+    if (!wasLiked) {
+      setHeartBurst((n) => n + 1);
+      setLikePop((n) => n + 1);
+      // Haptic tick on supporting devices.
+      try { (navigator as any).vibrate?.(12); } catch { /* noop */ }
+    }
     const { error } = wasLiked
       ? await supabase.from("post_likes").delete().eq("post_id", post.id).eq("user_id", user.id)
       : await supabase.from("post_likes").insert({ post_id: post.id, user_id: user.id });
@@ -150,6 +159,35 @@ export function PostCard({ post, locked, prefetchNextVideoUrl }: { post: FeedPos
       setLikeCount(prevCount);
       toast.error(wasLiked ? "Couldn't unlike" : "Couldn't like");
     }
+  };
+
+  const toggleLike = async (e: React.MouseEvent) => {
+    e.preventDefault(); e.stopPropagation();
+    doLike("button");
+  };
+
+  const onMediaTap = (e: React.MouseEvent) => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      e.preventDefault(); e.stopPropagation();
+      lastTapRef.current = 0;
+      doLike("double-tap");
+    } else {
+      lastTapRef.current = now;
+    }
+  };
+
+  const onShare = async (e: React.MouseEvent) => {
+    e.preventDefault(); e.stopPropagation();
+    const url = `${window.location.origin}/post/${post.id}`;
+    try {
+      if ((navigator as any).share) {
+        await (navigator as any).share({ title: post.title, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied");
+      }
+    } catch { /* user cancelled */ }
   };
 
   const toggleRepost = async (e: React.MouseEvent) => {
