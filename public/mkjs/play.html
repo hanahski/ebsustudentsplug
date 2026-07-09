@@ -124,6 +124,35 @@
     #spectatorTag::before { content:''; position:absolute; left:8px; top:50%; transform:translateY(-50%);
       width:8px; height:8px; border-radius:50%; background:#22d3ee; box-shadow:0 0 8px #22d3ee;
       animation: pulse 1s infinite alternate; }
+
+    /* ---------- Omar signature FX ---------- */
+    .portrait.omar { border-color:#f472b6 !important; box-shadow:0 0 12px rgba(244,114,182,.75), inset 0 0 8px rgba(0,0,0,.5) !important; }
+    #roses { position:absolute; inset:0; pointer-events:none; z-index:7; overflow:hidden; }
+    .petal { position:absolute; width:14px; height:14px; border-radius:60% 10% 60% 10%;
+      background:linear-gradient(135deg,#fbcfe8,#ec4899 60%,#9d174d);
+      box-shadow:0 0 6px rgba(236,72,153,.7);
+      transform-origin:center; opacity:0; }
+    .petal.go { animation: petalFly 1100ms cubic-bezier(.2,.7,.2,1) forwards; }
+    @keyframes petalFly {
+      0%   { opacity:0; transform:translate(0,0) rotate(0deg) scale(.4); }
+      15%  { opacity:1; }
+      100% { opacity:0; transform:translate(var(--dx),var(--dy)) rotate(var(--rot)) scale(1); }
+    }
+    #omarAura { position:absolute; inset:0; pointer-events:none; z-index:4;
+      background:radial-gradient(circle at var(--ax,50%) 70%, rgba(236,72,153,.35), transparent 42%);
+      opacity:0; transition:opacity 260ms ease-out; mix-blend-mode:screen; }
+    #omarAura.on { opacity:1; }
+    .rose-badge { position:absolute; top:96px; left:50%; transform:translateX(-50%);
+      font-family:'Impact','Arial Black',sans-serif; font-size:26px; letter-spacing:.14em;
+      color:#fbcfe8; text-shadow:0 0 10px #ec4899, 0 0 22px #9d174d, 0 2px 4px #000;
+      opacity:0; pointer-events:none; z-index:8; white-space:nowrap; }
+    .rose-badge.show { animation: roseBadge 1100ms cubic-bezier(.2,.9,.2,1) forwards; }
+    @keyframes roseBadge {
+      0% { opacity:0; transform:translate(-50%,10px) scale(.6); }
+      25% { opacity:1; transform:translate(-50%,0) scale(1.1); }
+      75% { opacity:1; transform:translate(-50%,-4px) scale(1); }
+      100% { opacity:0; transform:translate(-50%,-18px) scale(1); }
+    }
   </style>
 </head>
 <body>
