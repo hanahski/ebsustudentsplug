@@ -403,7 +403,7 @@
       if (typeof s.p2.life === 'number' && f1.getLife() !== s.p2.life) {
         var d2 = prevLife.p2 - s.p2.life;
         f1.setLife(s.p2.life); setLife('p2', s.p2.life);
-        if (d2 > 0) { damageFloat('p2', d2, d2>=8); flash(); shake(); bumpCombo('p1'); }
+        if (d2 > 0) { damageFloat('p2', d2, d2>=8); flash(); shake(); bumpCombo('p1'); onOmarHit('p1'); }
         prevLife.p2 = s.p2.life;
       }
       if (s.p2.move && (!f1._currentMove || f1._currentMove.type !== s.p2.move)) { try { f1.setMove(s.p2.move); } catch (e) {} }
