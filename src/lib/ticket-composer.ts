@@ -405,8 +405,13 @@ export async function createTicketPdfBlob(
   return pdf.output("blob");
 }
 
-export async function downloadTicketPdf(dataUrl: string, filename: string, _openedWindow?: Window | null) {
-  const blob = await createTicketPdfBlob(dataUrl);
+export async function downloadTicketPdf(
+  dataUrl: string,
+  filename: string,
+  _openedWindow?: Window | null,
+  meta?: { title?: string; holder?: string; buyerIndex?: number | null; qrToken?: string },
+) {
+  const blob = await createTicketPdfBlob(dataUrl, meta);
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
