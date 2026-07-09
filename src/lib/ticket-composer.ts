@@ -238,37 +238,180 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
 
 function truncate(s: string, n: number) { return s.length > n ? s.slice(0, n - 1) + "…" : s; }
 
-export async function createTicketPdfBlob(dataUrl: string): Promise<Blob> {
+/**
+ * Build the ticket PDF as a designed vector page — not just an embedded photo.
+ *
+ * Layout (portrait A5-ish):
+ *   ┌───────────────────────────────┐
+ *   │  gradient hero band + title   │
+ *   ├───────────────────────────────┤
+ *   │      event photo (cover)      │
+ *   ├─── perforated dashed line ────┤
+ *   │  stub:  buyer + verified · QR │
+ *   └───────────────────────────────┘
+ *
+ * The photo comes from `composeTicketImage`'s dataUrl (which already carries
+ * the anti-forgery watermark). The rest is drawn as PDF vectors so the file
+ * scales cleanly and prints crisply on any paper.
+ */
+export async function createTicketPdfBlob(
+  dataUrl: string,
+  opts?: { title?: string; holder?: string; buyerIndex?: number | null; qrToken?: string },
+): Promise<Blob> {
   const { jsPDF } = await import("jspdf");
-  const img = await loadImage(dataUrl);
-  const ratio = img.height / img.width;
-  const pageW = 595; // pt (A4 width)
-  const margin = 24;
-  const imgW = pageW - margin * 2;
-  const imgH = imgW * ratio;
-  const pageH = imgH + margin * 2;
+  const pageW = 420; // pt — ~A5 width
+  const pageH = 640;
   const pdf = new jsPDF({ unit: "pt", format: [pageW, pageH], orientation: "portrait" });
 
-  // Extra brand-watermark layer painted onto a full-page canvas, so the PDF
-  // page itself carries the anti-forgery pattern even in the margin areas.
-  try {
-    const brand = await getBrandLogo();
-    const wmCanvas = document.createElement("canvas");
-    wmCanvas.width = Math.round(pageW * 2);
-    wmCanvas.height = Math.round(pageH * 2);
-    const wctx = wmCanvas.getContext("2d")!;
-    wctx.scale(2, 2);
-    stampLogoPattern(wctx, brand, pageW, pageH, { tile: 90, alpha: 0.06, rotate: -22 });
-    const wmUrl = wmCanvas.toDataURL("image/png");
-    pdf.addImage(wmUrl, "PNG", 0, 0, pageW, pageH, undefined, "FAST");
-  } catch { /* watermark is decorative — never block the download */ }
+  const title = opts?.title ?? "Ticket";
+  const holder = opts?.holder ?? "";
+  const buyerIndex = opts?.buyerIndex ?? null;
+  const qrToken = opts?.qrToken ?? "";
 
-  pdf.addImage(dataUrl, "PNG", margin, margin, imgW, imgH, undefined, "FAST");
+  // 1) Base card — off-white with a rounded feel via a subtle border.
+  pdf.setFillColor(250, 249, 255);
+  pdf.rect(0, 0, pageW, pageH, "F");
+
+  // 2) Gradient hero band (fake gradient using stacked strips — jsPDF has no native gradient fill).
+  const bandH = 130;
+  for (let y = 0; y < bandH; y++) {
+    const t = y / bandH;
+    // Interpolate purple #6d28d9 → pink #db2777
+    const r = Math.round(0x6d + (0xdb - 0x6d) * t);
+    const g = Math.round(0x28 + (0x27 - 0x28) * t);
+    const b = Math.round(0xd9 + (0x77 - 0xd9) * t);
+    pdf.setFillColor(r, g, b);
+    pdf.rect(0, y, pageW, 1, "F");
+  }
+  // Diagonal shine
+  pdf.setFillColor(255, 255, 255);
+  pdf.setGState(new (pdf as any).GState({ opacity: 0.08 }));
+  pdf.triangle(0, 0, pageW * 0.6, 0, 0, bandH, "F");
+  pdf.setGState(new (pdf as any).GState({ opacity: 1 }));
+
+  // 3) Brand ribbon
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(10);
+  pdf.setFont("helvetica", "bold");
+  pdf.text("STUDENTSPLUG · OFFICIAL TICKET", 24, 28);
+
+  // 4) Title (wrap in two lines max)
+  pdf.setFontSize(22);
+  const titleLines = pdf.splitTextToSize(title, pageW - 48);
+  pdf.text(titleLines.slice(0, 2), 24, 60);
+
+  // 5) Buyer line
+  pdf.setFontSize(11);
+  pdf.setFont("helvetica", "normal");
+  const buyerLabel = buyerIndex && buyerIndex > 0 ? `Buyer #${buyerIndex}` : "Holder";
+  pdf.text(`${buyerLabel} · ${holder || "—"}`, 24, bandH - 14);
+
+  // 6) Cover photo (embed the composed image, keeping aspect ratio).
+  const img = await loadImage(dataUrl);
+  const imgTop = bandH + 12;
+  const imgAreaW = pageW - 32;
+  const imgAreaH = 300;
+  const imgRatio = img.height / img.width;
+  let iw = imgAreaW;
+  let ih = iw * imgRatio;
+  if (ih > imgAreaH) { ih = imgAreaH; iw = ih / imgRatio; }
+  const ix = (pageW - iw) / 2;
+  pdf.addImage(dataUrl, "PNG", ix, imgTop, iw, ih, undefined, "FAST");
+
+  // 7) Perforated stub separator
+  const stubY = imgTop + ih + 20;
+  pdf.setDrawColor(180, 180, 200);
+  pdf.setLineDashPattern([4, 4], 0);
+  pdf.line(16, stubY, pageW - 16, stubY);
+  pdf.setLineDashPattern([], 0);
+  // Circle notches on each side
+  pdf.setFillColor(250, 249, 255);
+  pdf.circle(0, stubY, 8, "F");
+  pdf.circle(pageW, stubY, 8, "F");
+
+  // 8) Stub row: QR on the right, meta on the left
+  const stubTop = stubY + 12;
+  const qrPt = 110;
+  const qrX = pageW - qrPt - 20;
+  const qrY = stubTop;
+
+  // QR — regenerate at PDF resolution with watermark
+  if (qrToken) {
+    const qrDataUrl = await composeVerifiedQr(qrToken, 480);
+    pdf.addImage(qrDataUrl, "PNG", qrX, qrY, qrPt, qrPt, undefined, "FAST");
+    // QR frame
+    pdf.setDrawColor(220, 220, 235);
+    pdf.roundedRect(qrX - 4, qrY - 4, qrPt + 8, qrPt + 8, 6, 6, "S");
+  }
+
+  // Meta column
+  const metaX = 24;
+  let metaY = stubTop + 4;
+  pdf.setTextColor(30, 30, 60);
+  pdf.setFontSize(10);
+  pdf.setFont("helvetica", "bold");
+  pdf.text("ADMIT ONE", metaX, metaY);
+  metaY += 16;
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(9);
+  pdf.setTextColor(90, 90, 120);
+  pdf.text("BUYER", metaX, metaY);
+  metaY += 12;
+  pdf.setTextColor(20, 20, 40);
+  pdf.setFontSize(11);
+  pdf.setFont("helvetica", "bold");
+  pdf.text(truncate(holder || "—", 22), metaX, metaY);
+  metaY += 18;
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(9);
+  pdf.setTextColor(90, 90, 120);
+  pdf.text("SEAT / BUYER #", metaX, metaY);
+  metaY += 12;
+  pdf.setTextColor(20, 20, 40);
+  pdf.setFontSize(11);
+  pdf.setFont("helvetica", "bold");
+  pdf.text(buyerIndex ? `#${buyerIndex}` : "—", metaX, metaY);
+  metaY += 18;
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(9);
+  pdf.setTextColor(90, 90, 120);
+  pdf.text("ISSUED", metaX, metaY);
+  metaY += 12;
+  pdf.setTextColor(20, 20, 40);
+  pdf.setFontSize(10);
+  pdf.text(new Date().toLocaleString(), metaX, metaY);
+
+  // 9) Footer — scan hint + tokenised barcode-style tickmarks
+  const footY = pageH - 40;
+  pdf.setDrawColor(200, 200, 220);
+  pdf.setLineDashPattern([2, 2], 0);
+  pdf.line(20, footY - 12, pageW - 20, footY - 12);
+  pdf.setLineDashPattern([], 0);
+  pdf.setTextColor(120, 120, 150);
+  pdf.setFontSize(8);
+  pdf.text("Scan with the StudentsPlug ticket scanner · Non-transferable · Any copy voids all", 20, footY);
+
+  // Barcode-ish tick row above the footer for a printed feel
+  const tickY = footY - 22;
+  pdf.setFillColor(60, 40, 120);
+  for (let x = 20, i = 0; x < pageW - 20; x += 3, i++) {
+    const h = i % 3 === 0 ? 8 : i % 2 === 0 ? 4 : 6;
+    pdf.rect(x, tickY - h, 1.2, h, "F");
+  }
+
   return pdf.output("blob");
 }
 
-export async function downloadTicketPdf(dataUrl: string, filename: string, _openedWindow?: Window | null) {
-  const blob = await createTicketPdfBlob(dataUrl);
+export async function downloadTicketPdf(
+  dataUrl: string,
+  filename: string,
+  _openedWindow?: Window | null,
+  meta?: { title?: string; holder?: string; buyerIndex?: number | null; qrToken?: string },
+) {
+  const blob = await createTicketPdfBlob(dataUrl, meta);
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

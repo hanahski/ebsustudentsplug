@@ -101,6 +101,7 @@ import { Route as ApiBootprintRouteImport } from './routes/api/bootprint'
 import { Route as EarnCreditsBattleIndexRouteImport } from './routes/earn-credits.battle.index'
 import { Route as BooksComposerIndexRouteImport } from './routes/books_.composer.index'
 import { Route as ToolsAiSlugRouteImport } from './routes/tools.ai.$slug'
+import { Route as TicketsLiveTokenRouteImport } from './routes/tickets_.live.$token'
 import { Route as EarnCreditsBattleScanRouteImport } from './routes/earn-credits.battle.scan'
 import { Route as CourseNameNameRouteImport } from './routes/course.name.$name'
 import { Route as BooksReadIdRouteImport } from './routes/books_.read.$id'
@@ -586,6 +587,11 @@ const ToolsAiSlugRoute = ToolsAiSlugRouteImport.update({
   path: '/ai/$slug',
   getParentRoute: () => ToolsRoute,
 } as any)
+const TicketsLiveTokenRoute = TicketsLiveTokenRouteImport.update({
+  id: '/tickets_/live/$token',
+  path: '/tickets/live/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EarnCreditsBattleScanRoute = EarnCreditsBattleScanRouteImport.update({
   id: '/scan',
   path: '/scan',
@@ -821,6 +827,7 @@ export interface FileRoutesByFullPath {
   '/books/read/$id': typeof BooksReadIdRoute
   '/course/name/$name': typeof CourseNameNameRoute
   '/earn-credits/battle/scan': typeof EarnCreditsBattleScanRoute
+  '/tickets/live/$token': typeof TicketsLiveTokenRoute
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books/composer/': typeof BooksComposerIndexRoute
   '/earn-credits/battle/': typeof EarnCreditsBattleIndexRoute
@@ -936,6 +943,7 @@ export interface FileRoutesByTo {
   '/books/read/$id': typeof BooksReadIdRoute
   '/course/name/$name': typeof CourseNameNameRoute
   '/earn-credits/battle/scan': typeof EarnCreditsBattleScanRoute
+  '/tickets/live/$token': typeof TicketsLiveTokenRoute
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books/composer': typeof BooksComposerIndexRoute
   '/earn-credits/battle': typeof EarnCreditsBattleIndexRoute
@@ -1055,6 +1063,7 @@ export interface FileRoutesById {
   '/books_/read/$id': typeof BooksReadIdRoute
   '/course/name/$name': typeof CourseNameNameRoute
   '/earn-credits/battle/scan': typeof EarnCreditsBattleScanRoute
+  '/tickets_/live/$token': typeof TicketsLiveTokenRoute
   '/tools/ai/$slug': typeof ToolsAiSlugRoute
   '/books_/composer/': typeof BooksComposerIndexRoute
   '/earn-credits/battle/': typeof EarnCreditsBattleIndexRoute
@@ -1175,6 +1184,7 @@ export interface FileRouteTypes {
     | '/books/read/$id'
     | '/course/name/$name'
     | '/earn-credits/battle/scan'
+    | '/tickets/live/$token'
     | '/tools/ai/$slug'
     | '/books/composer/'
     | '/earn-credits/battle/'
@@ -1290,6 +1300,7 @@ export interface FileRouteTypes {
     | '/books/read/$id'
     | '/course/name/$name'
     | '/earn-credits/battle/scan'
+    | '/tickets/live/$token'
     | '/tools/ai/$slug'
     | '/books/composer'
     | '/earn-credits/battle'
@@ -1408,6 +1419,7 @@ export interface FileRouteTypes {
     | '/books_/read/$id'
     | '/course/name/$name'
     | '/earn-credits/battle/scan'
+    | '/tickets_/live/$token'
     | '/tools/ai/$slug'
     | '/books_/composer/'
     | '/earn-credits/battle/'
@@ -1500,6 +1512,7 @@ export interface RootRouteChildren {
   BooksPreviewTokenRoute: typeof BooksPreviewTokenRoute
   BooksReadIdRoute: typeof BooksReadIdRoute
   CourseNameNameRoute: typeof CourseNameNameRoute
+  TicketsLiveTokenRoute: typeof TicketsLiveTokenRoute
   ApiPublicHooksAdminAiPulseRoute: typeof ApiPublicHooksAdminAiPulseRoute
   ApiPublicHooksAdminResetPasswordRoute: typeof ApiPublicHooksAdminResetPasswordRoute
   ApiPublicHooksAutoEbsuNewsRoute: typeof ApiPublicHooksAutoEbsuNewsRoute
@@ -2160,6 +2173,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ToolsAiSlugRouteImport
       parentRoute: typeof ToolsRoute
     }
+    '/tickets_/live/$token': {
+      id: '/tickets_/live/$token'
+      path: '/tickets/live/$token'
+      fullPath: '/tickets/live/$token'
+      preLoaderRoute: typeof TicketsLiveTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/earn-credits/battle/scan': {
       id: '/earn-credits/battle/scan'
       path: '/scan'
@@ -2529,6 +2549,7 @@ const rootRouteChildren: RootRouteChildren = {
   BooksPreviewTokenRoute: BooksPreviewTokenRoute,
   BooksReadIdRoute: BooksReadIdRoute,
   CourseNameNameRoute: CourseNameNameRoute,
+  TicketsLiveTokenRoute: TicketsLiveTokenRoute,
   ApiPublicHooksAdminAiPulseRoute: ApiPublicHooksAdminAiPulseRoute,
   ApiPublicHooksAdminResetPasswordRoute: ApiPublicHooksAdminResetPasswordRoute,
   ApiPublicHooksAutoEbsuNewsRoute: ApiPublicHooksAutoEbsuNewsRoute,

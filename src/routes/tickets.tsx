@@ -124,7 +124,12 @@ function BrowseTickets() {
         buyerIndex,
       });
 
-      await downloadTicketPdf(stampedTicket, ticketFilename(ticket.title, buyerIndex));
+      await downloadTicketPdf(stampedTicket, ticketFilename(ticket.title, buyerIndex), null, {
+        title: ticket.title,
+        holder: profile?.display_name || user.email || "Holder",
+        buyerIndex,
+        qrToken: qrToken ?? "",
+      });
       toast.success("Ticket PDF downloaded");
       qc.invalidateQueries({ queryKey: ["tickets-browse"] });
       qc.invalidateQueries({ queryKey: ["my-tickets", user.id] });
@@ -320,7 +325,12 @@ function PurchasedTicket({ p }: { p: any }) {
         holder: profile?.display_name || user?.email || "Holder",
         buyerIndex,
       });
-      await downloadTicketPdf(stampedTicket, ticketFilename(p.ticket?.title ?? "ticket", buyerIndex));
+      await downloadTicketPdf(stampedTicket, ticketFilename(p.ticket?.title ?? "ticket", buyerIndex), null, {
+        title: p.ticket?.title ?? "Ticket",
+        holder: profile?.display_name || user?.email || "Holder",
+        buyerIndex,
+        qrToken: p.qr_token,
+      });
       toast.success("Ticket PDF downloaded");
     } catch (err: any) {
       // no popup to close

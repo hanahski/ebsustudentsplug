@@ -35,7 +35,12 @@ function TicketDetail() {
       buyerIndex,
     });
     setComposed(stampedTicket);
-    await downloadTicketPdf(stampedTicket, ticketFilename(ticket.title, buyerIndex), openedWindow);
+    await downloadTicketPdf(stampedTicket, ticketFilename(ticket.title, buyerIndex), openedWindow, {
+      title: ticket.title,
+      holder: profile?.display_name || user?.email || "Holder",
+      buyerIndex,
+      qrToken,
+    });
   };
 
   const downloadOwnedTicket = async () => {

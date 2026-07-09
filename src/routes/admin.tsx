@@ -14,6 +14,7 @@ import {
   Shield, Trash2, ShoppingBag, FileText, Users, LayoutDashboard,
   Inbox, Image as ImageIcon, BadgeCheck, Star, Sparkles, Plug, Ban, CheckCircle2,
   BookOpen, ShieldCheck, Ticket, Wand2, Newspaper, Coins, ScanLine, Library, GraduationCap, Tag, KeyRound, Flag,
+  Share2, Link as LinkIcon, Copy, Download, ArrowLeft, Users2,
 } from "lucide-react";
 import { ToolEditor } from "@/components/admin/ToolEditor";
 import { ToolPricesPanel } from "@/components/admin/ToolPricesPanel";
@@ -955,92 +956,324 @@ function AdminBanners() {
 }
 
 
+/**
+ * Ticket Sales panel.
+ *
+ * Top level: one card per ticket/event with sold + used counts and revenue.
+ * Realtime — new purchases/scans update instantly via postgres_changes.
+ *
+ * Drilling into a ticket shows a per-buyer roster:
+ *   - buyer number, name, price paid, used/unused, purchase time
+ *   - export the roster to a formatted PDF
+ *   - create/copy/delete shareable public links to a live read-only view
+ */
 function AdminTickets() {
   const qc = useQueryClient();
-  const { data, isLoading } = useQuery({
-    queryKey: ["admin-ticket-sales"],
-    refetchInterval: 30_000,
+  const [focusTicketId, setFocusTicketId] = useState<string | null>(null);
+
+  const overview = useQuery({
+    queryKey: ["admin-ticket-sales-overview"],
     queryFn: async () => {
-      const { data: purchases } = await supabase
-        .from("ticket_purchases")
-        .select("id, ticket_id, buyer_id, price_paid, qr_token, created_at")
-        .order("created_at", { ascending: false })
-        .limit(200);
-      const rows = purchases ?? [];
-      const ticketIds = [...new Set(rows.map((r: any) => r.ticket_id))];
-      const buyerIds = [...new Set(rows.map((r: any) => r.buyer_id))];
-      const [{ data: tickets }, { data: buyers }] = await Promise.all([
-        ticketIds.length
-          ? supabase.from("tickets").select("id,title,uploader_id,pay_mode,photo_url").in("id", ticketIds)
-          : Promise.resolve({ data: [] as any[] }),
-        buyerIds.length
-          ? supabase.from("profiles").select("id,display_name").in("id", buyerIds)
-          : Promise.resolve({ data: [] as any[] }),
-      ]);
-      const tMap = new Map((tickets ?? []).map((t: any) => [t.id, t]));
-      const bMap = new Map((buyers ?? []).map((b: any) => [b.id, b]));
-      return rows.map((r: any) => ({ ...r, ticket: tMap.get(r.ticket_id), buyer: bMap.get(r.buyer_id) }));
+      const { data, error } = await supabase.rpc("admin_ticket_sales_overview" as any);
+      if (error) throw error;
+      return (data ?? []) as any[];
     },
+    refetchInterval: 60_000,
   });
 
-  // Live updates — any new scan/purchase shows up immediately
   useEffect(() => {
     const ch = supabase
-      .channel("admin-ticket-purchases")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "ticket_purchases" },
-        () => {
-          qc.invalidateQueries({ queryKey: ["admin-ticket-sales"] });
-          toast.success("New ticket sale", { id: "new-ticket-sale" });
-        },
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "tickets" },
-        () => qc.invalidateQueries({ queryKey: ["admin-ticket-sales"] }),
-      )
+      .channel("admin-ticket-sales-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "ticket_purchases" }, () => {
+        qc.invalidateQueries({ queryKey: ["admin-ticket-sales-overview"] });
+        qc.invalidateQueries({ queryKey: ["admin-ticket-roster"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "ticket_scans" }, () => {
+        qc.invalidateQueries({ queryKey: ["admin-ticket-sales-overview"] });
+        qc.invalidateQueries({ queryKey: ["admin-ticket-roster"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "tickets" }, () => {
+        qc.invalidateQueries({ queryKey: ["admin-ticket-sales-overview"] });
+      })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [qc]);
 
-  const totalRevenue = (data ?? []).reduce((sum: number, r: any) => sum + Number(r.price_paid || 0), 0);
+  if (focusTicketId) {
+    return <AdminTicketRoster ticketId={focusTicketId} onBack={() => setFocusTicketId(null)} />;
+  }
 
+  const rows = overview.data ?? [];
+  const totalSold = rows.reduce((s: number, r: any) => s + Number(r.sold_count ?? 0), 0);
+  const totalUsed = rows.reduce((s: number, r: any) => s + Number(r.used_count ?? 0), 0);
+  const totalRevenue = rows.reduce((s: number, r: any) => s + Number(r.revenue ?? 0), 0);
 
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard label="Tickets sold" value={data?.length ?? 0} icon={Ticket} />
-        <StatCard label="Revenue" value={`₦${totalRevenue.toLocaleString()}`} icon={Sparkles} />
+    <div className="space-y-4">
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard label="Tickets sold" value={totalSold} icon={Ticket} />
+        <StatCard label="Checked in" value={totalUsed} icon={ScanLine} />
+        <StatCard label="Revenue" value={`₦${Number(totalRevenue).toLocaleString()}`} icon={Sparkles} />
       </div>
-      {isLoading && <p className="text-sm text-muted-foreground">Loading sales…</p>}
-      {!isLoading && !data?.length && (
+
+      {overview.isLoading && <p className="text-sm text-muted-foreground">Loading sales…</p>}
+      {!overview.isLoading && rows.length === 0 && (
         <div className="text-center py-12 text-muted-foreground bg-card border rounded-2xl">
           <Ticket className="w-10 h-10 mx-auto mb-2 opacity-40" />
-          No tickets have been sold yet.
+          No tickets yet.
         </div>
       )}
-      <div className="space-y-2">
-        {(data ?? []).map((r: any) => (
-          <div key={r.id} className="bg-card border rounded-2xl p-3 flex items-center gap-3">
-            {r.ticket?.photo_url && (
-              <img src={r.ticket.photo_url} alt="" className="w-14 h-14 object-cover rounded-xl" />
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="font-medium line-clamp-1">{r.ticket?.title ?? "(deleted ticket)"}</p>
-              <p className="text-xs text-muted-foreground line-clamp-1">
-                Buyer: {r.buyer?.display_name ?? r.buyer_id.slice(0, 8)} · {new Date(r.created_at).toLocaleString()}
-              </p>
-              <p className="text-[10px] text-muted-foreground/70 font-mono truncate">QR {r.qr_token}</p>
-            </div>
-            <div className="text-right">
-              <div className="text-sm font-bold">
-                {r.ticket?.pay_mode === "credits" ? `${r.price_paid} cr` : `₦${Number(r.price_paid).toLocaleString()}`}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {rows.map((t: any) => {
+          const sold = Number(t.sold_count ?? 0);
+          const used = Number(t.used_count ?? 0);
+          const pct = sold > 0 ? Math.round((used / sold) * 100) : 0;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setFocusTicketId(t.id)}
+              className="text-left group relative overflow-hidden rounded-2xl border bg-gradient-to-br from-card to-card/60 p-4 hover:border-primary/50 transition shadow-card"
+            >
+              <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-primary/10 blur-3xl group-hover:bg-primary/20 transition" />
+              <div className="relative flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-bold font-display text-lg leading-tight line-clamp-1">{t.title ?? "Untitled event"}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    By {t.uploader_name ?? "—"} · {new Date(t.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/15 text-primary uppercase tracking-wide">
+                  {t.pay_mode === "credits" ? "Credits" : "Cash"}
+                </span>
               </div>
-              <div className="text-[10px] text-success inline-flex items-center gap-0.5"><CheckCircle2 className="w-3 h-3" />Sold</div>
+              <div className="relative mt-3 grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-xl bg-muted/40 p-2">
+                  <div className="text-[10px] uppercase text-muted-foreground">Sold</div>
+                  <div className="text-lg font-bold">{sold}</div>
+                </div>
+                <div className="rounded-xl bg-emerald-500/10 p-2">
+                  <div className="text-[10px] uppercase text-emerald-600 dark:text-emerald-400">Used</div>
+                  <div className="text-lg font-bold text-emerald-700 dark:text-emerald-300">{used}</div>
+                </div>
+                <div className="rounded-xl bg-amber-500/10 p-2">
+                  <div className="text-[10px] uppercase text-amber-600 dark:text-amber-400">Revenue</div>
+                  <div className="text-sm font-bold text-amber-700 dark:text-amber-300 truncate">
+                    {t.pay_mode === "credits" ? `${Number(t.revenue).toLocaleString()} cr` : `₦${Number(t.revenue).toLocaleString()}`}
+                  </div>
+                </div>
+              </div>
+              <div className="relative mt-3 h-1.5 rounded-full bg-muted overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all" style={{ width: `${pct}%` }} />
+              </div>
+              <p className="relative text-[10px] text-muted-foreground mt-1">{pct}% checked in · tap to open</p>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Per-event roster with sharing + PDF export. Real-time via realtime channels
+ * on ticket_purchases and ticket_scans (subscribed by parent).
+ */
+function AdminTicketRoster({ ticketId, onBack }: { ticketId: string; onBack: () => void }) {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  const roster = useQuery({
+    queryKey: ["admin-ticket-roster", ticketId],
+    queryFn: async () => {
+      const [{ data: ticket }, { data: purchases }] = await Promise.all([
+        supabase.from("tickets").select("id,title,pay_mode,price,photo_url,uploader_id,created_at").eq("id", ticketId).maybeSingle(),
+        supabase.from("ticket_purchases")
+          .select("id, buyer_id, buyer_index, price_paid, used_at, created_at, qr_token, buyer:profiles!ticket_purchases_buyer_id_fkey(display_name, avatar_key)")
+          .eq("ticket_id", ticketId)
+          .order("buyer_index", { ascending: true }),
+      ]);
+      return { ticket, purchases: (purchases ?? []) as any[] };
+    },
+  });
+
+  const shares = useQuery({
+    queryKey: ["admin-ticket-shares", ticketId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("ticket_share_links" as any)
+        .select("*")
+        .eq("ticket_id", ticketId)
+        .is("revoked_at", null)
+        .order("created_at", { ascending: false });
+      return (data ?? []) as any[];
+    },
+  });
+
+  const ticket = roster.data?.ticket as any;
+  const rows = roster.data?.purchases ?? [];
+  const sold = rows.length;
+  const used = rows.filter((r: any) => r.used_at).length;
+  const revenue = rows.reduce((s: number, r: any) => s + Number(r.price_paid ?? 0), 0);
+
+  const createShare = async () => {
+    if (!user) return;
+    const token = crypto.randomUUID().replace(/-/g, "");
+    const { error } = await supabase.from("ticket_share_links" as any).insert({
+      ticket_id: ticketId,
+      token,
+      created_by: user.id,
+      label: `Live view for ${ticket?.title ?? "ticket"}`,
+    });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Share link created");
+    qc.invalidateQueries({ queryKey: ["admin-ticket-shares", ticketId] });
+  };
+
+  const revokeShare = async (id: string) => {
+    const { error } = await supabase.from("ticket_share_links" as any).delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Share link revoked");
+    qc.invalidateQueries({ queryKey: ["admin-ticket-shares", ticketId] });
+  };
+
+  const copy = (token: string) => {
+    const url = `${window.location.origin}/tickets/live/${token}`;
+    navigator.clipboard?.writeText(url);
+    toast.success("Copied share URL");
+  };
+
+  const exportPdf = async () => {
+    const { jsPDF } = await import("jspdf");
+    const autoTable = (await import("jspdf-autotable")).default;
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+
+    // Header band
+    doc.setFillColor(109, 40, 217);
+    doc.rect(0, 0, 595, 90, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.text(ticket?.title ?? "Ticket sales", 32, 42);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      `Sold: ${sold}   ·   Used: ${used}   ·   ${ticket?.pay_mode === "credits" ? `Revenue: ${revenue.toLocaleString()} cr` : `Revenue: NGN ${revenue.toLocaleString()}`}`,
+      32,
+      64,
+    );
+    doc.setFontSize(9);
+    doc.text(`Generated ${new Date().toLocaleString()} · StudentsPlug Admin`, 32, 78);
+
+    autoTable(doc, {
+      startY: 110,
+      head: [["#", "Buyer", "Paid", "Purchased", "Status"]],
+      body: rows.map((r: any) => [
+        `#${r.buyer_index ?? "-"}`,
+        r.buyer?.display_name ?? r.buyer_id?.slice(0, 8) ?? "—",
+        ticket?.pay_mode === "credits" ? `${r.price_paid} cr` : `NGN ${Number(r.price_paid ?? 0).toLocaleString()}`,
+        new Date(r.created_at).toLocaleString(),
+        r.used_at ? `Used ${new Date(r.used_at).toLocaleString()}` : "Not used",
+      ]),
+      headStyles: { fillColor: [219, 39, 119], textColor: 255, fontStyle: "bold" },
+      alternateRowStyles: { fillColor: [245, 244, 253] },
+      styles: { fontSize: 9, cellPadding: 6 },
+      columnStyles: { 0: { cellWidth: 40 }, 4: { cellWidth: 130 } },
+      margin: { left: 24, right: 24 },
+    });
+
+    const slug = (ticket?.title || "ticket-sales").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    doc.save(`${slug}-sales.pdf`);
+  };
+
+  return (
+    <div className="space-y-4">
+      <button onClick={onBack} className="text-xs text-primary inline-flex items-center gap-1 hover:underline">
+        <ArrowLeft className="w-3 h-3" /> Back to all tickets
+      </button>
+
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/20 via-card to-card p-4 shadow-card">
+        <div className="absolute -top-20 -right-20 w-56 h-56 rounded-full bg-primary/25 blur-3xl" />
+        <div className="relative flex items-start gap-3">
+          {ticket?.photo_url && (
+            <img src={ticket.photo_url} alt="" className="w-16 h-16 rounded-xl object-cover border shrink-0" />
+          )}
+          <div className="min-w-0 flex-1">
+            <h2 className="text-xl font-bold font-display line-clamp-1">{ticket?.title ?? "Ticket"}</h2>
+            <p className="text-xs text-muted-foreground">
+              {ticket?.pay_mode === "credits" ? `${Number(ticket?.price).toLocaleString()} cr` : `₦${Number(ticket?.price).toLocaleString()}`} · Since {ticket?.created_at ? new Date(ticket.created_at).toLocaleDateString() : "—"}
+            </p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <span className="admin-chip">Sold: {sold}</span>
+              <span className="admin-chip">Used: {used}</span>
+              <span className="admin-chip">Revenue: {ticket?.pay_mode === "credits" ? `${revenue.toLocaleString()} cr` : `₦${revenue.toLocaleString()}`}</span>
             </div>
           </div>
-        ))}
+        </div>
+        <div className="relative mt-4 flex flex-wrap gap-2">
+          <Button size="sm" onClick={exportPdf} disabled={!rows.length}>
+            <Download className="w-3.5 h-3.5 mr-1" /> Export PDF
+          </Button>
+          <Button size="sm" variant="outline" onClick={createShare}>
+            <Share2 className="w-3.5 h-3.5 mr-1" /> Create share link
+          </Button>
+        </div>
+      </div>
+
+      {(shares.data?.length ?? 0) > 0 && (
+        <div className="rounded-2xl border bg-card p-3 space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Live share links</p>
+          {(shares.data ?? []).map((s: any) => {
+            const url = `${window.location.origin}/tickets/live/${s.token}`;
+            return (
+              <div key={s.id} className="flex items-center gap-2 bg-muted/30 rounded-xl p-2">
+                <LinkIcon className="w-4 h-4 text-primary shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-mono truncate">{url}</p>
+                  <p className="text-[10px] text-muted-foreground">Created {new Date(s.created_at).toLocaleString()}</p>
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => copy(s.token)}><Copy className="w-3.5 h-3.5" /></Button>
+                <Button size="sm" variant="ghost" className="text-destructive" onClick={() => revokeShare(s.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="rounded-2xl border bg-card overflow-hidden">
+        <div className="px-3 py-2 border-b bg-muted/30 text-xs font-semibold text-muted-foreground flex items-center gap-2">
+          <Users2 className="w-3.5 h-3.5" /> Roster ({sold} buyer{sold === 1 ? "" : "s"})
+        </div>
+        {roster.isLoading ? (
+          <p className="text-sm text-muted-foreground p-6 text-center">Loading roster…</p>
+        ) : rows.length === 0 ? (
+          <p className="text-sm text-muted-foreground p-6 text-center">No buyers yet.</p>
+        ) : (
+          <ul className="divide-y">
+            {rows.map((r: any) => (
+              <li key={r.id} className="p-3 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-primary/60 text-primary-foreground grid place-items-center text-xs font-bold shrink-0">
+                  #{r.buyer_index ?? "-"}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium line-clamp-1">{r.buyer?.display_name ?? r.buyer_id?.slice(0, 8) ?? "—"}</p>
+                  <p className="text-[10px] text-muted-foreground line-clamp-1">
+                    {new Date(r.created_at).toLocaleString()} · {ticket?.pay_mode === "credits" ? `${r.price_paid} cr` : `₦${Number(r.price_paid ?? 0).toLocaleString()}`}
+                  </p>
+                </div>
+                {r.used_at ? (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 whitespace-nowrap">
+                    Used {new Date(r.used_at).toLocaleTimeString()}
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 whitespace-nowrap">
+                    Not used
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
