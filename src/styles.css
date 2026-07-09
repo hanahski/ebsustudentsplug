@@ -761,3 +761,317 @@ nav[aria-label="Mobile navigation"] {
 body { top: 0 !important; }
 .skiptranslate iframe { visibility: hidden !important; }
 font.goog-text-highlight { background: transparent !important; box-shadow: none !important; }
+
+/* ============================================================
+   ADMIN PANEL — Modern Design System (30 UI + 20 Animations)
+   ============================================================ */
+
+/* Palette */
+@utility admin-gradient-primary { background: linear-gradient(135deg, oklch(0.52 0.18 268), oklch(0.72 0.18 320)); }
+@utility admin-gradient-success { background: linear-gradient(135deg, oklch(0.68 0.16 155), oklch(0.78 0.15 200)); }
+@utility admin-gradient-warn    { background: linear-gradient(135deg, oklch(0.78 0.14 78),  oklch(0.72 0.19 40));  }
+@utility admin-gradient-danger  { background: linear-gradient(135deg, oklch(0.65 0.22 27),  oklch(0.62 0.24 350)); }
+@utility admin-gradient-cool    { background: linear-gradient(135deg, oklch(0.55 0.18 240), oklch(0.65 0.15 200)); }
+@utility admin-gradient-plum    { background: linear-gradient(135deg, oklch(0.45 0.18 310), oklch(0.55 0.22 340)); }
+@utility admin-gradient-mesh {
+  background:
+    radial-gradient(60% 80% at 10% 10%,  oklch(0.72 0.18 320 / 0.35), transparent 60%),
+    radial-gradient(70% 90% at 90% 20%,  oklch(0.68 0.19 200 / 0.30), transparent 60%),
+    radial-gradient(60% 80% at 50% 100%, oklch(0.78 0.14 78  / 0.28), transparent 60%),
+    linear-gradient(135deg, oklch(0.52 0.18 268), oklch(0.42 0.15 290));
+}
+
+/* 1. Glass card */
+@utility admin-glass {
+  background: color-mix(in oklab, var(--card) 78%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid color-mix(in oklab, var(--foreground) 8%, transparent);
+  border-radius: 1.25rem;
+  box-shadow: 0 10px 30px -18px color-mix(in oklab, var(--primary) 40%, transparent);
+}
+/* 2. Neon border */
+@utility admin-neon {
+  position: relative;
+  border-radius: 1.25rem;
+  background: var(--card);
+  isolation: isolate;
+}
+@utility admin-neon-glow {
+  position: relative;
+  border-radius: 1.25rem;
+  padding: 1px;
+  background: linear-gradient(120deg, oklch(0.72 0.18 320), oklch(0.65 0.19 200), oklch(0.78 0.14 78), oklch(0.72 0.18 320));
+  background-size: 300% 300%;
+  animation: admin-hue-slide 6s linear infinite;
+}
+@utility admin-neon-glow-inner {
+  border-radius: calc(1.25rem - 1px);
+  background: var(--card);
+}
+
+/* 3. Stat card */
+@utility admin-stat {
+  position: relative; overflow: hidden;
+  border-radius: 1.25rem;
+  padding: 1rem;
+  background: var(--card);
+  border: 1px solid color-mix(in oklab, var(--foreground) 6%, transparent);
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+@utility admin-stat-hover { &:hover { transform: translateY(-2px); box-shadow: 0 20px 40px -20px color-mix(in oklab, var(--primary) 45%, transparent); } }
+@utility admin-stat-shine {
+  &::before {
+    content: ""; position: absolute; inset: -40% -20% auto auto;
+    width: 220px; height: 220px; border-radius: 999px;
+    background: radial-gradient(circle, color-mix(in oklab, var(--accent) 40%, transparent), transparent 70%);
+    filter: blur(20px); opacity: .55; pointer-events: none;
+  }
+}
+
+/* 4. Tab pill */
+@utility admin-tab {
+  display: inline-flex; align-items: center; gap: .375rem;
+  padding: .5rem .85rem; border-radius: 999px;
+  font-size: .8125rem; font-weight: 600;
+  background: color-mix(in oklab, var(--muted) 90%, transparent);
+  color: var(--muted-foreground);
+  border: 1px solid transparent;
+  transition: background .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+@utility admin-tab-hover { &:hover { color: var(--foreground); background: color-mix(in oklab, var(--muted) 70%, transparent); transform: translateY(-1px); } }
+@utility admin-tab-active {
+  color: white; background-image: linear-gradient(135deg, oklch(0.52 0.18 268), oklch(0.72 0.18 320));
+  border-color: color-mix(in oklab, oklch(0.72 0.18 320) 40%, transparent);
+  box-shadow: 0 8px 20px -8px color-mix(in oklab, oklch(0.72 0.18 320) 60%, transparent);
+}
+
+/* 5. Section header */
+@utility admin-section-title {
+  font-family: var(--font-display);
+  font-size: 1.35rem; font-weight: 700; letter-spacing: -0.01em;
+  background: linear-gradient(90deg, var(--foreground), color-mix(in oklab, var(--primary) 80%, var(--foreground)));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* 6. Divider gradient */
+@utility admin-divider {
+  height: 1px; border: 0;
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--foreground) 25%, transparent), transparent);
+}
+
+/* 7. Badge chip */
+@utility admin-chip {
+  display: inline-flex; align-items: center; gap: .25rem;
+  padding: .15rem .55rem; border-radius: 999px;
+  font-size: .7rem; font-weight: 600;
+  border: 1px solid color-mix(in oklab, var(--foreground) 10%, transparent);
+  background: color-mix(in oklab, var(--muted) 80%, transparent);
+}
+@utility admin-chip-primary { color: white; background-image: linear-gradient(135deg, oklch(0.52 0.18 268), oklch(0.65 0.18 290)); border-color: transparent; }
+@utility admin-chip-success { color: white; background-image: linear-gradient(135deg, oklch(0.55 0.15 155), oklch(0.65 0.15 180)); border-color: transparent; }
+@utility admin-chip-warn    { color: white; background-image: linear-gradient(135deg, oklch(0.72 0.16 78),  oklch(0.68 0.19 40));  border-color: transparent; }
+@utility admin-chip-danger  { color: white; background-image: linear-gradient(135deg, oklch(0.60 0.22 27),  oklch(0.55 0.24 350)); border-color: transparent; }
+
+/* 8. KPI ring */
+@utility admin-ring {
+  --p: 60; --sz: 42px;
+  width: var(--sz); height: var(--sz); border-radius: 50%;
+  background: conic-gradient(oklch(0.72 0.18 320) calc(var(--p) * 1%), color-mix(in oklab, var(--muted) 80%, transparent) 0);
+  display: grid; place-items: center; position: relative;
+}
+@utility admin-ring-inner {
+  width: calc(var(--sz) - 10px); height: calc(var(--sz) - 10px); border-radius: 50%;
+  background: var(--card); display: grid; place-items: center;
+  font-size: .65rem; font-weight: 700; color: var(--foreground);
+}
+
+/* 9. Row card */
+@utility admin-row {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .75rem .9rem; border-radius: 1rem;
+  background: var(--card); border: 1px solid color-mix(in oklab, var(--foreground) 6%, transparent);
+  transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+@utility admin-row-hover { &:hover { transform: translateX(2px); box-shadow: 0 6px 18px -12px color-mix(in oklab, var(--primary) 50%, transparent); background: color-mix(in oklab, var(--card) 92%, var(--primary) 8%); } }
+
+/* 10. Toolbar */
+@utility admin-toolbar {
+  display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+  padding: .5rem .75rem; border-radius: 1rem;
+  background: color-mix(in oklab, var(--muted) 60%, transparent);
+  border: 1px solid color-mix(in oklab, var(--foreground) 6%, transparent);
+}
+
+/* 11. Icon tile */
+@utility admin-icon-tile {
+  width: 40px; height: 40px; border-radius: .9rem;
+  display: grid; place-items: center; color: white; flex-shrink: 0;
+  box-shadow: inset 0 -8px 20px -8px rgba(0,0,0,.25), 0 8px 22px -12px color-mix(in oklab, var(--primary) 55%, transparent);
+}
+
+/* 12. Status dot */
+@utility admin-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+@utility admin-dot-live { background: oklch(0.65 0.19 145); box-shadow: 0 0 0 0 oklch(0.65 0.19 145 / .6); animation: admin-ping 1.6s ease-out infinite; }
+@utility admin-dot-warn { background: oklch(0.75 0.17 75); }
+@utility admin-dot-off  { background: oklch(0.65 0.02 260); }
+
+/* 13. Search input wrap */
+@utility admin-search {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .55rem .85rem; border-radius: 999px;
+  background: color-mix(in oklab, var(--muted) 60%, transparent);
+  border: 1px solid color-mix(in oklab, var(--foreground) 8%, transparent);
+  transition: border-color .2s ease, box-shadow .2s ease;
+  &:focus-within { border-color: color-mix(in oklab, var(--primary) 60%, transparent); box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 15%, transparent); }
+}
+
+/* 14. Empty state */
+@utility admin-empty {
+  text-align: center; padding: 2.5rem 1rem; border-radius: 1.25rem;
+  background: color-mix(in oklab, var(--muted) 40%, transparent);
+  border: 1px dashed color-mix(in oklab, var(--foreground) 15%, transparent);
+  color: var(--muted-foreground);
+}
+
+/* 15. Sidebar nav pill for desktop */
+@utility admin-nav-item {
+  display: flex; align-items: center; gap: .6rem;
+  padding: .55rem .75rem; border-radius: .9rem;
+  font-size: .875rem; font-weight: 500; color: var(--muted-foreground);
+  transition: background .18s ease, color .18s ease, transform .18s ease;
+  &:hover { background: color-mix(in oklab, var(--muted) 70%, transparent); color: var(--foreground); transform: translateX(2px); }
+}
+@utility admin-nav-active {
+  color: var(--primary-foreground); background-image: linear-gradient(135deg, oklch(0.52 0.18 268), oklch(0.65 0.18 300));
+  box-shadow: 0 8px 20px -10px color-mix(in oklab, oklch(0.52 0.18 268) 60%, transparent);
+}
+
+/* 16. Skeleton shimmer */
+@utility admin-skel {
+  position: relative; overflow: hidden;
+  background: color-mix(in oklab, var(--muted) 80%, transparent);
+  border-radius: .75rem;
+  &::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--foreground) 8%, transparent), transparent);
+    transform: translateX(-100%);
+    animation: admin-shimmer 1.4s linear infinite;
+  }
+}
+
+/* 17. Focus ring */
+@utility admin-focus-ring { &:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 50%, transparent); border-radius: .75rem; } }
+
+/* 18. Ambient card glow on hover */
+@utility admin-glow-hover {
+  position: relative;
+  &::before { content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; background: linear-gradient(120deg, oklch(0.72 0.18 320), oklch(0.65 0.19 200), oklch(0.78 0.14 78)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0; transition: opacity .3s ease; }
+  &:hover::before { opacity: 1; }
+}
+
+/* 19. Grid dot pattern */
+@utility admin-grid-bg {
+  background-image: radial-gradient(color-mix(in oklab, var(--foreground) 10%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* 20. Marquee bar */
+@utility admin-marquee {
+  overflow: hidden; white-space: nowrap;
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+@utility admin-marquee-track { display: inline-flex; gap: 2rem; animation: admin-marquee 18s linear infinite; }
+
+/* 21. Segmented control */
+@utility admin-seg {
+  display: inline-flex; padding: 3px; border-radius: 999px;
+  background: color-mix(in oklab, var(--muted) 80%, transparent);
+  border: 1px solid color-mix(in oklab, var(--foreground) 6%, transparent);
+}
+@utility admin-seg-btn { padding: .3rem .8rem; border-radius: 999px; font-size: .75rem; font-weight: 600; color: var(--muted-foreground); transition: all .18s ease; }
+@utility admin-seg-btn-active { color: var(--primary-foreground); background-image: linear-gradient(135deg, oklch(0.52 0.18 268), oklch(0.65 0.18 300)); box-shadow: 0 4px 10px -4px color-mix(in oklab, var(--primary) 50%, transparent); }
+
+/* 22. Callout */
+@utility admin-callout { position: relative; padding: 1rem 1.15rem 1rem 3rem; border-radius: 1rem; background: color-mix(in oklab, var(--primary) 8%, var(--card)); border: 1px solid color-mix(in oklab, var(--primary) 25%, transparent); }
+@utility admin-callout-icon { position: absolute; left: .8rem; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border-radius: 50%; background-image: linear-gradient(135deg, oklch(0.52 0.18 268), oklch(0.65 0.18 300)); color: white; display: grid; place-items: center; }
+
+/* 23. Data pill */
+@utility admin-pill-metric { display: inline-flex; align-items: baseline; gap: .3rem; padding: .3rem .7rem; border-radius: .8rem; background: color-mix(in oklab, var(--muted) 70%, transparent); font-variant-numeric: tabular-nums; font-weight: 700; }
+
+/* 24. Avatar stack tile */
+@utility admin-avatar-ring { width: 32px; height: 32px; border-radius: 50%; background-image: linear-gradient(135deg, oklch(0.65 0.18 320), oklch(0.55 0.18 250)); color: white; display: grid; place-items: center; font-size: .7rem; font-weight: 700; border: 2px solid var(--card); }
+
+/* 25. Progress bar */
+@utility admin-progress { position: relative; height: 8px; border-radius: 999px; background: color-mix(in oklab, var(--muted) 80%, transparent); overflow: hidden; }
+@utility admin-progress-fill { position: absolute; inset: 0 auto 0 0; background-image: linear-gradient(90deg, oklch(0.65 0.19 145), oklch(0.72 0.18 200), oklch(0.72 0.18 320)); border-radius: 999px; animation: admin-progress-slide 2s ease-in-out infinite; }
+
+/* 26. Notice banner */
+@utility admin-notice { padding: .75rem 1rem; border-radius: 1rem; background: linear-gradient(120deg, oklch(0.72 0.18 320 / 0.15), oklch(0.65 0.19 200 / 0.15)); border: 1px solid color-mix(in oklab, oklch(0.72 0.18 320) 30%, transparent); color: var(--foreground); }
+
+/* 27. Floating action button */
+@utility admin-fab { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; color: white; background-image: linear-gradient(135deg, oklch(0.52 0.18 268), oklch(0.72 0.18 320)); box-shadow: 0 10px 25px -8px color-mix(in oklab, oklch(0.72 0.18 320) 55%, transparent); transition: transform .2s ease; &:hover { transform: scale(1.08) rotate(6deg); } }
+
+/* 28. Tooltip label */
+@utility admin-tooltip { padding: .25rem .55rem; border-radius: .5rem; background: oklch(0.20 0.03 260); color: oklch(0.98 0 0); font-size: .7rem; font-weight: 500; box-shadow: 0 4px 12px -4px rgba(0,0,0,.35); }
+
+/* 29. Timeline dot line */
+@utility admin-timeline { position: relative; padding-left: 1.25rem; }
+@utility admin-timeline-item { position: relative; padding-bottom: .9rem; &::before { content: ""; position: absolute; left: -1.1rem; top: 6px; width: 8px; height: 8px; border-radius: 50%; background-image: linear-gradient(135deg, oklch(0.72 0.18 320), oklch(0.52 0.18 268)); box-shadow: 0 0 0 3px color-mix(in oklab, oklch(0.72 0.18 320) 20%, transparent); } &::after { content: ""; position: absolute; left: -0.85rem; top: 16px; bottom: 0; width: 1px; background: color-mix(in oklab, var(--foreground) 12%, transparent); } &:last-child::after { display: none; } }
+
+/* 30. Sticky action bar */
+@utility admin-sticky-bar { position: sticky; bottom: 12px; z-index: 20; padding: .6rem .8rem; border-radius: 999px; background: color-mix(in oklab, var(--card) 85%, transparent); backdrop-filter: blur(12px) saturate(140%); border: 1px solid color-mix(in oklab, var(--foreground) 10%, transparent); box-shadow: 0 20px 40px -20px color-mix(in oklab, var(--primary) 40%, transparent); }
+
+/* ============================================================
+   ANIMATIONS (20)
+   ============================================================ */
+@keyframes admin-fade-up      { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes admin-fade-in      { from { opacity: 0; } to { opacity: 1; } }
+@keyframes admin-scale-in     { from { opacity: 0; transform: scale(.95); } to { opacity: 1; transform: scale(1); } }
+@keyframes admin-pop          { 0% { transform: scale(.6); opacity: 0; } 60% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes admin-slide-in     { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes admin-shimmer      { 100% { transform: translateX(100%); } }
+@keyframes admin-ping         { 0% { box-shadow: 0 0 0 0 oklch(0.65 0.19 145 / .55); } 70% { box-shadow: 0 0 0 10px oklch(0.65 0.19 145 / 0); } 100% { box-shadow: 0 0 0 0 oklch(0.65 0.19 145 / 0); } }
+@keyframes admin-hue-slide    { 0% { background-position: 0% 50%; } 100% { background-position: 300% 50%; } }
+@keyframes admin-marquee      { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes admin-progress-slide { 0% { transform: translateX(-100%); } 50% { transform: translateX(0); } 100% { transform: translateX(100%); } }
+@keyframes admin-float        { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes admin-glow-pulse   { 0%,100% { box-shadow: 0 0 0 0 color-mix(in oklab, oklch(0.72 0.18 320) 45%, transparent); } 50% { box-shadow: 0 0 30px 4px color-mix(in oklab, oklch(0.72 0.18 320) 45%, transparent); } }
+@keyframes admin-tilt-in      { from { opacity: 0; transform: rotate(-4deg) translateY(8px); } to { opacity: 1; transform: rotate(0) translateY(0); } }
+@keyframes admin-count-up     { from { transform: translateY(6px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes admin-bounce-soft  { 0%,100% { transform: translateY(0); } 30% { transform: translateY(-4px); } 60% { transform: translateY(-1px); } }
+@keyframes admin-rotate-slow  { to { transform: rotate(360deg); } }
+@keyframes admin-blur-in      { from { opacity: 0; filter: blur(8px); } to { opacity: 1; filter: blur(0); } }
+@keyframes admin-swipe-in     { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes admin-heartbeat    { 0%,20%,50%,80%,100% { transform: scale(1); } 40% { transform: scale(1.08); } 60% { transform: scale(1.04); } }
+@keyframes admin-gradient-x   { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+@utility a-fade-up      { animation: admin-fade-up .45s cubic-bezier(.22,.61,.36,1) both; }
+@utility a-fade-in      { animation: admin-fade-in .4s ease-out both; }
+@utility a-scale-in     { animation: admin-scale-in .3s cubic-bezier(.22,.61,.36,1) both; }
+@utility a-pop          { animation: admin-pop .5s cubic-bezier(.34,1.56,.64,1) both; }
+@utility a-slide-in     { animation: admin-slide-in .4s ease-out both; }
+@utility a-tilt-in      { animation: admin-tilt-in .5s cubic-bezier(.22,.61,.36,1) both; }
+@utility a-blur-in      { animation: admin-blur-in .5s ease-out both; }
+@utility a-swipe-in     { animation: admin-swipe-in .5s cubic-bezier(.65,0,.35,1) both; }
+@utility a-count-up     { animation: admin-count-up .4s ease-out both; }
+@utility a-float        { animation: admin-float 3.5s ease-in-out infinite; }
+@utility a-glow-pulse   { animation: admin-glow-pulse 2.5s ease-in-out infinite; }
+@utility a-heartbeat    { animation: admin-heartbeat 1.6s ease-in-out infinite; }
+@utility a-rotate-slow  { animation: admin-rotate-slow 12s linear infinite; }
+@utility a-bounce-soft  { animation: admin-bounce-soft 1.6s ease-in-out infinite; }
+@utility a-hue-slide    { animation: admin-hue-slide 6s linear infinite; background-size: 300% 300%; }
+@utility a-gradient-x   { animation: admin-gradient-x 5s ease infinite; background-size: 200% 200%; }
+@utility a-stagger-1    { animation-delay: .05s; }
+@utility a-stagger-2    { animation-delay: .10s; }
+@utility a-stagger-3    { animation-delay: .15s; }
+@utility a-stagger-4    { animation-delay: .20s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .a-fade-up, .a-fade-in, .a-scale-in, .a-pop, .a-slide-in, .a-tilt-in, .a-blur-in, .a-swipe-in, .a-count-up,
+  .a-float, .a-glow-pulse, .a-heartbeat, .a-rotate-slow, .a-bounce-soft, .a-hue-slide, .a-gradient-x { animation: none !important; }
+}
+
+@utility scrollbar-hide {
+  -ms-overflow-style: none; scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
