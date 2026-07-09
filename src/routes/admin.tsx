@@ -75,58 +75,98 @@ function AdminPanel() {
     { k: "integrations", label: "Integrations", icon: KeyRound },
   ];
 
+  const activeLabel = tabs.find((t) => t.k === tab)?.label ?? "Dashboard";
+
   return (
     <AppShell>
       <div className="space-y-5">
-        <div className="bg-card border rounded-3xl p-5 shadow-card">
-          <div className="flex items-start justify-between gap-3 flex-wrap">
-            <div>
-              <h1 className="text-2xl font-bold font-display flex items-center gap-2"><Shield className="w-6 h-6 text-primary" />Admin Panel</h1>
-              <p className="text-sm text-muted-foreground">Full control of users, content, badges, and banners.</p>
+        {/* Hero header with animated mesh gradient */}
+        <div className="relative overflow-hidden rounded-3xl p-5 sm:p-6 admin-gradient-mesh a-fade-in text-white shadow-card">
+          <div className="absolute inset-0 admin-grid-bg opacity-20 pointer-events-none" />
+          <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full a-float admin-gradient-warn opacity-30 blur-2xl pointer-events-none" />
+          <div className="absolute -bottom-16 -left-10 w-56 h-56 rounded-full a-float admin-gradient-cool opacity-25 blur-2xl pointer-events-none" style={{ animationDelay: "1.5s" }} />
+          <div className="relative flex items-start justify-between gap-3 flex-wrap">
+            <div className="flex items-start gap-3">
+              <div className="admin-icon-tile w-12 h-12 a-glow-pulse" style={{ background: "linear-gradient(135deg, oklch(0.78 0.14 78), oklch(0.72 0.19 40))" }}>
+                <Shield className="w-6 h-6" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold font-display leading-tight a-fade-up">Admin Panel</h1>
+                <p className="text-sm text-white/85 a-fade-up a-stagger-1">Full control of users, content, badges &amp; banners.</p>
+                <div className="mt-2 flex items-center gap-2 flex-wrap a-fade-up a-stagger-2">
+                  <span className="admin-chip"><span className="admin-dot admin-dot-live" /> Live</span>
+                  <span className="admin-chip">{activeLabel}</span>
+                </div>
+              </div>
             </div>
-            <AdminViewSwitch />
+            <div className="a-fade-up a-stagger-3"><AdminViewSwitch /></div>
           </div>
-          <div className="mt-4 flex gap-2 flex-wrap">
-            {tabs.map(({ k, label, icon: Icon }) => (
-              <button key={k} onClick={() => setTab(k)}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium inline-flex items-center gap-1.5 transition ${tab === k ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"}`}>
-                <Icon className="w-3.5 h-3.5" />{label}
+        </div>
+
+        {/* Scrolling tab rail */}
+        <div className="admin-glass p-3 a-fade-up a-stagger-1">
+          <div className="flex gap-2 flex-nowrap overflow-x-auto scrollbar-hide -mx-1 px-1">
+            {tabs.map(({ k, label, icon: Icon }, i) => (
+              <button
+                key={k}
+                onClick={() => setTab(k)}
+                className={`admin-tab admin-tab-hover admin-focus-ring shrink-0 a-fade-up ${tab === k ? "admin-tab-active a-pop" : ""}`}
+                style={{ animationDelay: `${Math.min(i * 20, 200)}ms` }}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {label}
               </button>
             ))}
           </div>
         </div>
 
-        {tab === "dashboard" && <AdminDashboard />}
-        {tab === "ai" && <AdminAiPanel />}
-        {tab === "aibank" && <AdminAiBankPanel />}
-        {tab === "toolai" && <ToolAiPanel />}
-        {tab === "ebsunews" && <EbsuNewsPanel />}
-        {tab === "users" && <AdminUsers />}
-        {tab === "applications" && <AdminApplications />}
-        {tab === "reports" && <AdminReports />}
-        {tab === "verifications" && <AdminVerifications />}
-        
-        {tab === "posts" && <AdminPosts />}
-        {tab === "listings" && <AdminListings />}
-        {tab === "tickets" && <AdminTickets />}
-        {tab === "scans" && <AdminScanLog />}
-        {tab === "catalogue" && <AdminCatalogue />}
-        {tab === "marketcats" && <AdminMarketCategories />}
-        {tab === "banners" && <AdminBanners />}
-        {tab === "tools" && <ToolEditor />}
-        {tab === "prices" && <ToolPricesPanel />}
-        {tab === "tasks" && <TaskComposerPanel />}
-        {tab === "integrations" && <AdminIntegrations />}
+        <div className="a-fade-up" key={tab}>
+          {tab === "dashboard" && <AdminDashboard />}
+          {tab === "ai" && <AdminAiPanel />}
+          {tab === "aibank" && <AdminAiBankPanel />}
+          {tab === "toolai" && <ToolAiPanel />}
+          {tab === "ebsunews" && <EbsuNewsPanel />}
+          {tab === "users" && <AdminUsers />}
+          {tab === "applications" && <AdminApplications />}
+          {tab === "reports" && <AdminReports />}
+          {tab === "verifications" && <AdminVerifications />}
+          {tab === "posts" && <AdminPosts />}
+          {tab === "listings" && <AdminListings />}
+          {tab === "tickets" && <AdminTickets />}
+          {tab === "scans" && <AdminScanLog />}
+          {tab === "catalogue" && <AdminCatalogue />}
+          {tab === "marketcats" && <AdminMarketCategories />}
+          {tab === "banners" && <AdminBanners />}
+          {tab === "tools" && <ToolEditor />}
+          {tab === "prices" && <ToolPricesPanel />}
+          {tab === "tasks" && <TaskComposerPanel />}
+          {tab === "integrations" && <AdminIntegrations />}
+        </div>
       </div>
     </AppShell>
   );
 }
 
-function StatCard({ label, value, icon: Icon }: { label: string; value: any; icon: any }) {
+function StatCard({ label, value, icon: Icon, tint = "primary", i = 0 }: { label: string; value: any; icon: any; tint?: "primary" | "success" | "warn" | "danger" | "cool" | "plum"; i?: number }) {
+  const tintCls: Record<string, string> = {
+    primary: "admin-gradient-primary",
+    success: "admin-gradient-success",
+    warn: "admin-gradient-warn",
+    danger: "admin-gradient-danger",
+    cool: "admin-gradient-cool",
+    plum: "admin-gradient-plum",
+  };
   return (
-    <div className="bg-card border rounded-2xl p-4 shadow-card">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground"><Icon className="w-3.5 h-3.5" />{label}</div>
-      <div className="text-2xl font-bold font-display mt-1">{value ?? "—"}</div>
+    <div className="admin-stat admin-stat-hover admin-stat-shine admin-glow-hover a-tilt-in" style={{ animationDelay: `${i * 40}ms` }}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</div>
+          <div className="text-2xl font-bold font-display mt-1 a-count-up">{value ?? "—"}</div>
+        </div>
+        <div className={`admin-icon-tile w-10 h-10 ${tintCls[tint]}`}>
+          <Icon className="w-5 h-5" />
+        </div>
+      </div>
     </div>
   );
 }
