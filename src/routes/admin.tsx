@@ -851,6 +851,19 @@ function AdminBanners() {
         </div>
 
         <div>
+          <label className="block text-sm font-medium mb-1">Show for (seconds before swap)</label>
+          <input
+            type="number"
+            min={2}
+            max={30}
+            value={rotationSeconds}
+            onChange={(e) => setRotationSeconds(Number(e.target.value) || 6)}
+            className="w-full h-10 px-3 rounded-md border bg-background text-sm"
+          />
+          <p className="text-[11px] text-muted-foreground mt-1">Between 2 and 30 seconds. Default 6. The carousel waits for the image to load before it counts.</p>
+        </div>
+
+        <div>
           <label className="block text-sm font-medium mb-1">Banner image</label>
           <input
             type="file"
