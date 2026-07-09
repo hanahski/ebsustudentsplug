@@ -9,41 +9,157 @@
   <script src="/mkjs/src/mk.js"></script>
   <script src="/mkjs/audio/sfx.js"></script>
   <style>
-    html, body { margin:0; padding:0; background:#000; overflow:hidden; height:100%; }
+    html, body { margin:0; padding:0; background:#000; overflow:hidden; height:100%; font-family:'Impact','Arial Black',system-ui,sans-serif; }
     #parent { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
-    #arena { background:#000; }
-    #utils { position:absolute; left:0; right:0; top:0; padding:8px 10px; z-index:5;
-      display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:center;
-      color:#fff; font-family:system-ui,sans-serif; font-size:12px; font-weight:800;
-      text-shadow:0 1px 2px #000; }
-    .playerName { text-transform:uppercase; letter-spacing:.05em; }
-    .lifebar { grid-column:1/-1; display:grid; grid-template-columns:1fr auto 1fr; gap:8px; margin-top:2px; }
-    .life-shell { height:10px; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.4); border-radius:6px; overflow:hidden; }
-    .life-shell.right { direction:rtl; }
-    .life-bar { height:100%; background:linear-gradient(90deg,#f43f5e,#f59e0b); transition:width .12s linear; }
-    .vs { font-weight:900; color:#fbbf24; font-family:'Impact','Arial Black',sans-serif; }
-    #loading { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-family:system-ui,sans-serif; font-weight:700; background:#000; z-index:10; }
-    #spectatorTag { position:absolute; bottom:6px; right:8px; z-index:6;
-      background:rgba(6,6,10,.75); color:#a5b4fc; font-family:system-ui,sans-serif; font-size:10px;
-      font-weight:800; letter-spacing:.08em; text-transform:uppercase;
-      padding:3px 8px; border-radius:999px; border:1px solid rgba(165,180,252,.35); }
+    #arena { background:#000; will-change: transform, filter; }
     canvas { display:block; image-rendering:pixelated; }
+
+    /* ---------- HUD ---------- */
+    #hud { position:absolute; left:0; right:0; top:0; z-index:5; padding:8px 10px 4px;
+      color:#fff; text-shadow:0 2px 3px #000, 0 0 6px rgba(0,0,0,.9); pointer-events:none; }
+    .hud-row { display:grid; grid-template-columns: 44px 1fr 60px 1fr 44px; gap:8px; align-items:center; }
+    .portrait { width:44px; height:44px; border-radius:50%; overflow:hidden;
+      border:2px solid #fbbf24; box-shadow:0 0 8px rgba(251,191,36,.55), inset 0 0 8px rgba(0,0,0,.5);
+      background:#111 center/140% no-repeat; }
+    .portrait.p2 { border-color:#38bdf8; box-shadow:0 0 8px rgba(56,189,248,.55), inset 0 0 8px rgba(0,0,0,.5); }
+    .portrait img { width:100%; height:100%; object-fit:cover; object-position:top; transform:scale(1.6) translateY(6px); filter:drop-shadow(0 1px 1px #000); }
+    .portrait.p2 img { transform:scale(1.6) translateY(6px) scaleX(-1); }
+
+    .stack { display:flex; flex-direction:column; gap:2px; }
+    .name-row { display:flex; align-items:center; gap:6px; font-size:12px; letter-spacing:.12em; text-transform:uppercase; font-weight:800; font-family:system-ui,sans-serif; }
+    .stack.right .name-row { justify-content:flex-end; }
+    .name-row .dot { width:6px; height:6px; border-radius:50%; background:#fbbf24; box-shadow:0 0 6px #fbbf24; }
+    .stack.right .name-row .dot { background:#38bdf8; box-shadow:0 0 6px #38bdf8; }
+
+    .life-shell { position:relative; height:14px; background:linear-gradient(#0b0b12,#1a1a26);
+      border:1px solid rgba(255,255,255,.35); border-radius:3px; overflow:hidden;
+      box-shadow: inset 0 0 6px rgba(0,0,0,.7), 0 0 0 1px rgba(0,0,0,.6); }
+    .life-shell.right { transform:scaleX(-1); }
+    .life-chip { position:absolute; inset:0; width:100%; background:linear-gradient(#fde047,#f59e0b); transition:width .55s cubic-bezier(.2,.7,.2,1) .12s; }
+    .life-bar  { position:absolute; inset:0; width:100%;
+      background:linear-gradient(180deg,#fef08a 0%,#f97316 30%,#dc2626 60%,#7f1d1d 100%);
+      transition:width .1s linear; box-shadow: inset 0 -3px 6px rgba(0,0,0,.35); }
+    .life-shell::after { content:''; position:absolute; inset:0;
+      background:repeating-linear-gradient(90deg, rgba(255,255,255,.08) 0 2px, transparent 2px 22px); pointer-events:none; }
+
+    .center { display:flex; flex-direction:column; align-items:center; gap:2px; }
+    .timer { font-family:'Impact','Arial Black',sans-serif; font-size:26px; line-height:1;
+      color:#fef08a; text-shadow: 0 0 8px rgba(251,191,36,.6), 0 2px 3px #000; letter-spacing:.05em; }
+    .timer.low { color:#ef4444; text-shadow:0 0 10px rgba(239,68,68,.9), 0 2px 3px #000; animation: pulse 0.6s infinite alternate; }
+    .vs-badge { font-size:10px; font-weight:900; color:#fbbf24; letter-spacing:.25em; font-family:system-ui,sans-serif; }
+    @keyframes pulse { from { transform:scale(1); } to { transform:scale(1.12); } }
+
+    .combo { position:absolute; top:60px; font-family:'Impact','Arial Black',sans-serif;
+      color:#fff; font-size:22px; letter-spacing:.08em; opacity:0; transition:opacity .25s;
+      text-shadow: 0 0 8px #f97316, 0 0 16px #ef4444, 0 2px 4px #000; pointer-events:none; }
+    .combo.p1 { left:14px; } .combo.p2 { right:14px; }
+    .combo.show { opacity:1; }
+    .combo .n { font-size:34px; color:#fde047; }
+
+    /* ---------- Damage floaters ---------- */
+    #floaters { position:absolute; inset:0; pointer-events:none; z-index:6; overflow:hidden; }
+    .float { position:absolute; font-family:'Impact','Arial Black',sans-serif; font-weight:900;
+      font-size:26px; color:#fff; text-shadow:0 0 6px #ef4444, 0 0 12px #b91c1c, 0 2px 3px #000;
+      animation: floatUp 900ms ease-out forwards; }
+    .float.big { font-size:34px; color:#fde047; text-shadow:0 0 8px #f97316, 0 0 18px #ef4444, 0 2px 3px #000; }
+    @keyframes floatUp {
+      0% { transform:translate(-50%, 0) scale(.6); opacity:0; }
+      15% { transform:translate(-50%,-6px) scale(1.15); opacity:1; }
+      100% { transform:translate(-50%,-60px) scale(1); opacity:0; }
+    }
+
+    /* ---------- Hit flash + screen shake ---------- */
+    #flash { position:absolute; inset:0; background:radial-gradient(circle at center, rgba(255,80,80,.55), rgba(255,255,255,.15) 60%, transparent 80%);
+      opacity:0; pointer-events:none; z-index:7; mix-blend-mode:screen; }
+    #flash.on { animation: hitflash 220ms ease-out; }
+    @keyframes hitflash { 0% { opacity:0; } 20% { opacity:1; } 100% { opacity:0; } }
+    #arena.shake { animation: shake .28s cubic-bezier(.36,.07,.19,.97); }
+    @keyframes shake {
+      10%,90% { transform:translate(-1px,0); }
+      20%,80% { transform:translate(2px,-1px); }
+      30%,50%,70% { transform:translate(-4px,1px); }
+      40%,60% { transform:translate(4px,-1px); }
+    }
+
+    /* ---------- Arena FX overlays ---------- */
+    #vignette { position:absolute; inset:0; pointer-events:none; z-index:2;
+      background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.55) 100%); }
+    #scanlines { position:absolute; inset:0; pointer-events:none; z-index:3;
+      background:repeating-linear-gradient(transparent 0 2px, rgba(0,0,0,.12) 2px 3px); mix-blend-mode:multiply; opacity:.35; }
+
+    /* ---------- Announcer overlay ---------- */
+    #announcer { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+      pointer-events:none; z-index:8; }
+    #announcer .txt { font-family:'Impact','Arial Black',sans-serif; font-size:78px; letter-spacing:.06em;
+      color:#fde047; text-shadow: 0 0 20px #ef4444, 0 0 40px #7f1d1d, 0 6px 12px #000, 0 0 4px #fff;
+      opacity:0; transform:scale(.6) rotate(-4deg); }
+    #announcer .txt.show { animation: announce 1200ms cubic-bezier(.2,.9,.2,1) forwards; }
+    #announcer .txt.hold { animation: announce-hold 2400ms cubic-bezier(.2,.9,.2,1) forwards; }
+    @keyframes announce {
+      0% { opacity:0; transform:scale(.4) rotate(-8deg); filter:blur(6px); }
+      30% { opacity:1; transform:scale(1.15) rotate(0); filter:blur(0); }
+      70% { opacity:1; transform:scale(1) rotate(0); }
+      100% { opacity:0; transform:scale(1.3) rotate(0); }
+    }
+    @keyframes announce-hold {
+      0% { opacity:0; transform:scale(.4) rotate(-8deg); filter:blur(6px); }
+      20% { opacity:1; transform:scale(1.15) rotate(0); filter:blur(0); }
+      85% { opacity:1; transform:scale(1) rotate(0); }
+      100% { opacity:0; transform:scale(1.3) rotate(0); }
+    }
+
+    /* ---------- Loading + spectator ---------- */
+    #loading { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fbbf24;
+      font-family:'Impact','Arial Black',sans-serif; font-size:22px; letter-spacing:.2em;
+      background:radial-gradient(ellipse at center, #1a1a2e 0%, #000 70%); z-index:10; }
+    #loading::after { content:''; margin-left:12px; width:14px; height:14px; border-radius:50%;
+      background:#ef4444; animation: pulse .8s infinite alternate; box-shadow:0 0 10px #ef4444; }
+    #spectatorTag { position:absolute; bottom:8px; right:10px; z-index:6;
+      background:linear-gradient(135deg, rgba(30,20,60,.9), rgba(6,6,10,.9));
+      color:#a5b4fc; font-family:system-ui,sans-serif; font-size:10px; font-weight:900;
+      letter-spacing:.15em; text-transform:uppercase; padding:5px 10px 5px 22px;
+      border-radius:999px; border:1px solid rgba(165,180,252,.5); box-shadow:0 0 14px rgba(99,102,241,.4);
+      display:flex; align-items:center; gap:6px; }
+    #spectatorTag::before { content:''; position:absolute; left:8px; top:50%; transform:translateY(-50%);
+      width:8px; height:8px; border-radius:50%; background:#22d3ee; box-shadow:0 0 8px #22d3ee;
+      animation: pulse 1s infinite alternate; }
   </style>
 </head>
 <body>
 <main id="parent">
-  <div id="utils">
-    <div id="player1Name" class="playerName">Player 1</div>
-    <div class="vs">VS</div>
-    <div id="player2Name" class="playerName" style="text-align:right">Player 2</div>
-    <div class="lifebar">
-      <div class="life-shell"><div class="life-bar" id="p1life" style="width:100%"></div></div>
-      <div style="opacity:.6">100 | 100</div>
-      <div class="life-shell right"><div class="life-bar" id="p2life" style="width:100%"></div></div>
+  <div id="hud">
+    <div class="hud-row">
+      <div class="portrait" id="p1portrait"></div>
+      <div class="stack">
+        <div class="name-row"><span class="dot"></span><span id="player1Name">Player 1</span></div>
+        <div class="life-shell">
+          <div class="life-chip" id="p1chip"></div>
+          <div class="life-bar"  id="p1life"></div>
+        </div>
+      </div>
+      <div class="center">
+        <div class="timer" id="timer">99</div>
+        <div class="vs-badge">ROUND 1</div>
+      </div>
+      <div class="stack right">
+        <div class="name-row"><span id="player2Name">Player 2</span><span class="dot"></span></div>
+        <div class="life-shell right">
+          <div class="life-chip" id="p2chip"></div>
+          <div class="life-bar"  id="p2life"></div>
+        </div>
+      </div>
+      <div class="portrait p2" id="p2portrait"></div>
     </div>
+    <div class="combo p1" id="p1combo"><span class="n">0</span> HIT COMBO</div>
+    <div class="combo p2" id="p2combo"><span class="n">0</span> HIT COMBO</div>
   </div>
   <div id="arena"></div>
-  <div id="loading">Loading fighters…</div>
+  <div id="vignette"></div>
+  <div id="scanlines"></div>
+  <div id="floaters"></div>
+  <div id="flash"></div>
+  <div id="announcer"><div class="txt" id="annTxt"></div></div>
+  <div id="loading">LOADING KOMBAT</div>
   <div id="spectatorTag" style="display:none">Live spectator</div>
 </main>
 <script>
@@ -54,56 +170,130 @@
   var p1 = (params.get('p1') || 'Subzero');
   var p2 = (params.get('p2') || 'Kano');
   var arenaKey = (params.get('arena') || 'THRONE_ROOM').toUpperCase();
-  var mode = (params.get('mode') || 'host').toLowerCase(); // 'host' | 'spectator' | 'solo'
+  var mode = (params.get('mode') || 'host').toLowerCase();
   var isSpectator = mode === 'spectator';
   var arena = mk.arenas.types[arenaKey] != null ? mk.arenas.types[arenaKey] : mk.arenas.types.THRONE_ROOM;
 
   document.getElementById('player1Name').textContent = p1;
   document.getElementById('player2Name').textContent = p2;
-  if (isSpectator) document.getElementById('spectatorTag').style.display = 'block';
+  function portraitUrl(name){ return '/mkjs/images/fighters/' + name.toLowerCase() + '/right/attractive-stand-up/0.png'; }
+  document.getElementById('p1portrait').innerHTML = '<img src="'+portraitUrl(p1)+'" alt="">';
+  document.getElementById('p2portrait').innerHTML = '<img src="'+portraitUrl(p2)+'" alt="">';
+  if (isSpectator) document.getElementById('spectatorTag').style.display = 'flex';
 
   function post(type, data) {
     try { parent.postMessage(Object.assign({ __mk: true, type: type }, data || {}), '*'); } catch (e) {}
   }
 
+  // ---------- HUD helpers ----------
+  var arenaEl = document.getElementById('arena');
+  var flashEl = document.getElementById('flash');
+  var floatersEl = document.getElementById('floaters');
+  var announcer = document.getElementById('annTxt');
+  var timerEl = document.getElementById('timer');
+  var lifeBar = { p1: document.getElementById('p1life'), p2: document.getElementById('p2life') };
+  var chipBar = { p1: document.getElementById('p1chip'), p2: document.getElementById('p2chip') };
+  var comboEl = { p1: document.getElementById('p1combo'), p2: document.getElementById('p2combo') };
+  var prevLife = { p1: 100, p2: 100 };
+  var combo = { p1: { n:0, t:0 }, p2: { n:0, t:0 } };
+  var COMBO_WINDOW = 1400;
+
+  function setLife(who, life) {
+    var pct = Math.max(0, life) + '%';
+    lifeBar[who].style.width = pct;
+    // chip trails after a short delay via CSS transition
+    setTimeout(function(){ chipBar[who].style.width = pct; }, 30);
+  }
+
+  function shake() {
+    arenaEl.classList.remove('shake'); void arenaEl.offsetWidth; arenaEl.classList.add('shake');
+  }
+  function flash() {
+    flashEl.classList.remove('on'); void flashEl.offsetWidth; flashEl.classList.add('on');
+  }
+  function damageFloat(who, dmg, big) {
+    var f = document.createElement('div');
+    f.className = 'float' + (big ? ' big' : '');
+    f.textContent = '-' + dmg;
+    var rect = arenaEl.getBoundingClientRect();
+    var x = who === 'p1' ? rect.left + rect.width*0.3 : rect.left + rect.width*0.7;
+    var y = rect.top + rect.height*0.35;
+    f.style.left = x + 'px'; f.style.top = y + 'px';
+    floatersEl.appendChild(f);
+    setTimeout(function(){ f.remove(); }, 950);
+  }
+  function bumpCombo(attackerWho) {
+    var c = combo[attackerWho]; var now = performance.now();
+    if (now - c.t > COMBO_WINDOW) c.n = 0;
+    c.n++; c.t = now;
+    if (c.n >= 2) {
+      var el = comboEl[attackerWho];
+      el.querySelector('.n').textContent = c.n;
+      el.classList.add('show');
+      clearTimeout(el._to);
+      el._to = setTimeout(function(){ el.classList.remove('show'); }, COMBO_WINDOW);
+    }
+  }
+  function announce(text, hold) {
+    announcer.textContent = text;
+    announcer.classList.remove('show','hold'); void announcer.offsetWidth;
+    announcer.classList.add(hold ? 'hold' : 'show');
+  }
+
+  // ---------- Round timer ----------
+  var roundTime = 99, timerHandle = null, timerFrozen = true;
+  function tickTimer() {
+    if (timerFrozen) return;
+    roundTime = Math.max(0, roundTime - 1);
+    timerEl.textContent = roundTime < 10 ? '0'+roundTime : roundTime;
+    timerEl.classList.toggle('low', roundTime <= 10);
+    if (roundTime === 0) { timerFrozen = true; announce('TIME OUT', true); }
+  }
+  function startTimer() { timerFrozen = false; if (!timerHandle) timerHandle = setInterval(tickTimer, 1000); }
+
   var options = {
-    arena: { container: document.getElementById('arena'), arena: arena },
+    arena: { container: arenaEl, arena: arena },
     fighters: [{ name: p1 }, { name: p2 }],
     callbacks: {
       attack: function (attacker, opp) {
         var life = opp.getLife();
         var name = opp.getName().toLowerCase();
         var p1Name = p1.toLowerCase();
-        var el = name === p1Name ? 'p1life' : 'p2life';
-        var bar = document.getElementById(el);
-        if (bar) bar.style.width = life + '%';
+        var defWho = name === p1Name ? 'p1' : 'p2';
+        var atkWho = defWho === 'p1' ? 'p2' : 'p1';
+        var dmg = Math.max(0, prevLife[defWho] - life);
+        prevLife[defWho] = life;
+        setLife(defWho, life);
+        if (dmg > 0) {
+          damageFloat(defWho, dmg, dmg >= 8);
+          flash(); shake();
+          bumpCombo(atkWho);
+        }
         if (!isSpectator) post('attack', { defender: name, life: life });
       },
       'game-end': function (winner) {
         try { window.MKSFX && window.MKSFX.onGameEnd(); } catch (e) {}
-        // Only the host reports the authoritative winner. Spectator suppresses.
+        timerFrozen = true;
+        announce((winner.getName() || 'FIGHTER').toUpperCase() + ' WINS', true);
+        setTimeout(function(){ announce('FLAWLESS VICTORY', true); }, 1400);
         if (!isSpectator) post('game-end', { winner: winner.getName() });
       }
     },
     gameType: 'multiplayer'
   };
 
-  // Pad bridge (host only). Parent sends {type:'press'|'release', player:0|1, key:'LEFT'}
+  // Pad bridge
   var pressed = { 0: {}, 1: {} };
   function applyKey(playerIdx, keyName, down) {
-    if (isSpectator) return; // guest never simulates
+    if (isSpectator) return;
     if (!mk.game || !mk.game.fighters) return;
     var kmap = playerIdx === 0 ? mk.controllers.keys.p1 : mk.controllers.keys.p2;
-    var code = kmap[keyName];
-    if (!code) return;
-    if (down) pressed[playerIdx][code] = true;
-    else delete pressed[playerIdx][code];
+    var code = kmap[keyName]; if (!code) return;
+    if (down) pressed[playerIdx][code] = true; else delete pressed[playerIdx][code];
     var move = mk.game._getMove(pressed[playerIdx], kmap, playerIdx);
     if (move) mk.game.fighters[playerIdx].setMove(move);
   }
 
-  // Spectator: apply authoritative snapshot from host.
-  // s = { p1:{x,y,life,move,o}, p2:{...}, done?:{winner} }
   function applySnap(s) {
     if (!mk.game || !mk.game.fighters || !s) return;
     var f0 = mk.game.fighters[0], f1 = mk.game.fighters[1];
@@ -113,65 +303,57 @@
       if (typeof s.p1.y === 'number' && Math.abs(f0.getY() - s.p1.y) > 1) f0.setY(s.p1.y);
       if (s.p1.o && f0.getOrientation() !== s.p1.o) f0.setOrientation(s.p1.o);
       if (typeof s.p1.life === 'number' && f0.getLife() !== s.p1.life) {
-        f0.setLife(s.p1.life);
-        var b1 = document.getElementById('p1life'); if (b1) b1.style.width = s.p1.life + '%';
+        var d1 = prevLife.p1 - s.p1.life;
+        f0.setLife(s.p1.life); setLife('p1', s.p1.life);
+        if (d1 > 0) { damageFloat('p1', d1, d1>=8); flash(); shake(); bumpCombo('p2'); }
+        prevLife.p1 = s.p1.life;
       }
-      if (s.p1.move && (!f0._currentMove || f0._currentMove.type !== s.p1.move)) {
-        try { f0.setMove(s.p1.move); } catch (e) {}
-      }
+      if (s.p1.move && (!f0._currentMove || f0._currentMove.type !== s.p1.move)) { try { f0.setMove(s.p1.move); } catch (e) {} }
       if (typeof s.p2.x === 'number' && Math.abs(f1.getX() - s.p2.x) > 1) f1.setX(s.p2.x);
       if (typeof s.p2.y === 'number' && Math.abs(f1.getY() - s.p2.y) > 1) f1.setY(s.p2.y);
       if (s.p2.o && f1.getOrientation() !== s.p2.o) f1.setOrientation(s.p2.o);
       if (typeof s.p2.life === 'number' && f1.getLife() !== s.p2.life) {
-        f1.setLife(s.p2.life);
-        var b2 = document.getElementById('p2life'); if (b2) b2.style.width = s.p2.life + '%';
+        var d2 = prevLife.p2 - s.p2.life;
+        f1.setLife(s.p2.life); setLife('p2', s.p2.life);
+        if (d2 > 0) { damageFloat('p2', d2, d2>=8); flash(); shake(); bumpCombo('p1'); }
+        prevLife.p2 = s.p2.life;
       }
-      if (s.p2.move && (!f1._currentMove || f1._currentMove.type !== s.p2.move)) {
-        try { f1.setMove(s.p2.move); } catch (e) {}
-      }
+      if (s.p2.move && (!f1._currentMove || f1._currentMove.type !== s.p2.move)) { try { f1.setMove(s.p2.move); } catch (e) {} }
     } catch (e) {}
   }
 
-  // Host: expose snapshot reader for parent to poll.
   function snapshot() {
     if (!mk.game || !mk.game.fighters) return null;
     var f0 = mk.game.fighters[0], f1 = mk.game.fighters[1];
     if (!f0 || !f1) return null;
     return {
-      p1: { x: f0.getX(), y: f0.getY(), life: f0.getLife(), o: f0.getOrientation(),
-            move: f0._currentMove && f0._currentMove.type },
-      p2: { x: f1.getX(), y: f1.getY(), life: f1.getLife(), o: f1.getOrientation(),
-            move: f1._currentMove && f1._currentMove.type }
+      p1: { x:f0.getX(), y:f0.getY(), life:f0.getLife(), o:f0.getOrientation(), move:f0._currentMove && f0._currentMove.type },
+      p2: { x:f1.getX(), y:f1.getY(), life:f1.getLife(), o:f1.getOrientation(), move:f1._currentMove && f1._currentMove.type }
     };
   }
 
   window.addEventListener('message', function (ev) {
-    var d = ev.data;
-    if (!d || !d.__mkctl) return;
-    if (d.type === 'press') applyKey(d.player | 0, d.key, true);
-    else if (d.type === 'release') applyKey(d.player | 0, d.key, false);
+    var d = ev.data; if (!d || !d.__mkctl) return;
+    if (d.type === 'press') applyKey(d.player|0, d.key, true);
+    else if (d.type === 'release') applyKey(d.player|0, d.key, false);
     else if (d.type === 'reset') location.reload();
     else if (d.type === 'spectate') applySnap(d.snap);
     else if (d.type === 'snap-request') post('snap', { snap: snapshot() });
   });
 
-  // Suppress physical keyboard (we control via bridge only).
   document.addEventListener('keydown', function (e) { e.stopImmediatePropagation(); }, true);
-  document.addEventListener('keyup', function (e) { e.stopImmediatePropagation(); }, true);
+  document.addEventListener('keyup',   function (e) { e.stopImmediatePropagation(); }, true);
 
-  // Boot SFX engine (preloads samples). Actual playback waits for a user
-  // gesture — the parent MkPlay wrapper handles the tap-to-start UI.
   try { window.MKSFX && window.MKSFX.load(); } catch (e) {}
   var sfxStarted = false;
   function startSfxOnce() {
     if (sfxStarted) return; sfxStarted = true;
     try { window.MKSFX && window.MKSFX.boot(); } catch (e) {}
   }
-  ['pointerdown', 'keydown', 'touchstart'].forEach(function (ev) {
-    window.addEventListener(ev, startSfxOnce, { once: true, passive: true });
+  ['pointerdown','keydown','touchstart'].forEach(function (ev) {
+    window.addEventListener(ev, startSfxOnce, { once:true, passive:true });
   });
 
-  // Drive SFX from observed fighter state (works on host + spectator).
   function tickSfx(s) {
     if (!s || !window.MKSFX) return;
     try { MKSFX.tick(0, s.p1, s.p2); MKSFX.tick(1, s.p2, s.p1); } catch (e) {}
@@ -179,12 +361,10 @@
 
   mk.start(options).ready(function () {
     document.getElementById('loading').style.display = 'none';
-    // Spectator: neutralise stray fighter AI-ish keyboard binds (Basic controller may add them).
-    if (isSpectator && mk.game && mk.game._addHandlers) {
-      // no-op — Basic already added its handlers, but our capture-phase suppress kills them.
-    }
+    setLife('p1', 100); setLife('p2', 100);
+    announce('ROUND 1');
+    setTimeout(function(){ announce('FIGHT!'); startTimer(); }, 1200);
     post('ready', { mode: mode });
-    // Host: publish snapshots at ~15Hz and drive local SFX from them.
     if (!isSpectator) {
       setInterval(function () {
         var s = snapshot();
@@ -193,7 +373,6 @@
     }
   });
 
-  // Spectator: also drive SFX from incoming snapshots.
   var _origApplySnap = applySnap;
   applySnap = function (s) { _origApplySnap(s); tickSfx(s); };
 
