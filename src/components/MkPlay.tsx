@@ -23,9 +23,37 @@ export type MkMatch = {
 type Profile = { id: string; display_name: string | null };
 
 const CHARACTERS = [
-  { id: "Subzero", label: "Sub-Zero", color: "from-cyan-500 to-blue-700", tag: "Ice" },
-  { id: "Kano", label: "Kano", color: "from-red-500 to-rose-700", tag: "Blade" },
-  { id: "Omar", label: "Omar", color: "from-pink-500 to-fuchsia-700", tag: "Rose Fury" },
+  {
+    id: "Subzero",
+    label: "Sub-Zero",
+    color: "from-cyan-500 to-blue-700",
+    tag: "Ice",
+    hp: 100,
+    passives: ["Frost Focus: block a hit → next counter deals +2 dmg (1.2s window)"],
+    signature: "Balanced ice ninja — good for defensive players.",
+  },
+  {
+    id: "Kano",
+    label: "Kano",
+    color: "from-red-500 to-rose-700",
+    tag: "Blade",
+    hp: 100,
+    passives: ["Berserker: while HP ≤ 30, every landed hit deals +2 dmg"],
+    signature: "Comeback fighter — deadliest when cornered.",
+  },
+  {
+    id: "Omar",
+    label: "Omar",
+    color: "from-pink-500 to-fuchsia-700",
+    tag: "Rose Fury",
+    hp: 120,
+    passives: [
+      "Rose Guard: starts round with 120 HP (+20 overheal)",
+      "Iron Will: −15% damage taken",
+      "Rose Fury: every 3rd landed hit +5 dmg (500ms cooldown)",
+    ],
+    signature: "Tanky bruiser with a rose-petal crit rhythm.",
+  },
 ] as const;
 
 type PadKey = "LEFT" | "RIGHT" | "UP" | "DOWN" | "BLOCK" | "HP" | "LP" | "HK" | "LK";
@@ -310,7 +338,12 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
                     {c.label.split("-").map((s) => s[0]).join("")}
                   </div>
                   <div className="font-bold font-display">{c.label}</div>
-                  <div className="text-[11px] text-muted-foreground">{c.tag}</div>
+                  <div className="text-[11px] text-muted-foreground">{c.tag} · {c.hp} HP</div>
+                  <ul className="mt-1.5 space-y-0.5">
+                    {c.passives.map((p) => (
+                      <li key={p} className="text-[10px] text-muted-foreground leading-snug">• {p}</li>
+                    ))}
+                  </ul>
                   {mine && <span className="absolute top-2 right-2 text-[10px] bg-primary text-primary-foreground rounded-full px-2 py-0.5 font-bold">YOU</span>}
                   {oppPicked && !mine && <span className="absolute top-2 right-2 text-[10px] bg-muted rounded-full px-2 py-0.5 font-bold">TAKEN</span>}
                 </button>
