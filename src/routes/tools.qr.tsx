@@ -102,7 +102,7 @@ function QrScanner() {
     setScanning(false);
   };
 
-  useEffect(() => () => { void teardown(); }, []);
+  useEffect(() => () => { void teardown(); stopTicketScanFail(); }, []);
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
