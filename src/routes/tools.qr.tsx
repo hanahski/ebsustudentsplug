@@ -266,7 +266,7 @@ function QrScanner() {
 
       {failFlash && (
         <div
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background/95 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background/95 backdrop-blur-md animate-fade-in p-4"
           role="status"
           aria-live="assertive"
         >
@@ -277,11 +277,29 @@ function QrScanner() {
             </div>
           </div>
           <h2 className="mt-8 text-2xl sm:text-3xl font-bold font-display text-center px-4 animate-fade-in">
-            Ticket rejected
+            {result?.meta?.reason === "foreign_qr" ? "Not a StudentsPlug QR" : "Ticket rejected"}
           </h2>
           <p className="mt-2 text-sm sm:text-base text-muted-foreground text-center px-6 max-w-sm animate-fade-in">
             {failFlash}
           </p>
+          <div className="mt-6 flex gap-2">
+            <Button
+              size="lg"
+              variant="destructive"
+              className="rounded-2xl shadow-glow"
+              onClick={() => { stopTicketScanFail(); setFailFlash(null); }}
+            >
+              Stop sound
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="rounded-2xl"
+              onClick={() => { stopTicketScanFail(); setFailFlash(null); setResult(null); void start(); }}
+            >
+              Scan next
+            </Button>
+          </div>
         </div>
       )}
     </div>
