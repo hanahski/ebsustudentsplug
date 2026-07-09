@@ -124,6 +124,35 @@
     #spectatorTag::before { content:''; position:absolute; left:8px; top:50%; transform:translateY(-50%);
       width:8px; height:8px; border-radius:50%; background:#22d3ee; box-shadow:0 0 8px #22d3ee;
       animation: pulse 1s infinite alternate; }
+
+    /* ---------- Omar signature FX ---------- */
+    .portrait.omar { border-color:#f472b6 !important; box-shadow:0 0 12px rgba(244,114,182,.75), inset 0 0 8px rgba(0,0,0,.5) !important; }
+    #roses { position:absolute; inset:0; pointer-events:none; z-index:7; overflow:hidden; }
+    .petal { position:absolute; width:14px; height:14px; border-radius:60% 10% 60% 10%;
+      background:linear-gradient(135deg,#fbcfe8,#ec4899 60%,#9d174d);
+      box-shadow:0 0 6px rgba(236,72,153,.7);
+      transform-origin:center; opacity:0; }
+    .petal.go { animation: petalFly 1100ms cubic-bezier(.2,.7,.2,1) forwards; }
+    @keyframes petalFly {
+      0%   { opacity:0; transform:translate(0,0) rotate(0deg) scale(.4); }
+      15%  { opacity:1; }
+      100% { opacity:0; transform:translate(var(--dx),var(--dy)) rotate(var(--rot)) scale(1); }
+    }
+    #omarAura { position:absolute; inset:0; pointer-events:none; z-index:4;
+      background:radial-gradient(circle at var(--ax,50%) 70%, rgba(236,72,153,.35), transparent 42%);
+      opacity:0; transition:opacity 260ms ease-out; mix-blend-mode:screen; }
+    #omarAura.on { opacity:1; }
+    .rose-badge { position:absolute; top:96px; left:50%; transform:translateX(-50%);
+      font-family:'Impact','Arial Black',sans-serif; font-size:26px; letter-spacing:.14em;
+      color:#fbcfe8; text-shadow:0 0 10px #ec4899, 0 0 22px #9d174d, 0 2px 4px #000;
+      opacity:0; pointer-events:none; z-index:8; white-space:nowrap; }
+    .rose-badge.show { animation: roseBadge 1100ms cubic-bezier(.2,.9,.2,1) forwards; }
+    @keyframes roseBadge {
+      0% { opacity:0; transform:translate(-50%,10px) scale(.6); }
+      25% { opacity:1; transform:translate(-50%,0) scale(1.1); }
+      75% { opacity:1; transform:translate(-50%,-4px) scale(1); }
+      100% { opacity:0; transform:translate(-50%,-18px) scale(1); }
+    }
   </style>
 </head>
 <body>
@@ -157,9 +186,12 @@
   <div id="arena"></div>
   <div id="vignette"></div>
   <div id="scanlines"></div>
+  <div id="omarAura"></div>
   <div id="floaters"></div>
+  <div id="roses"></div>
   <div id="flash"></div>
   <div id="announcer"><div class="txt" id="annTxt"></div></div>
+  <div class="rose-badge" id="roseBadge">✿ ROSE FURY ✿</div>
   <div id="loading">LOADING KOMBAT</div>
   <div id="spectatorTag" style="display:none">Live spectator</div>
 </main>
@@ -180,6 +212,8 @@
   function portraitUrl(name){ return '/mkjs/images/fighters/' + name.toLowerCase() + '/right/attractive-stand-up/0.png'; }
   document.getElementById('p1portrait').innerHTML = '<img src="'+portraitUrl(p1)+'" alt="">';
   document.getElementById('p2portrait').innerHTML = '<img src="'+portraitUrl(p2)+'" alt="">';
+  if (p1.toLowerCase() === 'omar') document.getElementById('p1portrait').classList.add('omar');
+  if (p2.toLowerCase() === 'omar') document.getElementById('p2portrait').classList.add('omar');
   if (isSpectator) document.getElementById('spectatorTag').style.display = 'flex';
 
   function post(type, data) {
@@ -242,6 +276,57 @@
     announcer.classList.add(hold ? 'hold' : 'show');
   }
 
+  // ---------- Omar signature FX ----------
+  var rosesEl = document.getElementById('roses');
+  var auraEl = document.getElementById('omarAura');
+  var roseBadgeEl = document.getElementById('roseBadge');
+  var omarSide = p1.toLowerCase() === 'omar' ? 'p1' : (p2.toLowerCase() === 'omar' ? 'p2' : null);
+  var omarHits = { p1: 0, p2: 0 };
+  function spawnPetals(who, count) {
+    var rect = arenaEl.getBoundingClientRect();
+    var ox = who === 'p1' ? rect.left + rect.width*0.32 : rect.left + rect.width*0.68;
+    var oy = rect.top + rect.height*0.55;
+    for (var i = 0; i < count; i++) {
+      var p = document.createElement('div');
+      p.className = 'petal';
+      var ang = Math.random() * Math.PI * 2;
+      var dist = 60 + Math.random() * 120;
+      var dx = Math.cos(ang) * dist;
+      var dy = Math.sin(ang) * dist - 30;
+      p.style.left = ox + 'px'; p.style.top = oy + 'px';
+      p.style.setProperty('--dx', dx.toFixed(0)+'px');
+      p.style.setProperty('--dy', dy.toFixed(0)+'px');
+      p.style.setProperty('--rot', (Math.random()*720 - 360).toFixed(0)+'deg');
+      rosesEl.appendChild(p);
+      // stagger flight
+      (function(el, d){ setTimeout(function(){ el.classList.add('go'); }, d); setTimeout(function(){ el.remove(); }, d + 1150); })(p, i * 25);
+    }
+  }
+  function flashAura(who) {
+    var rect = arenaEl.getBoundingClientRect();
+    var pct = who === 'p1' ? 32 : 68;
+    auraEl.style.setProperty('--ax', pct + '%');
+    auraEl.classList.add('on');
+    clearTimeout(flashAura._to);
+    flashAura._to = setTimeout(function(){ auraEl.classList.remove('on'); }, 420);
+  }
+  function roseFury(who) {
+    spawnPetals(who, 18);
+    flashAura(who);
+    roseBadgeEl.classList.remove('show'); void roseBadgeEl.offsetWidth; roseBadgeEl.classList.add('show');
+    try { window.MKSFX && MKSFX.play('uppercut', 1.0); } catch (e) {}
+    try { window.MKSFX && MKSFX.play('blockMetal', 0.6); } catch (e) {}
+    try { window.MKSFX && MKSFX.play('effort', 0.7); } catch (e) {}
+  }
+  function onOmarHit(atkWho) {
+    if (!omarSide || atkWho !== omarSide) return;
+    omarHits[atkWho]++;
+    // light petal puff on every landed hit
+    spawnPetals(atkWho, 4);
+    try { window.MKSFX && MKSFX.play('whoosh', 0.35); } catch (e) {}
+    if (omarHits[atkWho] % 3 === 0) roseFury(atkWho);
+  }
+
   // ---------- Round timer ----------
   var roundTime = 99, timerHandle = null, timerFrozen = true;
   function tickTimer() {
@@ -270,6 +355,7 @@
           damageFloat(defWho, dmg, dmg >= 8);
           flash(); shake();
           bumpCombo(atkWho);
+          onOmarHit(atkWho);
         }
         if (!isSpectator) post('attack', { defender: name, life: life });
       },
@@ -307,7 +393,7 @@
       if (typeof s.p1.life === 'number' && f0.getLife() !== s.p1.life) {
         var d1 = prevLife.p1 - s.p1.life;
         f0.setLife(s.p1.life); setLife('p1', s.p1.life);
-        if (d1 > 0) { damageFloat('p1', d1, d1>=8); flash(); shake(); bumpCombo('p2'); }
+        if (d1 > 0) { damageFloat('p1', d1, d1>=8); flash(); shake(); bumpCombo('p2'); onOmarHit('p2'); }
         prevLife.p1 = s.p1.life;
       }
       if (s.p1.move && (!f0._currentMove || f0._currentMove.type !== s.p1.move)) { try { f0.setMove(s.p1.move); } catch (e) {} }
@@ -317,7 +403,7 @@
       if (typeof s.p2.life === 'number' && f1.getLife() !== s.p2.life) {
         var d2 = prevLife.p2 - s.p2.life;
         f1.setLife(s.p2.life); setLife('p2', s.p2.life);
-        if (d2 > 0) { damageFloat('p2', d2, d2>=8); flash(); shake(); bumpCombo('p1'); }
+        if (d2 > 0) { damageFloat('p2', d2, d2>=8); flash(); shake(); bumpCombo('p1'); onOmarHit('p1'); }
         prevLife.p2 = s.p2.life;
       }
       if (s.p2.move && (!f1._currentMove || f1._currentMove.type !== s.p2.move)) { try { f1.setMove(s.p2.move); } catch (e) {} }
@@ -363,7 +449,8 @@
 
   mk.start(options).ready(function () {
     document.getElementById('loading').style.display = 'none';
-    setLife('p1', 100); setLife('p2', 100);
+    setLife('p1', MAX.p1); setLife('p2', MAX.p2);
+    if (omarSide) { setTimeout(function(){ roseFury(omarSide); }, 500); }
     announce('ROUND 1');
     setTimeout(function(){ announce('FIGHT!'); startTimer(); }, 1200);
     post('ready', { mode: mode });
