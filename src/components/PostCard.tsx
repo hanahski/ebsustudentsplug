@@ -100,18 +100,22 @@ export function PostCard({ post, locked, prefetchNextVideoUrl }: { post: FeedPos
   }, [user, post.id]);
 
   // Realtime: live like + comment counts for this post.
+  // IMPORTANT: skip events triggered by the current user — we already
+  // applied the change optimistically in toggleLike/toggleRepost. Without
+  // this guard the count flickered 1 → 2 → 0 (optimistic +1, realtime +1,
+  // then a stale post prop refresh reset it).
   useEffect(() => {
     const channel = supabase
       .channel(`post-${post.id}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "post_likes", filter: `post_id=eq.${post.id}` },
         (payload: any) => {
+          if (user && payload.new?.user_id === user.id) return;
           setLikeCount((c) => c + 1);
-          if (user && payload.new?.user_id === user.id) setLiked(true);
         })
       .on("postgres_changes", { event: "DELETE", schema: "public", table: "post_likes", filter: `post_id=eq.${post.id}` },
         (payload: any) => {
+          if (user && payload.old?.user_id === user.id) return;
           setLikeCount((c) => Math.max(0, c - 1));
-          if (user && payload.old?.user_id === user.id) setLiked(false);
         })
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "post_comments", filter: `post_id=eq.${post.id}` },
         () => setCommentCount((c) => c + 1))

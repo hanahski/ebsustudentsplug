@@ -250,31 +250,99 @@ export function playTicketScanChime() {
 }
 
 /**
- * Harsh descending "buzz" played when a ticket QR fails to verify or is
- * already used. Intentionally negative-sounding so the scan operator notices
- * the failure even in a noisy environment.
+ * Loud repeating alarm played when a ticket QR is invalid or already used.
+ * Loops until stopTicketScanFail() is called (or the user taps "Stop sound").
+ * Loud and unpleasant on purpose so a gate operator notices in a noisy venue.
  */
-export function playTicketScanFail() {
+let _failOscs: OscillatorNode[] | null = null;
+let _failGain: GainNode | null = null;
+let _failInterval: number | null = null;
+
+export function stopTicketScanFail() {
+  if (_failInterval != null) {
+    clearInterval(_failInterval);
+    _failInterval = null;
+  }
+  const audio = getCtx();
+  const now = audio?.currentTime ?? 0;
+  if (_failGain && audio) {
+    try { _failGain.gain.cancelScheduledValues(now); } catch {}
+    try { _failGain.gain.setValueAtTime(_failGain.gain.value, now); } catch {}
+    try { _failGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05); } catch {}
+  }
+  if (_failOscs) {
+    for (const o of _failOscs) { try { o.stop(now + 0.08); } catch {} }
+    _failOscs = null;
+  }
+  _failGain = null;
+}
+
+export function playTicketScanFail(opts?: { loop?: boolean }) {
+  stopTicketScanFail();
+  const audio = getCtx();
+  if (!audio) return;
+  ensureRunning(audio);
+  const master = audio.createGain();
+  master.gain.value = 0.55; // louder than the old 0.28
+  master.connect(audio.destination);
+  _failGain = master;
+
+  const oneBurst = () => {
+    if (!audio || audio.state === "closed") return;
+    const now = audio.currentTime;
+    const blips = [
+      { from: 880, to: 520, at: 0.0,  dur: 0.18 },
+      { from: 720, to: 380, at: 0.22, dur: 0.22 },
+      { from: 520, to: 200, at: 0.48, dur: 0.32 },
+    ];
+    const oscs: OscillatorNode[] = [];
+    for (const n of blips) {
+      const o = audio.createOscillator();
+      const g = audio.createGain();
+      o.type = "sawtooth";
+      o.frequency.setValueAtTime(n.from, now + n.at);
+      o.frequency.exponentialRampToValueAtTime(n.to, now + n.at + n.dur);
+      g.gain.setValueAtTime(0.0001, now + n.at);
+      g.gain.exponentialRampToValueAtTime(1, now + n.at + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + n.at + n.dur);
+      o.connect(g).connect(master);
+      o.start(now + n.at);
+      o.stop(now + n.at + n.dur + 0.02);
+      oscs.push(o);
+    }
+    _failOscs = oscs;
+  };
+
+  oneBurst();
+  if (opts?.loop) {
+    _failInterval = window.setInterval(oneBurst, 900);
+  }
+}
+
+/**
+ * Softer "wrong kind of code" alert — plays once when the scanner sees a QR
+ * that isn't a StudentsPlug ticket at all (a WhatsApp link, a URL, junk text).
+ * Meant to be distinct from the ticket-fail alarm above.
+ */
+export function playForeignQr() {
   const audio = getCtx();
   if (!audio) return;
   ensureRunning(audio);
   const now = audio.currentTime;
   const master = audio.createGain();
-  master.gain.value = 0.28;
+  master.gain.value = 0.32;
   master.connect(audio.destination);
-  // Two low sawtooth blasts dropping in pitch.
-  const blips = [
-    { from: 320, to: 200, at: 0.0,  dur: 0.18 },
-    { from: 240, to: 120, at: 0.22, dur: 0.32 },
+  const notes = [
+    { freq: 660, at: 0.00, dur: 0.12 },
+    { freq: 440, at: 0.14, dur: 0.22 },
   ];
-  for (const n of blips) {
+  for (const n of notes) {
     const o = audio.createOscillator();
     const g = audio.createGain();
-    o.type = "sawtooth";
-    o.frequency.setValueAtTime(n.from, now + n.at);
-    o.frequency.exponentialRampToValueAtTime(n.to, now + n.at + n.dur);
+    o.type = "triangle";
+    o.frequency.value = n.freq;
     g.gain.setValueAtTime(0.0001, now + n.at);
-    g.gain.exponentialRampToValueAtTime(1, now + n.at + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.9, now + n.at + 0.01);
     g.gain.exponentialRampToValueAtTime(0.0001, now + n.at + n.dur);
     o.connect(g).connect(master);
     o.start(now + n.at);
