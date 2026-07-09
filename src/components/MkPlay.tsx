@@ -25,6 +25,7 @@ type Profile = { id: string; display_name: string | null };
 const CHARACTERS = [
   { id: "Subzero", label: "Sub-Zero", color: "from-cyan-500 to-blue-700", tag: "Ice" },
   { id: "Kano", label: "Kano", color: "from-red-500 to-rose-700", tag: "Blade" },
+  { id: "Omar", label: "Omar", color: "from-pink-500 to-fuchsia-700", tag: "Rose Fury" },
 ] as const;
 
 type PadKey = "LEFT" | "RIGHT" | "UP" | "DOWN" | "BLOCK" | "HP" | "LP" | "HK" | "LK";
