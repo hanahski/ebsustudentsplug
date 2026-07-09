@@ -103,6 +103,7 @@ function AdminPanel() {
         {tab === "ebsunews" && <EbsuNewsPanel />}
         {tab === "users" && <AdminUsers />}
         {tab === "applications" && <AdminApplications />}
+        {tab === "reports" && <AdminReports />}
         {tab === "verifications" && <AdminVerifications />}
         
         {tab === "posts" && <AdminPosts />}
