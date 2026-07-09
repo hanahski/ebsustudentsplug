@@ -393,7 +393,7 @@
       if (typeof s.p1.life === 'number' && f0.getLife() !== s.p1.life) {
         var d1 = prevLife.p1 - s.p1.life;
         f0.setLife(s.p1.life); setLife('p1', s.p1.life);
-        if (d1 > 0) { damageFloat('p1', d1, d1>=8); flash(); shake(); bumpCombo('p2'); }
+        if (d1 > 0) { damageFloat('p1', d1, d1>=8); flash(); shake(); bumpCombo('p2'); onOmarHit('p2'); }
         prevLife.p1 = s.p1.life;
       }
       if (s.p1.move && (!f0._currentMove || f0._currentMove.type !== s.p1.move)) { try { f0.setMove(s.p1.move); } catch (e) {} }
