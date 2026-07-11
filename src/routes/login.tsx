@@ -224,21 +224,25 @@ function LoginPage() {
 
     try {
       storeGoogleRedirect(redirect);
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/login`,
-          queryParams: { prompt: "select_account" },
-        },
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: `${window.location.origin}/login`,
+        extraParams: { prompt: "select_account" },
       });
+      const { error } = result;
       if (error) {
-        console.error("[GoogleSignIn] supabase error", error);
+        console.error("[GoogleSignIn] lovable auth error", error);
         toast.error(`Google sign-in failed: ${error.message || "unknown error"}`);
         clearStoredGoogleRedirect();
         setBusy(false);
         return;
       }
-      // Browser is being redirected to Google — nothing else to do.
+      if (result.redirected) {
+        // Browser is being redirected to Google — nothing else to do.
+        return;
+      }
+      await tryRedeemPendingReferral({ onlyFresh: true }).catch(() => {});
+      toast.success("Signed in");
+      await nav({ to: redirect });
       return;
     } catch (err: any) {
       console.error("[GoogleSignIn] threw", {
