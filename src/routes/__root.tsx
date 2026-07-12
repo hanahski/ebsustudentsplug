@@ -153,8 +153,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           
           <NetworkStatus />
           <Outlet />
+          <VerifyEmailDialog />
           <Toaster richColors position="top-center" />
         </AuthProvider>
+
       </QueryClientProvider>
     );
   },
