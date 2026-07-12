@@ -22,6 +22,8 @@ import { AvatarLightbox } from "@/components/AvatarLightbox";
 import { VerifyStudentDialog } from "@/components/VerifyStudentDialog";
 import { SpecialBadges } from "@/components/SpecialBadges";
 import { getIsAdminUser } from "@/lib/admin-role";
+import { handleEmailNotVerified, openVerifyEmailDialog } from "@/components/VerifyEmailDialog";
+
 
 const ACADEMIC_LEVELS = ["100", "200", "300", "400", "500", "Postgraduate", "Alumni"];
 
