@@ -120,7 +120,6 @@ import { Route as ApiPublicHooksSyncLibrarySourcesRouteImport } from './routes/a
 import { Route as ApiPublicHooksSyncLibraryBooksRouteImport } from './routes/api/public/hooks/sync-library-books'
 import { Route as ApiPublicHooksSyncCoursesRouteImport } from './routes/api/public/hooks/sync-courses'
 import { Route as ApiPublicHooksRunScheduledAdminRouteImport } from './routes/api/public/hooks/run-scheduled-admin'
-import { Route as ApiPublicHooksOneshotResetRouteImport } from './routes/api/public/hooks/oneshot-reset'
 import { Route as ApiPublicHooksGenerateNovelRouteImport } from './routes/api/public/hooks/generate-novel'
 import { Route as ApiPublicHooksGenerateBookCoversRouteImport } from './routes/api/public/hooks/generate-book-covers'
 import { Route as ApiPublicHooksCacheBookPdfRouteImport } from './routes/api/public/hooks/cache-book-pdf'
@@ -690,12 +689,6 @@ const ApiPublicHooksRunScheduledAdminRoute =
     path: '/api/public/hooks/run-scheduled-admin',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksOneshotResetRoute =
-  ApiPublicHooksOneshotResetRouteImport.update({
-    id: '/api/public/hooks/oneshot-reset',
-    path: '/api/public/hooks/oneshot-reset',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiPublicHooksGenerateNovelRoute =
   ApiPublicHooksGenerateNovelRouteImport.update({
     id: '/api/public/hooks/generate-novel',
@@ -844,7 +837,6 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/cache-book-pdf': typeof ApiPublicHooksCacheBookPdfRoute
   '/api/public/hooks/generate-book-covers': typeof ApiPublicHooksGenerateBookCoversRoute
   '/api/public/hooks/generate-novel': typeof ApiPublicHooksGenerateNovelRoute
-  '/api/public/hooks/oneshot-reset': typeof ApiPublicHooksOneshotResetRoute
   '/api/public/hooks/run-scheduled-admin': typeof ApiPublicHooksRunScheduledAdminRoute
   '/api/public/hooks/sync-courses': typeof ApiPublicHooksSyncCoursesRoute
   '/api/public/hooks/sync-library-books': typeof ApiPublicHooksSyncLibraryBooksRoute
@@ -961,7 +953,6 @@ export interface FileRoutesByTo {
   '/api/public/hooks/cache-book-pdf': typeof ApiPublicHooksCacheBookPdfRoute
   '/api/public/hooks/generate-book-covers': typeof ApiPublicHooksGenerateBookCoversRoute
   '/api/public/hooks/generate-novel': typeof ApiPublicHooksGenerateNovelRoute
-  '/api/public/hooks/oneshot-reset': typeof ApiPublicHooksOneshotResetRoute
   '/api/public/hooks/run-scheduled-admin': typeof ApiPublicHooksRunScheduledAdminRoute
   '/api/public/hooks/sync-courses': typeof ApiPublicHooksSyncCoursesRoute
   '/api/public/hooks/sync-library-books': typeof ApiPublicHooksSyncLibraryBooksRoute
@@ -1082,7 +1073,6 @@ export interface FileRoutesById {
   '/api/public/hooks/cache-book-pdf': typeof ApiPublicHooksCacheBookPdfRoute
   '/api/public/hooks/generate-book-covers': typeof ApiPublicHooksGenerateBookCoversRoute
   '/api/public/hooks/generate-novel': typeof ApiPublicHooksGenerateNovelRoute
-  '/api/public/hooks/oneshot-reset': typeof ApiPublicHooksOneshotResetRoute
   '/api/public/hooks/run-scheduled-admin': typeof ApiPublicHooksRunScheduledAdminRoute
   '/api/public/hooks/sync-courses': typeof ApiPublicHooksSyncCoursesRoute
   '/api/public/hooks/sync-library-books': typeof ApiPublicHooksSyncLibraryBooksRoute
@@ -1204,7 +1194,6 @@ export interface FileRouteTypes {
     | '/api/public/hooks/cache-book-pdf'
     | '/api/public/hooks/generate-book-covers'
     | '/api/public/hooks/generate-novel'
-    | '/api/public/hooks/oneshot-reset'
     | '/api/public/hooks/run-scheduled-admin'
     | '/api/public/hooks/sync-courses'
     | '/api/public/hooks/sync-library-books'
@@ -1321,7 +1310,6 @@ export interface FileRouteTypes {
     | '/api/public/hooks/cache-book-pdf'
     | '/api/public/hooks/generate-book-covers'
     | '/api/public/hooks/generate-novel'
-    | '/api/public/hooks/oneshot-reset'
     | '/api/public/hooks/run-scheduled-admin'
     | '/api/public/hooks/sync-courses'
     | '/api/public/hooks/sync-library-books'
@@ -1441,7 +1429,6 @@ export interface FileRouteTypes {
     | '/api/public/hooks/cache-book-pdf'
     | '/api/public/hooks/generate-book-covers'
     | '/api/public/hooks/generate-novel'
-    | '/api/public/hooks/oneshot-reset'
     | '/api/public/hooks/run-scheduled-admin'
     | '/api/public/hooks/sync-courses'
     | '/api/public/hooks/sync-library-books'
@@ -1532,7 +1519,6 @@ export interface RootRouteChildren {
   ApiPublicHooksCacheBookPdfRoute: typeof ApiPublicHooksCacheBookPdfRoute
   ApiPublicHooksGenerateBookCoversRoute: typeof ApiPublicHooksGenerateBookCoversRoute
   ApiPublicHooksGenerateNovelRoute: typeof ApiPublicHooksGenerateNovelRoute
-  ApiPublicHooksOneshotResetRoute: typeof ApiPublicHooksOneshotResetRoute
   ApiPublicHooksRunScheduledAdminRoute: typeof ApiPublicHooksRunScheduledAdminRoute
   ApiPublicHooksSyncCoursesRoute: typeof ApiPublicHooksSyncCoursesRoute
   ApiPublicHooksSyncLibraryBooksRoute: typeof ApiPublicHooksSyncLibraryBooksRoute
@@ -2320,13 +2306,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksRunScheduledAdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/oneshot-reset': {
-      id: '/api/public/hooks/oneshot-reset'
-      path: '/api/public/hooks/oneshot-reset'
-      fullPath: '/api/public/hooks/oneshot-reset'
-      preLoaderRoute: typeof ApiPublicHooksOneshotResetRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/hooks/generate-novel': {
       id: '/api/public/hooks/generate-novel'
       path: '/api/public/hooks/generate-novel'
@@ -2577,7 +2556,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksCacheBookPdfRoute: ApiPublicHooksCacheBookPdfRoute,
   ApiPublicHooksGenerateBookCoversRoute: ApiPublicHooksGenerateBookCoversRoute,
   ApiPublicHooksGenerateNovelRoute: ApiPublicHooksGenerateNovelRoute,
-  ApiPublicHooksOneshotResetRoute: ApiPublicHooksOneshotResetRoute,
   ApiPublicHooksRunScheduledAdminRoute: ApiPublicHooksRunScheduledAdminRoute,
   ApiPublicHooksSyncCoursesRoute: ApiPublicHooksSyncCoursesRoute,
   ApiPublicHooksSyncLibraryBooksRoute: ApiPublicHooksSyncLibraryBooksRoute,
