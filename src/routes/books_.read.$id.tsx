@@ -4,6 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { purchaseLibraryBook } from "@/lib/library-purchase.functions";
+import { handleEmailNotVerified } from "@/components/VerifyEmailDialog";
+
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Loader2, Download, ExternalLink, Coins, ArrowLeft } from "lucide-react";
