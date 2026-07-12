@@ -123,7 +123,6 @@ import { Route as ApiPublicHooksRunScheduledAdminRouteImport } from './routes/ap
 import { Route as ApiPublicHooksGenerateNovelRouteImport } from './routes/api/public/hooks/generate-novel'
 import { Route as ApiPublicHooksGenerateBookCoversRouteImport } from './routes/api/public/hooks/generate-book-covers'
 import { Route as ApiPublicHooksCacheBookPdfRouteImport } from './routes/api/public/hooks/cache-book-pdf'
-import { Route as ApiPublicHooksBankProbeRouteImport } from './routes/api/public/hooks/bank-probe'
 import { Route as ApiPublicHooksAutoEbsuNewsRouteImport } from './routes/api/public/hooks/auto-ebsu-news'
 import { Route as ApiPublicHooksAdminResetPasswordRouteImport } from './routes/api/public/hooks/admin-reset-password'
 import { Route as ApiPublicHooksAdminAiPulseRouteImport } from './routes/api/public/hooks/admin-ai-pulse'
@@ -708,11 +707,6 @@ const ApiPublicHooksCacheBookPdfRoute =
     path: '/api/public/hooks/cache-book-pdf',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksBankProbeRoute = ApiPublicHooksBankProbeRouteImport.update({
-  id: '/api/public/hooks/bank-probe',
-  path: '/api/public/hooks/bank-probe',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicHooksAutoEbsuNewsRoute =
   ApiPublicHooksAutoEbsuNewsRouteImport.update({
     id: '/api/public/hooks/auto-ebsu-news',
@@ -840,7 +834,6 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/admin-ai-pulse': typeof ApiPublicHooksAdminAiPulseRoute
   '/api/public/hooks/admin-reset-password': typeof ApiPublicHooksAdminResetPasswordRoute
   '/api/public/hooks/auto-ebsu-news': typeof ApiPublicHooksAutoEbsuNewsRoute
-  '/api/public/hooks/bank-probe': typeof ApiPublicHooksBankProbeRoute
   '/api/public/hooks/cache-book-pdf': typeof ApiPublicHooksCacheBookPdfRoute
   '/api/public/hooks/generate-book-covers': typeof ApiPublicHooksGenerateBookCoversRoute
   '/api/public/hooks/generate-novel': typeof ApiPublicHooksGenerateNovelRoute
@@ -957,7 +950,6 @@ export interface FileRoutesByTo {
   '/api/public/hooks/admin-ai-pulse': typeof ApiPublicHooksAdminAiPulseRoute
   '/api/public/hooks/admin-reset-password': typeof ApiPublicHooksAdminResetPasswordRoute
   '/api/public/hooks/auto-ebsu-news': typeof ApiPublicHooksAutoEbsuNewsRoute
-  '/api/public/hooks/bank-probe': typeof ApiPublicHooksBankProbeRoute
   '/api/public/hooks/cache-book-pdf': typeof ApiPublicHooksCacheBookPdfRoute
   '/api/public/hooks/generate-book-covers': typeof ApiPublicHooksGenerateBookCoversRoute
   '/api/public/hooks/generate-novel': typeof ApiPublicHooksGenerateNovelRoute
@@ -1078,7 +1070,6 @@ export interface FileRoutesById {
   '/api/public/hooks/admin-ai-pulse': typeof ApiPublicHooksAdminAiPulseRoute
   '/api/public/hooks/admin-reset-password': typeof ApiPublicHooksAdminResetPasswordRoute
   '/api/public/hooks/auto-ebsu-news': typeof ApiPublicHooksAutoEbsuNewsRoute
-  '/api/public/hooks/bank-probe': typeof ApiPublicHooksBankProbeRoute
   '/api/public/hooks/cache-book-pdf': typeof ApiPublicHooksCacheBookPdfRoute
   '/api/public/hooks/generate-book-covers': typeof ApiPublicHooksGenerateBookCoversRoute
   '/api/public/hooks/generate-novel': typeof ApiPublicHooksGenerateNovelRoute
@@ -1200,7 +1191,6 @@ export interface FileRouteTypes {
     | '/api/public/hooks/admin-ai-pulse'
     | '/api/public/hooks/admin-reset-password'
     | '/api/public/hooks/auto-ebsu-news'
-    | '/api/public/hooks/bank-probe'
     | '/api/public/hooks/cache-book-pdf'
     | '/api/public/hooks/generate-book-covers'
     | '/api/public/hooks/generate-novel'
@@ -1317,7 +1307,6 @@ export interface FileRouteTypes {
     | '/api/public/hooks/admin-ai-pulse'
     | '/api/public/hooks/admin-reset-password'
     | '/api/public/hooks/auto-ebsu-news'
-    | '/api/public/hooks/bank-probe'
     | '/api/public/hooks/cache-book-pdf'
     | '/api/public/hooks/generate-book-covers'
     | '/api/public/hooks/generate-novel'
@@ -1437,7 +1426,6 @@ export interface FileRouteTypes {
     | '/api/public/hooks/admin-ai-pulse'
     | '/api/public/hooks/admin-reset-password'
     | '/api/public/hooks/auto-ebsu-news'
-    | '/api/public/hooks/bank-probe'
     | '/api/public/hooks/cache-book-pdf'
     | '/api/public/hooks/generate-book-covers'
     | '/api/public/hooks/generate-novel'
@@ -1528,7 +1516,6 @@ export interface RootRouteChildren {
   ApiPublicHooksAdminAiPulseRoute: typeof ApiPublicHooksAdminAiPulseRoute
   ApiPublicHooksAdminResetPasswordRoute: typeof ApiPublicHooksAdminResetPasswordRoute
   ApiPublicHooksAutoEbsuNewsRoute: typeof ApiPublicHooksAutoEbsuNewsRoute
-  ApiPublicHooksBankProbeRoute: typeof ApiPublicHooksBankProbeRoute
   ApiPublicHooksCacheBookPdfRoute: typeof ApiPublicHooksCacheBookPdfRoute
   ApiPublicHooksGenerateBookCoversRoute: typeof ApiPublicHooksGenerateBookCoversRoute
   ApiPublicHooksGenerateNovelRoute: typeof ApiPublicHooksGenerateNovelRoute
@@ -2340,13 +2327,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksCacheBookPdfRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/bank-probe': {
-      id: '/api/public/hooks/bank-probe'
-      path: '/api/public/hooks/bank-probe'
-      fullPath: '/api/public/hooks/bank-probe'
-      preLoaderRoute: typeof ApiPublicHooksBankProbeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/hooks/auto-ebsu-news': {
       id: '/api/public/hooks/auto-ebsu-news'
       path: '/api/public/hooks/auto-ebsu-news'
@@ -2573,7 +2553,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksAdminAiPulseRoute: ApiPublicHooksAdminAiPulseRoute,
   ApiPublicHooksAdminResetPasswordRoute: ApiPublicHooksAdminResetPasswordRoute,
   ApiPublicHooksAutoEbsuNewsRoute: ApiPublicHooksAutoEbsuNewsRoute,
-  ApiPublicHooksBankProbeRoute: ApiPublicHooksBankProbeRoute,
   ApiPublicHooksCacheBookPdfRoute: ApiPublicHooksCacheBookPdfRoute,
   ApiPublicHooksGenerateBookCoversRoute: ApiPublicHooksGenerateBookCoversRoute,
   ApiPublicHooksGenerateNovelRoute: ApiPublicHooksGenerateNovelRoute,
