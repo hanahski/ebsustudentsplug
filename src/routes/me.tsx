@@ -297,6 +297,25 @@ function MePage() {
           </div>
         </section>
 
+        {profile && !profile.email_verified && (
+          <button
+            type="button"
+            onClick={() => openVerifyEmailDialog()}
+            className="w-full text-left rounded-2xl border border-amber-400/60 bg-amber-50 dark:bg-amber-950/30 p-4 flex items-center gap-3 shadow-card hover:bg-amber-100 dark:hover:bg-amber-950/50 transition"
+          >
+            <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0">
+              <span className="text-amber-600 dark:text-amber-400 text-xl">✉️</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-sm">Verify your email</div>
+              <div className="text-xs text-muted-foreground">Required before you can buy books, tickets, or redeem codes.</div>
+            </div>
+            <div className="text-xs font-semibold text-primary">Verify →</div>
+          </button>
+        )}
+
+
+
         <section className="bg-card border rounded-3xl shadow-card overflow-hidden">
 
           <div
