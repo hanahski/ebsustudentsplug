@@ -108,7 +108,7 @@ function MePage() {
   const redeemCoupon = async () => {
     if (!couponCode.trim()) return;
     const { data, error } = await supabase.rpc("redeem_coupon" as any, { _code: couponCode.trim() });
-    if (error) { toast.error(error.message.replace(/.*: /, "")); return; }
+    if (error) { if (handleEmailNotVerified(error)) return; toast.error(error.message.replace(/.*: /, "")); return; }
     const r = data as any;
     if (r?.ok) {
       toast.success(r.message ?? "Code redeemed!");
