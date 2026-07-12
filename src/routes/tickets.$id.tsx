@@ -89,10 +89,11 @@ function TicketDetail() {
     setBusy(true);
     const { data: buyRes, error } = await supabase.rpc("buy_ticket", { _ticket_id: id });
     if (error) {
-      // no popup to close
       setBusy(false);
+      if (handleEmailNotVerified(error)) return;
       return toast.error(error.message);
     }
+
     const buyerIndex = (buyRes as any)?.buyer_index as number | undefined;
     const qrToken = (buyRes as any)?.qr_token as string | undefined;
     toast.success(`Ticket purchased! You're buyer #${buyerIndex ?? "—"}. Downloading PDF…`);
