@@ -4,6 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { purchaseLibraryBook } from "@/lib/library-purchase.functions";
+import { handleEmailNotVerified } from "@/components/VerifyEmailDialog";
+
 import { getLibraryBooks, ensureLibraryCatalog } from "@/lib/library-books.functions";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -235,6 +237,7 @@ function BooksPage() {
     },
     onError: (e: any) => {
       const msg = e?.message ?? "Purchase failed";
+      if (handleEmailNotVerified(e)) return;
       if (msg.includes("INSUFFICIENT_CREDITS"))
         toast.error("Not enough credits", {
           action: { label: "Get credits", onClick: () => window.location.assign("/get-credits") },
@@ -242,6 +245,7 @@ function BooksPage() {
       else if (msg.includes("Not authenticated")) toast.error("Sign in to buy books");
       else toast.error(msg);
     },
+
   });
 
   return (

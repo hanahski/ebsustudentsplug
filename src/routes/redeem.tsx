@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Gift, Loader2, Sparkles } from "lucide-react";
+import { handleEmailNotVerified } from "@/components/VerifyEmailDialog";
+
 
 export const Route = createFileRoute("/redeem")({
   component: RedeemPage,
@@ -42,6 +44,7 @@ function RedeemPage() {
     const { data, error } = await supabase.rpc("redeem_coupon", { _code: c });
     setBusy(false);
     if (error) {
+      if (handleEmailNotVerified(error)) return;
       const msg = error.message || "Could not redeem code";
       toast.error(
         /invalid/i.test(msg) ? "That code doesn't exist." :
@@ -52,6 +55,7 @@ function RedeemPage() {
       );
       return;
     }
+
     const r = data as { credits_added: number; balance: number; role_granted: string | null };
     setResult({ credits: r.credits_added, balance: r.balance });
     setCode("");

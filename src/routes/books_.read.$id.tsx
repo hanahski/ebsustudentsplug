@@ -4,6 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { purchaseLibraryBook } from "@/lib/library-purchase.functions";
+import { handleEmailNotVerified } from "@/components/VerifyEmailDialog";
+
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Loader2, Download, ExternalLink, Coins, ArrowLeft } from "lucide-react";
@@ -110,6 +112,7 @@ function ReadBookPage() {
     },
     onError: (e: any) => {
       const msg = e?.message ?? "Purchase failed";
+      if (handleEmailNotVerified(e)) return;
       if (msg.includes("INSUFFICIENT_CREDITS"))
         toast.error("Not enough credits", {
           action: { label: "Get credits", onClick: () => window.location.assign("/get-credits") },
@@ -117,6 +120,7 @@ function ReadBookPage() {
       else if (msg.includes("Not authenticated")) toast.error("Sign in to unlock");
       else toast.error(msg);
     },
+
   });
 
   // First time we discover the user already owns this book, offer the chooser.

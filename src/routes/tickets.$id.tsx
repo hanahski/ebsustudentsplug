@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ArrowLeft, Ticket as TicketIcon, ShoppingCart, CheckCircle2, Download, Loader2 } from "lucide-react";
 import { composeTicketImage, downloadTicketPdf, ticketFilename } from "@/lib/ticket-composer";
+import { handleEmailNotVerified } from "@/components/VerifyEmailDialog";
+
 
 export const Route = createFileRoute("/tickets/$id")({ component: TicketDetail });
 
@@ -89,10 +91,11 @@ function TicketDetail() {
     setBusy(true);
     const { data: buyRes, error } = await supabase.rpc("buy_ticket", { _ticket_id: id });
     if (error) {
-      // no popup to close
       setBusy(false);
+      if (handleEmailNotVerified(error)) return;
       return toast.error(error.message);
     }
+
     const buyerIndex = (buyRes as any)?.buyer_index as number | undefined;
     const qrToken = (buyRes as any)?.qr_token as string | undefined;
     toast.success(`Ticket purchased! You're buyer #${buyerIndex ?? "—"}. Downloading PDF…`);

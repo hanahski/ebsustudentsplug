@@ -119,13 +119,16 @@ function LoginPage() {
           options: { data: { display_name: name || email.split("@")[0] } },
         });
         if (error) throw error;
+        // Auto-confirm is ON — a session is returned immediately. If for any
+        // reason we don't get one, fall back to the OTP flow.
         if (!data.session) {
           toast.success("Account created. Check your email for a 6-digit code.", { duration: 6000 });
           await nav({ to: "/verify-otp", search: { email, redirect } });
           return;
         }
         await tryRedeemPendingReferral();
-        toast.success("Welcome to StudentsPlug!");
+        toast.success("Welcome to StudentsPlug! Verify your email later to unlock buying.", { duration: 6000 });
+
 
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });

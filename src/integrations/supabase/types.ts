@@ -1463,6 +1463,7 @@ export type Database = {
           department_id: string | null
           display_name: string
           email: string | null
+          email_verified: boolean
           id: string
           is_legit: boolean
           is_star: boolean
@@ -1499,6 +1500,7 @@ export type Database = {
           department_id?: string | null
           display_name?: string
           email?: string | null
+          email_verified?: boolean
           id: string
           is_legit?: boolean
           is_star?: boolean
@@ -1535,6 +1537,7 @@ export type Database = {
           department_id?: string | null
           display_name?: string
           email?: string | null
+          email_verified?: boolean
           id?: string
           is_legit?: boolean
           is_star?: boolean
@@ -2471,6 +2474,7 @@ export type Database = {
           department_id: string | null
           display_name: string
           email: string | null
+          email_verified: boolean
           id: string
           is_legit: boolean
           is_star: boolean
@@ -2513,6 +2517,7 @@ export type Database = {
         Args: { _thread_id: string; _user_id: string }
         Returns: boolean
       }
+      mark_email_verified: { Args: never; Returns: undefined }
       publish_user_book: { Args: { _book_id: string }; Returns: string }
       redeem_coupon: { Args: { _code: string }; Returns: Json }
       redeem_referral: { Args: { _code: string }; Returns: undefined }
@@ -2524,6 +2529,7 @@ export type Database = {
         Args: { _name: string; _thread_id: string }
         Returns: undefined
       }
+      require_email_verified: { Args: never; Returns: undefined }
       seed_admin_email_matches_current_user: {
         Args: { _profile_id?: string }
         Returns: boolean

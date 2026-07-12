@@ -25,6 +25,17 @@ export const purchaseLibraryBook = createServerFn({ method: "POST" })
     });
     if (adminErr) throw new Error(adminErr.message);
 
+    // Require verified email for paid buys (admins are exempt).
+    if (!isAdmin && book.price_credits > 0) {
+      const { data: buyer } = await supabaseAdmin
+        .from("profiles")
+        .select("email_verified")
+        .eq("id", uid)
+        .maybeSingle();
+      if (!buyer?.email_verified) throw new Error("EMAIL_NOT_VERIFIED");
+    }
+
+
     const { data: existing } = await supabaseAdmin
       .from("library_book_purchases")
       .select("id")
