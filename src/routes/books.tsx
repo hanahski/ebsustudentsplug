@@ -4,6 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { purchaseLibraryBook } from "@/lib/library-purchase.functions";
+import { handleEmailNotVerified } from "@/components/VerifyEmailDialog";
+
 import { getLibraryBooks, ensureLibraryCatalog } from "@/lib/library-books.functions";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
