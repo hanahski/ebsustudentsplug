@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import { Ticket, Upload, QrCode, Lock, Loader2, Download, Megaphone, Eye, EyeOff, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { composeTicketImage, downloadTicketPdf, ticketFilename, composeVerifiedQr } from "@/lib/ticket-composer";
 import { getIsAdminUser } from "@/lib/admin-role";
+import { handleEmailNotVerified } from "@/components/VerifyEmailDialog";
+
 
 export const Route = createFileRoute("/tickets")({ component: TicketsPage });
 
