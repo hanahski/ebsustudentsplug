@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Gift, Loader2, Sparkles } from "lucide-react";
+import { handleEmailNotVerified } from "@/components/VerifyEmailDialog";
+
 
 export const Route = createFileRoute("/redeem")({
   component: RedeemPage,
