@@ -110,6 +110,7 @@ function ReadBookPage() {
     },
     onError: (e: any) => {
       const msg = e?.message ?? "Purchase failed";
+      if (handleEmailNotVerified(e)) return;
       if (msg.includes("INSUFFICIENT_CREDITS"))
         toast.error("Not enough credits", {
           action: { label: "Get credits", onClick: () => window.location.assign("/get-credits") },
@@ -117,6 +118,7 @@ function ReadBookPage() {
       else if (msg.includes("Not authenticated")) toast.error("Sign in to unlock");
       else toast.error(msg);
     },
+
   });
 
   // First time we discover the user already owns this book, offer the chooser.
