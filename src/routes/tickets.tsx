@@ -136,8 +136,9 @@ function BrowseTickets() {
       qc.invalidateQueries({ queryKey: ["tickets-browse"] });
       qc.invalidateQueries({ queryKey: ["my-tickets", user.id] });
     } catch (err: any) {
-      // no popup to close
+      if (handleEmailNotVerified(err)) { setBuyingId(null); return; }
       toast.error(err.message ?? "PDF download failed");
+
     } finally {
       setBuyingId(null);
     }
