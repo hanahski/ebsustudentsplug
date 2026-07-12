@@ -19,6 +19,8 @@ type Profile = {
   credits: number;
   seen_welcome: boolean;
   is_verified: boolean;
+  email_verified: boolean;
+
   status?: "active" | "blocked" | "deactivated";
 };
 
