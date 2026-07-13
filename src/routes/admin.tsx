@@ -16,6 +16,7 @@ export const Route = createFileRoute("/admin")({
     meta: [
       { title: "Opening admin — StudentsPlug" },
       { name: "robots", content: "noindex, nofollow" },
+      { httpEquiv: "refresh", content: `0;url=${getConfiguredAdminRedirectUrl() || LEGACY_ADMIN_PATH}` },
     ],
   }),
 });
