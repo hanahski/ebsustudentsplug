@@ -36,6 +36,7 @@ import { Route as BookshelfRouteImport } from './routes/bookshelf'
 import { Route as BooksRouteImport } from './routes/books'
 import { Route as ApplyBadgeRouteImport } from './routes/apply-badge'
 import { Route as AdminLoginRouteImport } from './routes/admin-login'
+import { Route as AdminLocalRouteImport } from './routes/admin-local'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
@@ -260,6 +261,11 @@ const ApplyBadgeRoute = ApplyBadgeRouteImport.update({
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/admin-login',
   path: '/admin-login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLocalRoute = AdminLocalRouteImport.update({
+  id: '/admin-local',
+  path: '/admin-local',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -730,6 +736,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
+  '/admin-local': typeof AdminLocalRoute
   '/admin-login': typeof AdminLoginRoute
   '/apply-badge': typeof ApplyBadgeRoute
   '/books': typeof BooksRoute
@@ -849,6 +856,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
+  '/admin-local': typeof AdminLocalRoute
   '/admin-login': typeof AdminLoginRoute
   '/apply-badge': typeof ApplyBadgeRoute
   '/books': typeof BooksRoute
@@ -966,6 +974,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
+  '/admin-local': typeof AdminLocalRoute
   '/admin-login': typeof AdminLoginRoute
   '/apply-badge': typeof ApplyBadgeRoute
   '/books': typeof BooksRoute
@@ -1087,6 +1096,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/admin'
+    | '/admin-local'
     | '/admin-login'
     | '/apply-badge'
     | '/books'
@@ -1206,6 +1216,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/admin'
+    | '/admin-local'
     | '/admin-login'
     | '/apply-badge'
     | '/books'
@@ -1322,6 +1333,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/admin'
+    | '/admin-local'
     | '/admin-login'
     | '/apply-badge'
     | '/books'
@@ -1442,6 +1454,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRoute
+  AdminLocalRoute: typeof AdminLocalRoute
   AdminLoginRoute: typeof AdminLoginRoute
   ApplyBadgeRoute: typeof ApplyBadgeRoute
   BooksRoute: typeof BooksRoute
@@ -1716,6 +1729,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-login'
       fullPath: '/admin-login'
       preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-local': {
+      id: '/admin-local'
+      path: '/admin-local'
+      fullPath: '/admin-local'
+      preLoaderRoute: typeof AdminLocalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -2479,6 +2499,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AdminRoute: AdminRoute,
+  AdminLocalRoute: AdminLocalRoute,
   AdminLoginRoute: AdminLoginRoute,
   ApplyBadgeRoute: ApplyBadgeRoute,
   BooksRoute: BooksRoute,
@@ -2566,13 +2587,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
