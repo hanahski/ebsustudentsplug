@@ -174,8 +174,8 @@ export const plugAiChat = createServerFn({ method: "POST" })
     return d;
   })
   .handler(async ({ data, context }) => {
-    const apiKey = process.env.PLUG_AI_KEY || process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("AI is not configured");
+    const apiKey = process.env.PLUG_AI_KEY || process.env.LOVABLE_API_KEY || process.env.AI_BANK_KEY;
+    if (!process.env.AI_BANK_URL || !process.env.AI_BANK_KEY) throw new Error("AI is not configured");
 
     let siteCtx = "";
     try { siteCtx = await buildSiteContext(context.userId); }

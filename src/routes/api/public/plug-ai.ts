@@ -147,8 +147,8 @@ export const Route = createFileRoute("/api/public/plug-ai")({
           return json(429, { error: "Too many requests. Slow down a bit." }, { "Retry-After": String(limit.retryAfter) });
         }
 
-        const apiKey = process.env.PLUG_AI_KEY || process.env.LOVABLE_API_KEY;
-        if (!apiKey) return json(500, { error: "AI not configured" });
+        const apiKey = process.env.PLUG_AI_KEY || process.env.LOVABLE_API_KEY || process.env.AI_BANK_KEY;
+        if (!process.env.AI_BANK_URL || !process.env.AI_BANK_KEY) return json(500, { error: "AI not configured" });
 
         try {
           const { googleChat } = await import("@/lib/google-ai");
