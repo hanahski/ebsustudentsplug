@@ -11,7 +11,7 @@ function cleanAdminUrl(value: string | null | undefined) {
 }
 
 export function getAdminRedirectUrl() {
-  const envUrl = cleanAdminUrl(import.meta.env.VITE_ADMIN_PANEL_URL as string | undefined);
+  const envUrl = getConfiguredAdminRedirectUrl();
   if (envUrl) return envUrl;
 
   if (typeof window === "undefined") return LEGACY_ADMIN_PATH;
@@ -21,6 +21,10 @@ export function getAdminRedirectUrl() {
   } catch {
     return LEGACY_ADMIN_PATH;
   }
+}
+
+export function getConfiguredAdminRedirectUrl() {
+  return cleanAdminUrl(import.meta.env.VITE_ADMIN_PANEL_URL as string | undefined);
 }
 
 export function goToAdminPanel() {

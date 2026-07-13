@@ -1,11 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Shield } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
-import { getAdminRedirectUrl, goToAdminPanel } from "@/lib/admin-redirect";
+import { getAdminRedirectUrl, getConfiguredAdminRedirectUrl, goToAdminPanel, LEGACY_ADMIN_PATH } from "@/lib/admin-redirect";
 
 export const Route = createFileRoute("/admin")({
+  beforeLoad: () => {
+    if (!getConfiguredAdminRedirectUrl()) {
+      throw redirect({ to: LEGACY_ADMIN_PATH });
+    }
+  },
   component: AdminRedirectPage,
   head: () => ({
     meta: [
