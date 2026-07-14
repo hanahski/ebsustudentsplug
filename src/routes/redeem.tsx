@@ -60,9 +60,8 @@ function RedeemPage() {
     setResult({ credits: r.credits_added, balance: r.balance });
     setCode("");
     if (r.role_granted === "admin") {
-      toast.success("Admin access unlocked! Opening admin panel…");
+      toast.success("Admin access unlocked!");
       try { await refreshProfile(); } catch {}
-      setTimeout(() => navigate({ to: "/admin" }), 800);
     } else if (r.credits_added > 0) {
       toast.success(`+${r.credits_added} credits added!`);
     } else {
