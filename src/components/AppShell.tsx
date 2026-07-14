@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { AvatarDisplay } from "./AvatarDisplay";
 import { Button } from "@/components/ui/button";
-import { Gamepad2, GraduationCap, Home, Library, LogIn, MessageCircle, PlusCircle, RotateCw, Rss, ScanLine, Search as SearchIcon, Shield, ShoppingBag, Sparkles, User, Wrench, X } from "lucide-react";
+import { Gamepad2, GraduationCap, Home, Library, LogIn, MessageCircle, PlusCircle, RotateCw, Rss, ScanLine, Search as SearchIcon, ShoppingBag, Sparkles, User, Wrench, X } from "lucide-react";
 import { Logo } from "./Logo";
 import { SiteSearch } from "./SiteSearch";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -229,16 +229,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <ReferralCelebration />
       <ContentRemovalToasts />
       <HideSeekListener userId={user?.id} />
-      {isAdmin && viewAsUser && (
-        <button
-          type="button"
-          onClick={() => { setViewAsUser(false); router.navigate({ to: "/admin" }); }}
-          className="fixed bottom-20 md:bottom-6 right-4 z-50 inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-amber-500 text-white text-xs font-bold shadow-glow hover:bg-amber-600 transition"
-          title="You're browsing as a normal user"
-        >
-          <Shield className="w-3.5 h-3.5" /> Return to Admin
-        </button>
-      )}
+      {/* Admin panel removed from website UI */}
       {/* Pull-to-refresh indicator (mobile) */}
       {(pullY > 0 || refreshing) && (
         <div
@@ -272,7 +263,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {key === "chat" && unread > 0 && <UnreadDot count={unread} />}
               </Link>
             ))}
-            {showAdminUi && <Link to="/admin" className="group inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1.5 text-primary font-bold transition-all hover:-translate-y-0.5"><Shield className="w-3.5 h-3.5" />Admin</Link>}
+            
           </nav>
           <div className="hidden md:flex flex-1 max-w-md mx-2">
             <SiteSearch />

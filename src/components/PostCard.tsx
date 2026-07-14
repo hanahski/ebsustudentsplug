@@ -94,6 +94,25 @@ export function PostCard({ post, locked, prefetchNextVideoUrl }: { post: FeedPos
     return () => { alive = false; };
   }, [post.id, post.comment_count]);
 
+  // Authoritative counts from the source tables. posts.like_count on the
+  // server is stale (no DB trigger keeps it in sync), so trusting
+  // post.like_count made the UI "revert to zero" after any refetch.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const [likes, reposts, comments] = await Promise.all([
+        supabase.from("post_likes").select("post_id", { count: "exact", head: true }).eq("post_id", post.id),
+        supabase.from("post_reposts").select("post_id", { count: "exact", head: true }).eq("post_id", post.id),
+        supabase.from("post_comments").select("id", { count: "exact", head: true }).eq("post_id", post.id),
+      ]);
+      if (!alive) return;
+      if (typeof likes.count === "number") setLikeCount(likes.count);
+      if (typeof reposts.count === "number") setRepostCount(reposts.count);
+      if (typeof comments.count === "number") setCommentCount(comments.count);
+    })();
+    return () => { alive = false; };
+  }, [post.id]);
+
   useEffect(() => {
     if (!user) { setLiked(false); setReposted(false); return; }
     supabase.from("post_likes").select("post_id").eq("post_id", post.id).eq("user_id", user.id).maybeSingle()

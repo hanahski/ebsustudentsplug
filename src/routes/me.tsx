@@ -427,7 +427,7 @@ function MePage() {
           <section className="bg-card border rounded-3xl shadow-card p-4 flex items-center justify-between gap-4 bg-gradient-to-br from-amber-500/10 to-yellow-500/5">
             <div>
               <h2 className="font-bold font-display flex items-center gap-2"><Coins className="w-5 h-5 text-amber-500" /> Admin — unlimited credits</h2>
-              <Link to="/admin" className="text-xs text-primary inline-flex items-center gap-1 mt-1"><Shield className="w-3 h-3" /> Open Admin Panel</Link>
+              <p className="text-xs text-muted-foreground mt-1">Staff account</p>
             </div>
             <div className="text-4xl font-bold text-amber-500 leading-none">∞</div>
           </section>
