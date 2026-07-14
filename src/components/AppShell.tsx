@@ -229,16 +229,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <ReferralCelebration />
       <ContentRemovalToasts />
       <HideSeekListener userId={user?.id} />
-      {isAdmin && viewAsUser && (
-        <button
-          type="button"
-          onClick={() => { setViewAsUser(false); router.navigate({ to: "/admin" }); }}
-          className="fixed bottom-20 md:bottom-6 right-4 z-50 inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-amber-500 text-white text-xs font-bold shadow-glow hover:bg-amber-600 transition"
-          title="You're browsing as a normal user"
-        >
-          <Shield className="w-3.5 h-3.5" /> Return to Admin
-        </button>
-      )}
+      {/* Admin panel removed from website UI */}
       {/* Pull-to-refresh indicator (mobile) */}
       {(pullY > 0 || refreshing) && (
         <div
