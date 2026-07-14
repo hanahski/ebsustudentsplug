@@ -89,13 +89,7 @@ function ProfilePage() {
                 <h1 className="text-xl sm:text-2xl font-bold font-display leading-tight break-words flex items-start gap-2">
                   <span className="break-words min-w-0 flex-1">{p.display_name}</span>
                   {profileIsAdmin ? (
-                    isMe && isAdmin ? (
-                      <Link to="/admin" className="hover:opacity-80 transition-opacity" title="Admin Panel">
-                        <AdminCrownBadge size={24} className="mt-1" />
-                      </Link>
-                    ) : (
-                      <AdminCrownBadge size={24} className="mt-1" />
-                    )
+                    <AdminCrownBadge size={24} className="mt-1" />
                   ) : (
                     <SpecialBadges profile={p} size={20} className="mt-1" />
                   )}
