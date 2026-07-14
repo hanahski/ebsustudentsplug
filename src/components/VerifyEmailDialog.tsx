@@ -3,10 +3,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { MailCheck, Loader2 } from "lucide-react";
+import { sendVerifyOtp, verifyEmailOtp } from "@/lib/email-otp.functions";
 
 const OPEN_EVENT = "studentsplug:open-verify-email";
 
@@ -58,11 +58,7 @@ export function VerifyEmailDialog() {
     if (!email) return;
     setBusy(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { shouldCreateUser: false },
-      });
-      if (error) throw error;
+      await sendVerifyOtp();
       toast.success(`Code sent to ${email}`);
       setStage("code");
     } catch (err: any) {
@@ -76,14 +72,7 @@ export function VerifyEmailDialog() {
     if (!email || code.trim().length < 6) return;
     setBusy(true);
     try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token: code.trim(),
-        type: "email",
-      });
-      if (error) throw error;
-      const { error: rpcErr } = await supabase.rpc("mark_email_verified" as any);
-      if (rpcErr) throw rpcErr;
+      await verifyEmailOtp({ data: { code: code.trim() } });
       await refreshProfile();
       toast.success("Email verified! You can buy now.");
       setOpen(false);
