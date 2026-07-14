@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { AvatarDisplay } from "./AvatarDisplay";
 import { Button } from "@/components/ui/button";
-import { Gamepad2, GraduationCap, Home, Library, LogIn, MessageCircle, PlusCircle, RotateCw, Rss, ScanLine, Search as SearchIcon, Shield, ShoppingBag, Sparkles, User, Wrench, X } from "lucide-react";
+import { Gamepad2, GraduationCap, Home, Library, LogIn, MessageCircle, PlusCircle, RotateCw, Rss, ScanLine, Search as SearchIcon, ShoppingBag, Sparkles, User, Wrench, X } from "lucide-react";
 import { Logo } from "./Logo";
 import { SiteSearch } from "./SiteSearch";
 import { useEffect, useRef, useState, type ReactNode } from "react";
