@@ -272,7 +272,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {key === "chat" && unread > 0 && <UnreadDot count={unread} />}
               </Link>
             ))}
-            {showAdminUi && <Link to="/admin" className="group inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1.5 text-primary font-bold transition-all hover:-translate-y-0.5"><Shield className="w-3.5 h-3.5" />Admin</Link>}
+            
           </nav>
           <div className="hidden md:flex flex-1 max-w-md mx-2">
             <SiteSearch />

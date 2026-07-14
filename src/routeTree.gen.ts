@@ -37,7 +37,6 @@ import { Route as BooksRouteImport } from './routes/books'
 import { Route as ApplyBadgeRouteImport } from './routes/apply-badge'
 import { Route as AdminLoginRouteImport } from './routes/admin-login'
 import { Route as AdminLocalRouteImport } from './routes/admin-local'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NotesIndexRouteImport } from './routes/notes.index'
@@ -266,11 +265,6 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
 const AdminLocalRoute = AdminLocalRouteImport.update({
   id: '/admin-local',
   path: '/admin-local',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -735,7 +729,6 @@ const ApiPublicHooksAdminAiPulseRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin': typeof AdminRoute
   '/admin-local': typeof AdminLocalRoute
   '/admin-login': typeof AdminLoginRoute
   '/apply-badge': typeof ApplyBadgeRoute
@@ -855,7 +848,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin': typeof AdminRoute
   '/admin-local': typeof AdminLocalRoute
   '/admin-login': typeof AdminLoginRoute
   '/apply-badge': typeof ApplyBadgeRoute
@@ -973,7 +965,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin': typeof AdminRoute
   '/admin-local': typeof AdminLocalRoute
   '/admin-login': typeof AdminLoginRoute
   '/apply-badge': typeof ApplyBadgeRoute
@@ -1095,7 +1086,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
-    | '/admin'
     | '/admin-local'
     | '/admin-login'
     | '/apply-badge'
@@ -1215,7 +1205,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
-    | '/admin'
     | '/admin-local'
     | '/admin-login'
     | '/apply-badge'
@@ -1332,7 +1321,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
-    | '/admin'
     | '/admin-local'
     | '/admin-login'
     | '/apply-badge'
@@ -1453,7 +1441,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  AdminRoute: typeof AdminRoute
   AdminLocalRoute: typeof AdminLocalRoute
   AdminLoginRoute: typeof AdminLoginRoute
   ApplyBadgeRoute: typeof ApplyBadgeRoute
@@ -1736,13 +1723,6 @@ declare module '@tanstack/react-router' {
       path: '/admin-local'
       fullPath: '/admin-local'
       preLoaderRoute: typeof AdminLocalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -2498,7 +2478,6 @@ const EarnCreditsBattleRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  AdminRoute: AdminRoute,
   AdminLocalRoute: AdminLocalRoute,
   AdminLoginRoute: AdminLoginRoute,
   ApplyBadgeRoute: ApplyBadgeRoute,
