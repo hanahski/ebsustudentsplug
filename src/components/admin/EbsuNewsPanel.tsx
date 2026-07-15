@@ -134,7 +134,10 @@ export function EbsuNewsPanel() {
       toast.error(e?.message ?? "Cover generation failed");
     } finally {
       setCoveringId(null);
+    }
   }
+
+
 
   async function replaceAllCovers() {
     if (!articles.length) return;
