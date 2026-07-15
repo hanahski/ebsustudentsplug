@@ -123,6 +123,20 @@ export function EbsuNewsPanel() {
     }
   }
 
+  async function generateCover(id: string) {
+    setCoveringId(id);
+    try {
+      await genCover({ data: { id } });
+      toast.success("Cover image generated");
+      qc.invalidateQueries({ queryKey: ["ebsu-news-articles"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Cover generation failed");
+    } finally {
+      setCoveringId(null);
+    }
+  }
+
+
   async function remakeAll() {
     if (!articles.length) return;
     if (!confirm(`Remake all ${articles.length} EBSU articles with the updated AI? This rewrites bodies and generates new cover images.`)) return;
