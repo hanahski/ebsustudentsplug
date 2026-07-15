@@ -489,6 +489,11 @@ function ComposerForm({ kind, onBack, userId }: { kind: Kind; onBack: () => void
             </div>
           ))}
 
+          {isHostel && (
+            <HostelComposer value={hostelSpecs} onChange={setHostelSpecs} />
+          )}
+
+
           {kind !== "advert" && (
             <label className="flex items-start gap-3 p-3 rounded-2xl border bg-muted/40 cursor-pointer hover:bg-muted/60 transition">
               <Switch checked={shareToFeed} onCheckedChange={setShareToFeed} className="mt-0.5" />
