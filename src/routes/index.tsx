@@ -77,14 +77,21 @@ function Home() {
   const [pendingNew, setPendingNew] = useState(0);
   const [feedLimit, setFeedLimit] = useState(20);
   const qc = useQueryClient();
-  const { data: posts, isLoading, isFetching } = useQuery({
+  const { data: posts, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ["feed", feedLimit],
-    queryFn: async (): Promise<FeedPost[]> => {
-      const { data, error } = await supabase
+    queryFn: async ({ signal }): Promise<FeedPost[]> => {
+      // Hard 12s ceiling so a stalled network never leaves the feed stuck
+      // on "Loading feed…" forever.
+      const timeout = new Promise<never>((_, rej) =>
+        setTimeout(() => rej(new Error("Feed took too long to load. Tap retry.")), 12_000),
+      );
+      const req = supabase
         .from("posts")
         .select("id,title,body,post_type,file_url,image_url,media_url,media_type,link_url,view_count,like_count,comment_count,repost_count,created_at,is_official, course:courses(code,title), author:profiles!posts_author_id_fkey(id,display_name,avatar_key,rank_tier,rank_step,show_online,last_seen_at,is_verified,is_legit,is_star,is_sure_plug)")
         .order("created_at", { ascending: false })
-        .limit(feedLimit);
+        .limit(feedLimit)
+        .abortSignal(signal);
+      const { data, error } = (await Promise.race([req, timeout])) as Awaited<typeof req>;
       if (error) throw error;
       return (data ?? []) as unknown as FeedPost[];
     },
@@ -92,6 +99,8 @@ function Home() {
     // (which was causing playback stalls and apparent page "refreshes").
     placeholderData: (prev) => prev,
     staleTime: 30_000,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1500 * 2 ** attempt, 5000),
   });
   const canLoadMore = (posts?.length ?? 0) >= feedLimit;
 
@@ -330,8 +339,36 @@ function Home() {
               <ArrowUp className="w-4 h-4" /> {pendingNew} new post{pendingNew === 1 ? "" : "s"} — tap to load
             </button>
           )}
-          {isLoading ? (
-            <p className="text-muted-foreground">Loading feed…</p>
+          {error && !posts?.length ? (
+            <div className="bg-destructive/10 border border-destructive/30 rounded-2xl p-5 text-center">
+              <p className="font-semibold text-sm">Couldn't load the feed</p>
+              <p className="text-xs text-muted-foreground mt-1">{(error as Error)?.message ?? "Network hiccup — try again."}</p>
+              <button
+                onClick={() => refetch()}
+                disabled={isFetching}
+                className="mt-3 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
+              >
+                {isFetching ? "Retrying…" : "Try again"}
+              </button>
+            </div>
+          ) : isLoading && ((posts as FeedPost[] | undefined)?.length ?? 0) === 0 ? (
+            <div className="space-y-4" aria-busy="true" aria-label="Loading feed">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="bg-card border rounded-3xl p-4 shadow-card animate-pulse">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-muted" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 w-1/3 bg-muted rounded" />
+                      <div className="h-2 w-1/4 bg-muted rounded" />
+                    </div>
+                  </div>
+                  <div className="h-4 w-3/4 bg-muted rounded mb-2" />
+                  <div className="h-3 w-full bg-muted rounded mb-1.5" />
+                  <div className="h-3 w-5/6 bg-muted rounded mb-3" />
+                  <div className="h-40 w-full bg-muted rounded-xl" />
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="space-y-6">
               {!!filtered.length && (
