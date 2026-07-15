@@ -98,8 +98,26 @@ async function generateCover(
       `Subject / story: ${prompt}`;
 
     const refs = [...refImageDataUrls.slice(0, 3), BRAND_LOGO_DATA_URL];
-    const img = await googleImage({ apiKey: key, prompt: brandInstruction, refImages: refs });
-    if (!img) return null;
+    const models = [
+      "google/gemini-2.5-flash-image-preview",
+      "google/gemini-3-pro-image",
+      "openai/gpt-image-1",
+    ];
+    let img: { base64: string; mimeType: string } | null = null;
+    let lastErr: unknown = null;
+    for (const model of models) {
+      try {
+        img = await googleImage({ apiKey: key, prompt: brandInstruction, refImages: refs, model });
+        if (img) break;
+      } catch (e) {
+        lastErr = e;
+        console.error("cover gen model failed", model, e);
+      }
+    }
+    if (!img) {
+      if (lastErr) console.error("cover gen all models failed", lastErr);
+      return null;
+    }
     const buf = Buffer.from(img.base64, "base64");
     const path = `ebsu-news/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.png`;
     const { error } = await supabaseAdmin.storage
