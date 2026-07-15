@@ -189,33 +189,71 @@ export const verifyEmailOtp = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+const LOGO_URL = "https://ebsustudentsplug.lovable.app/__l5e/assets-v1/05672a98-a2df-4f83-aa5e-749269614f72/studentsplug-logo.png";
+const APP_URL = "https://ebsustudentsplug.lovable.app";
+
 function renderOtpHtml(code: string): string {
   return `<!doctype html>
-<html>
-  <body style="margin:0;padding:0;background:#f6f7fb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#0f172a;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
+    <title>Your StudentsPlug verification code</title>
+  </head>
+  <body style="margin:0;padding:0;background:#f6f7fb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0f172a;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Your StudentsPlug code is ${code}. It expires in 10 minutes.</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;background:#f6f7fb;">
       <tr><td align="center">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:16px;box-shadow:0 6px 24px rgba(15,23,42,.06);overflow:hidden;">
-          <tr><td style="padding:28px 28px 8px 28px;">
-            <div style="font-size:14px;font-weight:600;letter-spacing:.06em;color:#3b82f6;text-transform:uppercase;">StudentsPlug</div>
-            <h1 style="margin:8px 0 4px 0;font-size:22px;line-height:1.3;">Verify your email</h1>
-            <p style="margin:0;color:#475569;font-size:14px;line-height:1.55;">Use the code below to finish verifying your email. It expires in <b>10 minutes</b>.</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:20px;box-shadow:0 10px 40px rgba(15,23,42,.08);overflow:hidden;">
+          <!-- Header with logo -->
+          <tr><td style="padding:32px 32px 8px 32px;text-align:center;background:linear-gradient(135deg,#eff6ff 0%,#ffffff 60%);">
+            <a href="${APP_URL}" style="text-decoration:none;display:inline-block;">
+              <img src="${LOGO_URL}" alt="StudentsPlug" width="64" height="64" style="display:block;margin:0 auto 12px auto;width:64px;height:64px;border-radius:16px;box-shadow:0 4px 12px rgba(59,130,246,.18);" />
+              <div style="font-size:20px;font-weight:800;color:#0f172a;letter-spacing:-0.01em;">StudentsPlug</div>
+              <div style="font-size:12px;font-weight:500;color:#64748b;margin-top:2px;letter-spacing:.02em;">Ebonyi State University</div>
+            </a>
           </td></tr>
-          <tr><td style="padding:20px 28px 8px 28px;">
-            <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:12px;padding:20px;text-align:center;">
-              <div style="font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:32px;letter-spacing:.5em;font-weight:700;color:#0f172a;">${code}</div>
+
+          <!-- Heading -->
+          <tr><td style="padding:24px 32px 8px 32px;text-align:center;">
+            <h1 style="margin:0 0 8px 0;font-size:24px;line-height:1.3;font-weight:700;color:#0f172a;">Verify your email</h1>
+            <p style="margin:0;color:#475569;font-size:15px;line-height:1.6;">Enter this 6-digit code to confirm this email belongs to you. It expires in <b style="color:#0f172a;">10 minutes</b>.</p>
+          </td></tr>
+
+          <!-- Code box with inline logo mark -->
+          <tr><td style="padding:24px 32px 8px 32px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#f8fafc 0%,#eff6ff 100%);border:1px solid #dbeafe;border-radius:14px;">
+              <tr>
+                <td style="padding:22px 20px;text-align:center;">
+                  <img src="${LOGO_URL}" alt="" width="28" height="28" style="display:inline-block;vertical-align:middle;width:28px;height:28px;border-radius:8px;margin-right:12px;opacity:.9;" />
+                  <span style="font-family:'SFMono-Regular',ui-monospace,Consolas,'Liberation Mono',Menlo,monospace;font-size:34px;letter-spacing:.42em;font-weight:800;color:#0f172a;vertical-align:middle;">${code}</span>
+                </td>
+              </tr>
+            </table>
+          </td></tr>
+
+          <!-- Security note -->
+          <tr><td style="padding:20px 32px 4px 32px;">
+            <div style="background:#fffbeb;border-left:3px solid #f59e0b;border-radius:8px;padding:12px 14px;">
+              <p style="margin:0;color:#78350f;font-size:13px;line-height:1.55;"><b>Keep this code private.</b> StudentsPlug staff will never ask for it — not in chat, DMs, calls, or WhatsApp.</p>
             </div>
           </td></tr>
-          <tr><td style="padding:16px 28px 4px 28px;">
-            <p style="margin:0;color:#475569;font-size:13px;line-height:1.55;">Enter this code in the verification screen where you started. Never share it with anyone — StudentsPlug staff will never ask for it.</p>
+
+          <!-- Ignore note -->
+          <tr><td style="padding:16px 32px 28px 32px;">
+            <p style="margin:0;color:#94a3b8;font-size:12px;line-height:1.6;text-align:center;">Didn't request this code? You can safely ignore this email — no changes were made to your account.</p>
           </td></tr>
-          <tr><td style="padding:20px 28px 28px 28px;">
-            <p style="margin:0;color:#94a3b8;font-size:12px;line-height:1.6;">Didn't request this? You can ignore this email — no changes were made to your account.</p>
-          </td></tr>
-          <tr><td style="padding:16px 28px;background:#f8fafc;border-top:1px solid #e2e8f0;">
-            <p style="margin:0;color:#64748b;font-size:12px;line-height:1.5;">StudentsPlug Support · Ebonyi State University community</p>
+
+          <!-- Footer -->
+          <tr><td style="padding:20px 32px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;">
+            <img src="${LOGO_URL}" alt="" width="20" height="20" style="display:inline-block;vertical-align:middle;width:20px;height:20px;border-radius:6px;margin-right:8px;opacity:.7;" />
+            <span style="color:#64748b;font-size:12px;font-weight:600;vertical-align:middle;">StudentsPlug Support</span>
+            <div style="margin-top:8px;color:#94a3b8;font-size:11px;line-height:1.6;">The student plug for Ebonyi State University · <a href="${APP_URL}" style="color:#3b82f6;text-decoration:none;">ebsustudentsplug.lovable.app</a></div>
           </td></tr>
         </table>
+        <div style="max-width:560px;margin:16px auto 0 auto;color:#94a3b8;font-size:11px;line-height:1.5;text-align:center;">This is an automated security email sent because someone asked to verify this address on StudentsPlug.</div>
       </td></tr>
     </table>
   </body>
