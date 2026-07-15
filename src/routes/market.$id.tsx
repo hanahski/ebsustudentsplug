@@ -1,16 +1,20 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowLeft, Phone, MapPin, Trash2, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Phone, MapPin, Trash2, CheckCircle2, ChevronLeft, ChevronRight, ImageOff, PlayCircle, X } from "lucide-react";
 import { getIsAdminUser } from "@/lib/admin-role";
 import { extractHostelSpecs, stripHostelMarker } from "@/lib/hostel-specs";
 import { HostelDetailPanel } from "@/components/hostel/HostelCard";
 import { extractProductSpecs, stripProductMarker } from "@/lib/product-specs";
 import { ProductDetailPanel } from "@/components/product/ProductCard";
+import { StorageMedia } from "@/components/StorageMedia";
+import { isVideoUrl } from "@/lib/storage-url";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/market/$id")({
   component: ListingDetail,
