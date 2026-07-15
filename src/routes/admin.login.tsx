@@ -9,7 +9,7 @@ import { Loader2, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { getIsAdminUser } from "@/lib/admin-role";
 
-export const Route = createFileRoute("/admin-login")({
+export const Route = createFileRoute("/admin/login")({
   component: AdminLogin,
   head: () => ({
     meta: [

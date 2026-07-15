@@ -27,7 +27,7 @@ import { AdminIntegrations } from "@/components/admin/AdminIntegrations";
 import { resolveBannerUrls } from "@/lib/banner-url";
 import { claimSeedAdminRole, getIsAdminUser } from "@/lib/admin-role";
 
-export const Route = createFileRoute("/admin-local")({ component: AdminPanel });
+export const Route = createFileRoute("/admin/")({ component: AdminPanel });
 
 type Tab = "dashboard" | "ai" | "aibank" | "toolai" | "ebsunews" | "users" | "applications" | "reports" | "verifications" | "posts" | "listings" | "tickets" | "scans" | "catalogue" | "marketcats" | "banners" | "tools" | "prices" | "tasks" | "integrations";
 

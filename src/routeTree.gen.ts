@@ -35,8 +35,6 @@ import { Route as ChatRouteImport } from './routes/chat'
 import { Route as BookshelfRouteImport } from './routes/bookshelf'
 import { Route as BooksRouteImport } from './routes/books'
 import { Route as ApplyBadgeRouteImport } from './routes/apply-badge'
-import { Route as AdminLoginRouteImport } from './routes/admin-login'
-import { Route as AdminLocalRouteImport } from './routes/admin-local'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NotesIndexRouteImport } from './routes/notes.index'
@@ -44,6 +42,7 @@ import { Route as MarketIndexRouteImport } from './routes/market.index'
 import { Route as EarnCreditsIndexRouteImport } from './routes/earn-credits.index'
 import { Route as CoursesIndexRouteImport } from './routes/courses.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as WatchIdRouteImport } from './routes/watch.$id'
 import { Route as ToolsYoutubeRouteImport } from './routes/tools.youtube'
 import { Route as ToolsVoiceCloneRouteImport } from './routes/tools.voice-clone'
@@ -98,6 +97,7 @@ import { Route as ApiFreegamesRouteImport } from './routes/api/freegames'
 import { Route as ApiEightballRouteImport } from './routes/api/eightball'
 import { Route as ApiDictionaryRouteImport } from './routes/api/dictionary'
 import { Route as ApiBootprintRouteImport } from './routes/api/bootprint'
+import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as EarnCreditsBattleIndexRouteImport } from './routes/earn-credits.battle.index'
 import { Route as BooksComposerIndexRouteImport } from './routes/books_.composer.index'
 import { Route as ToolsAiSlugRouteImport } from './routes/tools.ai.$slug'
@@ -257,16 +257,6 @@ const ApplyBadgeRoute = ApplyBadgeRouteImport.update({
   path: '/apply-badge',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminLoginRoute = AdminLoginRouteImport.update({
-  id: '/admin-login',
-  path: '/admin-login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminLocalRoute = AdminLocalRouteImport.update({
-  id: '/admin-local',
-  path: '/admin-local',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
@@ -300,6 +290,11 @@ const CoursesIndexRoute = CoursesIndexRouteImport.update({
 const BlogIndexRoute = BlogIndexRouteImport.update({
   id: '/blog/',
   path: '/blog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WatchIdRoute = WatchIdRouteImport.update({
@@ -572,6 +567,11 @@ const ApiBootprintRoute = ApiBootprintRouteImport.update({
   path: '/api/bootprint',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin/login',
+  path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EarnCreditsBattleIndexRoute = EarnCreditsBattleIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -729,8 +729,6 @@ const ApiPublicHooksAdminAiPulseRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin-local': typeof AdminLocalRoute
-  '/admin-login': typeof AdminLoginRoute
   '/apply-badge': typeof ApplyBadgeRoute
   '/books': typeof BooksRoute
   '/bookshelf': typeof BookshelfRoute
@@ -757,6 +755,7 @@ export interface FileRoutesByFullPath {
   '/tickets': typeof TicketsRouteWithChildren
   '/tools': typeof ToolsRouteWithChildren
   '/verify-otp': typeof VerifyOtpRoute
+  '/admin/login': typeof AdminLoginRoute
   '/api/bootprint': typeof ApiBootprintRoute
   '/api/dictionary': typeof ApiDictionaryRoute
   '/api/eightball': typeof ApiEightballRoute
@@ -811,6 +810,7 @@ export interface FileRoutesByFullPath {
   '/tools/voice-clone': typeof ToolsVoiceCloneRoute
   '/tools/youtube': typeof ToolsYoutubeRoute
   '/watch/$id': typeof WatchIdRoute
+  '/admin/': typeof AdminIndexRoute
   '/blog/': typeof BlogIndexRoute
   '/courses/': typeof CoursesIndexRoute
   '/earn-credits/': typeof EarnCreditsIndexRoute
@@ -848,8 +848,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin-local': typeof AdminLocalRoute
-  '/admin-login': typeof AdminLoginRoute
   '/apply-badge': typeof ApplyBadgeRoute
   '/books': typeof BooksRoute
   '/bookshelf': typeof BookshelfRoute
@@ -875,6 +873,7 @@ export interface FileRoutesByTo {
   '/tickets': typeof TicketsRouteWithChildren
   '/tools': typeof ToolsRouteWithChildren
   '/verify-otp': typeof VerifyOtpRoute
+  '/admin/login': typeof AdminLoginRoute
   '/api/bootprint': typeof ApiBootprintRoute
   '/api/dictionary': typeof ApiDictionaryRoute
   '/api/eightball': typeof ApiEightballRoute
@@ -927,6 +926,7 @@ export interface FileRoutesByTo {
   '/tools/voice-clone': typeof ToolsVoiceCloneRoute
   '/tools/youtube': typeof ToolsYoutubeRoute
   '/watch/$id': typeof WatchIdRoute
+  '/admin': typeof AdminIndexRoute
   '/blog': typeof BlogIndexRoute
   '/courses': typeof CoursesIndexRoute
   '/earn-credits': typeof EarnCreditsIndexRoute
@@ -965,8 +965,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin-local': typeof AdminLocalRoute
-  '/admin-login': typeof AdminLoginRoute
   '/apply-badge': typeof ApplyBadgeRoute
   '/books': typeof BooksRoute
   '/bookshelf': typeof BookshelfRoute
@@ -993,6 +991,7 @@ export interface FileRoutesById {
   '/tickets': typeof TicketsRouteWithChildren
   '/tools': typeof ToolsRouteWithChildren
   '/verify-otp': typeof VerifyOtpRoute
+  '/admin/login': typeof AdminLoginRoute
   '/api/bootprint': typeof ApiBootprintRoute
   '/api/dictionary': typeof ApiDictionaryRoute
   '/api/eightball': typeof ApiEightballRoute
@@ -1047,6 +1046,7 @@ export interface FileRoutesById {
   '/tools/voice-clone': typeof ToolsVoiceCloneRoute
   '/tools/youtube': typeof ToolsYoutubeRoute
   '/watch/$id': typeof WatchIdRoute
+  '/admin/': typeof AdminIndexRoute
   '/blog/': typeof BlogIndexRoute
   '/courses/': typeof CoursesIndexRoute
   '/earn-credits/': typeof EarnCreditsIndexRoute
@@ -1086,8 +1086,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
-    | '/admin-local'
-    | '/admin-login'
     | '/apply-badge'
     | '/books'
     | '/bookshelf'
@@ -1114,6 +1112,7 @@ export interface FileRouteTypes {
     | '/tickets'
     | '/tools'
     | '/verify-otp'
+    | '/admin/login'
     | '/api/bootprint'
     | '/api/dictionary'
     | '/api/eightball'
@@ -1168,6 +1167,7 @@ export interface FileRouteTypes {
     | '/tools/voice-clone'
     | '/tools/youtube'
     | '/watch/$id'
+    | '/admin/'
     | '/blog/'
     | '/courses/'
     | '/earn-credits/'
@@ -1205,8 +1205,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
-    | '/admin-local'
-    | '/admin-login'
     | '/apply-badge'
     | '/books'
     | '/bookshelf'
@@ -1232,6 +1230,7 @@ export interface FileRouteTypes {
     | '/tickets'
     | '/tools'
     | '/verify-otp'
+    | '/admin/login'
     | '/api/bootprint'
     | '/api/dictionary'
     | '/api/eightball'
@@ -1284,6 +1283,7 @@ export interface FileRouteTypes {
     | '/tools/voice-clone'
     | '/tools/youtube'
     | '/watch/$id'
+    | '/admin'
     | '/blog'
     | '/courses'
     | '/earn-credits'
@@ -1321,8 +1321,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
-    | '/admin-local'
-    | '/admin-login'
     | '/apply-badge'
     | '/books'
     | '/bookshelf'
@@ -1349,6 +1347,7 @@ export interface FileRouteTypes {
     | '/tickets'
     | '/tools'
     | '/verify-otp'
+    | '/admin/login'
     | '/api/bootprint'
     | '/api/dictionary'
     | '/api/eightball'
@@ -1403,6 +1402,7 @@ export interface FileRouteTypes {
     | '/tools/voice-clone'
     | '/tools/youtube'
     | '/watch/$id'
+    | '/admin/'
     | '/blog/'
     | '/courses/'
     | '/earn-credits/'
@@ -1441,8 +1441,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  AdminLocalRoute: typeof AdminLocalRoute
-  AdminLoginRoute: typeof AdminLoginRoute
   ApplyBadgeRoute: typeof ApplyBadgeRoute
   BooksRoute: typeof BooksRoute
   BookshelfRoute: typeof BookshelfRoute
@@ -1469,6 +1467,7 @@ export interface RootRouteChildren {
   TicketsRoute: typeof TicketsRouteWithChildren
   ToolsRoute: typeof ToolsRouteWithChildren
   VerifyOtpRoute: typeof VerifyOtpRoute
+  AdminLoginRoute: typeof AdminLoginRoute
   ApiBootprintRoute: typeof ApiBootprintRoute
   ApiDictionaryRoute: typeof ApiDictionaryRoute
   ApiEightballRoute: typeof ApiEightballRoute
@@ -1500,6 +1499,7 @@ export interface RootRouteChildren {
   ProfileIdRoute: typeof ProfileIdRoute
   TasksAmountRoute: typeof TasksAmountRoute
   WatchIdRoute: typeof WatchIdRoute
+  AdminIndexRoute: typeof AdminIndexRoute
   BlogIndexRoute: typeof BlogIndexRoute
   CoursesIndexRoute: typeof CoursesIndexRoute
   EarnCreditsIndexRoute: typeof EarnCreditsIndexRoute
@@ -1711,20 +1711,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApplyBadgeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin-login': {
-      id: '/admin-login'
-      path: '/admin-login'
-      fullPath: '/admin-login'
-      preLoaderRoute: typeof AdminLoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin-local': {
-      id: '/admin-local'
-      path: '/admin-local'
-      fullPath: '/admin-local'
-      preLoaderRoute: typeof AdminLocalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/about': {
       id: '/about'
       path: '/about'
@@ -1772,6 +1758,13 @@ declare module '@tanstack/react-router' {
       path: '/blog'
       fullPath: '/blog/'
       preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/watch/$id': {
@@ -2152,6 +2145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiBootprintRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/admin/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/earn-credits/battle/': {
       id: '/earn-credits/battle/'
       path: '/'
@@ -2478,8 +2478,6 @@ const EarnCreditsBattleRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  AdminLocalRoute: AdminLocalRoute,
-  AdminLoginRoute: AdminLoginRoute,
   ApplyBadgeRoute: ApplyBadgeRoute,
   BooksRoute: BooksRoute,
   BookshelfRoute: BookshelfRoute,
@@ -2506,6 +2504,7 @@ const rootRouteChildren: RootRouteChildren = {
   TicketsRoute: TicketsRouteWithChildren,
   ToolsRoute: ToolsRouteWithChildren,
   VerifyOtpRoute: VerifyOtpRoute,
+  AdminLoginRoute: AdminLoginRoute,
   ApiBootprintRoute: ApiBootprintRoute,
   ApiDictionaryRoute: ApiDictionaryRoute,
   ApiEightballRoute: ApiEightballRoute,
@@ -2537,6 +2536,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileIdRoute: ProfileIdRoute,
   TasksAmountRoute: TasksAmountRoute,
   WatchIdRoute: WatchIdRoute,
+  AdminIndexRoute: AdminIndexRoute,
   BlogIndexRoute: BlogIndexRoute,
   CoursesIndexRoute: CoursesIndexRoute,
   EarnCreditsIndexRoute: EarnCreditsIndexRoute,
@@ -2566,13 +2566,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
