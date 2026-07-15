@@ -137,6 +137,21 @@ function ListingDetail() {
   );
 }
 
+function VerifiedBadge({ isAdmin, isVerified, isLegit }: { isAdmin?: boolean; isVerified?: boolean; isLegit?: boolean }) {
+  if (!isAdmin && !isVerified && !isLegit) return null;
+  const label = isAdmin ? "Admin" : isVerified ? "Verified" : "Legit";
+  const cls = isAdmin
+    ? "bg-primary/15 text-primary border-primary/30 shadow-[0_0_10px_hsl(var(--primary)/0.35)]"
+    : isVerified
+    ? "bg-sky-500/15 text-sky-400 border-sky-500/30 shadow-[0_0_10px_rgb(56_189_248/0.35)]"
+    : "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 shadow-[0_0_10px_rgb(52_211_153/0.35)]";
+  return (
+    <span title={`${label} seller`} className={cn("inline-flex items-center gap-1 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full border", cls)}>
+      <ShieldCheck className="w-3 h-3" />{label}
+    </span>
+  );
+}
+
 function MediaGallery({ photos, title, sold }: { photos: string[]; title: string; sold: boolean }) {
   const [active, setActive] = useState(0);
   const [zoom, setZoom] = useState(false);
