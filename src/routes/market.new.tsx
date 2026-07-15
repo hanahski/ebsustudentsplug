@@ -143,6 +143,7 @@ type Field = {
   required?: boolean;
   type?: "text" | "textarea" | "number" | "select" | "photos" | "toggle";
   options?: string[];
+  optionLabels?: Record<string, string>;
   placeholder?: string;
 };
 
