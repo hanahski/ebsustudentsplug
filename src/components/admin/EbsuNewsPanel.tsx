@@ -26,8 +26,10 @@ export function EbsuNewsPanel() {
   const gen = useServerFn(generateEbsuNews);
   const delArt = useServerFn(deleteNewsArticle);
   const remakeArt = useServerFn(regenerateEbsuNews);
+  const genCover = useServerFn(generateCoverForArticle);
   const [remakingId, setRemakingId] = useState<string | null>(null);
   const [remakingAll, setRemakingAll] = useState(false);
+  const [coveringId, setCoveringId] = useState<string | null>(null);
 
   const { data: sources = [], isLoading: srcLoading } = useQuery({
     queryKey: ["ebsu-sources"],
