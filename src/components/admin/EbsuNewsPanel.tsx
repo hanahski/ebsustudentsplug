@@ -134,8 +134,29 @@ export function EbsuNewsPanel() {
       toast.error(e?.message ?? "Cover generation failed");
     } finally {
       setCoveringId(null);
-    }
   }
+
+  async function replaceAllCovers() {
+    if (!articles.length) return;
+    if (!confirm(`Replace covers for all ${articles.length} EBSU articles? This regenerates every cover image with the trained news AI (bodies stay the same).`)) return;
+    setReplacingAllCovers(true);
+    let ok = 0, fail = 0;
+    for (const a of articles as any[]) {
+      setCoveringId(a.id);
+      try {
+        await genCover({ data: { id: a.id } });
+        ok++;
+      } catch (e: any) {
+        fail++;
+        console.error("cover failed", a.id, e);
+      }
+    }
+    setCoveringId(null);
+    setReplacingAllCovers(false);
+    qc.invalidateQueries({ queryKey: ["ebsu-news-articles"] });
+    toast[fail ? "warning" : "success"](`Replaced ${ok}/${articles.length}${fail ? ` (${fail} failed)` : ""}`);
+  }
+
 
 
   async function remakeAll() {
