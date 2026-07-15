@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowLeft, Phone, MapPin, Trash2, CheckCircle2, ChevronLeft, ChevronRight, ImageOff, PlayCircle, X } from "lucide-react";
+import { ArrowLeft, Phone, MapPin, Trash2, CheckCircle2, ChevronLeft, ChevronRight, ImageOff, PlayCircle, X, ShieldCheck } from "lucide-react";
 import { getIsAdminUser } from "@/lib/admin-role";
 import { extractHostelSpecs, stripHostelMarker } from "@/lib/hostel-specs";
 import { HostelDetailPanel } from "@/components/hostel/HostelCard";
