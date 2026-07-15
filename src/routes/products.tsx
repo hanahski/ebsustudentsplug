@@ -239,7 +239,7 @@ function ProductsPage() {
               <div className="absolute top-2 left-2 z-10 flex items-center gap-1">
                 <EbsuBadge size={22} />
                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full bg-card/95 backdrop-blur border text-[10px] font-bold uppercase tracking-wider shadow-card ${isHostel ? "text-emerald-500 border-emerald-500/40" : "text-primary"}`}>
-                  {isHostel ? "Hostel" : "Product"}
+                  {isHostel ? "Hostel / Apartment" : "Product"}
                 </span>
               </div>
               <SaveButton
