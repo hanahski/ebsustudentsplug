@@ -143,13 +143,14 @@ type Field = {
   required?: boolean;
   type?: "text" | "textarea" | "number" | "select" | "photos" | "toggle";
   options?: string[];
+  optionLabels?: Record<string, string>;
   placeholder?: string;
 };
 
 const FIELDS: Record<Kind, Field[]> = {
   products: [
     { key: "title",       label: "What are you selling?",           required: true, placeholder: "e.g. HP Pavilion laptop — perfect condition" },
-    { key: "category",    label: "Which category?",                 type: "select", options: ["electronics","fashion","hostel","services","other"], required: true },
+    { key: "category",    label: "Which category?",                 type: "select", options: ["electronics","fashion","hostel","services","other"], optionLabels: { hostel: "Hostel / Apartment" }, required: true },
     { key: "description", label: "Tell buyers more about it",       type: "textarea", placeholder: "Condition, specs, why you're selling…", required: true },
     { key: "price",       label: "Price (₦)",                       type: "number", required: true, placeholder: "0 for free / negotiable" },
     { key: "location",    label: "Where can buyers pick it up?",    placeholder: "e.g. CAS Campus, Abakaliki" },

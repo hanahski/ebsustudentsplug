@@ -138,7 +138,7 @@ export function HostelComposer({
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/15 text-primary text-[11px] font-bold uppercase tracking-wider">
-            Hostel / House Details
+            Hostel / Apartment Details
           </div>
           <h3 className="mt-2 font-display font-bold text-lg">Rate the place honestly</h3>
           <p className="text-xs text-muted-foreground max-w-md">
