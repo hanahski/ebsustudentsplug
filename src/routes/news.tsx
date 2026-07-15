@@ -6,6 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Newspaper, Search, Loader2, ExternalLink, RotateCw, AlertTriangle, GraduationCap, Globe2 } from "lucide-react";
+import { EbsuNewsComposer } from "@/components/EbsuNewsComposer";
 
 export const Route = createFileRoute("/news")({
   component: NewsPage,
