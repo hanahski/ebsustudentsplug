@@ -59,7 +59,7 @@ export function VerifyEmailDialog() {
     setBusy(true);
     try {
       await sendVerifyOtp();
-      toast.success(`Code sent to ${email}`);
+      toast.success(`Code sent to ${email}`, { description: "Can't see it? Check your Spam folder — mark it 'Not spam' so future codes inbox." });
       setStage("code");
     } catch (err: any) {
       toast.error(err.message || "Couldn't send code");
@@ -121,6 +121,13 @@ export function VerifyEmailDialog() {
                 className="text-center text-xl tracking-[0.4em] font-mono"
               />
             </div>
+
+            <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/30 p-3 text-xs leading-relaxed text-amber-900 dark:text-amber-100">
+              <p className="font-semibold mb-1">📬 Can't find the email?</p>
+              <p><b>Check your Spam / Junk folder</b> — the first email from us often lands there.</p>
+              <p className="mt-1">If it's in spam: tap <b>"Not spam"</b> and <b>add the sender to your contacts</b>. All future codes will go straight to your inbox.</p>
+            </div>
+
             <Button onClick={verify} disabled={busy || code.length < 6} className="w-full">
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify email"}
             </Button>
