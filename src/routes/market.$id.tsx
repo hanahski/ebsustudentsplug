@@ -123,7 +123,13 @@ function ListingDetail() {
           <div className="mt-6 p-4 rounded-2xl bg-muted/40 border">
             <p className="text-xs font-semibold uppercase text-muted-foreground mb-1">Contact seller</p>
             <p className="flex items-center gap-2 font-medium"><Phone className="w-4 h-4 text-primary" />{listing.contact}</p>
-            {seller && <p className="text-xs text-muted-foreground mt-2">Posted by <Link to="/profile/$id" params={{ id: seller.id }} className="text-primary hover:underline">{seller.display_name}</Link></p>}
+            {seller && (
+              <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5 flex-wrap">
+                <span>Posted by</span>
+                <Link to="/profile/$id" params={{ id: seller.id }} className="text-primary hover:underline font-medium">{seller.display_name}</Link>
+                <VerifiedBadge isAdmin={seller.isAdminSeller} isVerified={seller.is_verified} isLegit={seller.is_legit} />
+              </p>
+            )}
           </div>
         </div>
       </div>
