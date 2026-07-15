@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { supportsNativeGoogle, requestNativeGoogleSignIn } from "@/lib/app-bridge";
+import { sendRecoveryOtp } from "@/lib/password-reset-otp.functions";
+
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -292,15 +294,15 @@ function LoginPage() {
                     if (!email) return toast.error("Enter your email first");
                     setBusy(true);
                     try {
-                      const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
-                      if (error) throw error;
+                      await sendRecoveryOtp({ data: { email: email.trim() } });
                       toast.success("Code sent. Check your inbox.");
-                      await nav({ to: "/verify-otp", search: { email, redirect, mode: "recovery" } });
+                      await nav({ to: "/reset-password", search: { email } });
                     } catch (err: any) {
                       toast.error(err.message);
                     } finally {
                       setBusy(false);
                     }
+
                   }}
                 >
                   Forgot password?

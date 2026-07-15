@@ -17,7 +17,7 @@ export const Route = createFileRoute("/notes/$id")({
     const desc = builtIn
       ? `${builtIn.title} — past question and study note on StudentsPlug.`
       : "Past questions and study notes shared by EBSU students on StudentsPlug.";
-    const url = `https://ebsustudentsplug.lovable.app/notes/${params.id}`;
+    const url = `https://ebsustudentplug.fun/notes/${params.id}`;
     return {
       meta: [
         { title: `${title} — StudentsPlug`.slice(0, 70) },

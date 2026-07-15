@@ -11,4 +11,4 @@ Allow: /
 User-agent: AdsBot-Google
 Allow: /
 
-Sitemap: https://ebsustudentsplug.lovable.app/sitemap.xml
+Sitemap: https://ebsustudentplug.fun/sitemap.xml

@@ -15,9 +15,9 @@ export const Route = createFileRoute("/about")({
         property: "og:description",
         content: "A student-first knowledge and campus community platform.",
       },
-      { property: "og:url", content: "https://ebsustudentsplug.lovable.app/about" },
+      { property: "og:url", content: "https://ebsustudentplug.fun/about" },
     ],
-    links: [{ rel: "canonical", href: "https://ebsustudentsplug.lovable.app/about" }],
+    links: [{ rel: "canonical", href: "https://ebsustudentplug.fun/about" }],
   }),
   component: AboutPage,
 });

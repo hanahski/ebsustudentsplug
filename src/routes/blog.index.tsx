@@ -25,9 +25,9 @@ export const Route = createFileRoute("/blog/")({
           "EBSU cutoff marks, admission requirements, Post-UTME tips and aggregate-score breakdowns by course.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://ebsustudentsplug.lovable.app/blog" },
+      { property: "og:url", content: "https://ebsustudentplug.fun/blog" },
     ],
-    links: [{ rel: "canonical", href: "https://ebsustudentsplug.lovable.app/blog" }],
+    links: [{ rel: "canonical", href: "https://ebsustudentplug.fun/blog" }],
   }),
   component: BlogIndex,
 });

@@ -28,9 +28,9 @@ export const Route = createFileRoute("/blog/$slug")({
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:type", content: "article" },
-        { property: "og:url", content: `https://ebsustudentsplug.lovable.app/blog/${params.slug}` },
+        { property: "og:url", content: `https://ebsustudentplug.fun/blog/${params.slug}` },
       ],
-      links: [{ rel: "canonical", href: `https://ebsustudentsplug.lovable.app/blog/${params.slug}` }],
+      links: [{ rel: "canonical", href: `https://ebsustudentplug.fun/blog/${params.slug}` }],
       scripts: post
         ? [
             {
