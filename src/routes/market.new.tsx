@@ -224,6 +224,8 @@ function ComposerForm({ kind, onBack, userId }: { kind: Kind; onBack: () => void
   const [previews, setPreviews] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [shareToFeed, setShareToFeed] = useState(false);
+  const [hostelSpecs, setHostelSpecs] = useState<HostelSpecs>(DEFAULT_SPECS);
+  const isHostel = kind === "products" && values.category === "hostel";
 
   // Draft persistence (kind-scoped; photos are not persisted by design).
   const draft = useDraft(
