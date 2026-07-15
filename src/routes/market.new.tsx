@@ -242,7 +242,11 @@ function ComposerForm({ kind, onBack, userId }: { kind: Kind; onBack: () => void
   // Draft persistence (kind-scoped; photos are not persisted by design).
   const draft = useDraft(
     `market-new:${userId ?? "anon"}:${kind}`,
-    { values: {} as Record<string, any>, hostelSpecs: DEFAULT_SPECS as HostelSpecs },
+    {
+      values: {} as Record<string, any>,
+      hostelSpecs: DEFAULT_SPECS as HostelSpecs,
+      productSpecs: defaultSpecsFor("other") as ProductSpecs,
+    },
     { enabled: !!userId },
   );
   const draftHydratedRef = useRef(false);
@@ -253,11 +257,12 @@ function ComposerForm({ kind, onBack, userId }: { kind: Kind; onBack: () => void
       setValues(draft.value.values);
     }
     if (draft.value.hostelSpecs) setHostelSpecs({ ...DEFAULT_SPECS, ...draft.value.hostelSpecs });
+    if (draft.value.productSpecs) setProductSpecs(draft.value.productSpecs);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
   useEffect(() => {
     if (!userId) return;
-    draft.setValue((v) => ({ ...v, values, hostelSpecs }));
+    draft.setValue((v) => ({ ...v, values, hostelSpecs, productSpecs }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [values, hostelSpecs, userId]);
 
