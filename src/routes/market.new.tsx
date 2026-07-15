@@ -264,7 +264,7 @@ function ComposerForm({ kind, onBack, userId }: { kind: Kind; onBack: () => void
     if (!userId) return;
     draft.setValue((v) => ({ ...v, values, hostelSpecs, productSpecs }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [values, hostelSpecs, userId]);
+  }, [values, hostelSpecs, productSpecs, userId]);
 
   const set = (k: string, v: any) => setValues((s) => ({ ...s, [k]: v }));
 
