@@ -282,6 +282,7 @@ function ProductsPage() {
                 </p>
               )}
               {hostelSpecs && <HostelCardStrip specs={hostelSpecs} />}
+              {productSpecs && <ProductSpecStrip specs={productSpecs} />}
               <div className="flex gap-2 mt-3 text-xs items-center flex-wrap">
                 {l.category && (
                   <span className="px-2 py-0.5 rounded-full bg-muted capitalize">
