@@ -35,6 +35,7 @@ import { Route as ChatRouteImport } from './routes/chat'
 import { Route as BookshelfRouteImport } from './routes/bookshelf'
 import { Route as BooksRouteImport } from './routes/books'
 import { Route as ApplyBadgeRouteImport } from './routes/apply-badge'
+import { Route as AdminLocalRouteImport } from './routes/admin-local'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NotesIndexRouteImport } from './routes/notes.index'
@@ -255,6 +256,11 @@ const BooksRoute = BooksRouteImport.update({
 const ApplyBadgeRoute = ApplyBadgeRouteImport.update({
   id: '/apply-badge',
   path: '/apply-badge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLocalRoute = AdminLocalRouteImport.update({
+  id: '/admin-local',
+  path: '/admin-local',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -729,6 +735,7 @@ const ApiPublicHooksAdminAiPulseRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin-local': typeof AdminLocalRoute
   '/apply-badge': typeof ApplyBadgeRoute
   '/books': typeof BooksRoute
   '/bookshelf': typeof BookshelfRoute
@@ -848,6 +855,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin-local': typeof AdminLocalRoute
   '/apply-badge': typeof ApplyBadgeRoute
   '/books': typeof BooksRoute
   '/bookshelf': typeof BookshelfRoute
@@ -965,6 +973,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin-local': typeof AdminLocalRoute
   '/apply-badge': typeof ApplyBadgeRoute
   '/books': typeof BooksRoute
   '/bookshelf': typeof BookshelfRoute
@@ -1086,6 +1095,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/admin-local'
     | '/apply-badge'
     | '/books'
     | '/bookshelf'
@@ -1205,6 +1215,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/admin-local'
     | '/apply-badge'
     | '/books'
     | '/bookshelf'
@@ -1321,6 +1332,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/admin-local'
     | '/apply-badge'
     | '/books'
     | '/bookshelf'
@@ -1441,6 +1453,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  AdminLocalRoute: typeof AdminLocalRoute
   ApplyBadgeRoute: typeof ApplyBadgeRoute
   BooksRoute: typeof BooksRoute
   BookshelfRoute: typeof BookshelfRoute
@@ -1709,6 +1722,13 @@ declare module '@tanstack/react-router' {
       path: '/apply-badge'
       fullPath: '/apply-badge'
       preLoaderRoute: typeof ApplyBadgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-local': {
+      id: '/admin-local'
+      path: '/admin-local'
+      fullPath: '/admin-local'
+      preLoaderRoute: typeof AdminLocalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -2478,6 +2498,7 @@ const EarnCreditsBattleRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  AdminLocalRoute: AdminLocalRoute,
   ApplyBadgeRoute: ApplyBadgeRoute,
   BooksRoute: BooksRoute,
   BookshelfRoute: BookshelfRoute,
