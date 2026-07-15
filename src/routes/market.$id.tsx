@@ -45,7 +45,12 @@ function ListingDetail() {
   const { data: seller } = useQuery({
     queryKey: ["seller", listing?.seller_id],
     enabled: !!listing?.seller_id,
-    queryFn: async () => (await supabase.from("profiles").select("id,display_name,avatar_key").eq("id", listing!.seller_id).single()).data,
+    queryFn: async () => {
+      const { data: prof } = await supabase.from("profiles").select("id,display_name,avatar_key,is_verified,is_legit").eq("id", listing!.seller_id).single();
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", listing!.seller_id);
+      const isAdminSeller = !!roles?.some((r) => r.role === "admin");
+      return prof ? { ...prof, isAdminSeller } : null;
+    },
   });
   const { data: isAdmin } = useQuery({
     queryKey: ["is-admin", user?.id],
