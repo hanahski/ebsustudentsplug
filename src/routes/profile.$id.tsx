@@ -50,6 +50,18 @@ function ProfilePage() {
     },
   });
 
+  if (authLoading) return <AppShell><div className="max-w-3xl mx-auto py-10 text-center text-muted-foreground">Loading…</div></AppShell>;
+  if (!user) return (
+    <AppShell>
+      <div className="max-w-md mx-auto py-16 text-center bg-card border rounded-3xl shadow-card p-8">
+        <p className="text-lg font-bold font-display">Sign in to view this profile</p>
+        <p className="text-sm text-muted-foreground mt-2">Only signed-in students can view public profiles on StudentsPlug.</p>
+        <Button asChild className="mt-5">
+          <Link to="/login" search={{ redirect: `/profile/${id}` }}>Sign in</Link>
+        </Button>
+      </div>
+    </AppShell>
+  );
   if (isLoading) return <AppShell><div className="max-w-3xl mx-auto py-10 text-center text-muted-foreground">Loading profile…</div></AppShell>;
   if (error) return <AppShell><div className="max-w-3xl mx-auto py-10 text-center"><p className="text-destructive font-semibold">Couldn't load profile</p><p className="text-sm text-muted-foreground mt-1">{(error as any)?.message}</p></div></AppShell>;
   if (!data?.profile) return <AppShell><div className="max-w-3xl mx-auto py-10 text-center"><p className="font-semibold">Profile not found</p><p className="text-sm text-muted-foreground mt-1">This user may have deleted their account.</p></div></AppShell>;
