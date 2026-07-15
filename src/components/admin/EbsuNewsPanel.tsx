@@ -30,6 +30,7 @@ export function EbsuNewsPanel() {
   const [remakingId, setRemakingId] = useState<string | null>(null);
   const [remakingAll, setRemakingAll] = useState(false);
   const [coveringId, setCoveringId] = useState<string | null>(null);
+  const [replacingAllCovers, setReplacingAllCovers] = useState(false);
 
   const { data: sources = [], isLoading: srcLoading } = useQuery({
     queryKey: ["ebsu-sources"],
@@ -137,6 +138,30 @@ export function EbsuNewsPanel() {
   }
 
 
+
+  async function replaceAllCovers() {
+    if (!articles.length) return;
+    if (!confirm(`Replace covers for all ${articles.length} EBSU articles? This regenerates every cover image with the trained news AI (bodies stay the same).`)) return;
+    setReplacingAllCovers(true);
+    let ok = 0, fail = 0;
+    for (const a of articles as any[]) {
+      setCoveringId(a.id);
+      try {
+        await genCover({ data: { id: a.id } });
+        ok++;
+      } catch (e: any) {
+        fail++;
+        console.error("cover failed", a.id, e);
+      }
+    }
+    setCoveringId(null);
+    setReplacingAllCovers(false);
+    qc.invalidateQueries({ queryKey: ["ebsu-news-articles"] });
+    toast[fail ? "warning" : "success"](`Replaced ${ok}/${articles.length}${fail ? ` (${fail} failed)` : ""}`);
+  }
+
+
+
   async function remakeAll() {
     if (!articles.length) return;
     if (!confirm(`Remake all ${articles.length} EBSU articles with the updated AI? This rewrites bodies and generates new cover images.`)) return;
@@ -234,8 +259,12 @@ export function EbsuNewsPanel() {
       <div className="bg-card border rounded-3xl p-5 shadow-card">
         <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
           <h2 className="font-bold font-display text-lg flex items-center gap-2"><Newspaper className="w-5 h-5" />Recent EBSU Articles</h2>
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={remakeAll} disabled={remakingAll || articles.length === 0}>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button size="sm" variant="outline" onClick={replaceAllCovers} disabled={replacingAllCovers || remakingAll || articles.length === 0}>
+              {replacingAllCovers ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <ImagePlus className="w-3.5 h-3.5 mr-1" />}
+              Replace all covers
+            </Button>
+            <Button size="sm" variant="outline" onClick={remakeAll} disabled={remakingAll || replacingAllCovers || articles.length === 0}>
               {remakingAll ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Wand2 className="w-3.5 h-3.5 mr-1" />}
               Remake all
             </Button>
@@ -257,16 +286,14 @@ export function EbsuNewsPanel() {
                   {a.status} · {new Date(a.published_at).toLocaleString()}
                 </div>
               </div>
-              {!a.image_url && (
-                <button
-                  onClick={() => generateCover(a.id)}
-                  disabled={coveringId === a.id || remakingAll}
-                  className="text-muted-foreground hover:text-primary p-1 disabled:opacity-50"
-                  title="Generate cover image with trained news AI"
-                >
-                  {coveringId === a.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
-                </button>
-              )}
+              <button
+                onClick={() => generateCover(a.id)}
+                disabled={coveringId === a.id || remakingAll || replacingAllCovers}
+                className="text-muted-foreground hover:text-primary p-1 disabled:opacity-50"
+                title={a.image_url ? "Replace cover image with trained news AI" : "Generate cover image with trained news AI"}
+              >
+                {coveringId === a.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
+              </button>
               <button
                 onClick={() => remakeOne(a.id)}
                 disabled={remakingId === a.id || remakingAll}
