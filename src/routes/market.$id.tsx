@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ArrowLeft, Phone, MapPin, Trash2, CheckCircle2 } from "lucide-react";
 import { getIsAdminUser } from "@/lib/admin-role";
+import { extractHostelSpecs, stripHostelMarker } from "@/lib/hostel-specs";
+import { HostelDetailPanel } from "@/components/hostel/HostelCard";
 
 export const Route = createFileRoute("/market/$id")({
   component: ListingDetail,
