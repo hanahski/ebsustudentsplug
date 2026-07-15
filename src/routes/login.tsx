@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { supportsNativeGoogle, requestNativeGoogleSignIn } from "@/lib/app-bridge";
+import { sendRecoveryOtp } from "@/lib/password-reset-otp.functions";
+
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
