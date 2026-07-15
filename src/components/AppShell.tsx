@@ -9,7 +9,7 @@ import { SiteSearch } from "./SiteSearch";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { WelcomeOverlay } from "./WelcomeOverlay";
+
 import { ReferralCelebration } from "./ReferralCelebration";
 import { ContentRemovalToasts } from "./ContentRemovalToasts";
 import { HideSeekListener } from "./HideSeekListener";
@@ -225,7 +225,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const showAdminUi = isAdmin && !viewAsUser;
   return (
     <div className="min-h-screen flex flex-col">
-      <WelcomeOverlay />
+      
       <ReferralCelebration />
       <ContentRemovalToasts />
       <HideSeekListener userId={user?.id} />
