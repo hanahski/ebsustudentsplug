@@ -68,7 +68,9 @@ function ListingDetail() {
     else { toast.success("Deleted"); nav({ to: "/market" }); }
   };
 
-  const photos: string[] = Array.isArray(listing.photos) ? listing.photos.filter(Boolean) : [];
+  const photos: string[] = Array.isArray(listing.photos)
+    ? (listing.photos.filter((p): p is string => typeof p === "string" && !!p))
+    : [];
 
   return (
     <AppShell>
