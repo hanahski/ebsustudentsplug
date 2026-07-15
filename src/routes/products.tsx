@@ -229,7 +229,12 @@ function ProductsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {products.map((l: any) => {
             const hostelSpecs = extractHostelSpecs(l.description);
-            const cleanDesc = hostelSpecs ? stripHostelMarker(l.description) : l.description;
+            const productSpecs = hostelSpecs ? null : extractProductSpecs(l.description);
+            const cleanDesc = hostelSpecs
+              ? stripHostelMarker(l.description)
+              : productSpecs
+                ? stripProductMarker(l.description)
+                : l.description;
             const isHostel = !!hostelSpecs || l.category === "hostel";
             return (
             <Link
