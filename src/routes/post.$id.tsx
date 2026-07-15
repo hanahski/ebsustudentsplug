@@ -141,6 +141,55 @@ function PostPage() {
   };
   const locked = !user;
 
+  // Past questions render as inbuilt past-question articles (same layout as /notes/:id).
+  if (post.post_type === "past_question" && !locked) {
+    const { share, body: displayBody } = extractPlugShare(post.body ?? "");
+    return (
+      <AppShell>
+        <PastQuestionArticle
+          note={{
+            title: post.title,
+            body: displayBody ?? "",
+            created_at: post.created_at,
+            course: post.course ? { code: post.course.code, title: post.course.title } : null,
+            faculty: null,
+            department: null,
+          }}
+        />
+        {share && (
+          <div className="max-w-3xl mt-4">
+            <PlugShareActions share={share} authorLabel={post.author?.display_name} />
+          </div>
+        )}
+        <div className="max-w-3xl mt-6 bg-card border rounded-2xl p-4 flex items-center gap-3">
+          <Link to="/profile/$id" params={{ id: post.author?.id ?? "" }}>
+            <AvatarDisplay avatarKey={post.author?.avatar_key ?? "boy-1"} size={40} online={isOnline(post.author?.show_online, post.author?.last_seen_at)} />
+          </Link>
+          <div className="flex-1 min-w-0">
+            <Link to="/profile/$id" params={{ id: post.author?.id ?? "" }} className="font-semibold hover:underline text-sm">{post.author?.display_name}</Link>
+            {post.author && <span className="ml-2 align-middle"><RankBadge tier={post.author.rank_tier} step={post.author.rank_step} size="sm" /></span>}
+            <p className="text-xs text-muted-foreground">posted {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</p>
+          </div>
+          <Button variant={liked ? "default" : "outline"} size="sm" onClick={toggleLike}>
+            <Heart className={`w-4 h-4 mr-1 ${liked ? "fill-current" : ""}`} />{post.like_count}
+          </Button>
+          {canDelete && <Button variant="ghost" size="sm" onClick={remove} className="text-destructive"><Trash2 className="w-4 h-4" /></Button>}
+        </div>
+        <div className="max-w-3xl">
+          <PostQuiz
+            postId={post.id}
+            postTitle={post.title}
+            isAuthor={!!user && user.id === post.author_id}
+            userId={user?.id ?? null}
+            courseId={post.course_id ?? null}
+          />
+          <Comments postId={post.id} />
+        </div>
+        <VerifyStudentDialog open={verifyOpen} onOpenChange={setVerifyOpen} onVerified={() => refetch()} />
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell>
       <article className="bg-card border rounded-3xl shadow-card p-6 max-w-3xl mx-auto">
@@ -168,22 +217,7 @@ function PostPage() {
               const { share, body: displayBody } = extractPlugShare(post.body);
               return (
                 <>
-                  {displayBody && (
-                    post.post_type === "past_question" ? (
-                      <PastQuestionArticle
-                        note={{
-                          title: post.title,
-                          body: displayBody,
-                          created_at: post.created_at,
-                          course: post.course ? { code: post.course.code, title: post.course.title } : null,
-                          faculty: null,
-                          department: null,
-                        }}
-                      />
-                    ) : (
-                      <MathText>{displayBody}</MathText>
-                    )
-                  )}
+                  {displayBody && <MathText>{displayBody}</MathText>}
                   {share && <PlugShareActions share={share} authorLabel={post.author?.display_name} />}
                 </>
               );
