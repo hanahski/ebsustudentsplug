@@ -20,6 +20,8 @@ import { EbsuBadge } from "@/components/EbsuBadge";
 import { StorageMedia } from "@/components/StorageMedia";
 import { HostelCardStrip } from "@/components/hostel/HostelCard";
 import { extractHostelSpecs, stripHostelMarker } from "@/lib/hostel-specs";
+import { ProductSpecStrip } from "@/components/product/ProductCard";
+import { extractProductSpecs, stripProductMarker } from "@/lib/product-specs";
 
 export const Route = createFileRoute("/products")({
   component: ProductsPage,
