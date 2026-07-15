@@ -65,15 +65,22 @@ export const sendVerifyOtp = createServerFn({ method: "POST" })
     if (!fromAddress) throw new Error("Could not read sender address from Gmail.");
 
     // Build the RFC-2822 message.
-    const subject = "Your StudentsPlug verification code";
+    const subject = `Your StudentsPlug verification code: ${code}`;
     const html = renderOtpHtml(code);
-    const text = `Your StudentsPlug verification code is ${code}. It expires in 10 minutes.\n\nIf you didn't request this, you can safely ignore this email.`;
+    const text = `StudentsPlug — Email verification\n\nYour verification code is: ${code}\n\nThis code expires in 10 minutes. For your security, never share it with anyone — StudentsPlug staff will never ask for it.\n\nIf you didn't request this code, you can safely ignore this email; no changes were made to your account.\n\n— StudentsPlug Support\nEbonyi State University student community\nhttps://ebsustudentsplug.lovable.app`;
+    const msgId = `<otp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}@ebsustudentsplug.lovable.app>`;
     const boundary = `sp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
     const mime = [
       `From: ${SENDER_DISPLAY_NAME} <${fromAddress}>`,
       `To: ${toEmail}`,
+      `Reply-To: ${SENDER_DISPLAY_NAME} <${fromAddress}>`,
       `Subject: ${subject}`,
+      `Message-ID: ${msgId}`,
+      `Date: ${new Date().toUTCString()}`,
       `MIME-Version: 1.0`,
+      `X-Entity-Ref-ID: ${msgId}`,
+      `X-Mailer: StudentsPlug`,
+      `List-Unsubscribe: <mailto:${fromAddress}?subject=unsubscribe>`,
       `Content-Type: multipart/alternative; boundary="${boundary}"`,
       ``,
       `--${boundary}`,
