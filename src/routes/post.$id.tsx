@@ -149,7 +149,7 @@ function PostPage() {
         <PastQuestionArticle
           note={{
             title: post.title,
-            body: displayBody,
+            body: displayBody ?? "",
             created_at: post.created_at,
             course: post.course ? { code: post.course.code, title: post.course.title } : null,
             faculty: null,
