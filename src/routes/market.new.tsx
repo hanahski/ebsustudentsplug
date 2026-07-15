@@ -329,6 +329,8 @@ function ComposerForm({ kind, onBack, userId }: { kind: Kind; onBack: () => void
       }
       if (isHostel) {
         description = encodeHostelDescription(description, hostelSpecs);
+      } else if (productCat) {
+        description = encodeProductDescription(description, productSpecs);
       }
       const finalPrice = kind === "books" && values.is_donation ? 0 : Number(values.price) || 0;
 
