@@ -405,57 +405,69 @@ function MarketPage() {
                 </Button>
               </div>
             )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filtered.map((l: any) => (
-                <Link
-                  key={l.id}
-                  to="/market/$id"
-                  params={{ id: l.id }}
-                  className="relative bg-card border rounded-2xl p-4 shadow-card hover:shadow-glow transition group"
-                >
-                  <div className="absolute top-2 left-2 z-10 flex items-center gap-1">
-                    <EbsuBadge size={22} />
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-card/95 backdrop-blur border text-[10px] font-bold uppercase tracking-wider text-primary shadow-card">
-                      {l.listing_kind ?? "product"}
-                    </span>
-                  </div>
-                  <SaveButton
-                    itemType="market"
-                    itemId={l.id}
-                    title={l.title}
-                    subtitle={l.category}
-                    thumbUrl={l.photos?.[0] ?? null}
-                    className="absolute top-2 right-2 z-10"
-                  />
-                  {l.photos?.[0] && (
-                    <StorageMedia
-                      url={l.photos[0]}
-                      alt={l.title}
-                      className="w-full h-40 object-cover rounded-xl mb-3 mt-4"
-                    />
-                  )}
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold group-hover:text-primary break-words flex-1 min-w-0">
-                      {l.title}
-                    </h3>
-                    <span className="text-primary font-bold whitespace-nowrap">
-                      ₦{Number(l.price).toLocaleString()}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2 break-words">
-                    {l.description}
-                  </p>
-                  <div className="flex gap-2 mt-2 text-xs items-center flex-wrap">
-                    <span className="px-2 py-0.5 rounded-full bg-muted break-words">
-                      {l.category}
-                    </span>
-                    {l.location && (
-                      <span className="text-muted-foreground break-words">📍 {l.location}</span>
-                    )}
-                  </div>
-                </Link>
-              ))}
-            </div>
+            {filtered.length > 0 && (
+              <section className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <Package className="w-4 h-4 text-sky-500" /> Products
+                    <span className="text-[10px] font-normal text-muted-foreground/70 normal-case">· from students</span>
+                  </h2>
+                  <Link to="/products" className="text-xs text-primary hover:underline shrink-0">See all →</Link>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {filtered.map((l: any) => (
+                    <Link
+                      key={l.id}
+                      to="/market/$id"
+                      params={{ id: l.id }}
+                      className="relative bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition group flex flex-col"
+                    >
+                      <div className="relative aspect-square bg-muted overflow-hidden">
+                        {l.photos?.[0] ? (
+                          <StorageMedia url={l.photos[0]} alt={l.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                            <Package className="w-10 h-10 opacity-30" />
+                          </div>
+                        )}
+                        <div className="absolute top-2 left-2 flex items-center gap-1">
+                          <EbsuBadge size={20} />
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-sky-500/95 text-white text-[10px] font-bold uppercase tracking-wider shadow-card">
+                            {l.listing_kind ?? "product"}
+                          </span>
+                        </div>
+                        <SaveButton
+                          itemType="market"
+                          itemId={l.id}
+                          title={l.title}
+                          subtitle={l.category}
+                          thumbUrl={l.photos?.[0] ?? null}
+                          className="absolute top-2 right-2"
+                        />
+                        {l.is_sold && (
+                          <div className="absolute inset-0 bg-background/70 flex items-center justify-center">
+                            <span className="px-3 py-1 rounded-full bg-destructive text-destructive-foreground text-xs font-bold uppercase tracking-wider">Sold</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-3 flex flex-col gap-1 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="text-sm font-semibold line-clamp-1 group-hover:text-primary flex-1 min-w-0">{l.title}</h3>
+                          <span className="text-primary font-bold whitespace-nowrap text-sm">
+                            ₦{Number(l.price).toLocaleString()}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground line-clamp-2">{l.description}</p>
+                        <div className="flex gap-1.5 mt-auto pt-1 text-[10px] items-center flex-wrap">
+                          <span className="px-1.5 py-0.5 rounded-full bg-muted">{l.category}</span>
+                          {l.location && <span className="text-muted-foreground truncate">📍 {l.location}</span>}
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
             {canLoadMoreListings && filtered.length > 0 && (
               <div className="pt-2">
                 <button
