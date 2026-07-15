@@ -257,6 +257,16 @@ export function EbsuNewsPanel() {
                   {a.status} · {new Date(a.published_at).toLocaleString()}
                 </div>
               </div>
+              {!a.image_url && (
+                <button
+                  onClick={() => generateCover(a.id)}
+                  disabled={coveringId === a.id || remakingAll}
+                  className="text-muted-foreground hover:text-primary p-1 disabled:opacity-50"
+                  title="Generate cover image with trained news AI"
+                >
+                  {coveringId === a.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
+                </button>
+              )}
               <button
                 onClick={() => remakeOne(a.id)}
                 disabled={remakingId === a.id || remakingAll}
