@@ -59,7 +59,7 @@ export function VerifyEmailDialog() {
     setBusy(true);
     try {
       await sendVerifyOtp();
-      toast.success(`Code sent to ${email}`);
+      toast.success(`Code sent to ${email}`, { description: "Can't see it? Check your Spam folder — mark it 'Not spam' so future codes inbox." });
       setStage("code");
     } catch (err: any) {
       toast.error(err.message || "Couldn't send code");
