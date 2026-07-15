@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowLeft, Phone, MapPin, Trash2, CheckCircle2, ChevronLeft, ChevronRight, ImageOff, PlayCircle, X } from "lucide-react";
+import { ArrowLeft, Phone, MapPin, Trash2, CheckCircle2, ChevronLeft, ChevronRight, ImageOff, PlayCircle, X, ShieldCheck } from "lucide-react";
 import { getIsAdminUser } from "@/lib/admin-role";
 import { extractHostelSpecs, stripHostelMarker } from "@/lib/hostel-specs";
 import { HostelDetailPanel } from "@/components/hostel/HostelCard";
@@ -45,7 +45,12 @@ function ListingDetail() {
   const { data: seller } = useQuery({
     queryKey: ["seller", listing?.seller_id],
     enabled: !!listing?.seller_id,
-    queryFn: async () => (await supabase.from("profiles").select("id,display_name,avatar_key").eq("id", listing!.seller_id).single()).data,
+    queryFn: async () => {
+      const { data: prof } = await supabase.from("profiles").select("id,display_name,avatar_key,is_verified,is_legit").eq("id", listing!.seller_id).single();
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", listing!.seller_id);
+      const isAdminSeller = !!roles?.some((r) => r.role === "admin");
+      return prof ? { ...prof, isAdminSeller } : null;
+    },
   });
   const { data: isAdmin } = useQuery({
     queryKey: ["is-admin", user?.id],
@@ -118,11 +123,32 @@ function ListingDetail() {
           <div className="mt-6 p-4 rounded-2xl bg-muted/40 border">
             <p className="text-xs font-semibold uppercase text-muted-foreground mb-1">Contact seller</p>
             <p className="flex items-center gap-2 font-medium"><Phone className="w-4 h-4 text-primary" />{listing.contact}</p>
-            {seller && <p className="text-xs text-muted-foreground mt-2">Posted by <Link to="/profile/$id" params={{ id: seller.id }} className="text-primary hover:underline">{seller.display_name}</Link></p>}
+            {seller && (
+              <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5 flex-wrap">
+                <span>Posted by</span>
+                <Link to="/profile/$id" params={{ id: seller.id }} className="text-primary hover:underline font-medium">{seller.display_name}</Link>
+                <VerifiedBadge isAdmin={seller.isAdminSeller} isVerified={seller.is_verified} isLegit={seller.is_legit} />
+              </p>
+            )}
           </div>
         </div>
       </div>
     </AppShell>
+  );
+}
+
+function VerifiedBadge({ isAdmin, isVerified, isLegit }: { isAdmin?: boolean; isVerified?: boolean; isLegit?: boolean }) {
+  if (!isAdmin && !isVerified && !isLegit) return null;
+  const label = isAdmin ? "Admin" : isVerified ? "Verified" : "Legit";
+  const cls = isAdmin
+    ? "bg-primary/15 text-primary border-primary/30 shadow-[0_0_10px_hsl(var(--primary)/0.35)]"
+    : isVerified
+    ? "bg-sky-500/15 text-sky-400 border-sky-500/30 shadow-[0_0_10px_rgb(56_189_248/0.35)]"
+    : "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 shadow-[0_0_10px_rgb(52_211_153/0.35)]";
+  return (
+    <span title={`${label} seller`} className={cn("inline-flex items-center gap-1 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full border", cls)}>
+      <ShieldCheck className="w-3 h-3" />{label}
+    </span>
   );
 }
 
