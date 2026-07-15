@@ -34,6 +34,7 @@ function ProfilePage() {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["profile", id],
+    enabled: !!user,
     queryFn: async () => {
       const { data: p, error: pErr } = await supabase.from("profiles").select("*").eq("id", id).maybeSingle();
       if (pErr) throw pErr;
