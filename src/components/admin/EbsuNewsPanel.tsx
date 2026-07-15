@@ -10,12 +10,13 @@ import {
   generateEbsuNews,
   deleteNewsArticle,
   regenerateEbsuNews,
+  generateCoverForArticle,
 } from "@/lib/ebsu-news.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, Sparkles, Newspaper, ExternalLink, RotateCw, Wand2 } from "lucide-react";
+import { Loader2, Plus, Trash2, Sparkles, Newspaper, ExternalLink, RotateCw, Wand2, ImagePlus } from "lucide-react";
 
 export function EbsuNewsPanel() {
   const qc = useQueryClient();
@@ -25,8 +26,10 @@ export function EbsuNewsPanel() {
   const gen = useServerFn(generateEbsuNews);
   const delArt = useServerFn(deleteNewsArticle);
   const remakeArt = useServerFn(regenerateEbsuNews);
+  const genCover = useServerFn(generateCoverForArticle);
   const [remakingId, setRemakingId] = useState<string | null>(null);
   const [remakingAll, setRemakingAll] = useState(false);
+  const [coveringId, setCoveringId] = useState<string | null>(null);
 
   const { data: sources = [], isLoading: srcLoading } = useQuery({
     queryKey: ["ebsu-sources"],
@@ -119,6 +122,20 @@ export function EbsuNewsPanel() {
       setRemakingId(null);
     }
   }
+
+  async function generateCover(id: string) {
+    setCoveringId(id);
+    try {
+      await genCover({ data: { id } });
+      toast.success("Cover image generated");
+      qc.invalidateQueries({ queryKey: ["ebsu-news-articles"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Cover generation failed");
+    } finally {
+      setCoveringId(null);
+    }
+  }
+
 
   async function remakeAll() {
     if (!articles.length) return;
@@ -240,6 +257,16 @@ export function EbsuNewsPanel() {
                   {a.status} · {new Date(a.published_at).toLocaleString()}
                 </div>
               </div>
+              {!a.image_url && (
+                <button
+                  onClick={() => generateCover(a.id)}
+                  disabled={coveringId === a.id || remakingAll}
+                  className="text-muted-foreground hover:text-primary p-1 disabled:opacity-50"
+                  title="Generate cover image with trained news AI"
+                >
+                  {coveringId === a.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
+                </button>
+              )}
               <button
                 onClick={() => remakeOne(a.id)}
                 disabled={remakingId === a.id || remakingAll}

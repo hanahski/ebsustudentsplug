@@ -510,6 +510,53 @@ Return STRICT JSON:
     return { id: data.id, image_url: imageUrl ?? art.image_url };
   });
 
+// ---------- Generate ONLY a cover image for an existing article ----------
+// Uses the trained EBSU Plug News image style (brand watermark, editorial
+// magazine cover). Leaves title/body untouched.
+export const generateCoverForArticle = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: roles } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!roles) throw new Error("admin only");
+
+    const { data: art, error: loadErr } = await supabaseAdmin
+      .from("news_articles")
+      .select("id, title, summary, body")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (loadErr) throw loadErr;
+    if (!art) throw new Error("article not found");
+
+    // Ask the news AI for a short visual prompt tuned to our trained style.
+    let visualPrompt = art.title as string;
+    try {
+      const j = await aiJSON(
+        `Article title: ${art.title}\n${art.summary ? `Summary: ${art.summary}\n` : ""}Body excerpt:\n"""\n${String(art.body).slice(0, 1500)}\n"""\n\nWrite a short (max 40 words) visual prompt for an editorial magazine-style cover photo. No text, no logos, no watermarks. Focus on real Nigerian university scene relevant to the story.`,
+        `You generate concise visual cover-photo prompts for EBSU Plug News. Return JSON: { "image_prompt": "..." }`,
+      );
+      if (j?.image_prompt) visualPrompt = String(j.image_prompt);
+    } catch (e) {
+      console.error("cover prompt gen failed, falling back to title", e);
+    }
+
+    const imageUrl = await generateCover(visualPrompt, []);
+    if (!imageUrl) throw new Error("Cover image generation failed");
+
+    const { error: updErr } = await supabaseAdmin
+      .from("news_articles")
+      .update({ image_url: imageUrl })
+      .eq("id", data.id);
+    if (updErr) throw updErr;
+
+    return { id: data.id, image_url: imageUrl };
+  });
+
 // internal helper for cron
 export async function _autoGenerateForCron() {
   const { data: saved } = await supabaseAdmin
