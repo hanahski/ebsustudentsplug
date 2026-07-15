@@ -77,14 +77,21 @@ function Home() {
   const [pendingNew, setPendingNew] = useState(0);
   const [feedLimit, setFeedLimit] = useState(20);
   const qc = useQueryClient();
-  const { data: posts, isLoading, isFetching } = useQuery({
+  const { data: posts, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ["feed", feedLimit],
-    queryFn: async (): Promise<FeedPost[]> => {
-      const { data, error } = await supabase
+    queryFn: async ({ signal }): Promise<FeedPost[]> => {
+      // Hard 12s ceiling so a stalled network never leaves the feed stuck
+      // on "Loading feed…" forever.
+      const timeout = new Promise<never>((_, rej) =>
+        setTimeout(() => rej(new Error("Feed took too long to load. Tap retry.")), 12_000),
+      );
+      const req = supabase
         .from("posts")
         .select("id,title,body,post_type,file_url,image_url,media_url,media_type,link_url,view_count,like_count,comment_count,repost_count,created_at,is_official, course:courses(code,title), author:profiles!posts_author_id_fkey(id,display_name,avatar_key,rank_tier,rank_step,show_online,last_seen_at,is_verified,is_legit,is_star,is_sure_plug)")
         .order("created_at", { ascending: false })
-        .limit(feedLimit);
+        .limit(feedLimit)
+        .abortSignal(signal);
+      const { data, error } = (await Promise.race([req, timeout])) as Awaited<typeof req>;
       if (error) throw error;
       return (data ?? []) as unknown as FeedPost[];
     },
@@ -92,6 +99,8 @@ function Home() {
     // (which was causing playback stalls and apparent page "refreshes").
     placeholderData: (prev) => prev,
     staleTime: 30_000,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1500 * 2 ** attempt, 5000),
   });
   const canLoadMore = (posts?.length ?? 0) >= feedLimit;
 
