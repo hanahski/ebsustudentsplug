@@ -176,6 +176,7 @@ function NewsPage() {
           />
         )}
       </div>
+      {tab === "ebsu" && <EbsuNewsComposer />}
     </AppShell>
   );
 }
