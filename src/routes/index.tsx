@@ -351,7 +351,7 @@ function Home() {
                 {isFetching ? "Retrying…" : "Try again"}
               </button>
             </div>
-          ) : isLoading && !posts?.length ? (
+          ) : isLoading && !(posts && posts.length) ? (
             <div className="space-y-4" aria-busy="true" aria-label="Loading feed">
               {[0, 1, 2].map((i) => (
                 <div key={i} className="bg-card border rounded-3xl p-4 shadow-card animate-pulse">
