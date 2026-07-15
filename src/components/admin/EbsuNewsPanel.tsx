@@ -30,6 +30,7 @@ export function EbsuNewsPanel() {
   const [remakingId, setRemakingId] = useState<string | null>(null);
   const [remakingAll, setRemakingAll] = useState(false);
   const [coveringId, setCoveringId] = useState<string | null>(null);
+  const [replacingAllCovers, setReplacingAllCovers] = useState(false);
 
   const { data: sources = [], isLoading: srcLoading } = useQuery({
     queryKey: ["ebsu-sources"],
