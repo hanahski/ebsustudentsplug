@@ -20,6 +20,8 @@ import { EbsuBadge } from "@/components/EbsuBadge";
 import { StorageMedia } from "@/components/StorageMedia";
 import { HostelCardStrip } from "@/components/hostel/HostelCard";
 import { extractHostelSpecs, stripHostelMarker } from "@/lib/hostel-specs";
+import { ProductSpecStrip } from "@/components/product/ProductCard";
+import { extractProductSpecs, stripProductMarker } from "@/lib/product-specs";
 
 export const Route = createFileRoute("/products")({
   component: ProductsPage,
@@ -227,7 +229,12 @@ function ProductsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {products.map((l: any) => {
             const hostelSpecs = extractHostelSpecs(l.description);
-            const cleanDesc = hostelSpecs ? stripHostelMarker(l.description) : l.description;
+            const productSpecs = hostelSpecs ? null : extractProductSpecs(l.description);
+            const cleanDesc = hostelSpecs
+              ? stripHostelMarker(l.description)
+              : productSpecs
+                ? stripProductMarker(l.description)
+                : l.description;
             const isHostel = !!hostelSpecs || l.category === "hostel";
             return (
             <Link
@@ -275,6 +282,7 @@ function ProductsPage() {
                 </p>
               )}
               {hostelSpecs && <HostelCardStrip specs={hostelSpecs} />}
+              {productSpecs && <ProductSpecStrip specs={productSpecs} />}
               <div className="flex gap-2 mt-3 text-xs items-center flex-wrap">
                 {l.category && (
                   <span className="px-2 py-0.5 rounded-full bg-muted capitalize">

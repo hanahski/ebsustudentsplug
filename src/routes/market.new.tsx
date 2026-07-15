@@ -19,6 +19,11 @@ import {
 import { useDraft } from "@/hooks/use-draft";
 import { HostelComposer } from "@/components/hostel/HostelComposer";
 import { DEFAULT_SPECS, encodeHostelDescription, type HostelSpecs } from "@/lib/hostel-specs";
+import { ProductComposer } from "@/components/product/ProductComposer";
+import {
+  defaultSpecsFor, encodeProductDescription,
+  type ProductSpecs, type ProductCategory,
+} from "@/lib/product-specs";
 
 export const Route = createFileRoute("/market/new")({
   component: NewListing,
@@ -226,12 +231,22 @@ function ComposerForm({ kind, onBack, userId }: { kind: Kind; onBack: () => void
   const [saving, setSaving] = useState(false);
   const [shareToFeed, setShareToFeed] = useState(false);
   const [hostelSpecs, setHostelSpecs] = useState<HostelSpecs>(DEFAULT_SPECS);
+  const [productSpecs, setProductSpecs] = useState<ProductSpecs>(defaultSpecsFor("other"));
   const isHostel = kind === "products" && values.category === "hostel";
+  const PRODUCT_CATS: ProductCategory[] = ["electronics", "fashion", "beauty", "food", "services", "other"];
+  const productCat: ProductCategory | null =
+    kind === "products" && PRODUCT_CATS.includes(values.category as ProductCategory)
+      ? (values.category as ProductCategory)
+      : null;
 
   // Draft persistence (kind-scoped; photos are not persisted by design).
   const draft = useDraft(
     `market-new:${userId ?? "anon"}:${kind}`,
-    { values: {} as Record<string, any>, hostelSpecs: DEFAULT_SPECS as HostelSpecs },
+    {
+      values: {} as Record<string, any>,
+      hostelSpecs: DEFAULT_SPECS as HostelSpecs,
+      productSpecs: defaultSpecsFor("other") as ProductSpecs,
+    },
     { enabled: !!userId },
   );
   const draftHydratedRef = useRef(false);
@@ -242,13 +257,14 @@ function ComposerForm({ kind, onBack, userId }: { kind: Kind; onBack: () => void
       setValues(draft.value.values);
     }
     if (draft.value.hostelSpecs) setHostelSpecs({ ...DEFAULT_SPECS, ...draft.value.hostelSpecs });
+    if (draft.value.productSpecs) setProductSpecs(draft.value.productSpecs);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
   useEffect(() => {
     if (!userId) return;
-    draft.setValue((v) => ({ ...v, values, hostelSpecs }));
+    draft.setValue((v) => ({ ...v, values, hostelSpecs, productSpecs }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [values, hostelSpecs, userId]);
+  }, [values, hostelSpecs, productSpecs, userId]);
 
   const set = (k: string, v: any) => setValues((s) => ({ ...s, [k]: v }));
 
@@ -313,6 +329,8 @@ function ComposerForm({ kind, onBack, userId }: { kind: Kind; onBack: () => void
       }
       if (isHostel) {
         description = encodeHostelDescription(description, hostelSpecs);
+      } else if (productCat) {
+        description = encodeProductDescription(description, productSpecs);
       }
       const finalPrice = kind === "books" && values.is_donation ? 0 : Number(values.price) || 0;
 
@@ -492,6 +510,14 @@ function ComposerForm({ kind, onBack, userId }: { kind: Kind; onBack: () => void
 
           {isHostel && (
             <HostelComposer value={hostelSpecs} onChange={setHostelSpecs} />
+          )}
+
+          {productCat && (
+            <ProductComposer
+              category={productCat}
+              value={productSpecs}
+              onChange={setProductSpecs}
+            />
           )}
 
 

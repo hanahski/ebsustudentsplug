@@ -9,6 +9,8 @@ import { ArrowLeft, Phone, MapPin, Trash2, CheckCircle2 } from "lucide-react";
 import { getIsAdminUser } from "@/lib/admin-role";
 import { extractHostelSpecs, stripHostelMarker } from "@/lib/hostel-specs";
 import { HostelDetailPanel } from "@/components/hostel/HostelCard";
+import { extractProductSpecs, stripProductMarker } from "@/lib/product-specs";
+import { ProductDetailPanel } from "@/components/product/ProductCard";
 
 export const Route = createFileRoute("/market/$id")({
   component: ListingDetail,
@@ -87,12 +89,18 @@ function ListingDetail() {
             )}
           </div>
           {(() => {
-            const specs = extractHostelSpecs(listing.description);
-            const clean = specs ? stripHostelMarker(listing.description) : listing.description;
+            const hostel = extractHostelSpecs(listing.description);
+            const product = hostel ? null : extractProductSpecs(listing.description);
+            const clean = hostel
+              ? stripHostelMarker(listing.description)
+              : product
+                ? stripProductMarker(listing.description)
+                : listing.description;
             return (
               <>
                 {clean && <p className="mt-4 whitespace-pre-wrap leading-relaxed">{clean}</p>}
-                {specs && <HostelDetailPanel specs={specs} />}
+                {hostel && <HostelDetailPanel specs={hostel} />}
+                {product && <ProductDetailPanel specs={product} />}
               </>
             );
           })()}
