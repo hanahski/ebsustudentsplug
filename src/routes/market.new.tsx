@@ -19,6 +19,11 @@ import {
 import { useDraft } from "@/hooks/use-draft";
 import { HostelComposer } from "@/components/hostel/HostelComposer";
 import { DEFAULT_SPECS, encodeHostelDescription, type HostelSpecs } from "@/lib/hostel-specs";
+import { ProductComposer } from "@/components/product/ProductComposer";
+import {
+  defaultSpecsFor, encodeProductDescription,
+  type ProductSpecs, type ProductCategory,
+} from "@/lib/product-specs";
 
 export const Route = createFileRoute("/market/new")({
   component: NewListing,
