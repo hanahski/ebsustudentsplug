@@ -259,8 +259,12 @@ export function EbsuNewsPanel() {
       <div className="bg-card border rounded-3xl p-5 shadow-card">
         <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
           <h2 className="font-bold font-display text-lg flex items-center gap-2"><Newspaper className="w-5 h-5" />Recent EBSU Articles</h2>
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={remakeAll} disabled={remakingAll || articles.length === 0}>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button size="sm" variant="outline" onClick={replaceAllCovers} disabled={replacingAllCovers || remakingAll || articles.length === 0}>
+              {replacingAllCovers ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <ImagePlus className="w-3.5 h-3.5 mr-1" />}
+              Replace all covers
+            </Button>
+            <Button size="sm" variant="outline" onClick={remakeAll} disabled={remakingAll || replacingAllCovers || articles.length === 0}>
               {remakingAll ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Wand2 className="w-3.5 h-3.5 mr-1" />}
               Remake all
             </Button>
