@@ -24,7 +24,7 @@ export const Route = createFileRoute("/profile/$id")({ component: ProfilePage })
 
 function ProfilePage() {
   const { id } = Route.useParams();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [tab, setTab] = useState("posts");
   const navigate = useNavigate();
   const [dmBusy, setDmBusy] = useState(false);
