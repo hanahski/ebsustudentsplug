@@ -299,6 +299,10 @@ export function PostCard({ post, locked, prefetchNextVideoUrl }: { post: FeedPos
 
   if (removed) return null;
 
+  // General + news posts get a larger, magazine-style layout
+  const isFeatured = post.post_type === "general" || post.post_type === "news";
+
+
 
 
   return (
