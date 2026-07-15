@@ -17,6 +17,8 @@ import {
   Package, Ticket, BookOpen, Megaphone, ArrowLeft, ArrowRight, Loader2, CheckCircle2, ImagePlus, X, Megaphone as Mega,
 } from "lucide-react";
 import { useDraft } from "@/hooks/use-draft";
+import { HostelComposer } from "@/components/hostel/HostelComposer";
+import { DEFAULT_SPECS, encodeHostelDescription, type HostelSpecs } from "@/lib/hostel-specs";
 
 export const Route = createFileRoute("/market/new")({
   component: NewListing,
