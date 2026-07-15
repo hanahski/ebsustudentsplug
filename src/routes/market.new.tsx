@@ -231,7 +231,13 @@ function ComposerForm({ kind, onBack, userId }: { kind: Kind; onBack: () => void
   const [saving, setSaving] = useState(false);
   const [shareToFeed, setShareToFeed] = useState(false);
   const [hostelSpecs, setHostelSpecs] = useState<HostelSpecs>(DEFAULT_SPECS);
+  const [productSpecs, setProductSpecs] = useState<ProductSpecs>(defaultSpecsFor("other"));
   const isHostel = kind === "products" && values.category === "hostel";
+  const PRODUCT_CATS: ProductCategory[] = ["electronics", "fashion", "beauty", "food", "services", "other"];
+  const productCat: ProductCategory | null =
+    kind === "products" && PRODUCT_CATS.includes(values.category as ProductCategory)
+      ? (values.category as ProductCategory)
+      : null;
 
   // Draft persistence (kind-scoped; photos are not persisted by design).
   const draft = useDraft(
