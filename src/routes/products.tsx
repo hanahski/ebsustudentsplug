@@ -301,7 +301,8 @@ function ProductsPage() {
                 </span>
               </div>
             </Link>
-          ))}
+            );
+          })}
         </div>
 
         {canLoadMore && (
