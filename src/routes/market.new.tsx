@@ -310,6 +310,9 @@ function ComposerForm({ kind, onBack, userId }: { kind: Kind; onBack: () => void
         if (values.is_donation) meta.push(`Free / donation`);
         description = [meta.join(" · "), description].filter(Boolean).join("\n\n");
       }
+      if (isHostel) {
+        description = encodeHostelDescription(description, hostelSpecs);
+      }
       const finalPrice = kind === "books" && values.is_donation ? 0 : Number(values.price) || 0;
 
       const { data, error } = await supabase
@@ -321,7 +324,7 @@ function ComposerForm({ kind, onBack, userId }: { kind: Kind; onBack: () => void
           price: finalPrice,
           category: String(values.category ?? "other"),
           contact: String(values.contact ?? "").trim(),
-          location: String(values.location ?? "").trim() || null,
+          location: isHostel && hostelSpecs.address ? hostelSpecs.address : (String(values.location ?? "").trim() || null),
           listing_kind: kind,
           photos: photoUrls,
           cover_url: photoUrls[0] ?? null,
