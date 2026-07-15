@@ -294,15 +294,15 @@ function LoginPage() {
                     if (!email) return toast.error("Enter your email first");
                     setBusy(true);
                     try {
-                      const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
-                      if (error) throw error;
+                      await sendRecoveryOtp({ data: { email: email.trim() } });
                       toast.success("Code sent. Check your inbox.");
-                      await nav({ to: "/verify-otp", search: { email, redirect, mode: "recovery" } });
+                      await nav({ to: "/reset-password", search: { email } });
                     } catch (err: any) {
                       toast.error(err.message);
                     } finally {
                       setBusy(false);
                     }
+
                   }}
                 >
                   Forgot password?
