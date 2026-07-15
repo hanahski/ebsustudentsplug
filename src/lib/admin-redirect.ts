@@ -1,6 +1,6 @@
 const ADMIN_PANEL_URL_KEY = "studentsplug:admin-panel-url";
 
-export const LEGACY_ADMIN_PATH = "/admin-local";
+export const LEGACY_ADMIN_PATH = "/admin";
 
 function cleanAdminUrl(value: string | null | undefined) {
   const url = value?.trim();
