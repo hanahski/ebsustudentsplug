@@ -67,8 +67,8 @@ export const sendVerifyOtp = createServerFn({ method: "POST" })
     // Build the RFC-2822 message.
     const subject = `Your StudentsPlug verification code: ${code}`;
     const html = renderOtpHtml(code);
-    const text = `StudentsPlug — Email verification\n\nYour verification code is: ${code}\n\nThis code expires in 10 minutes. For your security, never share it with anyone — StudentsPlug staff will never ask for it.\n\nIf you didn't request this code, you can safely ignore this email; no changes were made to your account.\n\n— StudentsPlug Support\nEbonyi State University student community\nhttps://ebsustudentsplug.lovable.app`;
-    const msgId = `<otp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}@ebsustudentsplug.lovable.app>`;
+    const text = `StudentsPlug — Email verification\n\nYour verification code is: ${code}\n\nThis code expires in 10 minutes. For your security, never share it with anyone — StudentsPlug staff will never ask for it.\n\nIf you didn't request this code, you can safely ignore this email; no changes were made to your account.\n\n— StudentsPlug Support\nEbonyi State University student community\nhttps://ebsustudentplug.fun`;
+    const msgId = `<otp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}@ebsustudentplug.fun>`;
     const boundary = `sp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
     const mime = [
       `From: ${SENDER_DISPLAY_NAME} <${fromAddress}>`,
@@ -189,8 +189,8 @@ export const verifyEmailOtp = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-const LOGO_URL = "https://ebsustudentsplug.lovable.app/__l5e/assets-v1/05672a98-a2df-4f83-aa5e-749269614f72/studentsplug-logo.png";
-const APP_URL = "https://ebsustudentsplug.lovable.app";
+const LOGO_URL = "https://ebsustudentplug.fun/__l5e/assets-v1/05672a98-a2df-4f83-aa5e-749269614f72/studentsplug-logo.png";
+const APP_URL = "https://ebsustudentplug.fun";
 
 function renderOtpHtml(code: string): string {
   return `<!doctype html>
@@ -250,7 +250,7 @@ function renderOtpHtml(code: string): string {
           <tr><td style="padding:20px 32px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;">
             <img src="${LOGO_URL}" alt="" width="20" height="20" style="display:inline-block;vertical-align:middle;width:20px;height:20px;border-radius:6px;margin-right:8px;opacity:.7;" />
             <span style="color:#64748b;font-size:12px;font-weight:600;vertical-align:middle;">StudentsPlug Support</span>
-            <div style="margin-top:8px;color:#94a3b8;font-size:11px;line-height:1.6;">The student plug for Ebonyi State University · <a href="${APP_URL}" style="color:#3b82f6;text-decoration:none;">ebsustudentsplug.lovable.app</a></div>
+            <div style="margin-top:8px;color:#94a3b8;font-size:11px;line-height:1.6;">The student plug for Ebonyi State University · <a href="${APP_URL}" style="color:#3b82f6;text-decoration:none;">ebsustudentplug.fun</a></div>
           </td></tr>
         </table>
         <div style="max-width:560px;margin:16px auto 0 auto;color:#94a3b8;font-size:11px;line-height:1.5;text-align:center;">This is an automated security email sent because someone asked to verify this address on StudentsPlug.</div>

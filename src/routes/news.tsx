@@ -16,9 +16,9 @@ export const Route = createFileRoute("/news")({
       { property: "og:title", content: "Daily Plug News — EBSU & world headlines" },
       { property: "og:description", content: "EBSU campus news plus tech, science, business and world headlines, refreshed every day." },
       { property: "og:type", content: "article" },
-      { property: "og:url", content: "https://ebsustudentsplug.lovable.app/news" },
+      { property: "og:url", content: "https://ebsustudentplug.fun/news" },
     ],
-    links: [{ rel: "canonical", href: "https://ebsustudentsplug.lovable.app/news" }],
+    links: [{ rel: "canonical", href: "https://ebsustudentplug.fun/news" }],
   }),
 });
 

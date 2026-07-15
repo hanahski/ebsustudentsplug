@@ -15,9 +15,9 @@ export const Route = createFileRoute("/privacy")({
         property: "og:description",
         content: "How StudentsPlug handles information and user privacy.",
       },
-      { property: "og:url", content: "https://ebsustudentsplug.lovable.app/privacy" },
+      { property: "og:url", content: "https://ebsustudentplug.fun/privacy" },
     ],
-    links: [{ rel: "canonical", href: "https://ebsustudentsplug.lovable.app/privacy" }],
+    links: [{ rel: "canonical", href: "https://ebsustudentplug.fun/privacy" }],
   }),
   component: PrivacyPage,
 });

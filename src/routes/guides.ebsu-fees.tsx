@@ -10,9 +10,9 @@ export const Route = createFileRoute("/guides/ebsu-fees")({
       { property: "og:title", content: "EBSU School Fees & Portal Guide" },
       { property: "og:description", content: "Check your EBSU school fees, log in to the portal, and track admission status — explained simply for new and returning students." },
       { property: "og:type", content: "article" },
-      { property: "og:url", content: "https://ebsustudentsplug.lovable.app/guides/ebsu-fees" },
+      { property: "og:url", content: "https://ebsustudentplug.fun/guides/ebsu-fees" },
     ],
-    links: [{ rel: "canonical", href: "https://ebsustudentsplug.lovable.app/guides/ebsu-fees" }],
+    links: [{ rel: "canonical", href: "https://ebsustudentplug.fun/guides/ebsu-fees" }],
     scripts: [{
       type: "application/ld+json",
       children: JSON.stringify({

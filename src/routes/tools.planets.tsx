@@ -11,9 +11,9 @@ export const Route = createFileRoute("/tools/planets")({
       { name: "description", content: "Discover surprising facts and stunning images for every planet — plus the Sun and Moon — powered by Bootprint." },
       { property: "og:title", content: "Planet Explorer — Solar System Facts" },
       { property: "og:description", content: "Facts and images for every planet, the Sun and the Moon." },
-      { property: "og:url", content: "https://ebsustudentsplug.lovable.app/tools/planets" },
+      { property: "og:url", content: "https://ebsustudentplug.fun/tools/planets" },
     ],
-    links: [{ rel: "canonical", href: "https://ebsustudentsplug.lovable.app/tools/planets" }],
+    links: [{ rel: "canonical", href: "https://ebsustudentplug.fun/tools/planets" }],
   }),
 });
 

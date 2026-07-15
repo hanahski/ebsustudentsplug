@@ -17,9 +17,9 @@ export const Route = createFileRoute("/courses/")({
       { name: "description", content: "Read free university-level textbooks from OpenStax, MIT OpenCourseWare, LibreTexts and Saylor — embedded inside StudentsPlug." },
       { property: "og:title", content: "Free Courses & Textbooks — StudentsPlug" },
       { property: "og:description", content: "Curated free, embeddable academic content from OpenStax, MIT OCW, LibreTexts and more." },
-      { property: "og:url", content: "https://ebsustudentsplug.lovable.app/courses" },
+      { property: "og:url", content: "https://ebsustudentplug.fun/courses" },
     ],
-    links: [{ rel: "canonical", href: "https://ebsustudentsplug.lovable.app/courses" }],
+    links: [{ rel: "canonical", href: "https://ebsustudentplug.fun/courses" }],
   }),
 });
 
