@@ -17,6 +17,8 @@ import {
   Package, Ticket, BookOpen, Megaphone, ArrowLeft, ArrowRight, Loader2, CheckCircle2, ImagePlus, X, Megaphone as Mega,
 } from "lucide-react";
 import { useDraft } from "@/hooks/use-draft";
+import { HostelComposer } from "@/components/hostel/HostelComposer";
+import { DEFAULT_SPECS, encodeHostelDescription, type HostelSpecs } from "@/lib/hostel-specs";
 
 export const Route = createFileRoute("/market/new")({
   component: NewListing,
@@ -222,11 +224,13 @@ function ComposerForm({ kind, onBack, userId }: { kind: Kind; onBack: () => void
   const [previews, setPreviews] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [shareToFeed, setShareToFeed] = useState(false);
+  const [hostelSpecs, setHostelSpecs] = useState<HostelSpecs>(DEFAULT_SPECS);
+  const isHostel = kind === "products" && values.category === "hostel";
 
   // Draft persistence (kind-scoped; photos are not persisted by design).
   const draft = useDraft(
     `market-new:${userId ?? "anon"}:${kind}`,
-    { values: {} as Record<string, any> },
+    { values: {} as Record<string, any>, hostelSpecs: DEFAULT_SPECS as HostelSpecs },
     { enabled: !!userId },
   );
   const draftHydratedRef = useRef(false);
@@ -236,13 +240,14 @@ function ComposerForm({ kind, onBack, userId }: { kind: Kind; onBack: () => void
     if (draft.value.values && Object.keys(draft.value.values).length) {
       setValues(draft.value.values);
     }
+    if (draft.value.hostelSpecs) setHostelSpecs({ ...DEFAULT_SPECS, ...draft.value.hostelSpecs });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
   useEffect(() => {
     if (!userId) return;
-    draft.setValue((v) => ({ ...v, values }));
+    draft.setValue((v) => ({ ...v, values, hostelSpecs }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [values, userId]);
+  }, [values, hostelSpecs, userId]);
 
   const set = (k: string, v: any) => setValues((s) => ({ ...s, [k]: v }));
 
@@ -305,6 +310,9 @@ function ComposerForm({ kind, onBack, userId }: { kind: Kind; onBack: () => void
         if (values.is_donation) meta.push(`Free / donation`);
         description = [meta.join(" · "), description].filter(Boolean).join("\n\n");
       }
+      if (isHostel) {
+        description = encodeHostelDescription(description, hostelSpecs);
+      }
       const finalPrice = kind === "books" && values.is_donation ? 0 : Number(values.price) || 0;
 
       const { data, error } = await supabase
@@ -316,7 +324,7 @@ function ComposerForm({ kind, onBack, userId }: { kind: Kind; onBack: () => void
           price: finalPrice,
           category: String(values.category ?? "other"),
           contact: String(values.contact ?? "").trim(),
-          location: String(values.location ?? "").trim() || null,
+          location: isHostel && hostelSpecs.address ? hostelSpecs.address : (String(values.location ?? "").trim() || null),
           listing_kind: kind,
           photos: photoUrls,
           cover_url: photoUrls[0] ?? null,
@@ -480,6 +488,11 @@ function ComposerForm({ kind, onBack, userId }: { kind: Kind; onBack: () => void
               )}
             </div>
           ))}
+
+          {isHostel && (
+            <HostelComposer value={hostelSpecs} onChange={setHostelSpecs} />
+          )}
+
 
           {kind !== "advert" && (
             <label className="flex items-start gap-3 p-3 rounded-2xl border bg-muted/40 cursor-pointer hover:bg-muted/60 transition">

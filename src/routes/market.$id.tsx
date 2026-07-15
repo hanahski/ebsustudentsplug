@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ArrowLeft, Phone, MapPin, Trash2, CheckCircle2 } from "lucide-react";
 import { getIsAdminUser } from "@/lib/admin-role";
+import { extractHostelSpecs, stripHostelMarker } from "@/lib/hostel-specs";
+import { HostelDetailPanel } from "@/components/hostel/HostelCard";
 
 export const Route = createFileRoute("/market/$id")({
   component: ListingDetail,
@@ -84,7 +86,16 @@ function ListingDetail() {
               </div>
             )}
           </div>
-          {listing.description && <p className="mt-4 whitespace-pre-wrap leading-relaxed">{listing.description}</p>}
+          {(() => {
+            const specs = extractHostelSpecs(listing.description);
+            const clean = specs ? stripHostelMarker(listing.description) : listing.description;
+            return (
+              <>
+                {clean && <p className="mt-4 whitespace-pre-wrap leading-relaxed">{clean}</p>}
+                {specs && <HostelDetailPanel specs={specs} />}
+              </>
+            );
+          })()}
           <div className="mt-6 p-4 rounded-2xl bg-muted/40 border">
             <p className="text-xs font-semibold uppercase text-muted-foreground mb-1">Contact seller</p>
             <p className="flex items-center gap-2 font-medium"><Phone className="w-4 h-4 text-primary" />{listing.contact}</p>

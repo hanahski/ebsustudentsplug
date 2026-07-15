@@ -18,6 +18,8 @@ import {
 
 import { EbsuBadge } from "@/components/EbsuBadge";
 import { StorageMedia } from "@/components/StorageMedia";
+import { HostelCardStrip } from "@/components/hostel/HostelCard";
+import { extractHostelSpecs, stripHostelMarker } from "@/lib/hostel-specs";
 
 export const Route = createFileRoute("/products")({
   component: ProductsPage,
@@ -223,7 +225,11 @@ function ProductsPage() {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {products.map((l: any) => (
+          {products.map((l: any) => {
+            const hostelSpecs = extractHostelSpecs(l.description);
+            const cleanDesc = hostelSpecs ? stripHostelMarker(l.description) : l.description;
+            const isHostel = !!hostelSpecs || l.category === "hostel";
+            return (
             <Link
               key={l.id}
               to="/market/$id"
@@ -232,8 +238,8 @@ function ProductsPage() {
             >
               <div className="absolute top-2 left-2 z-10 flex items-center gap-1">
                 <EbsuBadge size={22} />
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-card/95 backdrop-blur border text-[10px] font-bold uppercase tracking-wider text-primary shadow-card">
-                  Product
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-full bg-card/95 backdrop-blur border text-[10px] font-bold uppercase tracking-wider shadow-card ${isHostel ? "text-emerald-500 border-emerald-500/40" : "text-primary"}`}>
+                  {isHostel ? "Hostel" : "Product"}
                 </span>
               </div>
               <SaveButton
@@ -263,11 +269,12 @@ function ProductsPage() {
                   ₦{Number(l.price).toLocaleString()}
                 </span>
               </div>
-              {l.description && (
+              {cleanDesc && (
                 <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                  {l.description}
+                  {cleanDesc}
                 </p>
               )}
+              {hostelSpecs && <HostelCardStrip specs={hostelSpecs} />}
               <div className="flex gap-2 mt-3 text-xs items-center flex-wrap">
                 {l.category && (
                   <span className="px-2 py-0.5 rounded-full bg-muted capitalize">
@@ -294,7 +301,8 @@ function ProductsPage() {
                 </span>
               </div>
             </Link>
-          ))}
+            );
+          })}
         </div>
 
         {canLoadMore && (
