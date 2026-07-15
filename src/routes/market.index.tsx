@@ -232,105 +232,146 @@ function MarketPage() {
 
         {isLoading && <p className="text-center text-muted-foreground py-8">Loading…</p>}
 
+        {/* TICKETS */}
         {(kind === "all" || kind === "tickets") && (tickets?.length ?? 0) > 0 && (
-          <div className="space-y-3">
+          <section className="space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <Ticket className="w-4 h-4" /> Tickets
+                <Ticket className="w-4 h-4 text-fuchsia-500" /> Tickets
+                <span className="text-[10px] font-normal text-muted-foreground/70 normal-case">· events & parties</span>
               </h2>
-              <Link to="/tickets" className="text-xs text-primary hover:underline">
-                See all →
-              </Link>
+              <Link to="/tickets" className="text-xs text-primary hover:underline shrink-0">See all →</Link>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {(tickets ?? []).map((t: any) => (
-                <Link
-                  key={t.id}
-                  to="/tickets/$id"
-                  params={{ id: t.id }}
-                  className="bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition"
-                >
-                  <div className="aspect-video bg-muted overflow-hidden">
-                    <img
-                      src={t.photo_url}
-                      alt={t.title}
-                     
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="p-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-semibold line-clamp-1">{t.title}</h3>
-                      <span className="text-primary font-bold whitespace-nowrap text-sm">
-                        {t.pay_mode === "credits"
-                          ? `${t.price} cr`
-                          : `₦${Number(t.price).toLocaleString()}`}
+            {kind === "all" ? (
+              <div className="-mx-2 px-2 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none">
+                <div className="flex gap-3 pb-2">
+                  {(tickets ?? []).map((t: any) => (
+                    <Link
+                      key={t.id}
+                      to="/tickets/$id"
+                      params={{ id: t.id }}
+                      className="snap-start shrink-0 w-[240px] sm:w-[280px] bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition"
+                    >
+                      <div className="aspect-video bg-muted overflow-hidden relative">
+                        <img src={t.photo_url} alt={t.title} className="w-full h-full object-cover" />
+                        <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-fuchsia-500/95 text-white text-[10px] font-bold uppercase tracking-wider shadow-card">
+                          <Ticket className="w-3 h-3" /> Ticket
+                        </span>
+                      </div>
+                      <div className="p-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="font-semibold line-clamp-1 text-sm">{t.title}</h3>
+                          <span className="text-primary font-bold whitespace-nowrap text-sm">
+                            {t.pay_mode === "credits" ? `${t.price} cr` : `₦${Number(t.price).toLocaleString()}`}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">{t.description}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {(tickets ?? []).map((t: any) => (
+                  <Link
+                    key={t.id}
+                    to="/tickets/$id"
+                    params={{ id: t.id }}
+                    className="bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition"
+                  >
+                    <div className="aspect-video bg-muted overflow-hidden relative">
+                      <img src={t.photo_url} alt={t.title} className="w-full h-full object-cover" />
+                      <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-fuchsia-500/95 text-white text-[10px] font-bold uppercase tracking-wider">
+                        <Ticket className="w-3 h-3" /> Ticket
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                      {t.description}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
+                    <div className="p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-semibold line-clamp-1 text-sm">{t.title}</h3>
+                        <span className="text-primary font-bold whitespace-nowrap text-sm">
+                          {t.pay_mode === "credits" ? `${t.price} cr` : `₦${Number(t.price).toLocaleString()}`}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{t.description}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
         )}
         {kind === "tickets" && !ticketsLoading && (tickets?.length ?? 0) === 0 && (
           <div className="text-center py-16 text-muted-foreground">
             <Ticket className="w-12 h-12 mx-auto mb-2 opacity-30" />
             <p>No tickets for sale right now.</p>
             <Button asChild className="mt-4">
-              <Link to="/tickets">
-                <Ticket className="w-4 h-4 mr-1" />
-                Open ticket marketplace
-              </Link>
+              <Link to="/tickets"><Ticket className="w-4 h-4 mr-1" />Open ticket marketplace</Link>
             </Button>
           </div>
         )}
 
+        {/* BOOKS */}
         {(kind === "all" || kind === "books") && (books?.length ?? 0) > 0 && (
-          <div className="space-y-3">
+          <section className="space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <BookOpen className="w-4 h-4" /> Book Plug
+                <BookOpen className="w-4 h-4 text-emerald-500" /> Book Plug
+                <span className="text-[10px] font-normal text-muted-foreground/70 normal-case">· novels & textbooks</span>
               </h2>
-              <Link to="/books" className="text-xs text-primary hover:underline">
-                See all →
-              </Link>
+              <Link to="/books" className="text-xs text-primary hover:underline shrink-0">See all →</Link>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-              {(books ?? []).map((b: any) => (
-                <Link
-                  key={b.id}
-                  to="/books/read/$id"
-                  params={{ id: b.id }}
-                  className="bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition flex flex-col"
-                >
-                  <div className="aspect-[2/3] bg-muted overflow-hidden">
-                    <BookCover
-                      title={b.title}
-                      author={b.author}
-                      src={b.cover_url}
-                      className="w-full h-full"
-                    />
-                  </div>
-                  <div className="p-3 flex flex-col gap-1 flex-1">
-                    <h3 className="text-sm font-semibold line-clamp-2 leading-tight">{b.title}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-1">{b.author}</p>
-                    <div className="flex items-center justify-between text-xs mt-auto pt-1">
-                      <span className="capitalize px-2 py-0.5 rounded-full bg-muted">
-                        {b.category}
-                      </span>
-                      <span className="inline-flex items-center gap-1 font-bold text-primary">
-                        <Coins className="w-3 h-3" /> {b.price_credits}
-                      </span>
+            {kind === "all" ? (
+              <div className="-mx-2 px-2 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none">
+                <div className="flex gap-3 pb-2">
+                  {(books ?? []).map((b: any) => (
+                    <Link
+                      key={b.id}
+                      to="/books/read/$id"
+                      params={{ id: b.id }}
+                      className="snap-start shrink-0 w-[130px] sm:w-[150px] bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition flex flex-col"
+                    >
+                      <div className="aspect-[2/3] bg-muted overflow-hidden">
+                        <BookCover title={b.title} author={b.author} src={b.cover_url} className="w-full h-full" />
+                      </div>
+                      <div className="p-2 flex flex-col gap-0.5 flex-1">
+                        <h3 className="text-xs font-semibold line-clamp-2 leading-tight">{b.title}</h3>
+                        <p className="text-[10px] text-muted-foreground line-clamp-1">{b.author}</p>
+                        <span className="inline-flex items-center gap-1 font-bold text-primary text-[11px] mt-auto pt-1">
+                          <Coins className="w-3 h-3" /> {b.price_credits}
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                {(books ?? []).map((b: any) => (
+                  <Link
+                    key={b.id}
+                    to="/books/read/$id"
+                    params={{ id: b.id }}
+                    className="bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition flex flex-col"
+                  >
+                    <div className="aspect-[2/3] bg-muted overflow-hidden">
+                      <BookCover title={b.title} author={b.author} src={b.cover_url} className="w-full h-full" />
                     </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
+                    <div className="p-3 flex flex-col gap-1 flex-1">
+                      <h3 className="text-sm font-semibold line-clamp-2 leading-tight">{b.title}</h3>
+                      <p className="text-xs text-muted-foreground line-clamp-1">{b.author}</p>
+                      <div className="flex items-center justify-between text-xs mt-auto pt-1">
+                        <span className="capitalize px-2 py-0.5 rounded-full bg-muted">{b.category}</span>
+                        <span className="inline-flex items-center gap-1 font-bold text-primary">
+                          <Coins className="w-3 h-3" /> {b.price_credits}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
         )}
         {kind === "books" ? (
           <>
@@ -364,57 +405,69 @@ function MarketPage() {
                 </Button>
               </div>
             )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filtered.map((l: any) => (
-                <Link
-                  key={l.id}
-                  to="/market/$id"
-                  params={{ id: l.id }}
-                  className="relative bg-card border rounded-2xl p-4 shadow-card hover:shadow-glow transition group"
-                >
-                  <div className="absolute top-2 left-2 z-10 flex items-center gap-1">
-                    <EbsuBadge size={22} />
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-card/95 backdrop-blur border text-[10px] font-bold uppercase tracking-wider text-primary shadow-card">
-                      {l.listing_kind ?? "product"}
-                    </span>
-                  </div>
-                  <SaveButton
-                    itemType="market"
-                    itemId={l.id}
-                    title={l.title}
-                    subtitle={l.category}
-                    thumbUrl={l.photos?.[0] ?? null}
-                    className="absolute top-2 right-2 z-10"
-                  />
-                  {l.photos?.[0] && (
-                    <StorageMedia
-                      url={l.photos[0]}
-                      alt={l.title}
-                      className="w-full h-40 object-cover rounded-xl mb-3 mt-4"
-                    />
-                  )}
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold group-hover:text-primary break-words flex-1 min-w-0">
-                      {l.title}
-                    </h3>
-                    <span className="text-primary font-bold whitespace-nowrap">
-                      ₦{Number(l.price).toLocaleString()}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2 break-words">
-                    {l.description}
-                  </p>
-                  <div className="flex gap-2 mt-2 text-xs items-center flex-wrap">
-                    <span className="px-2 py-0.5 rounded-full bg-muted break-words">
-                      {l.category}
-                    </span>
-                    {l.location && (
-                      <span className="text-muted-foreground break-words">📍 {l.location}</span>
-                    )}
-                  </div>
-                </Link>
-              ))}
-            </div>
+            {filtered.length > 0 && (
+              <section className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <Package className="w-4 h-4 text-sky-500" /> Products
+                    <span className="text-[10px] font-normal text-muted-foreground/70 normal-case">· from students</span>
+                  </h2>
+                  <Link to="/products" className="text-xs text-primary hover:underline shrink-0">See all →</Link>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {filtered.map((l: any) => (
+                    <Link
+                      key={l.id}
+                      to="/market/$id"
+                      params={{ id: l.id }}
+                      className="relative bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition group flex flex-col"
+                    >
+                      <div className="relative aspect-square bg-muted overflow-hidden">
+                        {l.photos?.[0] ? (
+                          <StorageMedia url={l.photos[0]} alt={l.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                            <Package className="w-10 h-10 opacity-30" />
+                          </div>
+                        )}
+                        <div className="absolute top-2 left-2 flex items-center gap-1">
+                          <EbsuBadge size={20} />
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-sky-500/95 text-white text-[10px] font-bold uppercase tracking-wider shadow-card">
+                            {l.listing_kind ?? "product"}
+                          </span>
+                        </div>
+                        <SaveButton
+                          itemType="market"
+                          itemId={l.id}
+                          title={l.title}
+                          subtitle={l.category}
+                          thumbUrl={l.photos?.[0] ?? null}
+                          className="absolute top-2 right-2"
+                        />
+                        {l.is_sold && (
+                          <div className="absolute inset-0 bg-background/70 flex items-center justify-center">
+                            <span className="px-3 py-1 rounded-full bg-destructive text-destructive-foreground text-xs font-bold uppercase tracking-wider">Sold</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-3 flex flex-col gap-1 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="text-sm font-semibold line-clamp-1 group-hover:text-primary flex-1 min-w-0">{l.title}</h3>
+                          <span className="text-primary font-bold whitespace-nowrap text-sm">
+                            ₦{Number(l.price).toLocaleString()}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground line-clamp-2">{l.description}</p>
+                        <div className="flex gap-1.5 mt-auto pt-1 text-[10px] items-center flex-wrap">
+                          <span className="px-1.5 py-0.5 rounded-full bg-muted">{l.category}</span>
+                          {l.location && <span className="text-muted-foreground truncate">📍 {l.location}</span>}
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
             {canLoadMoreListings && filtered.length > 0 && (
               <div className="pt-2">
                 <button
