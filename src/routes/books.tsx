@@ -32,6 +32,7 @@ import {
 import { toast } from "sonner";
 import { SaveButton } from "@/components/SaveButton";
 import { BookCover } from "@/components/BookCover";
+import { BookShape } from "@/components/market/BookShape";
 import { PdfReader } from "@/components/PdfReader";
 
 const MAX_INAPP_PDF_BYTES = 8 * 1024 * 1024; // 8MB
