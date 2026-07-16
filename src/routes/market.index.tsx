@@ -18,9 +18,26 @@ import {
   PenLine,
 } from "lucide-react";
 import { EbsuBadge } from "@/components/EbsuBadge";
-import { StorageMedia } from "@/components/StorageMedia";
 import { BookCover } from "@/components/BookCover";
+import { BookShape } from "@/components/market/BookShape";
+import { TicketShape } from "@/components/market/TicketShape";
+import { ProductMediaSlider } from "@/components/market/ProductMediaSlider";
 import { getLibraryBooks, getPopularNovels } from "@/lib/library-books.functions";
+
+// Rotating spine tones so a shelf of books doesn't look monotone.
+const BOOK_SPINES = [
+  "from-emerald-800 via-emerald-700 to-emerald-900",
+  "from-rose-800 via-rose-700 to-rose-900",
+  "from-indigo-800 via-indigo-700 to-indigo-900",
+  "from-amber-800 via-amber-700 to-amber-900",
+  "from-slate-800 via-slate-700 to-slate-900",
+  "from-fuchsia-800 via-fuchsia-700 to-fuchsia-900",
+];
+const spineFor = (id: string) => {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return BOOK_SPINES[h % BOOK_SPINES.length];
+};
 
 export const Route = createFileRoute("/market/")({ component: MarketPage });
 
