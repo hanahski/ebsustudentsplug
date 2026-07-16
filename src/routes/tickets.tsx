@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { encodePlugShare } from "@/components/PlugShareActions";
 import { toast } from "sonner";
 import { Ticket, Upload, QrCode, Lock, Loader2, Download, Megaphone, Eye, EyeOff, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { TicketShape } from "@/components/market/TicketShape";
 import { composeTicketImage, downloadTicketPdf, ticketFilename, composeVerifiedQr } from "@/lib/ticket-composer";
 import { getIsAdminUser } from "@/lib/admin-role";
 import { handleEmailNotVerified } from "@/components/VerifyEmailDialog";
@@ -147,25 +148,41 @@ function BrowseTickets() {
   if (isLoading) return <p className="text-center text-muted-foreground py-8">Loading…</p>;
   if (!data?.length) return <div className="text-center py-12 text-muted-foreground"><Ticket className="w-10 h-10 mx-auto mb-2 opacity-40" />No tickets for sale right now.</div>;
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
       {data.map((t) => (
-        <div key={t.id} className="bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition flex flex-col">
-          <Link to="/tickets/$id" params={{ id: t.id }}>
-            <img src={t.photo_url} alt={t.title} className="w-full h-44 object-cover" />
-          </Link>
-          <div className="p-4 flex-1 flex flex-col">
-            <Link to="/tickets/$id" params={{ id: t.id }} className="flex-1">
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="font-semibold line-clamp-1">{t.title}</h3>
-                <span className="text-primary font-bold whitespace-nowrap">{t.pay_mode === "credits" ? `${t.price} cr` : `₦${Number(t.price).toLocaleString()}`}</span>
+        <div key={t.id} className="flex flex-col">
+          <Link to="/tickets/$id" params={{ id: t.id }} className="block hover:-translate-y-0.5 transition-transform">
+            <TicketShape className="flex bg-card border border-border/60 rounded-xl overflow-hidden h-40">
+              <div className="w-[34%] shrink-0 relative overflow-hidden">
+                {t.photo_url ? (
+                  <img src={t.photo_url} alt={t.title} className="absolute inset-0 w-full h-full object-cover" />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500 to-rose-600" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-600/70 via-pink-600/60 to-rose-700/80" />
+                <div className="relative p-3 h-full flex flex-col justify-between text-white">
+                  <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider">
+                    <Ticket className="w-3.5 h-3.5" /> Ticket
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase opacity-80">Price</div>
+                    <div className="font-black text-lg leading-none drop-shadow">
+                      {t.pay_mode === "credits" ? `${t.price} cr` : `₦${Number(t.price).toLocaleString()}`}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{t.description}</p>
-            </Link>
-            <Button type="button" onClick={() => buyAndDownload(t)} disabled={buyingId === t.id} className="mt-3 w-full">
-              {buyingId === t.id ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Ticket className="w-4 h-4 mr-1" />}
-              {buyingId === t.id ? "Downloading PDF…" : t.pay_mode === "credits" ? `Buy for ${t.price} cr` : `Buy for ₦${Number(t.price).toLocaleString()}`}
-            </Button>
-          </div>
+              <div className="flex-1 min-w-0 p-3 pl-5 flex flex-col">
+                <h3 className="font-bold line-clamp-1 text-sm">{t.title}</h3>
+                <p className="text-[11px] text-muted-foreground line-clamp-3 mt-0.5 flex-1">{t.description}</p>
+                <div className="text-[10px] font-semibold text-primary mt-1">ADMIT ONE →</div>
+              </div>
+            </TicketShape>
+          </Link>
+          <Button type="button" onClick={() => buyAndDownload(t)} disabled={buyingId === t.id} className="mt-3 w-full">
+            {buyingId === t.id ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Ticket className="w-4 h-4 mr-1" />}
+            {buyingId === t.id ? "Downloading PDF…" : t.pay_mode === "credits" ? `Buy for ${t.price} cr` : `Buy for ₦${Number(t.price).toLocaleString()}`}
+          </Button>
         </div>
       ))}
     </div>

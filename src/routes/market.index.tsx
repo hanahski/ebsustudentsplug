@@ -270,15 +270,23 @@ function MarketPage() {
                       className="snap-start shrink-0 w-[300px] sm:w-[340px] hover:-translate-y-0.5 transition-transform"
                     >
                       <TicketShape className="flex bg-card border border-border/60 rounded-xl overflow-hidden h-32">
-                        {/* stub */}
-                        <div className="w-[34%] shrink-0 bg-gradient-to-br from-fuchsia-500 via-pink-600 to-rose-600 text-white p-3 flex flex-col justify-between">
-                          <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider">
-                            <Ticket className="w-3.5 h-3.5" /> Ticket
-                          </div>
-                          <div>
-                            <div className="text-[10px] uppercase opacity-80">Price</div>
-                            <div className="font-black text-base leading-none">
-                              {t.pay_mode === "credits" ? `${t.price} cr` : `₦${Number(t.price).toLocaleString()}`}
+                        {/* stub with real ticket image */}
+                        <div className="w-[34%] shrink-0 relative overflow-hidden">
+                          {t.photo_url ? (
+                            <img src={t.photo_url} alt={t.title} className="absolute inset-0 w-full h-full object-cover" />
+                          ) : (
+                            <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500 via-pink-600 to-rose-600" />
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-600/70 via-pink-600/60 to-rose-700/80" />
+                          <div className="relative p-3 h-full flex flex-col justify-between text-white">
+                            <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider">
+                              <Ticket className="w-3.5 h-3.5" /> Ticket
+                            </div>
+                            <div>
+                              <div className="text-[10px] uppercase opacity-80">Price</div>
+                              <div className="font-black text-base leading-none drop-shadow">
+                                {t.pay_mode === "credits" ? `${t.price} cr` : `₦${Number(t.price).toLocaleString()}`}
+                              </div>
                             </div>
                           </div>
                         </div>

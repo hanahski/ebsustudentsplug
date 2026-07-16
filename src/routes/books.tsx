@@ -32,6 +32,7 @@ import {
 import { toast } from "sonner";
 import { SaveButton } from "@/components/SaveButton";
 import { BookCover } from "@/components/BookCover";
+import { BookShape } from "@/components/market/BookShape";
 import { PdfReader } from "@/components/PdfReader";
 
 const MAX_INAPP_PDF_BYTES = 8 * 1024 * 1024; // 8MB
@@ -125,6 +126,20 @@ function formatCredits(v: unknown) {
   if (!Number.isFinite(n)) return "0";
   return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
 }
+
+const BOOK_SPINES = [
+  "from-emerald-800 via-emerald-700 to-emerald-900",
+  "from-rose-800 via-rose-700 to-rose-900",
+  "from-indigo-800 via-indigo-700 to-indigo-900",
+  "from-amber-800 via-amber-700 to-amber-900",
+  "from-slate-800 via-slate-700 to-slate-900",
+  "from-fuchsia-800 via-fuchsia-700 to-fuchsia-900",
+];
+const spineFor = (id: string) => {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return BOOK_SPINES[h % BOOK_SPINES.length];
+};
 
 const BOOK_CACHE_PREFIX = "book-plug-cache:";
 
@@ -438,18 +453,18 @@ function BookCard({
   };
 
   return (
-    <div className="group relative bg-card border rounded-2xl overflow-hidden shadow-card flex flex-col hover:shadow-lg hover:-translate-y-0.5 transition-all">
+    <div className="group relative bg-transparent flex flex-col hover:-translate-y-1 transition-all">
       <SaveButton
         itemType="book"
         itemId={book.id}
         title={book.title}
         subtitle={book.author}
         thumbUrl={book.cover_url}
-        className="absolute top-2 right-2 z-10"
+        className="absolute top-2 right-2 z-20"
       />
 
       {/* Format badges (top-left, stacked). */}
-      <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 items-start max-w-[70%]">
+      <div className="absolute top-2 left-3 z-20 flex flex-col gap-1 items-start max-w-[70%]">
         {orderedKeys.slice(0, 4).map((k) => (
           <span
             key={k}
@@ -465,7 +480,7 @@ function BookCard({
         )}
       </div>
 
-      <div className="aspect-[2/3] bg-muted overflow-hidden">
+      <BookShape className="aspect-[2/3] w-full" spineTone={spineFor(book.id)}>
         <BookCover
           title={book.title}
           author={book.author}
@@ -473,7 +488,8 @@ function BookCard({
           className="h-full w-full"
           imageClassName="group-hover:scale-105 transition-transform duration-500"
         />
-      </div>
+      </BookShape>
+
 
       <div className="p-3 flex flex-col gap-2 flex-1">
         <div className="min-h-[38px]">
