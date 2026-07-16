@@ -356,21 +356,21 @@ function MarketPage() {
             </div>
             {kind === "all" ? (
               <div className="-mx-2 px-2 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none">
-                <div className="flex gap-3 pb-2">
+                <div className="flex gap-5 pb-4 pt-1 pl-1">
                   {(books ?? []).map((b: any) => (
                     <Link
                       key={b.id}
                       to="/books/read/$id"
                       params={{ id: b.id }}
-                      className="snap-start shrink-0 w-[130px] sm:w-[150px] bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition flex flex-col"
+                      className="snap-start shrink-0 w-[130px] sm:w-[150px] group hover:-translate-y-1 transition-transform"
                     >
-                      <div className="aspect-[2/3] bg-muted overflow-hidden">
+                      <BookShape className="aspect-[2/3] w-full" spineTone={spineFor(b.id)}>
                         <BookCover title={b.title} author={b.author} src={b.cover_url} className="w-full h-full" />
-                      </div>
-                      <div className="p-2 flex flex-col gap-0.5 flex-1">
-                        <h3 className="text-xs font-semibold line-clamp-2 leading-tight">{b.title}</h3>
+                      </BookShape>
+                      <div className="pt-3 px-0.5">
+                        <h3 className="text-xs font-semibold line-clamp-2 leading-tight group-hover:text-primary">{b.title}</h3>
                         <p className="text-[10px] text-muted-foreground line-clamp-1">{b.author}</p>
-                        <span className="inline-flex items-center gap-1 font-bold text-primary text-[11px] mt-auto pt-1">
+                        <span className="inline-flex items-center gap-1 font-bold text-primary text-[11px] mt-1">
                           <Coins className="w-3 h-3" /> {b.price_credits}
                         </span>
                       </div>
@@ -379,21 +379,21 @@ function MarketPage() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-6">
                 {(books ?? []).map((b: any) => (
                   <Link
                     key={b.id}
                     to="/books/read/$id"
                     params={{ id: b.id }}
-                    className="bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition flex flex-col"
+                    className="group hover:-translate-y-1 transition-transform"
                   >
-                    <div className="aspect-[2/3] bg-muted overflow-hidden">
+                    <BookShape className="aspect-[2/3] w-full" spineTone={spineFor(b.id)}>
                       <BookCover title={b.title} author={b.author} src={b.cover_url} className="w-full h-full" />
-                    </div>
-                    <div className="p-3 flex flex-col gap-1 flex-1">
-                      <h3 className="text-sm font-semibold line-clamp-2 leading-tight">{b.title}</h3>
+                    </BookShape>
+                    <div className="pt-3 px-0.5">
+                      <h3 className="text-sm font-semibold line-clamp-2 leading-tight group-hover:text-primary">{b.title}</h3>
                       <p className="text-xs text-muted-foreground line-clamp-1">{b.author}</p>
-                      <div className="flex items-center justify-between text-xs mt-auto pt-1">
+                      <div className="flex items-center justify-between text-xs mt-1">
                         <span className="capitalize px-2 py-0.5 rounded-full bg-muted">{b.category}</span>
                         <span className="inline-flex items-center gap-1 font-bold text-primary">
                           <Coins className="w-3 h-3" /> {b.price_credits}
