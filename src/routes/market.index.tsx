@@ -261,57 +261,73 @@ function MarketPage() {
             </div>
             {kind === "all" ? (
               <div className="-mx-2 px-2 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none">
-                <div className="flex gap-3 pb-2">
+                <div className="flex gap-4 pb-3 pt-1">
                   {(tickets ?? []).map((t: any) => (
                     <Link
                       key={t.id}
                       to="/tickets/$id"
                       params={{ id: t.id }}
-                      className="snap-start shrink-0 w-[240px] sm:w-[280px] bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition"
+                      className="snap-start shrink-0 w-[300px] sm:w-[340px] hover:-translate-y-0.5 transition-transform"
                     >
-                      <div className="aspect-video bg-muted overflow-hidden relative">
-                        <img src={t.photo_url} alt={t.title} className="w-full h-full object-cover" />
-                        <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-fuchsia-500/95 text-white text-[10px] font-bold uppercase tracking-wider shadow-card">
-                          <Ticket className="w-3 h-3" /> Ticket
-                        </span>
-                      </div>
-                      <div className="p-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <h3 className="font-semibold line-clamp-1 text-sm">{t.title}</h3>
-                          <span className="text-primary font-bold whitespace-nowrap text-sm">
-                            {t.pay_mode === "credits" ? `${t.price} cr` : `₦${Number(t.price).toLocaleString()}`}
-                          </span>
+                      <TicketShape className="flex bg-card border border-border/60 rounded-xl overflow-hidden h-32">
+                        {/* stub */}
+                        <div className="w-[34%] shrink-0 bg-gradient-to-br from-fuchsia-500 via-pink-600 to-rose-600 text-white p-3 flex flex-col justify-between">
+                          <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider">
+                            <Ticket className="w-3.5 h-3.5" /> Ticket
+                          </div>
+                          <div>
+                            <div className="text-[10px] uppercase opacity-80">Price</div>
+                            <div className="font-black text-base leading-none">
+                              {t.pay_mode === "credits" ? `${t.price} cr` : `₦${Number(t.price).toLocaleString()}`}
+                            </div>
+                          </div>
                         </div>
-                        <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">{t.description}</p>
-                      </div>
+                        {/* body */}
+                        <div className="flex-1 min-w-0 p-3 pl-5 flex flex-col">
+                          <h3 className="font-bold line-clamp-1 text-sm">{t.title}</h3>
+                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5 flex-1">{t.description}</p>
+                          <div className="text-[10px] font-semibold text-primary mt-1">ADMIT ONE →</div>
+                        </div>
+                      </TicketShape>
                     </Link>
                   ))}
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {(tickets ?? []).map((t: any) => (
                   <Link
                     key={t.id}
                     to="/tickets/$id"
                     params={{ id: t.id }}
-                    className="bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition"
+                    className="hover:-translate-y-0.5 transition-transform"
                   >
-                    <div className="aspect-video bg-muted overflow-hidden relative">
-                      <img src={t.photo_url} alt={t.title} className="w-full h-full object-cover" />
-                      <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-fuchsia-500/95 text-white text-[10px] font-bold uppercase tracking-wider">
-                        <Ticket className="w-3 h-3" /> Ticket
-                      </span>
-                    </div>
-                    <div className="p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-semibold line-clamp-1 text-sm">{t.title}</h3>
-                        <span className="text-primary font-bold whitespace-nowrap text-sm">
-                          {t.pay_mode === "credits" ? `${t.price} cr` : `₦${Number(t.price).toLocaleString()}`}
-                        </span>
+                    <TicketShape className="flex bg-card border border-border/60 rounded-xl overflow-hidden h-36">
+                      <div className="w-[34%] shrink-0 relative overflow-hidden">
+                        {t.photo_url ? (
+                          <img src={t.photo_url} alt={t.title} className="absolute inset-0 w-full h-full object-cover" />
+                        ) : (
+                          <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500 to-rose-600" />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-600/70 to-rose-700/80" />
+                        <div className="relative p-3 h-full flex flex-col justify-between text-white">
+                          <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider">
+                            <Ticket className="w-3.5 h-3.5" /> Ticket
+                          </div>
+                          <div>
+                            <div className="text-[10px] uppercase opacity-80">Price</div>
+                            <div className="font-black text-lg leading-none">
+                              {t.pay_mode === "credits" ? `${t.price} cr` : `₦${Number(t.price).toLocaleString()}`}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{t.description}</p>
-                    </div>
+                      <div className="flex-1 min-w-0 p-3 pl-5 flex flex-col">
+                        <h3 className="font-bold line-clamp-1 text-sm">{t.title}</h3>
+                        <p className="text-[11px] text-muted-foreground line-clamp-3 mt-0.5 flex-1">{t.description}</p>
+                        <div className="text-[10px] font-semibold text-primary mt-1">ADMIT ONE →</div>
+                      </div>
+                    </TicketShape>
                   </Link>
                 ))}
               </div>
