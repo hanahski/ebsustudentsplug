@@ -49,6 +49,19 @@ function ContactPage() {
           </Button>
         </section>
         <section className="space-y-3">
+          <h2 className="text-xl font-bold font-display">Email us</h2>
+          <p>
+            Prefer email? Reach the team directly at{" "}
+            <a
+              href="mailto:studentsplug@gmail.com"
+              className="font-semibold text-primary hover:underline"
+            >
+              studentsplug@gmail.com
+            </a>
+            . We typically reply within 24 hours.
+          </p>
+        </section>
+        <section className="space-y-3">
           <h2 className="text-xl font-bold font-display">Content and copyright</h2>
           <p>
             If you own content shown on StudentsPlug and believe it was shared without permission,
