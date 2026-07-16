@@ -18,9 +18,26 @@ import {
   PenLine,
 } from "lucide-react";
 import { EbsuBadge } from "@/components/EbsuBadge";
-import { StorageMedia } from "@/components/StorageMedia";
 import { BookCover } from "@/components/BookCover";
+import { BookShape } from "@/components/market/BookShape";
+import { TicketShape } from "@/components/market/TicketShape";
+import { ProductMediaSlider } from "@/components/market/ProductMediaSlider";
 import { getLibraryBooks, getPopularNovels } from "@/lib/library-books.functions";
+
+// Rotating spine tones so a shelf of books doesn't look monotone.
+const BOOK_SPINES = [
+  "from-emerald-800 via-emerald-700 to-emerald-900",
+  "from-rose-800 via-rose-700 to-rose-900",
+  "from-indigo-800 via-indigo-700 to-indigo-900",
+  "from-amber-800 via-amber-700 to-amber-900",
+  "from-slate-800 via-slate-700 to-slate-900",
+  "from-fuchsia-800 via-fuchsia-700 to-fuchsia-900",
+];
+const spineFor = (id: string) => {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return BOOK_SPINES[h % BOOK_SPINES.length];
+};
 
 export const Route = createFileRoute("/market/")({ component: MarketPage });
 
@@ -244,57 +261,73 @@ function MarketPage() {
             </div>
             {kind === "all" ? (
               <div className="-mx-2 px-2 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none">
-                <div className="flex gap-3 pb-2">
+                <div className="flex gap-4 pb-3 pt-1">
                   {(tickets ?? []).map((t: any) => (
                     <Link
                       key={t.id}
                       to="/tickets/$id"
                       params={{ id: t.id }}
-                      className="snap-start shrink-0 w-[240px] sm:w-[280px] bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition"
+                      className="snap-start shrink-0 w-[300px] sm:w-[340px] hover:-translate-y-0.5 transition-transform"
                     >
-                      <div className="aspect-video bg-muted overflow-hidden relative">
-                        <img src={t.photo_url} alt={t.title} className="w-full h-full object-cover" />
-                        <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-fuchsia-500/95 text-white text-[10px] font-bold uppercase tracking-wider shadow-card">
-                          <Ticket className="w-3 h-3" /> Ticket
-                        </span>
-                      </div>
-                      <div className="p-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <h3 className="font-semibold line-clamp-1 text-sm">{t.title}</h3>
-                          <span className="text-primary font-bold whitespace-nowrap text-sm">
-                            {t.pay_mode === "credits" ? `${t.price} cr` : `₦${Number(t.price).toLocaleString()}`}
-                          </span>
+                      <TicketShape className="flex bg-card border border-border/60 rounded-xl overflow-hidden h-32">
+                        {/* stub */}
+                        <div className="w-[34%] shrink-0 bg-gradient-to-br from-fuchsia-500 via-pink-600 to-rose-600 text-white p-3 flex flex-col justify-between">
+                          <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider">
+                            <Ticket className="w-3.5 h-3.5" /> Ticket
+                          </div>
+                          <div>
+                            <div className="text-[10px] uppercase opacity-80">Price</div>
+                            <div className="font-black text-base leading-none">
+                              {t.pay_mode === "credits" ? `${t.price} cr` : `₦${Number(t.price).toLocaleString()}`}
+                            </div>
+                          </div>
                         </div>
-                        <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">{t.description}</p>
-                      </div>
+                        {/* body */}
+                        <div className="flex-1 min-w-0 p-3 pl-5 flex flex-col">
+                          <h3 className="font-bold line-clamp-1 text-sm">{t.title}</h3>
+                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5 flex-1">{t.description}</p>
+                          <div className="text-[10px] font-semibold text-primary mt-1">ADMIT ONE →</div>
+                        </div>
+                      </TicketShape>
                     </Link>
                   ))}
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {(tickets ?? []).map((t: any) => (
                   <Link
                     key={t.id}
                     to="/tickets/$id"
                     params={{ id: t.id }}
-                    className="bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition"
+                    className="hover:-translate-y-0.5 transition-transform"
                   >
-                    <div className="aspect-video bg-muted overflow-hidden relative">
-                      <img src={t.photo_url} alt={t.title} className="w-full h-full object-cover" />
-                      <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-fuchsia-500/95 text-white text-[10px] font-bold uppercase tracking-wider">
-                        <Ticket className="w-3 h-3" /> Ticket
-                      </span>
-                    </div>
-                    <div className="p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-semibold line-clamp-1 text-sm">{t.title}</h3>
-                        <span className="text-primary font-bold whitespace-nowrap text-sm">
-                          {t.pay_mode === "credits" ? `${t.price} cr` : `₦${Number(t.price).toLocaleString()}`}
-                        </span>
+                    <TicketShape className="flex bg-card border border-border/60 rounded-xl overflow-hidden h-36">
+                      <div className="w-[34%] shrink-0 relative overflow-hidden">
+                        {t.photo_url ? (
+                          <img src={t.photo_url} alt={t.title} className="absolute inset-0 w-full h-full object-cover" />
+                        ) : (
+                          <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500 to-rose-600" />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-600/70 to-rose-700/80" />
+                        <div className="relative p-3 h-full flex flex-col justify-between text-white">
+                          <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider">
+                            <Ticket className="w-3.5 h-3.5" /> Ticket
+                          </div>
+                          <div>
+                            <div className="text-[10px] uppercase opacity-80">Price</div>
+                            <div className="font-black text-lg leading-none">
+                              {t.pay_mode === "credits" ? `${t.price} cr` : `₦${Number(t.price).toLocaleString()}`}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{t.description}</p>
-                    </div>
+                      <div className="flex-1 min-w-0 p-3 pl-5 flex flex-col">
+                        <h3 className="font-bold line-clamp-1 text-sm">{t.title}</h3>
+                        <p className="text-[11px] text-muted-foreground line-clamp-3 mt-0.5 flex-1">{t.description}</p>
+                        <div className="text-[10px] font-semibold text-primary mt-1">ADMIT ONE →</div>
+                      </div>
+                    </TicketShape>
                   </Link>
                 ))}
               </div>
@@ -323,21 +356,21 @@ function MarketPage() {
             </div>
             {kind === "all" ? (
               <div className="-mx-2 px-2 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none">
-                <div className="flex gap-3 pb-2">
+                <div className="flex gap-5 pb-4 pt-1 pl-1">
                   {(books ?? []).map((b: any) => (
                     <Link
                       key={b.id}
                       to="/books/read/$id"
                       params={{ id: b.id }}
-                      className="snap-start shrink-0 w-[130px] sm:w-[150px] bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition flex flex-col"
+                      className="snap-start shrink-0 w-[130px] sm:w-[150px] group hover:-translate-y-1 transition-transform"
                     >
-                      <div className="aspect-[2/3] bg-muted overflow-hidden">
+                      <BookShape className="aspect-[2/3] w-full" spineTone={spineFor(b.id)}>
                         <BookCover title={b.title} author={b.author} src={b.cover_url} className="w-full h-full" />
-                      </div>
-                      <div className="p-2 flex flex-col gap-0.5 flex-1">
-                        <h3 className="text-xs font-semibold line-clamp-2 leading-tight">{b.title}</h3>
+                      </BookShape>
+                      <div className="pt-3 px-0.5">
+                        <h3 className="text-xs font-semibold line-clamp-2 leading-tight group-hover:text-primary">{b.title}</h3>
                         <p className="text-[10px] text-muted-foreground line-clamp-1">{b.author}</p>
-                        <span className="inline-flex items-center gap-1 font-bold text-primary text-[11px] mt-auto pt-1">
+                        <span className="inline-flex items-center gap-1 font-bold text-primary text-[11px] mt-1">
                           <Coins className="w-3 h-3" /> {b.price_credits}
                         </span>
                       </div>
@@ -346,21 +379,21 @@ function MarketPage() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-6">
                 {(books ?? []).map((b: any) => (
                   <Link
                     key={b.id}
                     to="/books/read/$id"
                     params={{ id: b.id }}
-                    className="bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition flex flex-col"
+                    className="group hover:-translate-y-1 transition-transform"
                   >
-                    <div className="aspect-[2/3] bg-muted overflow-hidden">
+                    <BookShape className="aspect-[2/3] w-full" spineTone={spineFor(b.id)}>
                       <BookCover title={b.title} author={b.author} src={b.cover_url} className="w-full h-full" />
-                    </div>
-                    <div className="p-3 flex flex-col gap-1 flex-1">
-                      <h3 className="text-sm font-semibold line-clamp-2 leading-tight">{b.title}</h3>
+                    </BookShape>
+                    <div className="pt-3 px-0.5">
+                      <h3 className="text-sm font-semibold line-clamp-2 leading-tight group-hover:text-primary">{b.title}</h3>
                       <p className="text-xs text-muted-foreground line-clamp-1">{b.author}</p>
-                      <div className="flex items-center justify-between text-xs mt-auto pt-1">
+                      <div className="flex items-center justify-between text-xs mt-1">
                         <span className="capitalize px-2 py-0.5 rounded-full bg-muted">{b.category}</span>
                         <span className="inline-flex items-center gap-1 font-bold text-primary">
                           <Coins className="w-3 h-3" /> {b.price_credits}
@@ -414,25 +447,19 @@ function MarketPage() {
                   </h2>
                   <Link to="/products" className="text-xs text-primary hover:underline shrink-0">See all →</Link>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                   {filtered.map((l: any) => (
                     <Link
                       key={l.id}
                       to="/market/$id"
                       params={{ id: l.id }}
-                      className="relative bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition group flex flex-col"
+                      className="relative bg-card border border-border/60 rounded-3xl overflow-hidden shadow-card hover:shadow-glow hover:-translate-y-0.5 transition group flex flex-col"
                     >
-                      <div className="relative aspect-square bg-muted overflow-hidden">
-                        {l.photos?.[0] ? (
-                          <StorageMedia url={l.photos[0]} alt={l.title} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                            <Package className="w-10 h-10 opacity-30" />
-                          </div>
-                        )}
-                        <div className="absolute top-2 left-2 flex items-center gap-1">
-                          <EbsuBadge size={20} />
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-sky-500/95 text-white text-[10px] font-bold uppercase tracking-wider shadow-card">
+                      <div className="relative">
+                        <ProductMediaSlider photos={l.photos} title={l.title} aspect="aspect-[4/5]" />
+                        <div className="absolute top-3 left-3 flex items-center gap-1.5 z-10">
+                          <EbsuBadge size={22} />
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-black/60 backdrop-blur text-white text-[10px] font-bold uppercase tracking-wider">
                             {l.listing_kind ?? "product"}
                           </span>
                         </div>
@@ -442,24 +469,23 @@ function MarketPage() {
                           title={l.title}
                           subtitle={l.category}
                           thumbUrl={l.photos?.[0] ?? null}
-                          className="absolute top-2 right-2"
+                          className="absolute top-3 right-3 z-10"
                         />
                         {l.is_sold && (
-                          <div className="absolute inset-0 bg-background/70 flex items-center justify-center">
+                          <div className="absolute inset-0 bg-background/70 flex items-center justify-center z-10">
                             <span className="px-3 py-1 rounded-full bg-destructive text-destructive-foreground text-xs font-bold uppercase tracking-wider">Sold</span>
                           </div>
                         )}
-                      </div>
-                      <div className="p-3 flex flex-col gap-1 flex-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <h3 className="text-sm font-semibold line-clamp-1 group-hover:text-primary flex-1 min-w-0">{l.title}</h3>
-                          <span className="text-primary font-bold whitespace-nowrap text-sm">
-                            ₦{Number(l.price).toLocaleString()}
-                          </span>
+                        {/* price pill floats on the media */}
+                        <div className="absolute bottom-3 right-3 z-10 px-3 py-1.5 rounded-full bg-white/95 text-primary font-black text-sm shadow-lg backdrop-blur">
+                          ₦{Number(l.price).toLocaleString()}
                         </div>
-                        <p className="text-[11px] text-muted-foreground line-clamp-2">{l.description}</p>
-                        <div className="flex gap-1.5 mt-auto pt-1 text-[10px] items-center flex-wrap">
-                          <span className="px-1.5 py-0.5 rounded-full bg-muted">{l.category}</span>
+                      </div>
+                      <div className="p-4 flex flex-col gap-1.5 flex-1">
+                        <h3 className="text-base font-bold line-clamp-1 group-hover:text-primary">{l.title}</h3>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{l.description}</p>
+                        <div className="flex gap-1.5 mt-auto pt-2 text-[11px] items-center flex-wrap">
+                          <span className="px-2 py-0.5 rounded-full bg-muted capitalize font-medium">{l.category}</span>
                           {l.location && <span className="text-muted-foreground truncate">📍 {l.location}</span>}
                         </div>
                       </div>
