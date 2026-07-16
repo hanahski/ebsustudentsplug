@@ -127,6 +127,20 @@ function formatCredits(v: unknown) {
   return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
 }
 
+const BOOK_SPINES = [
+  "from-emerald-800 via-emerald-700 to-emerald-900",
+  "from-rose-800 via-rose-700 to-rose-900",
+  "from-indigo-800 via-indigo-700 to-indigo-900",
+  "from-amber-800 via-amber-700 to-amber-900",
+  "from-slate-800 via-slate-700 to-slate-900",
+  "from-fuchsia-800 via-fuchsia-700 to-fuchsia-900",
+];
+const spineFor = (id: string) => {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return BOOK_SPINES[h % BOOK_SPINES.length];
+};
+
 const BOOK_CACHE_PREFIX = "book-plug-cache:";
 
 function cachedBooksKey(category: string, tag: string, query: string) {
