@@ -447,25 +447,19 @@ function MarketPage() {
                   </h2>
                   <Link to="/products" className="text-xs text-primary hover:underline shrink-0">See all →</Link>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                   {filtered.map((l: any) => (
                     <Link
                       key={l.id}
                       to="/market/$id"
                       params={{ id: l.id }}
-                      className="relative bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition group flex flex-col"
+                      className="relative bg-card border border-border/60 rounded-3xl overflow-hidden shadow-card hover:shadow-glow hover:-translate-y-0.5 transition group flex flex-col"
                     >
-                      <div className="relative aspect-square bg-muted overflow-hidden">
-                        {l.photos?.[0] ? (
-                          <StorageMedia url={l.photos[0]} alt={l.title} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                            <Package className="w-10 h-10 opacity-30" />
-                          </div>
-                        )}
-                        <div className="absolute top-2 left-2 flex items-center gap-1">
-                          <EbsuBadge size={20} />
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-sky-500/95 text-white text-[10px] font-bold uppercase tracking-wider shadow-card">
+                      <div className="relative">
+                        <ProductMediaSlider photos={l.photos} title={l.title} aspect="aspect-[4/5]" />
+                        <div className="absolute top-3 left-3 flex items-center gap-1.5 z-10">
+                          <EbsuBadge size={22} />
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-black/60 backdrop-blur text-white text-[10px] font-bold uppercase tracking-wider">
                             {l.listing_kind ?? "product"}
                           </span>
                         </div>
@@ -475,24 +469,23 @@ function MarketPage() {
                           title={l.title}
                           subtitle={l.category}
                           thumbUrl={l.photos?.[0] ?? null}
-                          className="absolute top-2 right-2"
+                          className="absolute top-3 right-3 z-10"
                         />
                         {l.is_sold && (
-                          <div className="absolute inset-0 bg-background/70 flex items-center justify-center">
+                          <div className="absolute inset-0 bg-background/70 flex items-center justify-center z-10">
                             <span className="px-3 py-1 rounded-full bg-destructive text-destructive-foreground text-xs font-bold uppercase tracking-wider">Sold</span>
                           </div>
                         )}
-                      </div>
-                      <div className="p-3 flex flex-col gap-1 flex-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <h3 className="text-sm font-semibold line-clamp-1 group-hover:text-primary flex-1 min-w-0">{l.title}</h3>
-                          <span className="text-primary font-bold whitespace-nowrap text-sm">
-                            ₦{Number(l.price).toLocaleString()}
-                          </span>
+                        {/* price pill floats on the media */}
+                        <div className="absolute bottom-3 right-3 z-10 px-3 py-1.5 rounded-full bg-white/95 text-primary font-black text-sm shadow-lg backdrop-blur">
+                          ₦{Number(l.price).toLocaleString()}
                         </div>
-                        <p className="text-[11px] text-muted-foreground line-clamp-2">{l.description}</p>
-                        <div className="flex gap-1.5 mt-auto pt-1 text-[10px] items-center flex-wrap">
-                          <span className="px-1.5 py-0.5 rounded-full bg-muted">{l.category}</span>
+                      </div>
+                      <div className="p-4 flex flex-col gap-1.5 flex-1">
+                        <h3 className="text-base font-bold line-clamp-1 group-hover:text-primary">{l.title}</h3>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{l.description}</p>
+                        <div className="flex gap-1.5 mt-auto pt-2 text-[11px] items-center flex-wrap">
+                          <span className="px-2 py-0.5 rounded-full bg-muted capitalize font-medium">{l.category}</span>
                           {l.location && <span className="text-muted-foreground truncate">📍 {l.location}</span>}
                         </div>
                       </div>
