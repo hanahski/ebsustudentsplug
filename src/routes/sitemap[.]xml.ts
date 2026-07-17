@@ -14,11 +14,20 @@ export const Route = createFileRoute("/sitemap.xml")({
     handlers: {
       GET: async () => {
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const [{ data: newsRows }, { data: blogRows }, { data: listingRows }] = await Promise.all([
+        const [
+          { data: newsRows },
+          { data: blogRows },
+          { data: listingRows },
+          { data: ticketRows },
+          { data: bookRows },
+        ] = await Promise.all([
           supabaseAdmin.from("news_articles").select("slug").eq("status", "published"),
           supabaseAdmin.from("blog_posts").select("slug").eq("published", true),
           supabaseAdmin.from("market_listings").select("id,category,is_sold").eq("is_sold", false),
+          supabaseAdmin.from("tickets").select("id"),
+          supabaseAdmin.from("library_books").select("id"),
         ]);
+
 
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "daily", priority: "1.0" },
