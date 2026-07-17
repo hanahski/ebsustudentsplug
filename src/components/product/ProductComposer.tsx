@@ -167,22 +167,20 @@ export function ProductComposer({
     onChange({ ...value, [k]: v } as ProductSpecs);
 
   return (
-    <div className="space-y-5 rounded-3xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background p-5 shadow-card">
-      <div className="flex items-start gap-3">
+    <div className="space-y-5 rounded-2xl border bg-card p-4 sm:p-5">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3">
         <div
-          className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
-          style={{ background: `${meta.color}22`, color: meta.color, border: `1px solid ${meta.color}55` }}
+          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+          style={{ background: `${meta.color}18`, color: meta.color, border: `1px solid ${meta.color}40` }}
         >
           <Icon className="w-5 h-5" />
         </div>
-        <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/15 text-primary text-[11px] font-bold uppercase tracking-wider">
-            {meta.label} details
+        <div className="min-w-0">
+          <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
+            {meta.label}
           </div>
-          <h3 className="mt-1 font-display font-bold text-lg">Tell buyers the specifics</h3>
-          <p className="text-xs text-muted-foreground">
-            The right details make your listing sell faster.
-          </p>
+          <h3 className="mt-1 font-display font-bold text-base sm:text-lg leading-tight truncate">Product details</h3>
+          <p className="text-[11px] text-muted-foreground">The right specs make listings sell faster.</p>
         </div>
       </div>
 
