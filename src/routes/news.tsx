@@ -1,11 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Newspaper, Search, Loader2, ExternalLink, RotateCw, AlertTriangle, GraduationCap, Globe2 } from "lucide-react";
+import { Newspaper, RotateCw, GraduationCap } from "lucide-react";
 import { EbsuNewsComposer } from "@/components/EbsuNewsComposer";
 import feessaTvLogo from "@/assets/feessa-tv-logo.jpeg.asset.json";
 
@@ -14,37 +12,16 @@ export const Route = createFileRoute("/news")({
   component: NewsPage,
   head: () => ({
     meta: [
-      { title: "Daily Plug News — EBSU & world headlines for students" },
-      { name: "description", content: "Fresh EBSU campus news plus world, tech, science, business, health and sports headlines updated daily on StudentsPlug." },
-      { property: "og:title", content: "Daily Plug News — EBSU & world headlines" },
-      { property: "og:description", content: "EBSU campus news plus tech, science, business and world headlines, refreshed every day." },
+      { title: "EBSU News — Campus stories, announcements & updates" },
+      { name: "description", content: "Fresh EBSU campus news, announcements and student stories — updated daily on StudentsPlug." },
+      { property: "og:title", content: "EBSU News — Campus stories & updates" },
+      { property: "og:description", content: "Fresh EBSU campus news, announcements and student stories, refreshed daily." },
       { property: "og:type", content: "article" },
       { property: "og:url", content: "https://ebsustudentplug.fun/news" },
     ],
     links: [{ rel: "canonical", href: "https://ebsustudentplug.fun/news" }],
   }),
 });
-
-type Article = {
-  title: string;
-  description: string | null;
-  url: string;
-  image: string | null;
-  source: string | null;
-  publishedAt: string | null;
-};
-
-type NewsResp = { articles?: Article[]; total?: number; error?: string };
-
-const CATEGORIES = [
-  { id: "general", label: "Top" },
-  { id: "technology", label: "Tech" },
-  { id: "science", label: "Science" },
-  { id: "business", label: "Business" },
-  { id: "health", label: "Health" },
-  { id: "sports", label: "Sports" },
-  { id: "entertainment", label: "Culture" },
-] as const;
 
 const timeAgo = (iso: string | null) => {
   if (!iso) return "";
@@ -60,30 +37,8 @@ const timeAgo = (iso: string | null) => {
 };
 
 function NewsPage() {
-  const [tab, setTab] = useState<"ebsu" | "other">("ebsu");
-  const [category, setCategory] = useState<string>("general");
-  const [searchInput, setSearchInput] = useState("");
-  const [query, setQuery] = useState("");
-
-  const mode = query ? "search" : "headlines";
-  const { data, isFetching, isError, refetch } = useQuery<NewsResp>({
-    queryKey: ["news", mode, category, query],
-    enabled: tab === "other",
-    queryFn: async () => {
-      const params = new URLSearchParams(
-        query ? { mode: "search", q: query } : { mode: "headlines", category },
-      );
-      const res = await fetch(`/api/news?${params.toString()}`);
-      const j = (await res.json()) as NewsResp;
-      if (!res.ok) throw new Error(j.error || "Failed to load news");
-      return j;
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-
   const { data: ebsuArticles = [], isFetching: ebsuFetching, refetch: refetchEbsu } = useQuery({
     queryKey: ["ebsu-news-public"],
-    enabled: tab === "ebsu",
     queryFn: async () => {
       const { data, error } = await supabase
         .from("news_articles")
@@ -97,18 +52,6 @@ function NewsPage() {
     },
     staleTime: 60_000,
   });
-
-  const articles = data?.articles ?? [];
-
-  const submitSearch = (e: FormEvent) => {
-    e.preventDefault();
-    setQuery(searchInput.trim());
-  };
-
-  const clearSearch = () => {
-    setSearchInput("");
-    setQuery("");
-  };
 
   return (
     <AppShell>
@@ -124,8 +67,8 @@ function NewsPage() {
                 <Newspaper className="w-3.5 h-3.5" /> Daily Plug
               </div>
             </div>
-            <Button variant="outline" size="sm" className="bg-background/70 backdrop-blur" onClick={() => (tab === "ebsu" ? refetchEbsu() : refetch())} disabled={tab === "ebsu" ? ebsuFetching : isFetching}>
-              <RotateCw className={`w-4 h-4 mr-1.5 ${(tab === "ebsu" ? ebsuFetching : isFetching) ? "animate-spin" : ""}`} /> Refresh
+            <Button variant="outline" size="sm" className="bg-background/70 backdrop-blur" onClick={() => refetchEbsu()} disabled={ebsuFetching}>
+              <RotateCw className={`w-4 h-4 mr-1.5 ${ebsuFetching ? "animate-spin" : ""}`} /> Refresh
             </Button>
           </div>
           <div className="relative mt-4">
@@ -133,7 +76,7 @@ function NewsPage() {
               News that moves campus.
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground mt-2 max-w-xl">
-              Fresh EBSU stories side-by-side with the world's headlines — refreshed all day, every day.
+              Fresh EBSU stories, announcements and student voices — refreshed all day, every day.
             </p>
             <a
               href="https://www.youtube.com/@feessatv"
@@ -156,55 +99,14 @@ function NewsPage() {
                     <path d="M12 2l8 3v6c0 5-3.5 9.5-8 11-4.5-1.5-8-6-8-11V5l8-3zm-1 13l6-6-1.4-1.4L11 12.2 8.4 9.6 7 11l4 4z" />
                   </svg>
                 </span>
-
               </div>
             </a>
-
-
           </div>
         </section>
 
-        {/* Category tabs: EBSU vs Other */}
-        <div className="grid grid-cols-2 gap-2 mb-5 p-1 bg-muted/70 backdrop-blur rounded-2xl border">
-          <button
-            onClick={() => setTab("ebsu")}
-            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition ${
-              tab === "ebsu" ? "bg-card shadow-card text-primary" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <GraduationCap className="w-4 h-4" /> EBSU News
-          </button>
-          <button
-            onClick={() => setTab("other")}
-            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition ${
-              tab === "other" ? "bg-card shadow-card text-primary" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Globe2 className="w-4 h-4" /> Other News
-          </button>
-        </div>
-
-
-        {tab === "ebsu" ? (
-          <EbsuFeed articles={ebsuArticles} loading={ebsuFetching} />
-        ) : (
-          <OtherNewsFeed
-            data={data}
-            isFetching={isFetching}
-            isError={isError}
-            refetch={refetch}
-            category={category}
-            setCategory={setCategory}
-            query={query}
-            searchInput={searchInput}
-            setSearchInput={setSearchInput}
-            submitSearch={submitSearch}
-            clearSearch={clearSearch}
-            articles={articles}
-          />
-        )}
+        <EbsuFeed articles={ebsuArticles} loading={ebsuFetching} />
       </div>
-      {tab === "ebsu" && <EbsuNewsComposer />}
+      <EbsuNewsComposer />
     </AppShell>
   );
 }
@@ -248,6 +150,7 @@ function EbsuFeed({ articles, loading }: { articles: any[]; loading: boolean }) 
           <div className="p-4 flex flex-col flex-1">
             <div className="text-[11px] font-bold uppercase tracking-wider text-primary mb-1.5">EBSU · {timeAgo(a.published_at)}</div>
             <h2 className="font-bold font-display leading-snug line-clamp-3 group-hover:text-primary">{a.title}</h2>
+
             {a.summary && <p className="text-sm text-muted-foreground mt-1.5 line-clamp-2">{a.summary}</p>}
           </div>
         </Link>
