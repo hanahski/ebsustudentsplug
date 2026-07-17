@@ -1,8 +1,11 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { ArrowLeft, Trophy, Coins, Loader2, RotateCw, Swords, Wifi, WifiOff } from "lucide-react";
+import {
+  ArrowLeft, Trophy, Coins, Loader2, RotateCw, Swords, Wifi, WifiOff,
+  ArrowUp, ArrowDown, ArrowLeft as ArrLeft, ArrowRight, Zap, Shield, Flame,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -23,37 +26,12 @@ export type MkMatch = {
 type Profile = { id: string; display_name: string | null };
 
 const CHARACTERS = [
-  {
-    id: "Subzero",
-    label: "Sub-Zero",
-    color: "from-cyan-500 to-blue-700",
-    tag: "Ice",
-    hp: 100,
-    passives: ["Frost Focus: block a hit → next counter deals +2 dmg (1.2s window)"],
-    signature: "Balanced ice ninja — good for defensive players.",
-  },
-  {
-    id: "Kano",
-    label: "Kano",
-    color: "from-red-500 to-rose-700",
-    tag: "Blade",
-    hp: 100,
-    passives: ["Berserker: while HP ≤ 30, every landed hit deals +2 dmg"],
-    signature: "Comeback fighter — deadliest when cornered.",
-  },
-  {
-    id: "Omar",
-    label: "Omar",
-    color: "from-pink-500 to-fuchsia-700",
-    tag: "Rose Fury",
-    hp: 120,
-    passives: [
-      "Rose Guard: starts round with 120 HP (+20 overheal)",
-      "Iron Will: −15% damage taken",
-      "Rose Fury: every 3rd landed hit +5 dmg (500ms cooldown)",
-    ],
-    signature: "Tanky bruiser with a rose-petal crit rhythm.",
-  },
+  { id: "Subzero", label: "Sub-Zero", color: "from-cyan-500 to-blue-700", tag: "Ice", hp: 100,
+    passives: ["Frost Focus: block a hit → next counter +2 dmg"], signature: "Balanced ice ninja." },
+  { id: "Kano", label: "Kano", color: "from-red-500 to-rose-700", tag: "Blade", hp: 100,
+    passives: ["Berserker: while HP ≤ 30, landed hits +2 dmg"], signature: "Comeback fighter." },
+  { id: "Omar", label: "Omar", color: "from-pink-500 to-fuchsia-700", tag: "Rose Fury", hp: 120,
+    passives: ["Rose Guard: +20 HP", "Iron Will: −15% dmg taken", "Rose Fury every 3rd hit"], signature: "Tanky bruiser." },
 ] as const;
 
 type PadKey = "LEFT" | "RIGHT" | "UP" | "DOWN" | "BLOCK" | "HP" | "LP" | "HK" | "LK";
@@ -64,16 +42,23 @@ type BridgeMsg =
   | { __mkctl: true; type: "spectate"; snap: unknown }
   | { __mkctl: true; type: "reset" };
 
+// Native game canvas dimensions — never change these.
+const ARENA_W = 600;
+const ARENA_H = 420;
+
 export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }) {
   const nav = useNavigate();
   const [m, setM] = useState<MkMatch | null>(null);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [busy, setBusy] = useState(false);
-  const [landscape, setLandscape] = useState(true);
   const [iframeReady, setIframeReady] = useState(false);
   const [hostConnected, setHostConnected] = useState(false);
+  const [latencyMs, setLatencyMs] = useState<number | null>(null);
+  const [snapAgeMs, setSnapAgeMs] = useState(0);
   const [localWinner, setLocalWinner] = useState<string | null>(null);
+  const [portrait, setPortrait] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const stageRef = useRef<HTMLDivElement | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const settledRef = useRef(false);
   const lastSnapAtRef = useRef<number>(0);
@@ -89,7 +74,7 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "battle_matches", filter: `id=eq.${matchId}` },
-        (payload: any) => setM(payload.new as MkMatch),
+        (payload: unknown) => setM((payload as { new: MkMatch }).new),
       )
       .subscribe();
     return () => {
@@ -102,15 +87,11 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
     if (!m) return;
     const ids = [m.player_a, m.player_b].filter(Boolean) as string[];
     if (!ids.length) return;
-    supabase
-      .from("profiles")
-      .select("id,display_name")
-      .in("id", ids)
-      .then(({ data }) => {
-        const map: Record<string, Profile> = {};
-        (data as Profile[] | null)?.forEach((p) => (map[p.id] = p));
-        setProfiles(map);
-      });
+    supabase.from("profiles").select("id,display_name").in("id", ids).then(({ data }) => {
+      const map: Record<string, Profile> = {};
+      (data as Profile[] | null)?.forEach((p) => (map[p.id] = p));
+      setProfiles(map);
+    });
   }, [m?.player_a, m?.player_b]);
 
   const isHost = !!uid && m?.player_a === uid;
@@ -120,45 +101,55 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
   const opponentName = opponentId ? profiles[opponentId]?.display_name || "Opponent" : "…";
   const myName = uid ? profiles[uid]?.display_name || "You" : "You";
 
-  // In every viewer, p1 = host (player_a), p2 = guest (player_b).
-  // My pad controls p1 if I'm host, else p2 (via broadcast).
-  const myPlayerIdx: 0 | 1 = isHost ? 0 : 1;
   const aChar = m?.a_character || null;
   const bChar = m?.b_character || null;
   const myChar = isHost ? aChar : bChar;
   const oppChar = isHost ? bChar : aChar;
 
-  // Broadcast channel: host publishes 'snap' + winner; guest publishes 'pad'.
+  // Detect orientation for adaptive controls
   useEffect(() => {
-    if (m?.status !== "active" || !uid) return;
+    const check = () => setPortrait(window.innerHeight >= window.innerWidth);
+    check();
+    window.addEventListener("resize", check);
+    window.addEventListener("orientationchange", check);
+    return () => {
+      window.removeEventListener("resize", check);
+      window.removeEventListener("orientationchange", check);
+    };
+  }, []);
+
+  // Broadcast channel: subscribe as soon as we know we're an active/soon-active player
+  // to reduce cold-start latency at "FIGHT!".
+  useEffect(() => {
+    if (!uid || !m) return;
+    if (m.status !== "active" && m.status !== "coin_flip") return;
     const ch = supabase.channel(`mk-net-${matchId}`, { config: { broadcast: { self: false } } });
 
     if (isHost) {
-      // Receive guest pad input, apply to my iframe as player 1
       ch.on("broadcast", { event: "pad" }, ({ payload }) => {
         const iframe = iframeRef.current;
         if (!iframe?.contentWindow) return;
-        const msg: BridgeMsg = {
-          __mkctl: true,
-          type: payload.down ? "press" : "release",
-          player: 1,
-          key: payload.key,
-        };
+        const p = payload as { down: boolean; key: PadKey };
+        const msg: BridgeMsg = { __mkctl: true, type: p.down ? "press" : "release", player: 1, key: p.key };
         iframe.contentWindow.postMessage(msg, "*");
       });
+      ch.on("broadcast", { event: "ping" }, ({ payload }) => {
+        ch.send({ type: "broadcast", event: "pong", payload: { t: (payload as { t: number }).t } });
+      });
     } else if (isGuest) {
-      // Receive host snapshots + apply to spectator iframe
       ch.on("broadcast", { event: "snap" }, ({ payload }) => {
         lastSnapAtRef.current = Date.now();
         setHostConnected(true);
         const iframe = iframeRef.current;
         if (!iframe?.contentWindow) return;
-        const msg: BridgeMsg = { __mkctl: true, type: "spectate", snap: payload.snap };
+        const msg: BridgeMsg = { __mkctl: true, type: "spectate", snap: (payload as { snap: unknown }).snap };
         iframe.contentWindow.postMessage(msg, "*");
       });
-      // Host will also broadcast the authoritative winner for instant UI feedback
       ch.on("broadcast", { event: "gameover" }, ({ payload }) => {
-        setLocalWinner(payload.winnerId ?? null);
+        setLocalWinner((payload as { winnerId: string | null }).winnerId ?? null);
+      });
+      ch.on("broadcast", { event: "pong" }, ({ payload }) => {
+        setLatencyMs(Date.now() - (payload as { t: number }).t);
       });
     }
     ch.subscribe();
@@ -167,48 +158,56 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
       supabase.removeChannel(ch);
       channelRef.current = null;
     };
-  }, [m?.status, matchId, uid, isHost, isGuest]);
+  }, [m?.status, matchId, uid, isHost, isGuest, m]);
 
-  // Watchdog: guest shows disconnect banner if no snapshot for 3s
+  // Guest: ping host every 2s + slow-network watchdog based on snap age
   useEffect(() => {
     if (!isGuest || m?.status !== "active") return;
-    const t = setInterval(() => {
-      if (Date.now() - lastSnapAtRef.current > 3000) setHostConnected(false);
-    }, 1000);
-    return () => clearInterval(t);
+    const pingHandle = setInterval(() => {
+      const ch = channelRef.current;
+      if (ch) ch.send({ type: "broadcast", event: "ping", payload: { t: Date.now() } });
+    }, 2000);
+    const ageHandle = setInterval(() => {
+      const age = Date.now() - lastSnapAtRef.current;
+      setSnapAgeMs(age);
+      if (age > 3000) setHostConnected(false);
+    }, 500);
+    return () => { clearInterval(pingHandle); clearInterval(ageHandle); };
   }, [isGuest, m?.status]);
 
   // Messages from iframe
   useEffect(() => {
     function onMsg(ev: MessageEvent) {
-      const d = ev.data as any;
+      const d = ev.data as { __mk?: boolean; type?: string; snap?: unknown; winner?: string; winnerSlot?: "p1" | "p2" };
       if (!d || !d.__mk) return;
       if (d.type === "ready") setIframeReady(true);
       else if (d.type === "snap" && isHost) {
-        // Forward my snapshot to guest
         const ch = channelRef.current;
         if (ch) ch.send({ type: "broadcast", event: "snap", payload: { snap: d.snap } });
       } else if (d.type === "game-end" && isHost && !settledRef.current) {
         settledRef.current = true;
-        const winnerChar = String(d.winner).toLowerCase();
-        const aCharLc = (aChar || "").toLowerCase();
-        const winnerId = winnerChar === aCharLc ? m?.player_a : m?.player_b;
+        // Prefer authoritative slot from the iframe; fall back to character-name mapping.
+        let winnerId: string | null | undefined;
+        if (d.winnerSlot === "p1") winnerId = m?.player_a;
+        else if (d.winnerSlot === "p2") winnerId = m?.player_b;
+        else {
+          const wc = String(d.winner ?? "").toLowerCase();
+          winnerId = wc === (aChar || "").toLowerCase() ? m?.player_a : m?.player_b;
+        }
         setLocalWinner(winnerId ?? null);
         const ch = channelRef.current;
         if (ch) ch.send({ type: "broadcast", event: "gameover", payload: { winnerId } });
         supabase
           .rpc("battle_mk_finish", { _match_id: matchId, _winner: (winnerId ?? undefined) as unknown as string })
-          .then(({ error }) => {
-            if (error) toast.error(error.message);
-          });
+          .then(({ error }) => { if (error) toast.error(error.message); });
       }
     }
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);
   }, [isHost, aChar, matchId, m?.player_a, m?.player_b]);
 
-  // Send a pad press
-  const send = (key: PadKey, down: boolean) => {
+  // Send a pad press (host → local iframe as p1; guest → broadcast, host applies as p2)
+  const send = useCallback((key: PadKey, down: boolean) => {
     if (isHost) {
       const iframe = iframeRef.current;
       if (iframe?.contentWindow) {
@@ -219,16 +218,15 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
       const ch = channelRef.current;
       if (ch) ch.send({ type: "broadcast", event: "pad", payload: { key, down } });
     }
-    void myPlayerIdx;
-  };
+  }, [isHost, isGuest]);
 
   async function pickCharacter(charId: string) {
     setBusy(true);
     try {
       const { error } = await supabase.rpc("battle_mk_pick", { _match_id: matchId, _character: charId });
       if (error) throw error;
-    } catch (e: any) {
-      toast.error(String(e?.message ?? e));
+    } catch (e: unknown) {
+      toast.error(String((e as Error)?.message ?? e));
     } finally {
       setBusy(false);
     }
@@ -239,7 +237,6 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
     nav({ to: "/earn-credits/battle" });
   }
 
-  // Iframe URL — same view for both clients (A on left, B on right).
   const iframeSrc = useMemo(() => {
     if (m?.status !== "active" || !aChar || !bChar) return null;
     const seed = matchId.charCodeAt(0) + matchId.charCodeAt(1);
@@ -248,7 +245,23 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
     return `/mkjs/play.html?p1=${encodeURIComponent(aChar)}&p2=${encodeURIComponent(bChar)}&arena=${arena}&mode=${mode}`;
   }, [m?.status, aChar, bChar, matchId, isHost]);
 
-  const myChar_ = myChar; const oppChar_ = oppChar; // for badge display
+  // Responsive scaling: fit the 600×420 arena inside the available stage area.
+  const [scale, setScale] = useState(1);
+  useLayoutEffect(() => {
+    const el = stageRef.current;
+    if (!el) return;
+    const measure = () => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width < 1 || rect.height < 1) return;
+      const s = Math.min(rect.width / ARENA_W, rect.height / ARENA_H);
+      setScale(Math.max(0.3, Math.min(2.5, s)));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    window.addEventListener("orientationchange", measure);
+    return () => { ro.disconnect(); window.removeEventListener("orientationchange", measure); };
+  }, [iframeSrc, portrait]);
 
   if (!m) {
     return (
@@ -271,7 +284,6 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
     );
   }
 
-  // Waiting for opponent to join the queue
   if (m.status === "pending" || (m.status === "coin_flip" && !m.player_b)) {
     return (
       <AppShell>
@@ -285,7 +297,7 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
             </div>
             <div>
               <h1 className="text-xl font-bold font-display">Scanning for an opponent…</h1>
-              <p className="text-sm text-muted-foreground mt-1">Match starts as soon as another fighter joins the queue.</p>
+              <p className="text-sm text-muted-foreground mt-1">Match starts as soon as another fighter joins.</p>
             </div>
             <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
             <Button variant="outline" size="sm" onClick={cancel}>Cancel scan</Button>
@@ -295,7 +307,6 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
     );
   }
 
-  // Character select (both players present, choosing fighters)
   if (m.status === "coin_flip") {
     return (
       <AppShell>
@@ -352,11 +363,7 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
           </div>
 
           <div className="text-center text-xs text-muted-foreground">
-            {myChar
-              ? oppChar
-                ? "Both ready — starting…"
-                : "Waiting for opponent to pick…"
-              : "Tap a fighter to lock in."}
+            {myChar ? (oppChar ? "Both ready — starting…" : "Waiting for opponent to pick…") : "Tap a fighter to lock in."}
           </div>
 
           <div className="flex justify-center">
@@ -382,42 +389,61 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
   const finished = m.status === "finished";
   const iWon = finished && winnerId === uid;
 
+  const isSlow = isGuest && (snapAgeMs > 800 || (latencyMs !== null && latencyMs > 350));
+
   return (
-    <div className="fixed inset-0 bg-black text-white flex flex-col z-[60] overflow-hidden">
-      <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-b from-black/80 to-transparent">
+    <div className="fixed inset-0 bg-black text-white flex flex-col z-[60] overflow-hidden select-none">
+      {/* Top HUD */}
+      <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-b from-black/80 to-transparent shrink-0">
         <Link to="/earn-credits/battle" className="text-[11px] inline-flex items-center gap-1 bg-white/10 px-2.5 py-1 rounded-full border border-white/10">
           <ArrowLeft className="w-3 h-3" /> Exit
         </Link>
-        <div className="flex items-center gap-2 text-[11px] font-bold">
-          <span className="inline-flex items-center gap-1"><Coins className="w-3.5 h-3.5 text-amber-400" /> Pot {m.stake * 2}</span>
+        <div className="flex items-center gap-2 text-[11px] font-bold flex-wrap justify-center">
+          <span className="inline-flex items-center gap-1"><Coins className="w-3.5 h-3.5 text-amber-400" /> {m.stake * 2}</span>
           {isGuest && (
             <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border",
               hostConnected ? "border-emerald-400/40 text-emerald-300" : "border-red-400/40 text-red-300")}>
               {hostConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-              {hostConnected ? "Live" : "Reconnecting"}
+              {hostConnected ? (isSlow ? "Slow" : "Live") : "Reconnecting"}
+            </span>
+          )}
+          {isGuest && latencyMs !== null && (
+            <span className={cn("px-1.5 py-0.5 rounded-full border text-[10px]",
+              latencyMs < 150 ? "border-emerald-400/40 text-emerald-300" :
+              latencyMs < 350 ? "border-amber-400/40 text-amber-300" :
+                                "border-red-400/40 text-red-300")}>
+              {latencyMs} ms
             </span>
           )}
         </div>
-        <button
-          onClick={() => setLandscape((v) => !v)}
-          className="text-[11px] inline-flex items-center gap-1 bg-white/10 px-2.5 py-1 rounded-full border border-white/10"
-        >
-          <RotateCw className="w-3 h-3" /> {landscape ? "Portrait" : "Landscape"}
-        </button>
+        <div className="text-[11px] opacity-70">{portrait ? "Portrait" : "Landscape"}</div>
       </div>
 
-      <div className="flex-1 relative flex items-center justify-center overflow-hidden bg-neutral-950">
-        <div className={cn("relative bg-black origin-center", landscape ? "landscape-frame" : "portrait-frame")}>
+      {/* Player names */}
+      <div className="px-3 py-1 grid grid-cols-2 gap-2 text-[10px] font-bold uppercase tracking-wider bg-black/60 shrink-0">
+        <div className="truncate">{isHost ? "YOU" : (profiles[m.player_a]?.display_name || "Host")} · {aChar}</div>
+        <div className="truncate text-right">{isGuest ? "YOU" : opponentName} · {bChar}</div>
+      </div>
+
+      {/* Arena stage — always shows the FULL 600x420 canvas, scaled to fit */}
+      <div ref={stageRef} className="flex-1 relative flex items-center justify-center overflow-hidden bg-neutral-950">
+        <div
+          className="relative bg-black shadow-[0_0_60px_rgba(255,80,80,0.25)] ring-1 ring-white/10 rounded-md overflow-hidden"
+          style={{ width: ARENA_W, height: ARENA_H, transform: `scale(${scale})`, transformOrigin: "center center" }}
+        >
+          {/* Arena edge markers so the user can see the boundary clearly */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-[3px] bg-gradient-to-b from-amber-400/50 via-transparent to-amber-400/50" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-[3px] bg-gradient-to-b from-amber-400/50 via-transparent to-amber-400/50" />
           {iframeSrc ? (
             <iframe
               ref={iframeRef}
               src={iframeSrc}
               title="Fighter arena"
               className="border-0 block"
-              style={{ width: 600, height: 420 }}
+              style={{ width: ARENA_W, height: ARENA_H }}
             />
           ) : (
-            <div className="w-[300px] h-[200px] grid place-items-center text-white/60">
+            <div style={{ width: ARENA_W, height: ARENA_H }} className="grid place-items-center text-white/60">
               <Loader2 className="w-6 h-6 animate-spin" />
             </div>
           )}
@@ -429,19 +455,21 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
               </div>
             </div>
           )}
+          {isSlow && (
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-red-500/80 px-2 py-0.5 rounded-full animate-pulse">
+              Slow network — smoothing frames
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="px-3 py-1 grid grid-cols-2 gap-2 text-[10px] font-bold uppercase tracking-wider bg-black/60">
-        <div className="truncate">
-          {isHost ? "YOU (LEFT)" : `${profiles[m.player_a]?.display_name || "Host"} (LEFT)`} · {aChar}
-        </div>
-        <div className="truncate text-right">
-          {isGuest ? "YOU (RIGHT)" : `${opponentName} (RIGHT)`} · {bChar}
-        </div>
-      </div>
-
-      <ControlPad onKey={send} disabled={!iframeReady || finished || (isGuest && !hostConnected)} sideLabel={isHost ? "Left fighter" : "Right fighter"} />
+      {/* Adaptive control pad */}
+      <ControlPad
+        onKey={send}
+        disabled={!iframeReady || finished || (isGuest && !hostConnected)}
+        portrait={portrait}
+        sideLabel={isHost ? "Left fighter" : "Right fighter"}
+      />
 
       {finished && (
         <div className="absolute inset-0 z-20 grid place-items-center bg-black/80 p-6">
@@ -457,73 +485,128 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
           </div>
         </div>
       )}
-
-      {/* silence unused warnings */}
-      <div className="hidden">{myChar_}{oppChar_}</div>
-
-      <style>{`
-        .landscape-frame { transform: none; }
-        .portrait-frame { transform: rotate(90deg); }
-      `}</style>
     </div>
   );
 }
 
-function ControlPad({ onKey, disabled, sideLabel }: { onKey: (k: PadKey, down: boolean) => void; disabled: boolean; sideLabel: string }) {
+/**
+ * Adaptive control pad.
+ * - Portrait: D-pad bottom-left, attack cluster bottom-right, block+special centered.
+ * - Landscape: D-pad hugs left edge, attacks hug right edge, block+special sit between.
+ * All buttons use pointer capture so drags/lifts don't get stuck.
+ */
+function ControlPad({
+  onKey, disabled, portrait, sideLabel,
+}: { onKey: (k: PadKey, down: boolean) => void; disabled: boolean; portrait: boolean; sideLabel: string }) {
   const active = useRef<Set<PadKey>>(new Set());
+
+  const press = useCallback((k: PadKey) => {
+    if (disabled) return;
+    if (!active.current.has(k)) { active.current.add(k); onKey(k, true); }
+  }, [disabled, onKey]);
+
+  const release = useCallback((k: PadKey) => {
+    if (active.current.has(k)) { active.current.delete(k); onKey(k, false); }
+  }, [onKey]);
 
   const bind = (k: PadKey) => ({
     onPointerDown: (e: React.PointerEvent) => {
-      if (disabled) return;
-      (e.target as HTMLElement).setPointerCapture(e.pointerId);
-      if (!active.current.has(k)) {
-        active.current.add(k);
-        onKey(k, true);
-      }
+      (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+      press(k);
     },
     onPointerUp: (e: React.PointerEvent) => {
-      if (active.current.has(k)) {
-        active.current.delete(k);
-        onKey(k, false);
-      }
-      try { (e.target as HTMLElement).releasePointerCapture(e.pointerId); } catch {}
+      release(k);
+      try { (e.target as HTMLElement).releasePointerCapture?.(e.pointerId); } catch { /* ignore */ }
     },
-    onPointerCancel: () => {
-      if (active.current.has(k)) { active.current.delete(k); onKey(k, false); }
-    },
-    onPointerLeave: () => {
-      if (active.current.has(k)) { active.current.delete(k); onKey(k, false); }
-    },
+    onPointerCancel: () => release(k),
+    onLostPointerCapture: () => release(k),
   });
 
-  const dPad = "w-12 h-12 rounded-xl bg-white/10 border border-white/20 backdrop-blur active:bg-primary/60 active:scale-95 grid place-items-center text-white font-black select-none touch-none transition disabled:opacity-40";
-  const btn = (color: string) =>
-    `w-14 h-14 rounded-full border-2 border-white/30 active:scale-95 grid place-items-center text-white font-black select-none touch-none shadow-lg disabled:opacity-40 ${color}`;
+  // Special move = crouch + uppercut (DOWN + HP briefly). Multi-key combo.
+  const doSpecial = () => {
+    if (disabled) return;
+    press("DOWN"); press("HP");
+    setTimeout(() => { release("HP"); release("DOWN"); }, 180);
+  };
+  // Jump-kick = UP + HK
+  const doAerialKick = () => {
+    if (disabled) return;
+    press("UP"); press("HK");
+    setTimeout(() => { release("HK"); release("UP"); }, 220);
+  };
+
+  const dPadBtn =
+    "h-14 w-14 rounded-2xl bg-white/10 border border-white/20 backdrop-blur active:bg-primary/60 active:scale-95 grid place-items-center text-white select-none touch-none transition disabled:opacity-40 shadow-md";
+  const attackBtn = (color: string) =>
+    `h-14 w-14 rounded-full border-2 border-white/30 active:scale-95 grid place-items-center text-white font-black select-none touch-none shadow-lg disabled:opacity-40 ${color}`;
+
+  const DPad = (
+    <div className="grid grid-cols-3 grid-rows-3 gap-1.5 w-fit">
+      <div />
+      <button className={dPadBtn} {...bind("UP")} aria-label="Jump"><ArrowUp className="w-6 h-6" /></button>
+      <div />
+      <button className={dPadBtn} {...bind("LEFT")} aria-label="Left"><ArrLeft className="w-6 h-6" /></button>
+      <div className="h-14 w-14 rounded-2xl bg-white/5 border border-white/10 grid place-items-center text-[9px] opacity-60">MOVE</div>
+      <button className={dPadBtn} {...bind("RIGHT")} aria-label="Right"><ArrowRight className="w-6 h-6" /></button>
+      <div />
+      <button className={dPadBtn} {...bind("DOWN")} aria-label="Crouch"><ArrowDown className="w-6 h-6" /></button>
+      <div />
+    </div>
+  );
+
+  const Attacks = (
+    <div className="grid grid-cols-2 gap-2 w-fit">
+      <button className={attackBtn("bg-yellow-500/90")} {...bind("HP")} title="High Punch">HP</button>
+      <button className={attackBtn("bg-orange-500/90")} {...bind("LP")} title="Low Punch">LP</button>
+      <button className={attackBtn("bg-red-500/90")} {...bind("HK")} title="High Kick">HK</button>
+      <button className={attackBtn("bg-pink-500/90")} {...bind("LK")} title="Low Kick">LK</button>
+    </div>
+  );
+
+  const Extras = (
+    <div className="flex flex-col items-center gap-2">
+      <button
+        className="h-11 w-24 rounded-full bg-sky-600/90 border-2 border-white/30 grid place-items-center text-white font-black text-xs shadow-lg active:scale-95 disabled:opacity-40"
+        disabled={disabled}
+        {...bind("BLOCK")}
+      >
+        <span className="inline-flex items-center gap-1"><Shield className="w-3.5 h-3.5" /> BLOCK</span>
+      </button>
+      <button
+        onPointerDown={doSpecial}
+        disabled={disabled}
+        className="h-10 w-24 rounded-full bg-gradient-to-r from-fuchsia-600 to-purple-700 border-2 border-white/30 text-white font-black text-[11px] shadow-lg active:scale-95 disabled:opacity-40 inline-flex items-center justify-center gap-1"
+      >
+        <Zap className="w-3.5 h-3.5" /> SPECIAL
+      </button>
+      <button
+        onPointerDown={doAerialKick}
+        disabled={disabled}
+        className="h-10 w-24 rounded-full bg-gradient-to-r from-amber-500 to-red-600 border-2 border-white/30 text-white font-black text-[11px] shadow-lg active:scale-95 disabled:opacity-40 inline-flex items-center justify-center gap-1"
+      >
+        <Flame className="w-3.5 h-3.5" /> AERIAL
+      </button>
+    </div>
+  );
 
   return (
-    <div className="border-t border-white/10 bg-gradient-to-t from-black to-black/60">
-      <div className="text-center text-[10px] font-bold uppercase tracking-wider text-white/50 pt-2">
-        Controls: {sideLabel}
+    <div className="border-t border-white/10 bg-gradient-to-t from-black to-black/70 shrink-0">
+      <div className="text-center text-[10px] font-bold uppercase tracking-wider text-white/50 pt-1">
+        Controls · {sideLabel}
       </div>
-      <div className="grid grid-cols-2 gap-4 px-4 py-3">
-        <div className="flex flex-col items-center gap-1">
-          <button className={dPad} {...bind("UP")} aria-label="Up">↑</button>
-          <div className="flex gap-1">
-            <button className={dPad} {...bind("LEFT")} aria-label="Left">←</button>
-            <button className={cn(dPad, "opacity-40 pointer-events-none")}>·</button>
-            <button className={dPad} {...bind("RIGHT")} aria-label="Right">→</button>
-          </div>
-          <button className={dPad} {...bind("DOWN")} aria-label="Down">↓</button>
+      {portrait ? (
+        <div className="grid grid-cols-[auto_1fr_auto] items-end gap-3 px-3 py-2">
+          {DPad}
+          <div className="flex justify-center">{Extras}</div>
+          {Attacks}
         </div>
-
-        <div className="grid grid-cols-2 gap-2 place-items-center">
-          <button className={btn("bg-yellow-500/90")} {...bind("HP")}>HP</button>
-          <button className={btn("bg-orange-500/90")} {...bind("LP")}>LP</button>
-          <button className={btn("bg-red-500/90")} {...bind("HK")}>HK</button>
-          <button className={btn("bg-pink-500/90")} {...bind("LK")}>LK</button>
-          <button className={btn("bg-sky-600/90 col-span-2 w-32 h-10 rounded-full")} {...bind("BLOCK")}>BLOCK</button>
+      ) : (
+        <div className="flex items-end justify-between gap-4 px-4 py-2">
+          {DPad}
+          <div className="flex-1 flex justify-center">{Extras}</div>
+          {Attacks}
         </div>
-      </div>
+      )}
     </div>
   );
 }
