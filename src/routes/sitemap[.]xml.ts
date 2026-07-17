@@ -14,11 +14,20 @@ export const Route = createFileRoute("/sitemap.xml")({
     handlers: {
       GET: async () => {
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const [{ data: newsRows }, { data: blogRows }, { data: listingRows }] = await Promise.all([
+        const [
+          { data: newsRows },
+          { data: blogRows },
+          { data: listingRows },
+          { data: ticketRows },
+          { data: bookRows },
+        ] = await Promise.all([
           supabaseAdmin.from("news_articles").select("slug").eq("status", "published"),
           supabaseAdmin.from("blog_posts").select("slug").eq("published", true),
           supabaseAdmin.from("market_listings").select("id,category,is_sold").eq("is_sold", false),
+          supabaseAdmin.from("tickets").select("id"),
+          supabaseAdmin.from("library_books").select("id"),
         ]);
+
 
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "daily", priority: "1.0" },
@@ -58,6 +67,14 @@ export const Route = createFileRoute("/sitemap.xml")({
             changefreq: isHostel ? "daily" : "weekly",
             priority: isHostel ? "0.8" : "0.6",
           });
+        }
+        for (const row of ticketRows ?? []) {
+          const id = (row as { id: string }).id;
+          if (id) entries.push({ path: `/tickets/${id}`, changefreq: "weekly", priority: "0.6" });
+        }
+        for (const row of bookRows ?? []) {
+          const id = (row as { id: string }).id;
+          if (id) entries.push({ path: `/books/read/${id}`, changefreq: "monthly", priority: "0.5" });
         }
 
 
