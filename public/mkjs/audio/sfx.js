@@ -39,6 +39,51 @@
     arr.forEach(function (a) { try { a.pause(); a.currentTime = 0; } catch (e) {} });
   }
 
+  var ctx;
+  function audioCtx() {
+    try {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return null;
+      ctx = ctx || new Ctx();
+      if (ctx.state === 'suspended') ctx.resume().catch(function () {});
+      return ctx;
+    } catch (e) { return null; }
+  }
+  function tone(freq, type, dur, gain, bend) {
+    var c = audioCtx(); if (!c) return;
+    var o = c.createOscillator();
+    var g = c.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(freq, c.currentTime);
+    if (bend) o.frequency.exponentialRampToValueAtTime(Math.max(40, freq * bend), c.currentTime + dur);
+    g.gain.setValueAtTime(0.0001, c.currentTime);
+    g.gain.exponentialRampToValueAtTime(gain || 0.08, c.currentTime + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + dur);
+    o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + dur + 0.03);
+  }
+  function noise(dur, gain, filterFreq) {
+    var c = audioCtx(); if (!c) return;
+    var buffer = c.createBuffer(1, Math.max(1, c.sampleRate * dur), c.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    var src = c.createBufferSource(); src.buffer = buffer;
+    var filter = c.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = filterFreq || 1000;
+    var g = c.createGain();
+    g.gain.setValueAtTime(gain || 0.06, c.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + dur);
+    src.connect(filter); filter.connect(g); g.connect(c.destination); src.start(); src.stop(c.currentTime + dur + 0.02);
+  }
+  function elemental(kind, vol) {
+    vol = vol == null ? 1 : vol;
+    if (kind === 'fire') {
+      noise(0.34, 0.12 * vol, 620); tone(95, 'sawtooth', 0.32, 0.05 * vol, 0.55);
+    } else if (kind === 'ice') {
+      tone(940, 'triangle', 0.18, 0.07 * vol, 1.35); tone(1560, 'sine', 0.25, 0.045 * vol, 0.72); noise(0.16, 0.035 * vol, 3200);
+    } else if (kind === 'lightning') {
+      tone(120, 'square', 0.08, 0.09 * vol, 2.2); tone(1220, 'sawtooth', 0.12, 0.055 * vol, 0.42); noise(0.08, 0.07 * vol, 5200);
+    }
+  }
+
   var kickIdx = 0;
   function playKick() { kickIdx = (kickIdx + 1) % 3; play('kick' + (kickIdx + 1), 0.9); }
 
@@ -60,7 +105,7 @@
   }
 
   var SFX = {
-    load: load, play: play, stop: stop,
+    load: load, play: play, stop: stop, elemental: elemental,
     trackers: [makeTracker(), makeTracker()],
 
     // Kick things off — call from a user-gesture safe moment.

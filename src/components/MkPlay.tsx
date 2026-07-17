@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { AppShell } from "@/components/AppShell";
 import {
   ArrowLeft, Trophy, Coins, Loader2, RotateCw, Swords, Wifi, WifiOff,
@@ -9,6 +10,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { pickMkCharacter } from "@/lib/battle-mk.functions";
 
 export type MkMatch = {
   id: string;
@@ -35,6 +37,7 @@ const CHARACTERS = [
 ] as const;
 
 type PadKey = "LEFT" | "RIGHT" | "UP" | "DOWN" | "BLOCK" | "HP" | "LP" | "HK" | "LK";
+type Pov = "p1-right" | "p2-right";
 
 type BridgeMsg =
   | { __mkctl: true; type: "press"; player: 0 | 1; key: PadKey }
@@ -44,10 +47,11 @@ type BridgeMsg =
 
 // Native game canvas dimensions — never change these.
 const ARENA_W = 600;
-const ARENA_H = 420;
+const ARENA_H = 400;
 
 export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }) {
   const nav = useNavigate();
+  const pickMkCharacterFn = useServerFn(pickMkCharacter);
   const [m, setM] = useState<MkMatch | null>(null);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [busy, setBusy] = useState(false);
@@ -105,6 +109,7 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
   const bChar = m?.b_character || null;
   const myChar = isHost ? aChar : bChar;
   const oppChar = isHost ? bChar : aChar;
+  const pov: Pov = isHost ? "p1-right" : "p2-right";
 
   // Detect orientation for adaptive controls
   useEffect(() => {
@@ -206,25 +211,31 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
     return () => window.removeEventListener("message", onMsg);
   }, [isHost, aChar, matchId, m?.player_a, m?.player_b]);
 
+  const mapLocalKey = useCallback((key: PadKey): PadKey => {
+    if (!isHost) return key;
+    if (key === "LEFT") return "RIGHT";
+    if (key === "RIGHT") return "LEFT";
+    return key;
+  }, [isHost]);
+
   // Send a pad press (host → local iframe as p1; guest → broadcast, host applies as p2)
   const send = useCallback((key: PadKey, down: boolean) => {
     if (isHost) {
       const iframe = iframeRef.current;
       if (iframe?.contentWindow) {
-        const msg: BridgeMsg = { __mkctl: true, type: down ? "press" : "release", player: 0, key };
+        const msg: BridgeMsg = { __mkctl: true, type: down ? "press" : "release", player: 0, key: mapLocalKey(key) };
         iframe.contentWindow.postMessage(msg, "*");
       }
     } else if (isGuest) {
       const ch = channelRef.current;
       if (ch) ch.send({ type: "broadcast", event: "pad", payload: { key, down } });
     }
-  }, [isHost, isGuest]);
+  }, [isHost, isGuest, mapLocalKey]);
 
   async function pickCharacter(charId: string) {
     setBusy(true);
     try {
-      const { error } = await supabase.rpc("battle_mk_pick", { _match_id: matchId, _character: charId });
-      if (error) throw error;
+      await pickMkCharacterFn({ data: { matchId, character: charId } });
     } catch (e: unknown) {
       toast.error(String((e as Error)?.message ?? e));
     } finally {
@@ -242,8 +253,8 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
     const seed = matchId.charCodeAt(0) + matchId.charCodeAt(1);
     const arena = seed % 2 === 0 ? "THRONE_ROOM" : "TOWER";
     const mode = isHost ? "host" : "spectator";
-    return `/mkjs/play.html?p1=${encodeURIComponent(aChar)}&p2=${encodeURIComponent(bChar)}&arena=${arena}&mode=${mode}`;
-  }, [m?.status, aChar, bChar, matchId, isHost]);
+    return `/mkjs/play.html?p1=${encodeURIComponent(aChar)}&p2=${encodeURIComponent(bChar)}&arena=${arena}&mode=${mode}&pov=${pov}`;
+  }, [m?.status, aChar, bChar, matchId, isHost, pov]);
 
   // Responsive scaling: fit the 600×420 arena inside the available stage area.
   const [scale, setScale] = useState(1);
@@ -345,8 +356,14 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
                     !disabled && "hover:shadow-glow hover:-translate-y-0.5",
                   )}
                 >
-                  <div className={cn("w-full aspect-square rounded-xl bg-gradient-to-br mb-2 grid place-items-center text-white font-black text-2xl", c.color)}>
-                    {c.label.split("-").map((s) => s[0]).join("")}
+                  <div className={cn("relative w-full aspect-square rounded-xl bg-gradient-to-br mb-2 grid place-items-center overflow-hidden", c.color)}>
+                    <div className="absolute inset-x-3 bottom-2 h-10 rounded-full bg-black/25 blur-xl" />
+                    <img
+                      src={`/mkjs/images/fighters/${c.id.toLowerCase()}/right/attractive-stand-up/0.png`}
+                      alt=""
+                      className="relative h-[82%] w-[82%] object-contain drop-shadow-[0_10px_12px_rgba(0,0,0,0.45)]"
+                      draggable={false}
+                    />
                   </div>
                   <div className="font-bold font-display">{c.label}</div>
                   <div className="text-[11px] text-muted-foreground">{c.tag} · {c.hp} HP</div>
@@ -390,9 +407,15 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
   const iWon = finished && winnerId === uid;
 
   const isSlow = isGuest && (snapAgeMs > 800 || (latencyMs !== null && latencyMs > 350));
+  const leftFighterLabel = isHost
+    ? `${opponentName} · ${bChar}`
+    : `${profiles[m.player_a]?.display_name || "Opponent"} · ${aChar}`;
+  const rightFighterLabel = isHost
+    ? `YOU · ${aChar}`
+    : `YOU · ${bChar}`;
 
   return (
-    <div className="fixed inset-0 bg-black text-white flex flex-col z-[60] overflow-hidden select-none">
+    <div className="fixed inset-0 bg-black text-white flex flex-col z-[60] overflow-hidden select-none relative">
       {/* Top HUD */}
       <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-b from-black/80 to-transparent shrink-0">
         <Link to="/earn-credits/battle" className="text-[11px] inline-flex items-center gap-1 bg-white/10 px-2.5 py-1 rounded-full border border-white/10">
@@ -421,8 +444,8 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
 
       {/* Player names */}
       <div className="px-3 py-1 grid grid-cols-2 gap-2 text-[10px] font-bold uppercase tracking-wider bg-black/60 shrink-0">
-        <div className="truncate">{isHost ? "YOU" : (profiles[m.player_a]?.display_name || "Host")} · {aChar}</div>
-        <div className="truncate text-right">{isGuest ? "YOU" : opponentName} · {bChar}</div>
+        <div className="truncate">{leftFighterLabel}</div>
+        <div className="truncate text-right">{rightFighterLabel}</div>
       </div>
 
       {/* Arena stage — always shows the FULL 600x420 canvas, scaled to fit */}
@@ -468,7 +491,7 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
         onKey={send}
         disabled={!iframeReady || finished || (isGuest && !hostConnected)}
         portrait={portrait}
-        sideLabel={isHost ? "Left fighter" : "Right fighter"}
+        sideLabel="Right fighter"
       />
 
       {finished && (
@@ -535,18 +558,20 @@ function ControlPad({
     setTimeout(() => { release("HK"); release("UP"); }, 220);
   };
 
+  const moveSize = portrait ? "h-11 w-11 rounded-xl" : "h-14 w-14 rounded-2xl";
+  const attackSize = portrait ? "h-12 w-12" : "h-14 w-14";
   const dPadBtn =
-    "h-14 w-14 rounded-2xl bg-white/10 border border-white/20 backdrop-blur active:bg-primary/60 active:scale-95 grid place-items-center text-white select-none touch-none transition disabled:opacity-40 shadow-md";
+    `${moveSize} bg-white/10 border border-white/20 backdrop-blur active:bg-primary/60 active:scale-95 grid place-items-center text-white select-none touch-none transition disabled:opacity-40 shadow-md pointer-events-auto`;
   const attackBtn = (color: string) =>
-    `h-14 w-14 rounded-full border-2 border-white/30 active:scale-95 grid place-items-center text-white font-black select-none touch-none shadow-lg disabled:opacity-40 ${color}`;
+    `${attackSize} rounded-full border-2 border-white/30 active:scale-95 grid place-items-center text-white font-black select-none touch-none shadow-lg disabled:opacity-40 pointer-events-auto ${color}`;
 
   const DPad = (
-    <div className="grid grid-cols-3 grid-rows-3 gap-1.5 w-fit">
+    <div className="grid grid-cols-3 grid-rows-3 gap-1.5 w-fit pointer-events-none">
       <div />
       <button className={dPadBtn} {...bind("UP")} aria-label="Jump"><ArrowUp className="w-6 h-6" /></button>
       <div />
       <button className={dPadBtn} {...bind("LEFT")} aria-label="Left"><ArrLeft className="w-6 h-6" /></button>
-      <div className="h-14 w-14 rounded-2xl bg-white/5 border border-white/10 grid place-items-center text-[9px] opacity-60">MOVE</div>
+      <div className={cn(moveSize, "bg-white/5 border border-white/10 grid place-items-center text-[8px] opacity-60")}>MOVE</div>
       <button className={dPadBtn} {...bind("RIGHT")} aria-label="Right"><ArrowRight className="w-6 h-6" /></button>
       <div />
       <button className={dPadBtn} {...bind("DOWN")} aria-label="Crouch"><ArrowDown className="w-6 h-6" /></button>
@@ -555,7 +580,7 @@ function ControlPad({
   );
 
   const Attacks = (
-    <div className="grid grid-cols-2 gap-2 w-fit">
+    <div className="grid grid-cols-2 gap-2 w-fit pointer-events-none">
       <button className={attackBtn("bg-yellow-500/90")} {...bind("HP")} title="High Punch">HP</button>
       <button className={attackBtn("bg-orange-500/90")} {...bind("LP")} title="Low Punch">LP</button>
       <button className={attackBtn("bg-red-500/90")} {...bind("HK")} title="High Kick">HK</button>
@@ -564,9 +589,9 @@ function ControlPad({
   );
 
   const Extras = (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-1.5 pointer-events-none">
       <button
-        className="h-11 w-24 rounded-full bg-sky-600/90 border-2 border-white/30 grid place-items-center text-white font-black text-xs shadow-lg active:scale-95 disabled:opacity-40"
+        className={cn("rounded-full bg-sky-600/90 border-2 border-white/30 grid place-items-center text-white font-black shadow-lg active:scale-95 disabled:opacity-40 pointer-events-auto", portrait ? "h-9 w-20 text-[10px]" : "h-11 w-24 text-xs")}
         disabled={disabled}
         {...bind("BLOCK")}
       >
@@ -575,14 +600,14 @@ function ControlPad({
       <button
         onPointerDown={doSpecial}
         disabled={disabled}
-        className="h-10 w-24 rounded-full bg-gradient-to-r from-fuchsia-600 to-purple-700 border-2 border-white/30 text-white font-black text-[11px] shadow-lg active:scale-95 disabled:opacity-40 inline-flex items-center justify-center gap-1"
+        className={cn("rounded-full bg-gradient-to-r from-fuchsia-600 to-purple-700 border-2 border-white/30 text-white font-black shadow-lg active:scale-95 disabled:opacity-40 inline-flex items-center justify-center gap-1 pointer-events-auto", portrait ? "h-9 w-20 text-[9px]" : "h-10 w-24 text-[11px]")}
       >
         <Zap className="w-3.5 h-3.5" /> SPECIAL
       </button>
       <button
         onPointerDown={doAerialKick}
         disabled={disabled}
-        className="h-10 w-24 rounded-full bg-gradient-to-r from-amber-500 to-red-600 border-2 border-white/30 text-white font-black text-[11px] shadow-lg active:scale-95 disabled:opacity-40 inline-flex items-center justify-center gap-1"
+        className={cn("rounded-full bg-gradient-to-r from-amber-500 to-red-600 border-2 border-white/30 text-white font-black shadow-lg active:scale-95 disabled:opacity-40 inline-flex items-center justify-center gap-1 pointer-events-auto", portrait ? "h-9 w-20 text-[9px]" : "h-10 w-24 text-[11px]")}
       >
         <Flame className="w-3.5 h-3.5" /> AERIAL
       </button>
@@ -590,12 +615,12 @@ function ControlPad({
   );
 
   return (
-    <div className="border-t border-white/10 bg-gradient-to-t from-black to-black/70 shrink-0">
+    <div className="absolute inset-x-0 bottom-0 z-30 border-t border-white/10 bg-gradient-to-t from-black via-black/75 to-transparent pointer-events-none pb-[env(safe-area-inset-bottom)]">
       <div className="text-center text-[10px] font-bold uppercase tracking-wider text-white/50 pt-1">
         Controls · {sideLabel}
       </div>
       {portrait ? (
-        <div className="grid grid-cols-[auto_1fr_auto] items-end gap-3 px-3 py-2">
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-end gap-2 px-2 py-2">
           {DPad}
           <div className="flex justify-center">{Extras}</div>
           {Attacks}
