@@ -333,7 +333,7 @@ function MarketPage() {
                       </div>
                       <div className="flex-1 min-w-0 p-3 pl-5 flex flex-col">
                         <h3 className="font-bold line-clamp-1 text-sm">{t.title}</h3>
-                        <p className="text-[11px] text-muted-foreground line-clamp-3 mt-0.5 flex-1">{t.description}</p>
+                        <p className="text-[11px] text-muted-foreground line-clamp-3 mt-0.5 flex-1">{cleanListingDescription(t.description)}</p>
                         <div className="text-[10px] font-semibold text-primary mt-1">ADMIT ONE →</div>
                       </div>
                     </TicketShape>
