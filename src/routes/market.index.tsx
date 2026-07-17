@@ -23,6 +23,7 @@ import { BookShape } from "@/components/market/BookShape";
 import { TicketShape } from "@/components/market/TicketShape";
 import { ProductMediaSlider } from "@/components/market/ProductMediaSlider";
 import { getLibraryBooks, getPopularNovels } from "@/lib/library-books.functions";
+import { cleanListingDescription } from "@/lib/clean-description";
 
 // Rotating spine tones so a shelf of books doesn't look monotone.
 const BOOK_SPINES = [
@@ -293,7 +294,7 @@ function MarketPage() {
                         {/* body */}
                         <div className="flex-1 min-w-0 p-3 pl-5 flex flex-col">
                           <h3 className="font-bold line-clamp-1 text-sm">{t.title}</h3>
-                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5 flex-1">{t.description}</p>
+                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5 flex-1">{cleanListingDescription(t.description)}</p>
                           <div className="text-[10px] font-semibold text-primary mt-1">ADMIT ONE →</div>
                         </div>
                       </TicketShape>
@@ -332,7 +333,7 @@ function MarketPage() {
                       </div>
                       <div className="flex-1 min-w-0 p-3 pl-5 flex flex-col">
                         <h3 className="font-bold line-clamp-1 text-sm">{t.title}</h3>
-                        <p className="text-[11px] text-muted-foreground line-clamp-3 mt-0.5 flex-1">{t.description}</p>
+                        <p className="text-[11px] text-muted-foreground line-clamp-3 mt-0.5 flex-1">{cleanListingDescription(t.description)}</p>
                         <div className="text-[10px] font-semibold text-primary mt-1">ADMIT ONE →</div>
                       </div>
                     </TicketShape>
@@ -491,7 +492,7 @@ function MarketPage() {
                       </div>
                       <div className="p-4 flex flex-col gap-1.5 flex-1">
                         <h3 className="text-base font-bold line-clamp-1 group-hover:text-primary">{l.title}</h3>
-                        <p className="text-xs text-muted-foreground line-clamp-2">{l.description}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{cleanListingDescription(l.description)}</p>
                         <div className="flex gap-1.5 mt-auto pt-2 text-[11px] items-center flex-wrap">
                           <span className="px-2 py-0.5 rounded-full bg-muted capitalize font-medium">{l.category}</span>
                           {l.location && <span className="text-muted-foreground truncate">📍 {l.location}</span>}
