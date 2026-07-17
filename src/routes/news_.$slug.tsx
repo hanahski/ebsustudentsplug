@@ -12,7 +12,7 @@ export const Route = createFileRoute("/news_/$slug")({
   component: NewsArticlePage,
   head: ({ loaderData, params }: any) => {
     const a = loaderData?.article;
-    const url = `https://ebsustudentplug.fun/news/${params?.slug ?? ""}`;
+    const url = `https://ebsustudentsplug.fun/news/${params?.slug ?? ""}`;
     if (!a) return { meta: [{ title: "News — StudentsPlug" }], links: [{ rel: "canonical", href: url }] };
     return {
       meta: [
