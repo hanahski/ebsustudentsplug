@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { StorageMedia } from "@/components/StorageMedia";
-import { Package } from "lucide-react";
+import { isVideoUrl } from "@/lib/storage-url";
+import { Package, Play } from "lucide-react";
 
 /**
  * Horizontal snap-scroll media slider for a product card. Supports images and
