@@ -54,6 +54,7 @@ export function ProductMediaSlider({
                 url={url}
                 alt={`${title} ${i + 1}`}
                 className="w-full h-full object-cover"
+                videoAsPoster
               />
               {video && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
