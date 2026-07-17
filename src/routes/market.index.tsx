@@ -462,7 +462,7 @@ function MarketPage() {
                       key={l.id}
                       to="/market/$id"
                       params={{ id: l.id }}
-                      className="relative bg-card border border-border/60 rounded-3xl overflow-hidden shadow-card hover:shadow-glow hover:-translate-y-0.5 transition group flex flex-col"
+                      className="relative bg-card border border-border/60 rounded-2xl overflow-hidden hover:border-primary/60 hover:-translate-y-0.5 transition group flex flex-col"
                     >
                       <div className="relative">
                         <ProductMediaSlider photos={l.photos} title={l.title} aspect="aspect-[4/5]" />
