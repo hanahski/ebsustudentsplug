@@ -488,8 +488,8 @@
     if (!isSpectator) {
       setInterval(function () {
         var s = snapshot();
-        if (s) { post('snap', { snap: s }); tickSfx(s); }
-      }, 66);
+        if (s) { post('snap', { snap: s, t: Date.now() }); tickSfx(s); }
+      }, 40);
     }
   });
 
