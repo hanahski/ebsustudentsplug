@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { encodePlugShare } from "@/components/PlugShareActions";
+import { pingIndexNow } from "@/lib/indexnow";
 import { toast } from "sonner";
 import { Ticket, Upload, QrCode, Lock, Loader2, Download, Megaphone, Eye, EyeOff, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { TicketShape } from "@/components/market/TicketShape";
