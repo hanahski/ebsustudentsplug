@@ -13,6 +13,21 @@ function slugify(s: string) {
     .slice(0, 80) || `post-${Date.now().toString(36)}`;
 }
 
+// Fire-and-forget IndexNow ping from the server. Runs in the Worker after the
+// insert resolves; failures are swallowed so a bad ping never fails a publish.
+function pingIndexNowServer(paths: string[]) {
+  const SITE = "https://ebsustudentsplug.fun";
+  const urls = paths.map((p) => (p.startsWith("http") ? p : `${SITE}${p.startsWith("/") ? "" : "/"}${p}`));
+  try {
+    fetch(`${SITE}/api/public/hooks/indexnow`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ urls }),
+    }).catch(() => {});
+  } catch { /* noop */ }
+}
+
+
 async function assertCanPost(ctx: { userId: string; supabase: any }) {
   const { data: role } = await ctx.supabase
     .from("user_roles")
