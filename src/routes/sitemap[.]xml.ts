@@ -68,6 +68,14 @@ export const Route = createFileRoute("/sitemap.xml")({
             priority: isHostel ? "0.8" : "0.6",
           });
         }
+        for (const row of ticketRows ?? []) {
+          const id = (row as { id: string }).id;
+          if (id) entries.push({ path: `/tickets/${id}`, changefreq: "weekly", priority: "0.6" });
+        }
+        for (const row of bookRows ?? []) {
+          const id = (row as { id: string }).id;
+          if (id) entries.push({ path: `/books/read/${id}`, changefreq: "monthly", priority: "0.5" });
+        }
 
 
 
