@@ -23,6 +23,7 @@ import { BookShape } from "@/components/market/BookShape";
 import { TicketShape } from "@/components/market/TicketShape";
 import { ProductMediaSlider } from "@/components/market/ProductMediaSlider";
 import { getLibraryBooks, getPopularNovels } from "@/lib/library-books.functions";
+import { cleanListingDescription } from "@/lib/clean-description";
 
 // Rotating spine tones so a shelf of books doesn't look monotone.
 const BOOK_SPINES = [
