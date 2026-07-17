@@ -96,6 +96,7 @@ export const publishManualEbsuPost = createServerFn({ method: "POST" })
         .select("id, slug")
         .single();
       if (error) throw new Error(error.message);
+      if (data.publish) pingIndexNowServer([`/blog/${row.slug}`, "/blog", "/sitemap.xml"]);
       return { id: row.id, slug: row.slug, type: "blog" as const };
     }
 
