@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Ticket, Upload, QrCode, Lock, Loader2, Download, Megaphone, Eye, EyeOff, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { TicketShape } from "@/components/market/TicketShape";
 import { composeTicketImage, downloadTicketPdf, ticketFilename, composeVerifiedQr } from "@/lib/ticket-composer";
+import { cleanListingDescription } from "@/lib/clean-description";
 import { getIsAdminUser } from "@/lib/admin-role";
 import { handleEmailNotVerified } from "@/components/VerifyEmailDialog";
 
