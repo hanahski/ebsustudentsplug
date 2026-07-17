@@ -76,9 +76,13 @@ export const pickMkCharacter = createServerFn({ method: "POST" })
     if (match[myColumn]) throw new Error("already picked");
     if (match[oppColumn] === chosen) throw new Error("character taken");
 
+    const pickUpdate = isA
+      ? { a_character: chosen, last_activity_at: new Date().toISOString() }
+      : { b_character: chosen, last_activity_at: new Date().toISOString() };
+
     const { data: updated, error: updateError } = await supabaseAdmin
       .from("battle_matches")
-      .update({ [myColumn]: chosen, last_activity_at: new Date().toISOString() })
+      .update(pickUpdate)
       .eq("id", data.matchId)
       .is(myColumn, null)
       .select("id,status,player_a,player_b,a_character,b_character,stake")
