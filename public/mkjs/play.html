@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=600, user-scalable=no" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover" />
   <title>mk.js — battle</title>
   <link rel="stylesheet" href="/mkjs/styles/styles.css" />
   <script src="/mkjs/src/movement.js"></script>
@@ -340,6 +340,7 @@
   }
   function startTimer() { timerFrozen = false; if (!timerHandle) timerHandle = setInterval(tickTimer, 1000); }
 
+  var lastAttackAt = { p1: 0, p2: 0 };
   var options = {
     arena: { container: arenaEl, arena: arena },
     fighters: [{ name: p1 }, { name: p2 }],
@@ -358,15 +359,43 @@
           flash(); shake();
           bumpCombo(atkWho);
           onOmarHit(atkWho);
+          // CLASH detection: both attacked within 120ms window
+          var now = performance.now();
+          lastAttackAt[atkWho] = now;
+          if (now - lastAttackAt[defWho] < 120) {
+            try { window.MKSFX && MKSFX.play('blockMetal', 0.95); } catch (e) {}
+            try { window.MKSFX && MKSFX.play('uppercut', 0.5); } catch (e) {}
+            announce('CLASH!');
+          }
+          if (dmg >= 12) { try { window.MKSFX && MKSFX.play('uppercut', 0.9); } catch(e){} announce('BRUTAL'); }
         }
         if (!isSpectator) post('attack', { defender: name, life: life });
       },
-      'game-end': function (winner) {
+      'game-end': function (loserOrWinner) {
+        // NOTE: mk.js passes the DEAD fighter to fighterDead → this callback.
+        // Determine the real winner by comparing lives to avoid the reversed-name bug.
         try { window.MKSFX && window.MKSFX.onGameEnd(); } catch (e) {}
         timerFrozen = true;
-        announce((winner.getName() || 'FIGHTER').toUpperCase() + ' WINS', true);
-        setTimeout(function(){ announce('FLAWLESS VICTORY', true); }, 1400);
-        if (!isSpectator) post('game-end', { winner: winner.getName() });
+        var f0 = mk.game && mk.game.fighters && mk.game.fighters[0];
+        var f1 = mk.game && mk.game.fighters && mk.game.fighters[1];
+        var winnerFighter = loserOrWinner;
+        try {
+          if (f0 && f1) {
+            winnerFighter = (f0.getLife() >= f1.getLife()) ? f0 : f1;
+            if (loserOrWinner && winnerFighter === loserOrWinner) {
+              // engine handed us the survivor (older behavior) — trust it
+              winnerFighter = loserOrWinner;
+            } else if (loserOrWinner) {
+              // engine handed us the dead one — pick the other
+              winnerFighter = (loserOrWinner === f0) ? f1 : f0;
+            }
+          }
+        } catch (e) {}
+        var winName = (winnerFighter && winnerFighter.getName()) || 'FIGHTER';
+        var winnerSlot = (winnerFighter === f1) ? 'p2' : 'p1';
+        announce(winName.toUpperCase() + ' WINS', true);
+        setTimeout(function(){ announce(prevLife[winnerSlot === 'p1' ? 'p2' : 'p1'] <= 0 && prevLife[winnerSlot] >= MAX[winnerSlot] ? 'FLAWLESS VICTORY' : 'FATALITY?'); }, 1400);
+        if (!isSpectator) post('game-end', { winner: winName, winnerSlot: winnerSlot });
       }
     },
     gameType: 'multiplayer'
@@ -459,8 +488,8 @@
     if (!isSpectator) {
       setInterval(function () {
         var s = snapshot();
-        if (s) { post('snap', { snap: s }); tickSfx(s); }
-      }, 66);
+        if (s) { post('snap', { snap: s, t: Date.now() }); tickSfx(s); }
+      }, 40);
     }
   });
 
