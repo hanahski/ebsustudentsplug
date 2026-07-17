@@ -390,6 +390,7 @@ function ComposerForm({ kind, onBack, userId }: { kind: Kind; onBack: () => void
         toast.success("Advert submitted — our team will review it shortly.");
         nav({ to: "/market" });
       } else {
+        pingIndexNow([`/market/${data.id}`, "/market", "/sitemap.xml"]);
         toast.success(shareToFeed ? "Listing posted & shared to the feed!" : "Listing posted!");
         nav({ to: "/market/$id", params: { id: data.id } });
       }
