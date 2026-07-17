@@ -11,7 +11,72 @@ import { composeTicketImage, downloadTicketPdf, ticketFilename } from "@/lib/tic
 import { handleEmailNotVerified } from "@/components/VerifyEmailDialog";
 
 
-export const Route = createFileRoute("/tickets/$id")({ component: TicketDetail });
+export const Route = createFileRoute("/tickets/$id")({
+  component: TicketDetail,
+  loader: async ({ params }) => {
+    const { data } = await supabase
+      .from("tickets")
+      .select("id,title,description,price,photo_url,created_at,pay_mode")
+      .eq("id", params.id)
+      .maybeSingle();
+    return { ticket: data };
+  },
+  head: ({ params, loaderData }) => {
+    const url = `https://ebsustudentsplug.fun/tickets/${params.id}`;
+    const t = loaderData?.ticket as any;
+    if (!t) {
+      return {
+        meta: [
+          { title: "Event ticket — StudentsPlug" },
+          { name: "description", content: "Buy verified event tickets from EBSU students on StudentsPlug." },
+          { property: "og:url", content: url },
+        ],
+        links: [{ rel: "canonical", href: url }],
+      };
+    }
+    const priceLabel = t.pay_mode === "credits" ? `${Number(t.price) || 0} credits` : `₦${Number(t.price || 0).toLocaleString()}`;
+    const desc = String(t.description ?? "").replace(/<!--[\s\S]*?-->/g, "").trim().slice(0, 160) ||
+      `Buy tickets to ${t.title} at ${priceLabel} on StudentsPlug.`;
+    const title = `${t.title} — ${priceLabel} | EBSU Event Ticket`;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: desc },
+        { name: "keywords", content: `EBSU event, Ebonyi State University tickets, ${t.title}, Abakaliki party, student event` },
+        { property: "og:title", content: title },
+        { property: "og:description", content: desc },
+        { property: "og:type", content: "website" },
+        { property: "og:url", content: url },
+        ...(t.photo_url ? [{ property: "og:image", content: t.photo_url }, { name: "twitter:image", content: t.photo_url }] : []),
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Event",
+            name: t.title,
+            description: desc,
+            image: t.photo_url || undefined,
+            url,
+            eventStatus: "https://schema.org/EventScheduled",
+            eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+            location: { "@type": "Place", name: "Ebonyi State University", address: { "@type": "PostalAddress", addressLocality: "Abakaliki", addressRegion: "Ebonyi", addressCountry: "NG" } },
+            offers: {
+              "@type": "Offer",
+              price: Number(t.price) || 0,
+              priceCurrency: t.pay_mode === "credits" ? "XTS" : "NGN",
+              availability: "https://schema.org/InStock",
+              url,
+            },
+          }),
+        },
+      ],
+    };
+  },
+});
+
 
 function TicketDetail() {
   const { id } = Route.useParams();
