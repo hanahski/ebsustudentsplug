@@ -18,18 +18,55 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/market/$id")({
   component: ListingDetail,
-  head: ({ params }) => {
-    const url = `https://ebsustudentplug.fun/market/${params.id}`;
+  loader: async ({ params }) => {
+    const { data } = await supabase
+      .from("market_listings")
+      .select("id,title,description,price,category,photos,is_sold,created_at")
+      .eq("id", params.id)
+      .maybeSingle();
+    return { listing: data };
+  },
+  head: ({ params, loaderData }) => {
+    const url = `https://ebsustudentsplug.fun/market/${params.id}`;
+    const l = loaderData?.listing as any;
+    const title = l ? `${l.title} — ₦${Number(l.price).toLocaleString()} | StudentsPlug Market` : "Market listing — StudentsPlug";
+    const desc = l
+      ? String(l.description ?? "").replace(/<!--[\s\S]*?-->/g, "").slice(0, 160) || `Buy ${l.title} from a verified EBSU student on StudentsPlug Market.`
+      : "Browse and buy from verified EBSU student sellers on the StudentsPlug market.";
+    const photos: string[] = Array.isArray(l?.photos) ? l.photos.filter((p: any) => typeof p === "string") : [];
+    const image = photos[0];
+    const scripts = l
+      ? [{
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: l.title,
+            description: desc,
+            image: photos.length ? photos : undefined,
+            category: l.category,
+            offers: {
+              "@type": "Offer",
+              price: l.price,
+              priceCurrency: "NGN",
+              availability: l.is_sold ? "https://schema.org/SoldOut" : "https://schema.org/InStock",
+              url,
+            },
+          }),
+        }]
+      : undefined;
     return {
       meta: [
-        { title: "Market listing — StudentsPlug" },
-        { name: "description", content: "Browse and buy from verified EBSU student sellers on the StudentsPlug market." },
-        { property: "og:title", content: "Market listing — StudentsPlug" },
-        { property: "og:description", content: "Buy and sell with verified EBSU students on StudentsPlug Market." },
+        { title },
+        { name: "description", content: desc },
+        { property: "og:title", content: title },
+        { property: "og:description", content: desc },
         { property: "og:type", content: "product" },
         { property: "og:url", content: url },
+        ...(image ? [{ property: "og:image", content: image }, { name: "twitter:image", content: image }] : []),
       ],
       links: [{ rel: "canonical", href: url }],
+      scripts,
     };
   },
 });
