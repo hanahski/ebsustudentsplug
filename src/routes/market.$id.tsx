@@ -21,7 +21,7 @@ export const Route = createFileRoute("/market/$id")({
   loader: async ({ params }) => {
     const { data } = await supabase
       .from("market_listings")
-      .select("id,title,description,price,category,photos,is_sold,created_at")
+      .select("id,title,description,price,category,photos,is_sold,created_at,location")
       .eq("id", params.id)
       .maybeSingle();
     return { listing: data };
@@ -29,39 +29,139 @@ export const Route = createFileRoute("/market/$id")({
   head: ({ params, loaderData }) => {
     const url = `https://ebsustudentsplug.fun/market/${params.id}`;
     const l = loaderData?.listing as any;
-    const title = l ? `${l.title} — ₦${Number(l.price).toLocaleString()} | StudentsPlug Market` : "Market listing — StudentsPlug";
-    const desc = l
-      ? String(l.description ?? "").replace(/<!--[\s\S]*?-->/g, "").slice(0, 160) || `Buy ${l.title} from a verified EBSU student on StudentsPlug Market.`
-      : "Browse and buy from verified EBSU student sellers on the StudentsPlug market.";
-    const photos: string[] = Array.isArray(l?.photos) ? l.photos.filter((p: any) => typeof p === "string") : [];
+    if (!l) {
+      return {
+        meta: [
+          { title: "Market listing — StudentsPlug" },
+          { name: "description", content: "Browse and buy from verified EBSU student sellers on the StudentsPlug market." },
+          { property: "og:url", content: url },
+        ],
+        links: [{ rel: "canonical", href: url }],
+      };
+    }
+
+    const isHostel = String(l.category ?? "").toLowerCase() === "hostel";
+    const rawDesc = String(l.description ?? "").replace(/<!--[\s\S]*?-->/g, "").trim();
+    const photos: string[] = Array.isArray(l.photos) ? l.photos.filter((p: any) => typeof p === "string") : [];
     const image = photos[0];
-    const scripts = l
-      ? [{
-          type: "application/ld+json",
-          children: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Product",
+    const priceStr = `₦${Number(l.price).toLocaleString()}`;
+
+    // Pull hostel specs so search results tell renters what's inside.
+    let hostelSpecs: any = null;
+    if (isHostel) {
+      const m = String(l.description ?? "").match(/<!--HOSTEL::([A-Za-z0-9+/=]+)-->/);
+      if (m) { try { hostelSpecs = JSON.parse(atob(m[1])); } catch {} }
+    }
+
+    const title = isHostel
+      ? `${l.title} — ${priceStr} | Hostel / Apartment near EBSU`
+      : `${l.title} — ${priceStr} | StudentsPlug Market`;
+
+    const hostelSummary = hostelSpecs
+      ? [
+          hostelSpecs.bedrooms ? `${hostelSpecs.bedrooms} bed` : null,
+          hostelSpecs.toilets ? `${hostelSpecs.toilets} bath` : null,
+          hostelSpecs.ac ? "AC" : null,
+          hostelSpecs.kitchen ? "kitchen" : null,
+          hostelSpecs.water_heater ? "water heater" : null,
+          ...(Array.isArray(hostelSpecs.features) ? hostelSpecs.features.slice(0, 4).map((f: string) => f.replace(/_/g, " ")) : []),
+        ].filter(Boolean).join(" · ")
+      : "";
+
+    const desc = isHostel
+      ? (`${l.title} for rent near Ebonyi State University (EBSU), Abakaliki — ${priceStr}. ` +
+         (hostelSummary ? `${hostelSummary}. ` : "") +
+         (hostelSpecs?.address ? `Located at ${hostelSpecs.address}. ` : "") +
+         (rawDesc.slice(0, 120) || "Contact the verified student landlord on StudentsPlug.")
+        ).slice(0, 300)
+      : (rawDesc.slice(0, 160) || `Buy ${l.title} from a verified EBSU student on StudentsPlug Market.`);
+
+    const productLd = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: l.title,
+      description: desc,
+      image: photos.length ? photos : undefined,
+      category: l.category,
+      offers: {
+        "@type": "Offer",
+        price: l.price,
+        priceCurrency: "NGN",
+        availability: l.is_sold ? "https://schema.org/SoldOut" : "https://schema.org/InStock",
+        url,
+      },
+    };
+
+    // Hostels get an additional RealEstateListing + Accommodation schema so
+    // Google Housing / rich results surface bedrooms, amenities and address.
+    const amenityFeatures = hostelSpecs
+      ? [
+          hostelSpecs.ac ? "Air conditioning" : null,
+          hostelSpecs.kitchen ? "Kitchen" : null,
+          hostelSpecs.water_heater ? "Water heater" : null,
+          ...(Array.isArray(hostelSpecs.features)
+            ? hostelSpecs.features.map((f: string) => f.replace(/_/g, " "))
+            : []),
+        ]
+          .filter(Boolean)
+          .map((name) => ({ "@type": "LocationFeatureSpecification", name, value: true }))
+      : [];
+
+    const realEstateLd = isHostel
+      ? {
+          "@context": "https://schema.org",
+          "@type": "RealEstateListing",
+          name: l.title,
+          description: desc,
+          url,
+          datePosted: l.created_at,
+          image: photos.length ? photos : undefined,
+          offers: {
+            "@type": "Offer",
+            price: l.price,
+            priceCurrency: "NGN",
+            availability: l.is_sold ? "https://schema.org/SoldOut" : "https://schema.org/InStock",
+            url,
+          },
+          about: {
+            "@type": "Accommodation",
             name: l.title,
-            description: desc,
-            image: photos.length ? photos : undefined,
-            category: l.category,
-            offers: {
-              "@type": "Offer",
-              price: l.price,
-              priceCurrency: "NGN",
-              availability: l.is_sold ? "https://schema.org/SoldOut" : "https://schema.org/InStock",
-              url,
-            },
-          }),
-        }]
-      : undefined;
+            numberOfBedrooms: hostelSpecs?.bedrooms ?? undefined,
+            numberOfBathroomsTotal: hostelSpecs?.toilets ?? undefined,
+            amenityFeature: amenityFeatures.length ? amenityFeatures : undefined,
+            address: hostelSpecs?.address
+              ? {
+                  "@type": "PostalAddress",
+                  streetAddress: hostelSpecs.address,
+                  addressLocality: "Abakaliki",
+                  addressRegion: "Ebonyi",
+                  addressCountry: "NG",
+                }
+              : {
+                  "@type": "PostalAddress",
+                  addressLocality: "Abakaliki",
+                  addressRegion: "Ebonyi",
+                  addressCountry: "NG",
+                },
+          },
+        }
+      : null;
+
+    const scripts = [
+      { type: "application/ld+json", children: JSON.stringify(productLd) },
+      ...(realEstateLd ? [{ type: "application/ld+json", children: JSON.stringify(realEstateLd) }] : []),
+    ];
+
     return {
       meta: [
         { title },
         { name: "description", content: desc },
+        ...(isHostel
+          ? [{ name: "keywords", content: `EBSU hostel, Abakaliki apartment, student accommodation Ebonyi, ${l.title}` }]
+          : []),
         { property: "og:title", content: title },
         { property: "og:description", content: desc },
-        { property: "og:type", content: "product" },
+        { property: "og:type", content: isHostel ? "website" : "product" },
         { property: "og:url", content: url },
         ...(image ? [{ property: "og:image", content: image }, { name: "twitter:image", content: image }] : []),
       ],
@@ -70,6 +170,7 @@ export const Route = createFileRoute("/market/$id")({
     };
   },
 });
+
 
 function ListingDetail() {
   const { id } = Route.useParams();
