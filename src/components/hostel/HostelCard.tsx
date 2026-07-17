@@ -94,13 +94,13 @@ export function HostelDetailPanel({ specs }: { specs: HostelSpecs }) {
   ];
 
   return (
-    <div className="mt-6 space-y-5 rounded-3xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent p-5">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/15 text-primary text-[11px] font-bold uppercase tracking-wider">
-            <Home className="w-3.5 h-3.5" /> Hostel details
+    <div className="mt-6 space-y-5 rounded-2xl border bg-card p-4 sm:p-5">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+        <div className="min-w-0">
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
+            <Home className="w-3 h-3" /> Hostel details
           </div>
-          <h3 className="mt-1 font-display font-bold text-lg">Living conditions</h3>
+          <h3 className="mt-1 font-display font-bold text-base sm:text-lg">Living conditions</h3>
         </div>
         <ScoreBadge value={overall} size="lg" label="Overall" />
       </div>
