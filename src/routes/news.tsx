@@ -145,7 +145,7 @@ function NewsPage() {
               <img
                 src={feessaTvLogo.url}
                 alt="FEESSA TV"
-                className="h-14 sm:h-16 w-auto object-contain rounded-xl bg-black/60 backdrop-blur px-3 py-1.5 ring-1 ring-white/10 shadow-card group-hover:ring-primary/40 group-hover:scale-105 transition"
+                className="h-14 sm:h-16 w-auto object-contain group-hover:scale-105 transition drop-shadow-lg"
               />
             </a>
 
