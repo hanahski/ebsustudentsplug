@@ -263,6 +263,7 @@ function UploadTicket({ userId }: { userId?: string }) {
         } as any);
       }
 
+      pingIndexNow([`/tickets/${ins.data.id}`, "/tickets", "/sitemap.xml"]);
       toast.success(shareToFeed ? "Ticket listed & shared to the feed" : "Ticket listed");
       qc.invalidateQueries({ queryKey: ["tickets-browse"] });
       nav({ to: "/tickets" });
