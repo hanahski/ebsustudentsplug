@@ -142,12 +142,24 @@ function NewsPage() {
               className="mt-4 inline-flex items-center gap-2 group"
               aria-label="FEESSA TV — Your Faculty. Your Voice. Your Legacy."
             >
-              <img
-                src={feessaTvLogo.url}
-                alt="FEESSA TV"
-                className="h-14 sm:h-16 w-auto object-contain group-hover:scale-105 transition drop-shadow-lg"
-              />
+              <div className="relative inline-block">
+                <img
+                  src={feessaTvLogo.url}
+                  alt="FEESSA TV"
+                  className="h-14 sm:h-16 w-auto object-contain group-hover:scale-105 transition drop-shadow-lg"
+                />
+                <span
+                  className="absolute -top-1 -left-1 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase tracking-wider shadow-lg ring-2 ring-background"
+                  title="Legit verified"
+                >
+                  <svg viewBox="0 0 24 24" className="w-2.5 h-2.5" fill="currentColor" aria-hidden>
+                    <path d="M12 2l8 3v6c0 5-3.5 9.5-8 11-4.5-1.5-8-6-8-11V5l8-3zm-1 13l6-6-1.4-1.4L11 12.2 8.4 9.6 7 11l4 4z" />
+                  </svg>
+                  Legit
+                </span>
+              </div>
             </a>
+
 
           </div>
         </section>
