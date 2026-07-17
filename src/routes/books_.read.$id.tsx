@@ -16,7 +16,64 @@ import { PdfReader } from "@/components/PdfReader";
 import { EpubReader } from "@/components/EpubReader";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-export const Route = createFileRoute("/books_/read/$id")({ component: ReadBookPage });
+export const Route = createFileRoute("/books_/read/$id")({
+  component: ReadBookPage,
+  loader: async ({ params }) => {
+    const { data } = await supabase
+      .from("library_books")
+      .select("id,title,author,description,cover_url,price,is_free")
+      .eq("id", params.id)
+      .maybeSingle();
+    return { book: data };
+  },
+  head: ({ params, loaderData }) => {
+    const url = `https://ebsustudentsplug.fun/books/read/${params.id}`;
+    const b = loaderData?.book as any;
+    if (!b) {
+      return {
+        meta: [{ title: "Book — StudentsPlug Library" }, { property: "og:url", content: url }],
+        links: [{ rel: "canonical", href: url }],
+      };
+    }
+    const desc = String(b.description ?? "").slice(0, 160) || `Read ${b.title}${b.author ? ` by ${b.author}` : ""} on StudentsPlug Library.`;
+    const title = `${b.title}${b.author ? ` — ${b.author}` : ""} | StudentsPlug Library`;
+    const priceNum = Number(b.price ?? 0);
+    return {
+      meta: [
+        { title },
+        { name: "description", content: desc },
+        { property: "og:title", content: title },
+        { property: "og:description", content: desc },
+        { property: "og:type", content: "book" },
+        { property: "og:url", content: url },
+        ...(b.cover_url ? [{ property: "og:image", content: b.cover_url }, { name: "twitter:image", content: b.cover_url }] : []),
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Book",
+            name: b.title,
+            author: b.author ? { "@type": "Person", name: b.author } : undefined,
+            description: desc,
+            image: b.cover_url || undefined,
+            url,
+            offers: {
+              "@type": "Offer",
+              price: b.is_free ? 0 : priceNum,
+              priceCurrency: "NGN",
+              availability: "https://schema.org/InStock",
+              url,
+            },
+          }),
+        },
+      ],
+    };
+  },
+});
+
 
 function parseGutenbergId(
   book: { openlibrary_key?: string | null; read_url?: string | null } | null | undefined,
