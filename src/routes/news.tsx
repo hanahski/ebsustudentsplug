@@ -135,6 +135,20 @@ function NewsPage() {
             <p className="text-sm sm:text-base text-muted-foreground mt-2 max-w-xl">
               Fresh EBSU stories side-by-side with the world's headlines — refreshed all day, every day.
             </p>
+            <a
+              href="https://www.youtube.com/@feessatv"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center gap-2 group"
+              aria-label="FEESSA TV — Your Faculty. Your Voice. Your Legacy."
+            >
+              <img
+                src={feessaTvLogo.url}
+                alt="FEESSA TV"
+                className="h-14 sm:h-16 w-auto object-contain rounded-xl bg-black/60 backdrop-blur px-3 py-1.5 ring-1 ring-white/10 shadow-card group-hover:ring-primary/40 group-hover:scale-105 transition"
+              />
+            </a>
+
           </div>
         </section>
 
