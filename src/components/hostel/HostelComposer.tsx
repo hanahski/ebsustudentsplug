@@ -133,32 +133,25 @@ export function HostelComposer({
   const t = scoreTier(overall);
 
   return (
-    <div className="space-y-5 rounded-3xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background p-5 shadow-card">
+    <div className="space-y-5 rounded-2xl border bg-card p-4 sm:p-5">
       {/* Header + overall gauge */}
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/15 text-primary text-[11px] font-bold uppercase tracking-wider">
-            Hostel / Apartment Details
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:gap-4">
+        <div className="min-w-0">
+          <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
+            Hostel / Apartment
           </div>
-          <h3 className="mt-2 font-display font-bold text-lg">Rate the place honestly</h3>
-          <p className="text-xs text-muted-foreground max-w-md">
-            Students trust listings that spell out light, water, safety and network. Sliders auto-color from red to green.
+          <h3 className="mt-1.5 font-display font-bold text-base sm:text-lg leading-tight">Rate the place honestly</h3>
+          <p className="text-[11px] text-muted-foreground mt-0.5 hidden sm:block">
+            Sliders auto-color from red (poor) to green (excellent).
           </p>
         </div>
         <div
-          className="rounded-2xl px-4 py-3 border-2 text-center"
-          style={{
-            borderColor: t.color,
-            boxShadow: t.intensity === 2 ? `0 0 24px ${t.glow}` : t.intensity === 1 ? `0 0 12px ${t.glow}` : "none",
-            background: `linear-gradient(135deg, ${t.color}22, transparent)`,
-          }}
+          className="shrink-0 rounded-2xl px-3 py-2 text-center border"
+          style={{ borderColor: `${t.color}66`, background: `${t.color}10` }}
         >
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Overall</div>
-          <div
-            className="text-3xl font-black tabular-nums"
-            style={{ color: t.color, textShadow: t.intensity === 2 ? `0 0 12px ${t.glow}` : "none" }}
-          >{overall}</div>
-          <div className="text-[10px] font-semibold" style={{ color: t.color }}>{t.label}</div>
+          <div className="text-[9px] uppercase tracking-wider text-muted-foreground">Overall</div>
+          <div className="text-2xl font-black tabular-nums leading-none" style={{ color: t.color }}>{overall}</div>
+          <div className="text-[9px] font-semibold" style={{ color: t.color }}>{t.label}</div>
         </div>
       </div>
 

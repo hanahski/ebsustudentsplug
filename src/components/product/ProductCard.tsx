@@ -146,16 +146,16 @@ export function ProductDetailPanel({ specs }: { specs: ProductSpecs }) {
   }
 
   return (
-    <div className="mt-6 space-y-5 rounded-3xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent p-5">
+    <div className="mt-6 space-y-5 rounded-2xl border bg-card p-4 sm:p-5">
       <div className="flex items-center gap-3">
         <div
-          className="w-10 h-10 rounded-2xl flex items-center justify-center"
-          style={{ background: `${meta.color}22`, color: meta.color, border: `1px solid ${meta.color}55` }}
+          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+          style={{ background: `${meta.color}18`, color: meta.color, border: `1px solid ${meta.color}40` }}
         >
           <Icon className="w-5 h-5" />
         </div>
-        <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-bold uppercase tracking-wider">
+        <div className="min-w-0">
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
             {meta.label}
           </div>
           <h3 className="font-display font-bold text-base">Product details</h3>

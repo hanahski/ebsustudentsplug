@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { StorageMedia } from "@/components/StorageMedia";
-import { Package } from "lucide-react";
+import { isVideoUrl } from "@/lib/storage-url";
+import { Package, Play } from "lucide-react";
 
 /**
  * Horizontal snap-scroll media slider for a product card. Supports images and
@@ -45,15 +46,26 @@ export function ProductMediaSlider({
         ref={scrollerRef}
         className={`w-full ${aspect} overflow-x-auto snap-x snap-mandatory flex scrollbar-none scroll-smooth`}
       >
-        {list.map((url, i) => (
-          <div key={i} className="snap-start shrink-0 w-full h-full bg-muted">
-            <StorageMedia
-              url={url}
-              alt={`${title} ${i + 1}`}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        ))}
+        {list.map((url, i) => {
+          const video = isVideoUrl(url);
+          return (
+            <div key={i} className="snap-start shrink-0 w-full h-full bg-muted relative">
+              <StorageMedia
+                url={url}
+                alt={`${title} ${i + 1}`}
+                className="w-full h-full object-cover"
+                videoAsPoster
+              />
+              {video && (
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <span className="w-12 h-12 rounded-full bg-black/55 backdrop-blur flex items-center justify-center text-white shadow-lg">
+                    <Play className="w-5 h-5 ml-0.5 fill-current" />
+                  </span>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
       {list.length > 1 && (
         <div className="absolute inset-x-0 bottom-2 flex justify-center gap-1 pointer-events-none">

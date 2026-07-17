@@ -10,9 +10,11 @@ type Props = {
   loading?: "lazy" | "eager";
   /** Force a particular renderer; otherwise auto-detect by extension. */
   as?: "img" | "video";
+  /** Render videos as silent preview (no controls, muted) — for feed cards. */
+  videoAsPoster?: boolean;
 };
 
-export function StorageMedia({ url, alt, className, loading = "eager", as }: Props) {
+export function StorageMedia({ url, alt, className, loading = "eager", as, videoAsPoster }: Props) {
   const [resolved, setResolved] = useState<string | null>(null);
   useEffect(() => {
     let alive = true;
@@ -22,6 +24,17 @@ export function StorageMedia({ url, alt, className, loading = "eager", as }: Pro
   if (!resolved) return <div className={className} aria-hidden />;
   const kind = as ?? (isVideoUrl(resolved) ? "video" : "img");
   if (kind === "video") {
+    if (videoAsPoster) {
+      return (
+        <video
+          src={`${resolved}#t=0.1`}
+          className={className}
+          muted
+          playsInline
+          preload="metadata"
+        />
+      );
+    }
     return (
       <video
         src={resolved}
