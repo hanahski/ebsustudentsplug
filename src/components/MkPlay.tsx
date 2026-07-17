@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { AppShell } from "@/components/AppShell";
 import {
   ArrowLeft, Trophy, Coins, Loader2, RotateCw, Swords, Wifi, WifiOff,
@@ -9,6 +10,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { pickMkCharacter } from "@/lib/battle-mk.functions";
 
 export type MkMatch = {
   id: string;
@@ -49,6 +51,7 @@ const ARENA_H = 400;
 
 export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }) {
   const nav = useNavigate();
+  const pickMkCharacterFn = useServerFn(pickMkCharacter);
   const [m, setM] = useState<MkMatch | null>(null);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [busy, setBusy] = useState(false);
@@ -232,8 +235,7 @@ export function MkPlay({ matchId, uid }: { matchId: string; uid: string | null }
   async function pickCharacter(charId: string) {
     setBusy(true);
     try {
-      const { error } = await supabase.rpc("battle_mk_pick", { _match_id: matchId, _character: charId });
-      if (error) throw error;
+      await pickMkCharacterFn({ data: { matchId, character: charId } });
     } catch (e: unknown) {
       toast.error(String((e as Error)?.message ?? e));
     } finally {
