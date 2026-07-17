@@ -14,7 +14,8 @@
   <style>
     html, body { margin:0; padding:0; background:#000; overflow:hidden; height:100%; font-family:'Impact','Arial Black',system-ui,sans-serif; }
     #parent { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
-    #arena { background:#000; will-change: transform, filter; }
+    #arena { --flip: 1; background:#000; will-change: transform, filter; transform:scaleX(var(--flip)); transform-origin:center center; }
+    #arena.mirror { --flip: -1; }
     canvas { display:block; image-rendering:pixelated; }
 
     /* ---------- HUD ---------- */
@@ -78,11 +79,23 @@
     @keyframes hitflash { 0% { opacity:0; } 20% { opacity:1; } 100% { opacity:0; } }
     #arena.shake { animation: shake .28s cubic-bezier(.36,.07,.19,.97); }
     @keyframes shake {
-      10%,90% { transform:translate(-1px,0); }
-      20%,80% { transform:translate(2px,-1px); }
-      30%,50%,70% { transform:translate(-4px,1px); }
-      40%,60% { transform:translate(4px,-1px); }
+      10%,90% { transform:scaleX(var(--flip)) translate(-1px,0); }
+      20%,80% { transform:scaleX(var(--flip)) translate(2px,-1px); }
+      30%,50%,70% { transform:scaleX(var(--flip)) translate(-4px,1px); }
+      40%,60% { transform:scaleX(var(--flip)) translate(4px,-1px); }
     }
+
+    .elemental { position:absolute; width:22px; height:22px; border-radius:999px; pointer-events:none; z-index:7;
+      transform:translate(-50%,-50%) scale(.4); opacity:0; filter:blur(.1px); }
+    .elemental.fire { background:radial-gradient(circle,#fff7ad 0 18%,#fb923c 35%,#dc2626 62%,transparent 70%);
+      box-shadow:0 0 18px #fb923c, 0 0 34px rgba(220,38,38,.8); animation:fireBurst 700ms ease-out forwards; }
+    .elemental.ice { width:34px; height:34px; border-radius:8px; background:linear-gradient(135deg,rgba(224,242,254,.95),rgba(56,189,248,.65),rgba(37,99,235,.15));
+      border:1px solid rgba(186,230,253,.75); box-shadow:0 0 18px #38bdf8, inset 0 0 12px rgba(255,255,255,.85); animation:iceBurst 760ms ease-out forwards; }
+    .elemental.lightning { width:12px; height:46px; border-radius:4px; background:linear-gradient(#fef08a,#facc15,#a855f7);
+      clip-path:polygon(45% 0,100% 0,65% 38%,100% 38%,28% 100%,45% 54%,0 54%); box-shadow:0 0 16px #fde047,0 0 30px #a855f7; animation:boltBurst 520ms ease-out forwards; }
+    @keyframes fireBurst { 0%{opacity:0;transform:translate(-50%,-50%) scale(.3)} 25%{opacity:1;transform:translate(-50%,-50%) scale(1.25)} 100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.1)} }
+    @keyframes iceBurst { 0%{opacity:0;transform:translate(-50%,-50%) rotate(0deg) scale(.4)} 20%{opacity:1;transform:translate(-50%,-50%) rotate(18deg) scale(1.1)} 100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(90deg) scale(.7)} }
+    @keyframes boltBurst { 0%{opacity:0;transform:translate(-50%,-60%) scaleY(.4)} 18%{opacity:1;transform:translate(-50%,-50%) scaleY(1.1)} 100%{opacity:0;transform:translate(-50%,-70%) scaleY(.15)} }
 
     /* ---------- Arena FX overlays ---------- */
     #vignette { position:absolute; inset:0; pointer-events:none; z-index:2;
@@ -206,16 +219,20 @@
   var p2 = (params.get('p2') || 'Kano');
   var arenaKey = (params.get('arena') || 'THRONE_ROOM').toUpperCase();
   var mode = (params.get('mode') || 'host').toLowerCase();
+  var pov = (params.get('pov') || 'p2-right').toLowerCase();
+  var p1VisualRight = pov === 'p1-right';
   var isSpectator = mode === 'spectator';
   var arena = mk.arenas.types[arenaKey] != null ? mk.arenas.types[arenaKey] : mk.arenas.types.THRONE_ROOM;
 
-  document.getElementById('player1Name').textContent = p1;
-  document.getElementById('player2Name').textContent = p2;
+  var leftChar = p1VisualRight ? p2 : p1;
+  var rightChar = p1VisualRight ? p1 : p2;
+  document.getElementById('player1Name').textContent = leftChar;
+  document.getElementById('player2Name').textContent = rightChar;
   function portraitUrl(name){ return '/mkjs/images/fighters/' + name.toLowerCase() + '/right/attractive-stand-up/0.png'; }
-  document.getElementById('p1portrait').innerHTML = '<img src="'+portraitUrl(p1)+'" alt="">';
-  document.getElementById('p2portrait').innerHTML = '<img src="'+portraitUrl(p2)+'" alt="">';
-  if (p1.toLowerCase() === 'omar') document.getElementById('p1portrait').classList.add('omar');
-  if (p2.toLowerCase() === 'omar') document.getElementById('p2portrait').classList.add('omar');
+  document.getElementById('p1portrait').innerHTML = '<img src="'+portraitUrl(leftChar)+'" alt="">';
+  document.getElementById('p2portrait').innerHTML = '<img src="'+portraitUrl(rightChar)+'" alt="">';
+  if (leftChar.toLowerCase() === 'omar') document.getElementById('p1portrait').classList.add('omar');
+  if (rightChar.toLowerCase() === 'omar') document.getElementById('p2portrait').classList.add('omar');
   if (isSpectator) document.getElementById('spectatorTag').style.display = 'flex';
 
   function post(type, data) {
@@ -224,13 +241,23 @@
 
   // ---------- HUD helpers ----------
   var arenaEl = document.getElementById('arena');
+  if (p1VisualRight) arenaEl.classList.add('mirror');
   var flashEl = document.getElementById('flash');
   var floatersEl = document.getElementById('floaters');
   var announcer = document.getElementById('annTxt');
   var timerEl = document.getElementById('timer');
-  var lifeBar = { p1: document.getElementById('p1life'), p2: document.getElementById('p2life') };
-  var chipBar = { p1: document.getElementById('p1chip'), p2: document.getElementById('p2chip') };
-  var comboEl = { p1: document.getElementById('p1combo'), p2: document.getElementById('p2combo') };
+  var lifeBar = {
+    p1: document.getElementById(p1VisualRight ? 'p2life' : 'p1life'),
+    p2: document.getElementById(p1VisualRight ? 'p1life' : 'p2life')
+  };
+  var chipBar = {
+    p1: document.getElementById(p1VisualRight ? 'p2chip' : 'p1chip'),
+    p2: document.getElementById(p1VisualRight ? 'p1chip' : 'p2chip')
+  };
+  var comboEl = {
+    p1: document.getElementById(p1VisualRight ? 'p2combo' : 'p1combo'),
+    p2: document.getElementById(p1VisualRight ? 'p1combo' : 'p2combo')
+  };
   var MAX = { p1: p1.toLowerCase() === 'omar' ? 120 : 100,
               p2: p2.toLowerCase() === 'omar' ? 120 : 100 };
   var prevLife = { p1: MAX.p1, p2: MAX.p2 };
@@ -254,7 +281,7 @@
     f.className = 'float' + (big ? ' big' : '');
     f.textContent = '-' + dmg;
     var rect = arenaEl.getBoundingClientRect();
-    var x = who === 'p1' ? rect.left + rect.width*0.3 : rect.left + rect.width*0.7;
+    var x = rect.left + rect.width * screenXRatio(who);
     var y = rect.top + rect.height*0.35;
     f.style.left = x + 'px'; f.style.top = y + 'px';
     floatersEl.appendChild(f);
@@ -276,6 +303,10 @@
     announcer.textContent = text;
     announcer.classList.remove('show','hold'); void announcer.offsetWidth;
     announcer.classList.add(hold ? 'hold' : 'show');
+  }
+  function screenXRatio(who) {
+    if (p1VisualRight) return who === 'p1' ? 0.7 : 0.3;
+    return who === 'p1' ? 0.3 : 0.7;
   }
 
   // ---------- Omar signature FX ----------
@@ -319,6 +350,7 @@
     try { window.MKSFX && MKSFX.play('uppercut', 1.0); } catch (e) {}
     try { window.MKSFX && MKSFX.play('blockMetal', 0.6); } catch (e) {}
     try { window.MKSFX && MKSFX.play('effort', 0.7); } catch (e) {}
+    try { window.MKSFX && MKSFX.elemental('fire', 0.8); } catch (e) {}
   }
   function onOmarHit(atkWho) {
     if (!omarSide || atkWho !== omarSide) return;
@@ -327,6 +359,33 @@
     spawnPetals(atkWho, 4);
     try { window.MKSFX && MKSFX.play('whoosh', 0.35); } catch (e) {}
     if (omarHits[atkWho] % 3 === 0) roseFury(atkWho);
+  }
+
+  function elementalBurst(who, kind, count) {
+    var rect = arenaEl.getBoundingClientRect();
+    var ox = rect.left + rect.width * screenXRatio(who);
+    var oy = rect.top + rect.height * 0.48;
+    var n = count || (kind === 'lightning' ? 4 : 9);
+    for (var i = 0; i < n; i++) {
+      var e = document.createElement('div');
+      e.className = 'elemental ' + kind;
+      var dx = (Math.random() * 120 - 60).toFixed(0) + 'px';
+      var dy = (Math.random() * -80 - 10).toFixed(0) + 'px';
+      e.style.left = (ox + Math.random() * 30 - 15) + 'px';
+      e.style.top = (oy + Math.random() * 24 - 12) + 'px';
+      e.style.setProperty('--dx', dx);
+      e.style.setProperty('--dy', dy);
+      floatersEl.appendChild(e);
+      (function(el){ setTimeout(function(){ el.remove(); }, 820); })(e);
+    }
+    try { window.MKSFX && MKSFX.elemental(kind, 0.85); } catch (err) {}
+  }
+  function attackElement(attackerName, moveType) {
+    var n = String(attackerName || '').toLowerCase();
+    if (n === 'subzero') return 'ice';
+    if (n === 'omar') return 'fire';
+    if (n === 'kano' && (moveType === 'uppercut' || moveType === 'spin-kick')) return 'lightning';
+    return null;
   }
 
   // ---------- Round timer ----------
@@ -359,6 +418,8 @@
           flash(); shake();
           bumpCombo(atkWho);
           onOmarHit(atkWho);
+          var fx = attackElement(attacker.getName(), attacker.getMove() && attacker.getMove().type);
+          if (fx) elementalBurst(defWho, fx, dmg >= 8 ? 12 : 7);
           // CLASH detection: both attacked within 120ms window
           var now = performance.now();
           lastAttackAt[atkWho] = now;
@@ -424,7 +485,7 @@
       if (typeof s.p1.life === 'number' && f0.getLife() !== s.p1.life) {
         var d1 = prevLife.p1 - s.p1.life;
         f0.setLife(s.p1.life); setLife('p1', s.p1.life);
-        if (d1 > 0) { damageFloat('p1', d1, d1>=8); flash(); shake(); bumpCombo('p2'); onOmarHit('p2'); }
+        if (d1 > 0) { damageFloat('p1', d1, d1>=8); flash(); shake(); bumpCombo('p2'); onOmarHit('p2'); elementalBurst('p1', attackElement(p2, s.p2.move), d1>=8 ? 12 : 7); }
         prevLife.p1 = s.p1.life;
       }
       if (s.p1.move && (!f0._currentMove || f0._currentMove.type !== s.p1.move)) { try { f0.setMove(s.p1.move); } catch (e) {} }
@@ -434,7 +495,7 @@
       if (typeof s.p2.life === 'number' && f1.getLife() !== s.p2.life) {
         var d2 = prevLife.p2 - s.p2.life;
         f1.setLife(s.p2.life); setLife('p2', s.p2.life);
-        if (d2 > 0) { damageFloat('p2', d2, d2>=8); flash(); shake(); bumpCombo('p1'); onOmarHit('p1'); }
+        if (d2 > 0) { damageFloat('p2', d2, d2>=8); flash(); shake(); bumpCombo('p1'); onOmarHit('p1'); elementalBurst('p2', attackElement(p1, s.p1.move), d2>=8 ? 12 : 7); }
         prevLife.p2 = s.p2.life;
       }
       if (s.p2.move && (!f1._currentMove || f1._currentMove.type !== s.p2.move)) { try { f1.setMove(s.p2.move); } catch (e) {} }

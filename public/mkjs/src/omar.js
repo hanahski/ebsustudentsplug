@@ -9,10 +9,11 @@
 //                   with a 500ms cooldown so multi-hit chains can't stack it.
 (function () {
   if (typeof mk === 'undefined' || !mk.fighters) return;
-  if (mk.fighters._omar) return;
 
   // 1) Register
   mk.fighters.list.omar = true;
+
+  if (mk.fighters._omar) return;
 
   // 2) Buff starting HP for Omar
   var origInit = mk.fighters.Fighter.prototype.init;

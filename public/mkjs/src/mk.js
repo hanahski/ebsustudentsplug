@@ -110,7 +110,7 @@
       f = this.fighters[i];
       f.setArena(this.arena);
     }
-    f.setX(470);  //testing
+    f.setX(Math.max(360, this.arena.width - 130));
   };
 
   mk.controllers.Base.prototype.fighterAttacked = function (fighter, damage) {
@@ -1666,6 +1666,9 @@
   };
 
   mk.fighters.Fighter.prototype.getVisibleWidth = function () {
+    if (this._currentState && this._currentState.width) {
+      return Math.max(this._width, this._currentState.width);
+    }
     return this._width;
   };
 
