@@ -39,11 +39,17 @@ function stripHtml(html: string) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 // Convert plain-text (with blank-line paragraphs) into simple HTML so users can just type.
+// Also converts inline image tokens `[img:URL]` into <img> tags.
 function textToHtml(text: string) {
   const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   return text
     .split(/\n\s*\n/)
-    .map((p) => `<p>${esc(p).replace(/\n/g, "<br/>")}</p>`)
+    .map((p) => {
+      const trimmed = p.trim();
+      const m = trimmed.match(/^\[img:(https?:\/\/[^\]\s]+)\]$/);
+      if (m) return `<p><img src="${m[1]}" alt="" loading="eager" style="max-width:100%;border-radius:12px;" /></p>`;
+      return `<p>${esc(p).replace(/\n/g, "<br/>")}</p>`;
+    })
     .join("");
 }
 function htmlToText(html: string) {
@@ -100,6 +106,9 @@ export function EbsuNewsComposer() {
   const [publishing, setPublishing] = useState(false);
   const [touched, setTouched] = useState<{ title?: boolean; body?: boolean; source?: boolean; schedule?: boolean }>({});
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const inlineFileRef = useRef<HTMLInputElement | null>(null);
+  const bodyRef = useRef<HTMLTextAreaElement | null>(null);
+  const [inlineUploading, setInlineUploading] = useState(false);
 
   const slug = slugCustom ?? slugify(title);
   const wordCount = useMemo(() => bodyText.split(/\s+/).filter(Boolean).length, [bodyText]);
@@ -198,6 +207,38 @@ export function EbsuNewsComposer() {
     } catch (e: any) {
       toast.error(e?.message ?? "Upload failed");
     } finally { setUploading(false); }
+  };
+
+  const onInlineImage = async (file: File) => {
+    if (!user) return;
+    if (!file.type.startsWith("image/")) return toast.error("Pick an image file");
+    if (file.size > 8 * 1024 * 1024) return toast.error("Image must be under 8 MB");
+    setInlineUploading(true);
+    try {
+      const ext = (file.name.split(".").pop() || "png").toLowerCase();
+      const path = `${user.id}/${Date.now()}-inline.${ext}`;
+      const { error } = await supabase.storage.from("post-images").upload(path, file, { contentType: file.type, upsert: false });
+      if (error) throw error;
+      const { data } = supabase.storage.from("post-images").getPublicUrl(path);
+      const token = `\n\n[img:${data.publicUrl}]\n\n`;
+      const ta = bodyRef.current;
+      if (ta) {
+        const start = ta.selectionStart ?? bodyText.length;
+        const end = ta.selectionEnd ?? bodyText.length;
+        const next = bodyText.slice(0, start) + token + bodyText.slice(end);
+        setBodyText(next);
+        requestAnimationFrame(() => {
+          ta.focus();
+          const pos = start + token.length;
+          ta.setSelectionRange(pos, pos);
+        });
+      } else {
+        setBodyText((b) => b + token);
+      }
+      toast.success("Image added to story");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Upload failed");
+    } finally { setInlineUploading(false); }
   };
 
   const aiHeadline = async () => {
@@ -407,24 +448,35 @@ export function EbsuNewsComposer() {
                     </label>
                     <div className="flex items-center gap-3">
                       <span className="text-[11px] text-muted-foreground">{wordCount} words · {readMins} min</span>
+                      <button onClick={() => inlineFileRef.current?.click()} disabled={inlineUploading} className="text-[11px] flex items-center gap-1 text-primary font-semibold hover:underline disabled:opacity-50">
+                        {inlineUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ImageIcon className="w-3 h-3" />} Add image
+                      </button>
                       <button onClick={aiPolish} disabled={aiBusy === "body"} className="text-[11px] flex items-center gap-1 text-primary font-semibold hover:underline disabled:opacity-50">
                         {aiBusy === "body" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wand2 className="w-3 h-3" />} Polish
                       </button>
                     </div>
                   </div>
+                  <input
+                    ref={inlineFileRef}
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) onInlineImage(f); e.target.value = ""; }}
+                  />
                   <Textarea
                     id="np-body"
+                    ref={bodyRef}
                     value={bodyText}
                     onChange={(e) => setBodyText(e.target.value)}
                     onBlur={() => setTouched((t) => ({ ...t, body: true }))}
-                    placeholder={"Just type naturally. Leave a blank line between paragraphs.\n\nExample:\nEBSU released the new academic calendar today.\n\nExams start on…"}
+                    placeholder={"Just type naturally. Leave a blank line between paragraphs.\n\nTip: tap 'Add image' to drop a photo right inside your story."}
                     rows={10}
                     className={`text-[15px] leading-relaxed resize-none ${touched.body && bodyError ? "border-destructive focus-visible:ring-destructive" : ""}`}
                     aria-invalid={!!(touched.body && bodyError)}
                     aria-describedby="np-body-help"
                   />
                   <p id="np-body-help" className={`mt-1 text-[11px] ${touched.body && bodyError ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
-                    {touched.body && bodyError ? bodyError : "Tip: leave a blank line between paragraphs."}
+                    {touched.body && bodyError ? bodyError : "Tip: leave a blank line between paragraphs. Inline photos show as [img:…] here and render as images when published."}
                   </p>
                 </div>
 
