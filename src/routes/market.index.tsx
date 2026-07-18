@@ -40,7 +40,33 @@ const spineFor = (id: string) => {
   return BOOK_SPINES[h % BOOK_SPINES.length];
 };
 
-export const Route = createFileRoute("/market/")({ component: MarketPage });
+export const Route = createFileRoute("/market/")({
+  component: MarketPage,
+  head: () => ({
+    meta: [
+      { title: "EBSU Market — Hostels, apartments, textbooks & student deals" },
+      { name: "description", content: "Verified EBSU student marketplace: hostels and apartments in Abakaliki, textbooks, electronics, fashion, food and services." },
+      { property: "og:title", content: "EBSU Market — Hostels, apartments & student deals" },
+      { property: "og:description", content: "Hostels, apartments, textbooks and verified student deals for Ebonyi State University." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://ebsustudentsplug.fun/market" },
+    ],
+    links: [{ rel: "canonical", href: "https://ebsustudentsplug.fun/market" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "EBSU Market",
+          url: "https://ebsustudentsplug.fun/market",
+          about: "Verified student marketplace for Ebonyi State University — hostels, apartments, textbooks, electronics, fashion, food and services",
+          isPartOf: { "@type": "WebSite", name: "StudentsPlug", url: "https://ebsustudentsplug.fun/" },
+        }),
+      },
+    ],
+  }),
+});
 
 const HUBS = [
   {

@@ -46,7 +46,33 @@ async function pdfSizeBytes(url: string): Promise<number | null> {
   return null;
 }
 
-export const Route = createFileRoute("/books")({ component: BooksPage });
+export const Route = createFileRoute("/books")({
+  component: BooksPage,
+  head: () => ({
+    meta: [
+      { title: "Free Textbooks & Novels — StudentsPlug Library" },
+      { name: "description", content: "Free digital library for EBSU students: textbooks, novels and student-composed books you can read online or download." },
+      { property: "og:title", content: "Free Textbooks & Novels — StudentsPlug Library" },
+      { property: "og:description", content: "Free textbooks, novels and student-composed books for Ebonyi State University students." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://ebsustudentsplug.fun/books" },
+    ],
+    links: [{ rel: "canonical", href: "https://ebsustudentsplug.fun/books" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "StudentsPlug Library",
+          url: "https://ebsustudentsplug.fun/books",
+          about: "Free textbooks, novels and student-composed books for Nigerian university students",
+          isPartOf: { "@type": "WebSite", name: "StudentsPlug", url: "https://ebsustudentsplug.fun/" },
+        }),
+      },
+    ],
+  }),
+});
 
 const CATS = [
   { key: "all", label: "All" },

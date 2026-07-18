@@ -65,10 +65,29 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Past questions, assignments, notes, quizzes, market and games for Ebonyi State University students. Post, level up, and pass with flying colours." },
       { property: "og:title", content: "StudentsPlug — EBSU's student knowledge hub" },
       { property: "og:description", content: "The home feed for EBSU students: past questions, notes, news, market and more." },
-      { property: "og:url", content: "https://ebsustudentplug.fun/" },
+      { property: "og:url", content: "https://ebsustudentsplug.fun/" },
+      { property: "og:type", content: "website" },
     ],
-    links: [{ rel: "canonical", href: "https://ebsustudentplug.fun/" }],
+    links: [{ rel: "canonical", href: "https://ebsustudentsplug.fun/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "StudentsPlug",
+          url: "https://ebsustudentsplug.fun/",
+          publisher: { "@type": "Organization", name: "StudentsPlug", logo: "https://ebsustudentsplug.fun/brand-logo.png" },
+          potentialAction: {
+            "@type": "SearchAction",
+            target: "https://ebsustudentsplug.fun/search?q={search_term_string}",
+            "query-input": "required name=search_term_string",
+          },
+        }),
+      },
+    ],
   }),
+
 });
 
 function Home() {
