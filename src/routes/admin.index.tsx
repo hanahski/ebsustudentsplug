@@ -799,7 +799,7 @@ function AdminBanners() {
       variant,
       publish_at: publishAt ? new Date(publishAt).toISOString() : null,
       expire_at: expireAt ? new Date(expireAt).toISOString() : null,
-      rotation_seconds: Math.max(2, Math.min(30, Number(rotationSeconds) || 6)),
+      rotation_seconds: Math.max(2, Math.min(300, Number(rotationSeconds) || 6)),
     } as any);
     if (error) toast.error(error.message);
     else {
@@ -878,16 +878,42 @@ function AdminBanners() {
 
         <div>
           <label className="block text-sm font-medium mb-1">Show for (seconds before swap)</label>
-          <input
-            type="number"
-            min={2}
-            max={30}
-            value={rotationSeconds}
-            onChange={(e) => setRotationSeconds(Number(e.target.value) || 6)}
-            className="w-full h-10 px-3 rounded-md border bg-background text-sm"
-          />
-          <p className="text-[11px] text-muted-foreground mt-1">Between 2 and 30 seconds. Default 6. The carousel waits for the image to load before it counts.</p>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={2}
+              max={300}
+              step={1}
+              value={rotationSeconds}
+              onChange={(e) => setRotationSeconds(Math.max(2, Math.min(300, Number(e.target.value) || 6)))}
+              className="w-24 h-10 px-3 rounded-md border bg-background text-sm"
+            />
+            <input
+              type="range"
+              min={2}
+              max={300}
+              step={1}
+              value={rotationSeconds}
+              onChange={(e) => setRotationSeconds(Number(e.target.value))}
+              className="flex-1 accent-primary"
+            />
+            <span className="text-xs text-muted-foreground w-14 text-right">{rotationSeconds}s</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {[3, 5, 8, 15, 30, 60, 120].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setRotationSeconds(n)}
+                className={`px-2 py-1 rounded-full text-[11px] border ${rotationSeconds === n ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-muted"}`}
+              >
+                {n}s
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">Between 2 and 300 seconds. Default 6. The carousel waits for the image to load before it counts.</p>
         </div>
+
 
         <div>
           <label className="block text-sm font-medium mb-1">Banner image</label>
@@ -1003,15 +1029,15 @@ function AdminBanners() {
                   <input
                     type="number"
                     min={2}
-                    max={30}
+                    max={300}
                     defaultValue={Number(b.rotation_seconds) || 6}
                     onBlur={async (e) => {
-                      const v = Math.max(2, Math.min(30, Number(e.target.value) || 6));
+                      const v = Math.max(2, Math.min(300, Number(e.target.value) || 6));
                       if (v === (Number(b.rotation_seconds) || 6)) return;
                       const { error } = await supabase.from("banner_slides").update({ rotation_seconds: v } as any).eq("id", b.id);
                       if (error) toast.error(error.message); else { toast.success("Timing saved"); refetch(); }
                     }}
-                    className="w-14 h-7 px-2 rounded border bg-background text-[11px]"
+                    className="w-16 h-7 px-2 rounded border bg-background text-[11px]"
                   />
                   <span className="text-[11px] text-muted-foreground">seconds</span>
                 </div>

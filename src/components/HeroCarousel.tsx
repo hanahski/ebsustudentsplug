@@ -114,7 +114,7 @@ export function HeroCarousel() {
     layout: (b.layout ?? "image-bg") as Layout,
     accent: b.accent ?? null,
     variant: (b.variant ?? "auto") as Slide["variant"],
-    rotationMs: Math.max(2000, Math.min(30000, (Number(b.rotation_seconds) || 6) * 1000)),
+    rotationMs: Math.max(2000, Math.min(300000, (Number(b.rotation_seconds) || 6) * 1000)),
   }));
 
   const slides = admin?.defaultsOff ? adminSlides : [...adminSlides, ...defaultSlides];
