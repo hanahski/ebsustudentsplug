@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Camera, Trash2 } from "lucide-react";
 import { enhanceImageFile } from "@/lib/image-enhance";
+import { safeUserUpload, friendlyUploadError } from "@/lib/safe-upload";
 
 export const Route = createFileRoute("/me_/avatar")({
   component: AvatarPage,
