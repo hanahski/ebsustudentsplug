@@ -136,25 +136,6 @@ function ProfilePage() {
                     <ReportDialog target={{ kind: "user", id: p.id }} />
                   </div>
                 )}
-                    disabled={dmBusy}
-                    onClick={async () => {
-                      if (!user) { navigate({ to: "/login", search: { redirect: `/profile/${p.id}` } }); return; }
-                      setDmBusy(true);
-                      try {
-                        const tid = await getOrCreateDmThread(user.id, p.id);
-                        navigate({ to: "/chat", search: { t: tid } as any });
-                      } catch (e: any) {
-                        toast.error(e.message ?? "Couldn't open chat");
-                      } finally {
-                        setDmBusy(false);
-                      }
-                    }}
-                  >
-                    <Send className="w-4 h-4 mr-1.5" /> Message
-                  </Button>
-                    <ReportDialog target={{ kind: "user", id: p.id }} />
-                  </div>
-                )}
               </div>
             </div>
             <div className="mt-6">
