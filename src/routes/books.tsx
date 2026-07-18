@@ -203,7 +203,7 @@ function BooksPage() {
   const [q, setQ] = useState("");
   const qc = useQueryClient();
   const purchaseFn = useServerFn(purchaseLibraryBook);
-  const getBooksFn = useServerFn(getLibraryBooks);
+  // Direct browser query — works on ANY host, no server function needed.
   const ensureFn = useServerFn(ensureLibraryCatalog);
   // Auto-populate on entry and keep the catalog warm in the background.
   const ranAutoSync = useRef(false);
