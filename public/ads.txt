@@ -1,3 +1,1 @@
-# ads.txt — Add your AdSense publisher line after AdSense approves your site.
-# Example (replace pub-0000000000000000 with your real publisher ID from AdSense):
-# google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
+google.com, pub-3085170424128475, DIRECT, f08c47fec0942fa0

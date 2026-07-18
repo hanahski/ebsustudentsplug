@@ -694,6 +694,8 @@ function BannerLivePreview({ title, subtitle, imageUrl, ctaLabel, layout, accent
 }
 
 
+const DEFAULTS_OFF_MARKER = "__DEFAULTS_OFF__";
+
 function AdminBanners() {
   const { data, refetch } = useQuery({
     queryKey: ["admin-banners"],
@@ -702,6 +704,29 @@ function AdminBanners() {
       return resolveBannerUrls(rows as any[]);
     },
   });
+  const defaultsOffRow = (data ?? []).find((r: any) => r.title === DEFAULTS_OFF_MARKER);
+  const visibleRows = (data ?? []).filter((r: any) => r.title !== DEFAULTS_OFF_MARKER);
+  const defaultsHidden = !!(defaultsOffRow && (defaultsOffRow as any).is_active);
+  const toggleDefaults = async () => {
+    if (defaultsOffRow) {
+      const { error } = await supabase
+        .from("banner_slides")
+        .update({ is_active: !defaultsHidden } as any)
+        .eq("id", (defaultsOffRow as any).id);
+      if (error) return toast.error(error.message);
+    } else {
+      const { error } = await supabase.from("banner_slides").insert({
+        title: DEFAULTS_OFF_MARKER,
+        subtitle: "Hides the built-in home banners. Deactivate to bring them back.",
+        layout: "text-only",
+        is_active: true,
+        sort_order: 9999,
+      } as any);
+      if (error) return toast.error(error.message);
+    }
+    toast.success(defaultsHidden ? "Built-in banners restored" : "Built-in banners hidden");
+    refetch();
+  };
 
   // CTR analytics
   const { data: ctr } = useQuery({
