@@ -220,11 +220,12 @@ export const adminReviewNewsSubmission = createServerFn({ method: "POST" })
   }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as any);
-    const { error } = await context.supabase.rpc("admin_review_submission", {
+    const { error } = await (context.supabase as any).rpc("admin_review_submission", {
       _article_id: data.articleId,
       _decision: data.decision,
       _reason: data.reason ?? null,
     });
+
     if (error) throw new Error(error.message);
     if (data.decision === "approve") {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
