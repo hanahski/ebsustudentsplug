@@ -268,6 +268,14 @@ function BooksPage() {
 
   const buy = useMutation({
     mutationFn: async (book_id: string) => {
+      // Try DB RPC first so purchases work on ANY host (Vercel/static).
+      // Falls back to the TanStack server function if the RPC isn't installed
+      // yet (see docs/library-purchase-rpc.sql).
+      const rpc = await supabase.rpc("purchase_library_book" as any, { _book_id: book_id });
+      if (!rpc.error) return rpc.data as any;
+      const msg = String(rpc.error?.message ?? "");
+      const missing = /function .*purchase_library_book.* does not exist|schema cache/i.test(msg);
+      if (!missing) throw new Error(msg);
       return await purchaseFn({ data: { bookId: book_id } });
     },
     onSuccess: () => {
