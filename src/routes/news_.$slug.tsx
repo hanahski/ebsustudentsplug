@@ -4,13 +4,18 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
-import { ArrowLeft, ExternalLink, Calendar, Pencil, Trash2, Loader2, X, Save } from "lucide-react";
+import { ArrowLeft, ExternalLink, Calendar, Pencil, Trash2, Loader2, X, Save, ShieldAlert } from "lucide-react";
 import { renderArticleHtml } from "@/lib/render-article";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { StoryEditor } from "@/components/StoryEditor";
 import { deleteEbsuArticle, updateEbsuArticle } from "@/lib/ebsu-manual-post.functions";
 import { toast } from "sonner";
 
