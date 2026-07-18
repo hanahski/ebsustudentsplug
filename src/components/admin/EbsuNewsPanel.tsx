@@ -78,7 +78,7 @@ export function EbsuNewsPanel() {
   }
 
   async function removeSource(id: string) {
-    if (!confirm("Remove this source?")) return;
+    if (!(await confirm({ title: "Remove this source?", description: "They will lose the Verified Source badge.", variant: "destructive", confirmText: "Remove source" }))) return;
     await del({ data: { id } });
     qc.invalidateQueries({ queryKey: ["ebsu-sources"] });
   }
@@ -108,7 +108,7 @@ export function EbsuNewsPanel() {
   }
 
   async function removeArticle(id: string) {
-    if (!confirm("Delete this article?")) return;
+    if (!(await confirm({ title: "Delete this article?", description: "It will be removed from EBSU News.", variant: "destructive", confirmText: "Delete article", icon: "trash" }))) return;
     await delArt({ data: { id } });
     qc.invalidateQueries({ queryKey: ["ebsu-news-articles"] });
   }
@@ -143,7 +143,7 @@ export function EbsuNewsPanel() {
 
   async function replaceAllCovers() {
     if (!articles.length) return;
-    if (!confirm(`Replace covers for all ${articles.length} EBSU articles? This regenerates every cover image with the trained news AI (bodies stay the same).`)) return;
+    if (!(await confirm({ title: `Replace ${articles.length} cover images?`, description: "Every cover image will be regenerated with the trained news AI. Article bodies stay the same.", confirmText: "Replace covers" }))) return;
     setReplacingAllCovers(true);
     let ok = 0, fail = 0;
     for (const a of articles as any[]) {
@@ -166,7 +166,7 @@ export function EbsuNewsPanel() {
 
   async function remakeAll() {
     if (!articles.length) return;
-    if (!confirm(`Remake all ${articles.length} EBSU articles with the updated AI? This rewrites bodies and generates new cover images.`)) return;
+    if (!(await confirm({ title: `Remake all ${articles.length} articles?`, description: "This rewrites every body and regenerates cover images with the updated AI.", confirmText: "Remake all" }))) return;
     setRemakingAll(true);
     let ok = 0, fail = 0;
     for (const a of articles as any[]) {

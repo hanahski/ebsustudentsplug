@@ -244,7 +244,7 @@ export function PostCard({ post, locked, prefetchNextVideoUrl }: { post: FeedPos
 
   const onDelete = async (e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
-    if (!confirm("Delete this post?")) return;
+    if (!(await confirm({ title: "Delete this post?", description: "This post will be permanently removed.", variant: "destructive", confirmText: "Delete post", icon: "trash" }))) return;
     // If admin is deleting someone else's post, use the admin RPC so the
     // author gets a "removed for policy" notice.
     if (isAdmin && user?.id !== post.author?.id) {

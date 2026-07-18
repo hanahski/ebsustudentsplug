@@ -862,7 +862,7 @@ function ComposerEditorPage() {
                     size="icon"
                     variant="ghost"
                     onClick={() => {
-                      if (confirm("Delete this chapter?")) deleteChapter.mutate(active.id);
+                      if (await confirm({ title: "Delete this chapter?", variant: "destructive", confirmText: "Delete chapter", icon: "trash" })) deleteChapter.mutate(active.id);
                     }}
                     title="Delete chapter"
                   >

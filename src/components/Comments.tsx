@@ -120,7 +120,7 @@ export function Comments({ postId }: { postId: string }) {
 
   const remove = async (cid: string, authorId: string) => {
     if (!user || (user.id !== authorId && !isAdmin)) return;
-    if (!confirm("Delete this comment?")) return;
+    if (!(await confirm({ title: "Delete this comment?", description: "This comment will be permanently removed.", variant: "destructive", confirmText: "Delete comment", icon: "trash" }))) return;
     const { error } = await supabase.from("post_comments").delete().eq("id", cid);
     if (error) toast.error(error.message);
   };

@@ -663,7 +663,7 @@ export function EbsuNewsComposer() {
                   <ChevronLeft className="w-4 h-4 mr-1" /> Back
                 </Button>
               ) : (
-                <Button variant="ghost" size="sm" onClick={() => { if (confirm("Discard this post?")) { resetAll(); setOpen(false); } }}>
+                <Button variant="ghost" size="sm" onClick={async () => { if (await confirm({ title: "Discard this post?", description: "You will lose everything you have written.", variant: "destructive", confirmText: "Discard" })) { resetAll(); setOpen(false); } }}>
                   Cancel
                 </Button>
               )}

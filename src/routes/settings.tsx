@@ -55,7 +55,7 @@ function SettingsPage() {
   };
 
   const deleteAccount = async () => {
-    if (!confirm("This deletes your account. Continue?")) return;
+    if (!(await confirm({ title: "Delete your account?", description: "This permanently deletes your StudentsPlug account and all its data. This cannot be undone.", variant: "destructive", confirmText: "Delete account", icon: "trash" }))) return;
     toast.message("Account deletion request received — support will follow up.");
   };
 

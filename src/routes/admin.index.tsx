@@ -426,7 +426,7 @@ function AdminReports() {
   };
 
   const deletePost = async (postId: string, reportId: string) => {
-    if (!confirm("Delete the reported post?")) return;
+    if (!(await confirm({ title: "Delete the reported post?", variant: "destructive", confirmText: "Delete post", icon: "trash" }))) return;
     const { error } = await supabase.from("posts").delete().eq("id", postId);
     if (error) return toast.error(error.message);
     await supabase.from("user_reports").update({ status: "resolved", reviewed_at: new Date().toISOString() }).eq("id", reportId);
@@ -434,7 +434,7 @@ function AdminReports() {
     refetch();
   };
   const deleteListing = async (listingId: string, reportId: string) => {
-    if (!confirm("Delete the reported listing?")) return;
+    if (!(await confirm({ title: "Delete the reported listing?", variant: "destructive", confirmText: "Delete listing", icon: "trash" }))) return;
     const { error } = await supabase.from("market_listings").delete().eq("id", listingId);
     if (error) return toast.error(error.message);
     await supabase.from("user_reports").update({ status: "resolved", reviewed_at: new Date().toISOString() }).eq("id", reportId);
@@ -508,7 +508,7 @@ function AdminPosts() {
     queryFn: async () => (await supabase.from("posts").select("id,title,post_type,created_at,author_id,is_official,profiles:author_id(display_name)").order("created_at", { ascending: false }).limit(100)).data ?? [],
   });
   const del = async (id: string) => {
-    if (!confirm("Delete this post?")) return;
+    if (!(await confirm({ title: "Delete this post?", variant: "destructive", confirmText: "Delete post", icon: "trash" }))) return;
     const { error } = await supabase.from("posts").delete().eq("id", id);
     if (error) toast.error(error.message); else { toast.success("Deleted"); refetch(); }
   };
@@ -553,7 +553,7 @@ function AdminListings() {
     queryFn: async () => (await supabase.from("market_listings").select("*").order("created_at", { ascending: false }).limit(100)).data ?? [],
   });
   const del = async (id: string) => {
-    if (!confirm("Delete this listing?")) return;
+    if (!(await confirm({ title: "Delete this listing?", variant: "destructive", confirmText: "Delete listing", icon: "trash" }))) return;
     const { error } = await supabase.from("market_listings").delete().eq("id", id);
     if (error) toast.error(error.message); else { toast.success("Deleted"); refetch(); }
   };
@@ -790,7 +790,7 @@ function AdminBanners() {
     refetch();
   };
   const del = async (id: string) => {
-    if (!confirm("Delete this banner?")) return;
+    if (!(await confirm({ title: "Delete this banner?", variant: "destructive", confirmText: "Delete banner", icon: "trash" }))) return;
     await supabase.from("banner_slides").delete().eq("id", id);
     refetch();
   };
@@ -1417,7 +1417,7 @@ function AdminCatalogue() {
     if (error) toast.error(error.message); else { toast.success("Course added"); setNewCourse({ code: "", title: "", department_id: "" }); refresh(); }
   };
   const delRow = async (table: "faculties" | "departments" | "courses", id: string) => {
-    if (!confirm("Delete? This cannot be undone.")) return;
+    if (!(await confirm({ title: "Delete this item?", description: "This action cannot be undone.", variant: "destructive", confirmText: "Delete", icon: "trash" }))) return;
     const { error } = await supabase.from(table).delete().eq("id", id);
     if (error) toast.error(error.message); else { toast.success("Deleted"); refresh(); }
   };
@@ -1515,7 +1515,7 @@ function AdminVerifications() {
   });
 
   const revoke = async (user_id: string) => {
-    if (!confirm("Revoke this user's verified badge?")) return;
+    if (!(await confirm({ title: "Revoke verified badge?", description: "The user will lose their verified status.", variant: "destructive", confirmText: "Revoke badge" }))) return;
     const { error } = await supabase.rpc("admin_set_badge", {
       _user_id: user_id, _badge: "verified", _value: false,
     } as any);
@@ -1656,7 +1656,7 @@ function AdminMarketCategories() {
     if (error) toast.error(error.message); else refresh();
   };
   const del = async (id: string) => {
-    if (!confirm("Delete category?")) return;
+    if (!(await confirm({ title: "Delete this category?", variant: "destructive", confirmText: "Delete category", icon: "trash" }))) return;
     const { error } = await supabase.from("marketplace_categories" as any).delete().eq("id", id);
     if (error) toast.error(error.message); else { toast.success("Deleted"); refresh(); }
   };

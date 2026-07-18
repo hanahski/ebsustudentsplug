@@ -928,7 +928,7 @@ function ThreadPane({ meId, threadId, onBack }: { meId: string; threadId: string
   };
 
   const leaveGroup = async () => {
-    if (!confirm("Leave this group?")) return;
+    if (!(await confirm({ title: "Leave this group?", description: "You will stop receiving messages from this group.", variant: "destructive", confirmText: "Leave group" }))) return;
     const { error } = await supabase.rpc("remove_dm_group_member", { _thread_id: threadId, _member_id: meId });
     if (error) return toast.error(error.message);
     toast.success("Left group");
@@ -1364,7 +1364,7 @@ function AddMembersButton({ threadId, existingIds }: { threadId: string; existin
 function RemoveMemberButton({ threadId, memberId, memberName }: { threadId: string; memberId: string; memberName: string }) {
   const qc = useQueryClient();
   const remove = async () => {
-    if (!confirm(`Remove ${memberName} from this group?`)) return;
+    if (!(await confirm({ title: `Remove ${memberName}?`, description: "They will no longer be part of this group.", variant: "destructive", confirmText: "Remove member" }))) return;
     const { error } = await supabase.rpc("remove_dm_group_member", { _thread_id: threadId, _member_id: memberId });
     if (error) return toast.error(error.message);
     toast.success("Member removed");
@@ -1558,7 +1558,7 @@ function PlugAiPane({ meId, onBack }: { meId: string; onBack: () => void }) {
   };
 
   const clear = () => {
-    if (!confirm("Clear this conversation with Plug AI?")) return;
+    if (!(await confirm({ title: "Clear this conversation?", description: "Your chat history with Plug AI will be deleted.", variant: "destructive", confirmText: "Clear chat" }))) return;
     setMsgs([]);
     setPendingImages([]);
     try { localStorage.removeItem(storageKey); } catch {/* ignore */}

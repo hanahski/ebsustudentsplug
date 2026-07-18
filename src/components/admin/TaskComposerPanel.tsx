@@ -144,7 +144,7 @@ function TaskRow({ task, onChanged }: { task: Task; onChanged: () => void }) {
   };
 
   const del = async () => {
-    if (!confirm(`Delete "${task.title}"?`)) return;
+    if (!(await confirm({ title: `Delete "${task.title}"?`, variant: "destructive", confirmText: "Delete task", icon: "trash" }))) return;
     const { error } = await supabase.from("tasks").delete().eq("id", task.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Deleted");

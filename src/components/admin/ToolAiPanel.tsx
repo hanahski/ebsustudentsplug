@@ -60,7 +60,7 @@ export function ToolAiPanel() {
     qc.invalidateQueries({ queryKey: ["ai-tools-admin"] });
   }
   async function remove(id: string) {
-    if (!confirm("Delete this tool?")) return;
+    if (!(await confirm({ title: "Delete this tool?", variant: "destructive", confirmText: "Delete tool", icon: "trash" }))) return;
     await del({ data: { id } });
     qc.invalidateQueries({ queryKey: ["ai-tools-admin"] });
     qc.invalidateQueries({ queryKey: ["ai-tools-public"] });
