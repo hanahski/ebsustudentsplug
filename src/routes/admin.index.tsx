@@ -694,6 +694,8 @@ function BannerLivePreview({ title, subtitle, imageUrl, ctaLabel, layout, accent
 }
 
 
+const DEFAULTS_OFF_MARKER = "__DEFAULTS_OFF__";
+
 function AdminBanners() {
   const { data, refetch } = useQuery({
     queryKey: ["admin-banners"],
@@ -702,6 +704,29 @@ function AdminBanners() {
       return resolveBannerUrls(rows as any[]);
     },
   });
+  const defaultsOffRow = (data ?? []).find((r: any) => r.title === DEFAULTS_OFF_MARKER);
+  const visibleRows = (data ?? []).filter((r: any) => r.title !== DEFAULTS_OFF_MARKER);
+  const defaultsHidden = !!(defaultsOffRow && (defaultsOffRow as any).is_active);
+  const toggleDefaults = async () => {
+    if (defaultsOffRow) {
+      const { error } = await supabase
+        .from("banner_slides")
+        .update({ is_active: !defaultsHidden } as any)
+        .eq("id", (defaultsOffRow as any).id);
+      if (error) return toast.error(error.message);
+    } else {
+      const { error } = await supabase.from("banner_slides").insert({
+        title: DEFAULTS_OFF_MARKER,
+        subtitle: "Hides the built-in home banners. Deactivate to bring them back.",
+        layout: "text-only",
+        is_active: true,
+        sort_order: 9999,
+      } as any);
+      if (error) return toast.error(error.message);
+    }
+    toast.success(defaultsHidden ? "Built-in banners restored" : "Built-in banners hidden");
+    refetch();
+  };
 
   // CTR analytics
   const { data: ctr } = useQuery({
@@ -924,8 +949,22 @@ function AdminBanners() {
         <Button onClick={add} disabled={uploading || !title}>Add banner</Button>
       </div>
 
+      <div className={`rounded-2xl border p-3 flex items-center justify-between gap-3 ${defaultsHidden ? "bg-amber-500/10 border-amber-500/30" : "bg-card"}`}>
+        <div className="min-w-0">
+          <p className="font-semibold text-sm">Built-in banners</p>
+          <p className="text-[11px] text-muted-foreground line-clamp-2">
+            {defaultsHidden
+              ? "Hidden site-wide. Only your custom banners show on the home carousel."
+              : "The 4 default StudentsPlug banners are visible when there are no custom banners left."}
+          </p>
+        </div>
+        <Button size="sm" variant={defaultsHidden ? "default" : "outline"} onClick={toggleDefaults}>
+          {defaultsHidden ? "Restore built-ins" : "Hide built-ins"}
+        </Button>
+      </div>
+
       <div className="space-y-2">
-        {(data ?? []).map((b: any, idx: number) => {
+        {visibleRows.map((b: any, idx: number) => {
           const stats = ctr?.get(b.id);
           const imp = stats?.impressions ?? 0;
           const clk = stats?.clicks ?? 0;
@@ -1249,6 +1288,26 @@ function AdminTicketRoster({ ticketId, onBack }: { ticketId: string; onBack: () 
           </Button>
           <Button size="sm" variant="outline" onClick={createShare}>
             <Share2 className="w-3.5 h-3.5 mr-1" /> Create share link
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={async () => {
+              if (!(await confirm({
+                title: `Delete "${ticket?.title ?? "this ticket"}"?`,
+                description: `This wipes the event, all ${sold} purchase${sold === 1 ? "" : "s"} and every scan. This cannot be undone.`,
+                variant: "destructive",
+                confirmText: "Delete event",
+                icon: "trash",
+              }))) return;
+              const { error } = await supabase.from("tickets").delete().eq("id", ticketId);
+              if (error) { toast.error(error.message); return; }
+              toast.success("Ticket deleted");
+              qc.invalidateQueries({ queryKey: ["admin-ticket-sales-overview"] });
+              onBack();
+            }}
+          >
+            <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete event
           </Button>
         </div>
       </div>

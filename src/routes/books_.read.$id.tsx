@@ -158,6 +158,15 @@ function ReadBookPage() {
 
   const buy = useMutation({
     mutationFn: async () => {
+      // Try the database RPC first — this works on ANY host (Vercel,
+      // Cloudflare, Netlify) because it goes straight to Supabase. Falls
+      // back to the TanStack server function if the RPC hasn't been
+      // installed yet (see docs/library-purchase-rpc.sql).
+      const rpc = await supabase.rpc("purchase_library_book" as any, { _book_id: id });
+      if (!rpc.error) return rpc.data as any;
+      const msg = String(rpc.error?.message ?? "");
+      const missing = /function .*purchase_library_book.* does not exist|schema cache/i.test(msg);
+      if (!missing) throw new Error(msg);
       return await purchaseFn({ data: { bookId: id } });
     },
     onSuccess: () => {
@@ -174,7 +183,7 @@ function ReadBookPage() {
         toast.error("Not enough credits", {
           action: { label: "Get credits", onClick: () => window.location.assign("/get-credits") },
         });
-      else if (msg.includes("Not authenticated")) toast.error("Sign in to unlock");
+      else if (msg.includes("NOT_AUTHENTICATED") || msg.includes("Not authenticated")) toast.error("Sign in to unlock");
       else toast.error(msg);
     },
 
