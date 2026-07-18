@@ -193,20 +193,6 @@ function NewsArticlePage() {
           dangerouslySetInnerHTML={{ __html: renderArticleHtml(a.body) }}
         />
 
-        {sources.length > 0 && (
-          <div className="mt-8 pt-6 border-t">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2">Sources</h2>
-            <ul className="space-y-1">
-              {sources.map((u) => (
-                <li key={u}>
-                  <a href={u} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline inline-flex items-center gap-1 break-all">
-                    {u} <ExternalLink className="w-3 h-3 shrink-0" />
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </article>
 
       <Dialog open={editing} onOpenChange={setEditing}>
