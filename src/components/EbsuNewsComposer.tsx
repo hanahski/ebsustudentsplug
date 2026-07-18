@@ -22,6 +22,8 @@ import { sanitizeHtml } from "@/lib/sanitize-html";
 import { useAuth } from "@/lib/auth";
 import { canPostEbsuNews, publishManualEbsuPost, aiAssistNews } from "@/lib/ebsu-manual-post.functions";
 import { generatePostImage } from "@/lib/generate-post-image.functions";
+import { StoryEditor } from "@/components/StoryEditor";
+
 
 type PostType = "news" | "announcement" | "blog";
 const DRAFT_KEY = "ebsu-composer-draft-v2";
@@ -119,8 +121,9 @@ export function EbsuNewsComposer() {
 
   const [type, setType] = useState<PostType>("news");
   const [title, setTitle] = useState("");
-  const [bodyText, setBodyText] = useState("");
-  const [inlineImages, setInlineImages] = useState<string[]>([]);
+  // Story body is now HTML — the StoryEditor renders images inline so writers
+  // see the true published layout while composing.
+  const [bodyHtml, setBodyHtml] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [breaking, setBreaking] = useState(false);
   const [publish, setPublish] = useState(true);
@@ -140,25 +143,25 @@ export function EbsuNewsComposer() {
   const [publishing, setPublishing] = useState(false);
   const [touched, setTouched] = useState<{ title?: boolean; body?: boolean; source?: boolean; schedule?: boolean }>({});
   const fileRef = useRef<HTMLInputElement | null>(null);
-  const inlineFileRef = useRef<HTMLInputElement | null>(null);
-  const bodyRef = useRef<HTMLTextAreaElement | null>(null);
-  const [inlineUploading, setInlineUploading] = useState(false);
 
   const slug = slugCustom ?? slugify(title);
-  const wordCount = useMemo(() => bodyText.split(/\s+/).filter(Boolean).length, [bodyText]);
+  const bodyPlain = useMemo(() => stripHtml(bodyHtml), [bodyHtml]);
+  const hasInlineImg = /<img\b/i.test(bodyHtml);
+  const wordCount = useMemo(() => bodyPlain.split(/\s+/).filter(Boolean).length, [bodyPlain]);
   const readMins = Math.max(1, Math.round(wordCount / 220));
+
 
   // Inline validation
   const titleTrim = title.trim();
-  const bodyTrim = bodyText.trim();
-  const hasStoryContent = !!bodyTrim || inlineImages.length > 0;
+  const bodyTrimLen = bodyPlain.trim().length;
+  const hasStoryContent = bodyTrimLen > 0 || hasInlineImg;
   const titleError =
     !titleTrim ? "Headline is required"
     : titleTrim.length < 4 ? `Add ${4 - titleTrim.length} more character${4 - titleTrim.length === 1 ? "" : "s"} (minimum 4)`
     : null;
   const bodyError =
     !hasStoryContent ? "Your story is required"
-    : bodyTrim && bodyTrim.length < 10 ? `Write ${10 - bodyTrim.length} more character${10 - bodyTrim.length === 1 ? "" : "s"} (minimum 10)`
+    : !hasInlineImg && bodyTrimLen > 0 && bodyTrimLen < 10 ? `Write ${10 - bodyTrimLen} more character${10 - bodyTrimLen === 1 ? "" : "s"} (minimum 10)`
     : null;
   const sourceInputError = (() => {
     const v = sourceInput.trim();
@@ -179,11 +182,11 @@ export function EbsuNewsComposer() {
     if (!open) return;
     const t = setTimeout(() => {
       try {
-        localStorage.setItem(DRAFT_KEY, JSON.stringify({ type, title, bodyText, inlineImages, imageUrl, breaking, summary, tags, sourceUrls }));
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({ v: 3, type, title, bodyHtml, imageUrl, breaking, summary, tags, sourceUrls }));
       } catch {}
     }, 800);
     return () => clearTimeout(t);
-  }, [open, type, title, bodyText, inlineImages, imageUrl, breaking, summary, tags, sourceUrls]);
+  }, [open, type, title, bodyHtml, imageUrl, breaking, summary, tags, sourceUrls]);
 
   // Load draft
   useEffect(() => {
@@ -194,15 +197,18 @@ export function EbsuNewsComposer() {
       const d = JSON.parse(raw);
       if (d.type) setType(d.type);
       if (!title && d.title) setTitle(d.title);
-      if (!bodyText && d.bodyText) {
-        const extracted = extractInlineImages(d.bodyText);
-        setBodyText(extracted.cleanText);
-        if (extracted.urls.length) {
-          setInlineImages((prev) => uniqueImages([...prev, ...extracted.urls]));
+      if (!bodyHtml) {
+        // v3 stores HTML directly. v2 stored plain text + separate inlineImages
+        // urls — migrate by folding both into HTML.
+        if (typeof d.bodyHtml === "string" && d.bodyHtml) {
+          setBodyHtml(d.bodyHtml);
+        } else if (typeof d.bodyText === "string") {
+          const combined = [
+            d.bodyText,
+            ...(Array.isArray(d.inlineImages) ? d.inlineImages.filter((x: unknown) => typeof x === "string").map((u: string) => `[img:${u}]`) : []),
+          ].filter(Boolean).join("\n\n");
+          if (combined.trim()) setBodyHtml(sanitizeHtml(textToHtml(combined)));
         }
-      }
-      if (Array.isArray(d.inlineImages) && !inlineImages.length) {
-        setInlineImages((prev) => uniqueImages([...prev, ...d.inlineImages.filter((x: unknown): x is string => typeof x === "string")]));
       }
       if (!imageUrl && d.imageUrl) setImageUrl(d.imageUrl);
       if (typeof d.breaking === "boolean") setBreaking(d.breaking);
@@ -213,20 +219,8 @@ export function EbsuNewsComposer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  // Convert any existing/pasted image tokens into visual previews so users never
-  // have to work with the long storage URL in the writing box.
-  useEffect(() => {
-    if (!hasInlineImageToken(bodyText)) return;
-    const extracted = extractInlineImages(bodyText);
-    setBodyText(extracted.cleanText);
-    if (extracted.urls.length) {
-      setInlineImages((prev) => uniqueImages([...prev, ...extracted.urls]));
-    }
-  }, [bodyText]);
-
   function resetAll() {
-    setStep(0); setType("news"); setTitle(""); setBodyText(""); setImageUrl(null);
-    setInlineImages([]);
+    setStep(0); setType("news"); setTitle(""); setBodyHtml(""); setImageUrl(null);
     setBreaking(false); setPublish(true); setSummary(""); setTags([]); setSourceUrls([]);
     setSlugCustom(null); setSchedule(""); setShowAdvanced(false);
     try { localStorage.removeItem(DRAFT_KEY); } catch {}
@@ -264,27 +258,8 @@ export function EbsuNewsComposer() {
     } finally { setUploading(false); }
   };
 
-  const onInlineImage = async (file: File) => {
-    if (!user) return;
-    if (!file.type.startsWith("image/")) return toast.error("Pick an image file");
-    if (file.size > 8 * 1024 * 1024) return toast.error("Image must be under 8 MB");
-    setInlineUploading(true);
-    try {
-      const ext = (file.name.split(".").pop() || "png").toLowerCase();
-      const path = `${user.id}/${Date.now()}-inline.${ext}`;
-      const { error } = await supabase.storage.from("post-images").upload(path, file, { contentType: file.type, upsert: false });
-      if (error) throw error;
-      const { data } = supabase.storage.from("post-images").getPublicUrl(path);
-      setInlineImages((prev) => uniqueImages([...prev, data.publicUrl]));
-      requestAnimationFrame(() => bodyRef.current?.focus());
-      toast.success("Image added to story");
-    } catch (e: any) {
-      toast.error(e?.message ?? "Upload failed");
-    } finally { setInlineUploading(false); }
-  };
-
   const aiHeadline = async () => {
-    const src = bodyText || title;
+    const src = bodyPlain || title;
     if (src.trim().length < 6) return toast.info("Type a few words first");
     setAiBusy("title");
     try {
@@ -294,18 +269,22 @@ export function EbsuNewsComposer() {
     finally { setAiBusy(""); }
   };
   const aiPolish = async () => {
-    const src = bodyText;
+    const src = bodyPlain;
     if (src.trim().length < 10) return toast.info("Write some words first");
     setAiBusy("body");
     try {
       const { text } = await aiFn({ data: { mode: "rewrite", text: src, context: title || undefined } });
-      if (text) setBodyText(htmlToText(text));
+      if (text) {
+        // AI may return HTML or plain text — normalise either way.
+        const looksHtml = /<\/?[a-z][^>]*>/i.test(text);
+        setBodyHtml(sanitizeHtml(looksHtml ? text : textToHtml(text)));
+      }
       toast.success("Polished by AI");
     } catch (e: any) { toast.error(e?.message ?? "AI failed"); }
     finally { setAiBusy(""); }
   };
   const aiSummary = async () => {
-    const src = bodyText || title;
+    const src = bodyPlain || title;
     if (src.trim().length < 10) return toast.info("Write some words first");
     setAiBusy("summary");
     try {
@@ -315,7 +294,7 @@ export function EbsuNewsComposer() {
     finally { setAiBusy(""); }
   };
   const aiCover = async () => {
-    const prompt = title || bodyText.slice(0, 300);
+    const prompt = title || bodyPlain.slice(0, 300);
     if (!prompt) return toast.info("Add a title first");
     setAiBusy("cover");
     try {
@@ -334,8 +313,8 @@ export function EbsuNewsComposer() {
     if (scheduleError) { setTouched((t) => ({ ...t, schedule: true })); setStep(1); setShowAdvanced(true); return toast.error(scheduleError); }
     setPublishing(true);
     try {
-      const storyWithImages = [bodyText, ...inlineImages.map((url) => `[img:${url}]`)].filter(Boolean).join("\n\n");
-      const html = sanitizeHtml(textToHtml(storyWithImages));
+      // bodyHtml is already the composed layout — sanitize and ship as-is.
+      const html = sanitizeHtml(bodyHtml);
       const res = await publishFn({
         data: {
           type,
@@ -370,16 +349,9 @@ export function EbsuNewsComposer() {
   const onKey = useCallback((e: React.KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); publishNow(); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, bodyText, inlineImages, imageUrl, publish, breaking, schedule, type, slug, summary, tags, sourceUrls]);
+  }, [title, bodyHtml, imageUrl, publish, breaking, schedule, type, slug, summary, tags, sourceUrls]);
 
-  const updateBodyText = (value: string) => {
-    const extracted = extractInlineImages(value);
-    setBodyText(extracted.cleanText);
-    if (extracted.urls.length) {
-      setInlineImages((prev) => uniqueImages([...prev, ...extracted.urls]));
-      toast.success(extracted.urls.length === 1 ? "Image converted to preview" : "Images converted to previews");
-    }
-  };
+
 
   if (!perms?.allowed) return null;
 
@@ -491,7 +463,7 @@ export function EbsuNewsComposer() {
                   </div>
                 </div>
 
-                {/* Body — plain text */}
+                {/* Body — rich inline editor with drag & drop images */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label htmlFor="np-body" className="text-sm font-bold">
@@ -499,54 +471,25 @@ export function EbsuNewsComposer() {
                     </label>
                     <div className="flex items-center gap-3">
                       <span className="text-[11px] text-muted-foreground">{wordCount} words · {readMins} min</span>
-                      <button onClick={() => inlineFileRef.current?.click()} disabled={inlineUploading} className="text-[11px] flex items-center gap-1 text-primary font-semibold hover:underline disabled:opacity-50">
-                        {inlineUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ImageIcon className="w-3 h-3" />} Add image
-                      </button>
                       <button onClick={aiPolish} disabled={aiBusy === "body"} className="text-[11px] flex items-center gap-1 text-primary font-semibold hover:underline disabled:opacity-50">
                         {aiBusy === "body" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wand2 className="w-3 h-3" />} Polish
                       </button>
                     </div>
                   </div>
-                  <input
-                    ref={inlineFileRef}
-                    type="file"
-                    accept="image/*"
-                    hidden
-                    onChange={(e) => { const f = e.target.files?.[0]; if (f) onInlineImage(f); e.target.value = ""; }}
-                  />
-                  <Textarea
-                    id="np-body"
-                    ref={bodyRef}
-                    value={bodyText}
-                    onChange={(e) => updateBodyText(e.target.value)}
-                    onBlur={() => setTouched((t) => ({ ...t, body: true }))}
-                    placeholder={"Just type naturally. Leave a blank line between paragraphs.\n\nTip: tap 'Add image' to drop a photo right inside your story."}
-                    rows={10}
-                    className={`text-[15px] leading-relaxed resize-none ${touched.body && bodyError ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                    aria-invalid={!!(touched.body && bodyError)}
-                    aria-describedby="np-body-help"
+                  <StoryEditor
+                    value={bodyHtml}
+                    onChange={setBodyHtml}
+                    userId={user?.id}
+                    placeholder={"Just type naturally. Drag an image right into your story to see the layout."}
+                    minHeight={260}
+                    invalid={!!(touched.body && bodyError)}
+                    ariaDescribedBy="np-body-help"
                   />
                   <p id="np-body-help" className={`mt-1 text-[11px] ${touched.body && bodyError ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
-                    {touched.body && bodyError ? bodyError : "Tip: leave a blank line between paragraphs. Added photos appear as previews here and publish as real images."}
+                    {touched.body && bodyError ? bodyError : "Drag & drop, paste, or tap Add image — photos appear exactly where they'll publish."}
                   </p>
-                  {inlineImages.length > 0 && (
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      {inlineImages.map((url) => (
-                        <div key={url} className="relative overflow-hidden rounded-xl border bg-muted aspect-[16/10]">
-                          <img src={url} alt="Story image preview" className="h-full w-full object-cover" loading="eager" />
-                          <button
-                            type="button"
-                            onClick={() => setInlineImages((prev) => prev.filter((x) => x !== url))}
-                            className="absolute right-1.5 top-1.5 rounded-full bg-background/90 p-1 shadow hover:bg-background"
-                            aria-label="Remove story image"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
+
 
 
                 {type === "news" && (
