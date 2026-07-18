@@ -138,28 +138,40 @@ export const publishManualEbsuPost = createServerFn({ method: "POST" })
       if (!exists) break;
       slug = `${slug}-${Math.random().toString(36).slice(2, 5)}`;
     }
-    // Admins publish immediately. Verified sources create a pending submission —
-    // the DB trigger auto-publishes for trusted sources.
-    const isAdmin = perms.isAdmin;
-    const initialStatus = isAdmin ? (data.publish ? "published" : "draft") : "pending";
-    const { data: row, error } = await (supabaseAdmin as any)
-      .from("news_articles")
-      .insert({
-        category: "ebsu",
-        status: initialStatus,
-        title: `${prefix}${finalTitle}`.slice(0, 200),
-        slug,
-        summary: (data.summary || "").slice(0, 300) || null,
-        body: data.body,
-        image_url: data.imageUrl ?? null,
-        source_urls: data.sourceUrls ?? [],
-        author_id: context.userId,
-        submitted_by: context.userId,
-        published_at: isAdmin && data.publish ? publishedAt : null,
-      })
-      .select("id, slug, status")
-      .single();
-    if (error) throw new Error(error.message);
+    // Publish immediately (admins always; legit/verified users already passed the check above).
+    const baseRow: Record<string, any> = {
+      category: "ebsu",
+      status: data.publish ? "published" : "draft",
+      title: `${prefix}${finalTitle}`.slice(0, 200),
+      slug,
+      summary: (data.summary || "").slice(0, 300) || null,
+      body: data.body,
+      image_url: data.imageUrl ?? null,
+      source_urls: data.sourceUrls ?? [],
+      author_id: context.userId,
+      published_at: data.publish ? publishedAt : null,
+    };
+    // Try with submitted_by (present only if the verified-sources migration has been applied).
+    // Fall back to a plain insert if that column doesn't exist yet.
+    let row: any = null;
+    let insertErr: any = null;
+    {
+      const r = await (supabaseAdmin as any)
+        .from("news_articles")
+        .insert({ ...baseRow, submitted_by: context.userId })
+        .select("id, slug, status")
+        .single();
+      row = r.data; insertErr = r.error;
+    }
+    if (insertErr && /submitted_by|column .* does not exist|schema cache/i.test(insertErr.message || "")) {
+      const r2 = await (supabaseAdmin as any)
+        .from("news_articles")
+        .insert(baseRow)
+        .select("id, slug, status")
+        .single();
+      row = r2.data; insertErr = r2.error;
+    }
+    if (insertErr) throw new Error(insertErr.message);
     if (row.status === "published") pingIndexNowServer([`/news/${row.slug}`, "/news", "/sitemap.xml"]);
     return { id: row.id, slug: row.slug, type: data.type, status: row.status as string };
   });
