@@ -142,7 +142,7 @@ export const publishManualEbsuPost = createServerFn({ method: "POST" })
     // the DB trigger auto-publishes for trusted sources.
     const isAdmin = perms.isAdmin;
     const initialStatus = isAdmin ? (data.publish ? "published" : "draft") : "pending";
-    const { data: row, error } = await supabaseAdmin
+    const { data: row, error } = await (supabaseAdmin as any)
       .from("news_articles")
       .insert({
         category: "ebsu",
@@ -163,6 +163,7 @@ export const publishManualEbsuPost = createServerFn({ method: "POST" })
     if (row.status === "published") pingIndexNowServer([`/news/${row.slug}`, "/news", "/sitemap.xml"]);
     return { id: row.id, slug: row.slug, type: data.type, status: row.status as string };
   });
+
 
 // ============ Submissions: user + admin ============
 
