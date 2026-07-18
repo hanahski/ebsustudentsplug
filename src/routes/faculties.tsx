@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
@@ -97,6 +97,63 @@ function DeptGlyph({ name }: { name: string }) {
 
 function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+function SwipeToBio({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
+  const startX = useRef<number | null>(null);
+  const startY = useRef<number | null>(null);
+  const [dx, setDx] = useState(0);
+  const [locked, setLocked] = useState<null | "h" | "v">(null);
+  const THRESHOLD = 80;
+
+  const reset = () => { startX.current = null; startY.current = null; setDx(0); setLocked(null); };
+
+  return (
+    <div
+      className="relative overflow-hidden rounded-2xl"
+      onTouchStart={(e) => {
+        const t = e.touches[0];
+        startX.current = t.clientX; startY.current = t.clientY; setLocked(null); setDx(0);
+      }}
+      onTouchMove={(e) => {
+        if (startX.current == null || startY.current == null) return;
+        const t = e.touches[0];
+        const rawDx = t.clientX - startX.current;
+        const rawDy = t.clientY - startY.current;
+        if (locked == null) {
+          if (Math.abs(rawDx) > 8 || Math.abs(rawDy) > 8) {
+            setLocked(Math.abs(rawDx) > Math.abs(rawDy) ? "h" : "v");
+          }
+        }
+        if (locked === "h" && rawDx < 0) {
+          e.preventDefault();
+          setDx(Math.max(rawDx, -140));
+        }
+      }}
+      onTouchEnd={() => {
+        if (locked === "h" && dx <= -THRESHOLD) {
+          navigate({ to: "/school-biography" });
+        }
+        reset();
+      }}
+      onTouchCancel={reset}
+    >
+      {/* Reveal layer */}
+      <div
+        className="absolute inset-y-0 right-0 flex items-center justify-end pr-4 pointer-events-none"
+        style={{ width: Math.min(140, Math.abs(dx)), opacity: Math.min(1, Math.abs(dx) / THRESHOLD) }}
+      >
+        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-primary-foreground bg-primary rounded-full px-2.5 py-1 shadow-glow">
+          <Crown className="w-3 h-3" />
+          School Bio
+        </div>
+      </div>
+      <div style={{ transform: `translateX(${dx}px)`, transition: dx === 0 ? "transform 200ms ease" : "none" }}>
+        {children}
+      </div>
+    </div>
+  );
 }
 
 function Catalogue() {
@@ -305,14 +362,16 @@ function Catalogue() {
                   );
                   return (
                     <li key={name}>
-                      {isOpenable ? (
-                        <Link to="/course/name/$name" params={{ name }}>{inner}</Link>
-                      ) : id ? (
-                        <Link to="/department/$id" params={{ id }}>{inner}</Link>
-                      ) : (
-                        // Non-course departments are informational only.
-                        <div>{inner}</div>
-                      )}
+                      <SwipeToBio>
+                        {isOpenable ? (
+                          <Link to="/course/name/$name" params={{ name }}>{inner}</Link>
+                        ) : id ? (
+                          <Link to="/department/$id" params={{ id }}>{inner}</Link>
+                        ) : (
+                          // Non-course departments are informational only.
+                          <div>{inner}</div>
+                        )}
+                      </SwipeToBio>
                     </li>
                   );
                 })}
