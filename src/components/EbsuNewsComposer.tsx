@@ -153,15 +153,15 @@ export function EbsuNewsComposer() {
 
   // Inline validation
   const titleTrim = title.trim();
-  const bodyTrim = bodyText.trim();
-  const hasStoryContent = !!bodyTrim || inlineImages.length > 0;
+  const bodyTrimLen = bodyPlain.trim().length;
+  const hasStoryContent = bodyTrimLen > 0 || hasInlineImg;
   const titleError =
     !titleTrim ? "Headline is required"
     : titleTrim.length < 4 ? `Add ${4 - titleTrim.length} more character${4 - titleTrim.length === 1 ? "" : "s"} (minimum 4)`
     : null;
   const bodyError =
     !hasStoryContent ? "Your story is required"
-    : bodyTrim && bodyTrim.length < 10 ? `Write ${10 - bodyTrim.length} more character${10 - bodyTrim.length === 1 ? "" : "s"} (minimum 10)`
+    : !hasInlineImg && bodyTrimLen > 0 && bodyTrimLen < 10 ? `Write ${10 - bodyTrimLen} more character${10 - bodyTrimLen === 1 ? "" : "s"} (minimum 10)`
     : null;
   const sourceInputError = (() => {
     const v = sourceInput.trim();
@@ -182,11 +182,11 @@ export function EbsuNewsComposer() {
     if (!open) return;
     const t = setTimeout(() => {
       try {
-        localStorage.setItem(DRAFT_KEY, JSON.stringify({ type, title, bodyText, inlineImages, imageUrl, breaking, summary, tags, sourceUrls }));
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({ v: 3, type, title, bodyHtml, imageUrl, breaking, summary, tags, sourceUrls }));
       } catch {}
     }, 800);
     return () => clearTimeout(t);
-  }, [open, type, title, bodyText, inlineImages, imageUrl, breaking, summary, tags, sourceUrls]);
+  }, [open, type, title, bodyHtml, imageUrl, breaking, summary, tags, sourceUrls]);
 
   // Load draft
   useEffect(() => {
@@ -197,15 +197,18 @@ export function EbsuNewsComposer() {
       const d = JSON.parse(raw);
       if (d.type) setType(d.type);
       if (!title && d.title) setTitle(d.title);
-      if (!bodyText && d.bodyText) {
-        const extracted = extractInlineImages(d.bodyText);
-        setBodyText(extracted.cleanText);
-        if (extracted.urls.length) {
-          setInlineImages((prev) => uniqueImages([...prev, ...extracted.urls]));
+      if (!bodyHtml) {
+        // v3 stores HTML directly. v2 stored plain text + separate inlineImages
+        // urls — migrate by folding both into HTML.
+        if (typeof d.bodyHtml === "string" && d.bodyHtml) {
+          setBodyHtml(d.bodyHtml);
+        } else if (typeof d.bodyText === "string") {
+          const combined = [
+            d.bodyText,
+            ...(Array.isArray(d.inlineImages) ? d.inlineImages.filter((x: unknown) => typeof x === "string").map((u: string) => `[img:${u}]`) : []),
+          ].filter(Boolean).join("\n\n");
+          if (combined.trim()) setBodyHtml(sanitizeHtml(textToHtml(combined)));
         }
-      }
-      if (Array.isArray(d.inlineImages) && !inlineImages.length) {
-        setInlineImages((prev) => uniqueImages([...prev, ...d.inlineImages.filter((x: unknown): x is string => typeof x === "string")]));
       }
       if (!imageUrl && d.imageUrl) setImageUrl(d.imageUrl);
       if (typeof d.breaking === "boolean") setBreaking(d.breaking);
@@ -216,20 +219,8 @@ export function EbsuNewsComposer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  // Convert any existing/pasted image tokens into visual previews so users never
-  // have to work with the long storage URL in the writing box.
-  useEffect(() => {
-    if (!hasInlineImageToken(bodyText)) return;
-    const extracted = extractInlineImages(bodyText);
-    setBodyText(extracted.cleanText);
-    if (extracted.urls.length) {
-      setInlineImages((prev) => uniqueImages([...prev, ...extracted.urls]));
-    }
-  }, [bodyText]);
-
   function resetAll() {
-    setStep(0); setType("news"); setTitle(""); setBodyText(""); setImageUrl(null);
-    setInlineImages([]);
+    setStep(0); setType("news"); setTitle(""); setBodyHtml(""); setImageUrl(null);
     setBreaking(false); setPublish(true); setSummary(""); setTags([]); setSourceUrls([]);
     setSlugCustom(null); setSchedule(""); setShowAdvanced(false);
     try { localStorage.removeItem(DRAFT_KEY); } catch {}
@@ -267,27 +258,8 @@ export function EbsuNewsComposer() {
     } finally { setUploading(false); }
   };
 
-  const onInlineImage = async (file: File) => {
-    if (!user) return;
-    if (!file.type.startsWith("image/")) return toast.error("Pick an image file");
-    if (file.size > 8 * 1024 * 1024) return toast.error("Image must be under 8 MB");
-    setInlineUploading(true);
-    try {
-      const ext = (file.name.split(".").pop() || "png").toLowerCase();
-      const path = `${user.id}/${Date.now()}-inline.${ext}`;
-      const { error } = await supabase.storage.from("post-images").upload(path, file, { contentType: file.type, upsert: false });
-      if (error) throw error;
-      const { data } = supabase.storage.from("post-images").getPublicUrl(path);
-      setInlineImages((prev) => uniqueImages([...prev, data.publicUrl]));
-      requestAnimationFrame(() => bodyRef.current?.focus());
-      toast.success("Image added to story");
-    } catch (e: any) {
-      toast.error(e?.message ?? "Upload failed");
-    } finally { setInlineUploading(false); }
-  };
-
   const aiHeadline = async () => {
-    const src = bodyText || title;
+    const src = bodyPlain || title;
     if (src.trim().length < 6) return toast.info("Type a few words first");
     setAiBusy("title");
     try {
@@ -297,18 +269,22 @@ export function EbsuNewsComposer() {
     finally { setAiBusy(""); }
   };
   const aiPolish = async () => {
-    const src = bodyText;
+    const src = bodyPlain;
     if (src.trim().length < 10) return toast.info("Write some words first");
     setAiBusy("body");
     try {
       const { text } = await aiFn({ data: { mode: "rewrite", text: src, context: title || undefined } });
-      if (text) setBodyText(htmlToText(text));
+      if (text) {
+        // AI may return HTML or plain text — normalise either way.
+        const looksHtml = /<\/?[a-z][^>]*>/i.test(text);
+        setBodyHtml(sanitizeHtml(looksHtml ? text : textToHtml(text)));
+      }
       toast.success("Polished by AI");
     } catch (e: any) { toast.error(e?.message ?? "AI failed"); }
     finally { setAiBusy(""); }
   };
   const aiSummary = async () => {
-    const src = bodyText || title;
+    const src = bodyPlain || title;
     if (src.trim().length < 10) return toast.info("Write some words first");
     setAiBusy("summary");
     try {
@@ -318,7 +294,7 @@ export function EbsuNewsComposer() {
     finally { setAiBusy(""); }
   };
   const aiCover = async () => {
-    const prompt = title || bodyText.slice(0, 300);
+    const prompt = title || bodyPlain.slice(0, 300);
     if (!prompt) return toast.info("Add a title first");
     setAiBusy("cover");
     try {
@@ -337,8 +313,8 @@ export function EbsuNewsComposer() {
     if (scheduleError) { setTouched((t) => ({ ...t, schedule: true })); setStep(1); setShowAdvanced(true); return toast.error(scheduleError); }
     setPublishing(true);
     try {
-      const storyWithImages = [bodyText, ...inlineImages.map((url) => `[img:${url}]`)].filter(Boolean).join("\n\n");
-      const html = sanitizeHtml(textToHtml(storyWithImages));
+      // bodyHtml is already the composed layout — sanitize and ship as-is.
+      const html = sanitizeHtml(bodyHtml);
       const res = await publishFn({
         data: {
           type,
@@ -373,16 +349,9 @@ export function EbsuNewsComposer() {
   const onKey = useCallback((e: React.KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); publishNow(); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, bodyText, inlineImages, imageUrl, publish, breaking, schedule, type, slug, summary, tags, sourceUrls]);
+  }, [title, bodyHtml, imageUrl, publish, breaking, schedule, type, slug, summary, tags, sourceUrls]);
 
-  const updateBodyText = (value: string) => {
-    const extracted = extractInlineImages(value);
-    setBodyText(extracted.cleanText);
-    if (extracted.urls.length) {
-      setInlineImages((prev) => uniqueImages([...prev, ...extracted.urls]));
-      toast.success(extracted.urls.length === 1 ? "Image converted to preview" : "Images converted to previews");
-    }
-  };
+
 
   if (!perms?.allowed) return null;
 
