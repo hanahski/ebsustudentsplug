@@ -133,9 +133,10 @@ function MePage() {
       toast.dismiss(t);
       if (enhanced !== file) toast.success("Cover enhanced");
       const ext = (enhanced.name.split(".").pop() || "jpg").toLowerCase();
-      const path = `${profile.id}/cover-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("covers").upload(path, enhanced, { upsert: true, contentType: enhanced.type });
-      if (upErr) throw upErr;
+      const { path } = await safeUserUpload({
+        bucket: "covers", file: enhanced, filename: `cover-${Date.now()}.${ext}`,
+        contentType: enhanced.type, upsert: true,
+      });
       const { data: signed, error: sErr } = await supabase.storage.from("covers").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
       if (sErr) throw sErr;
       const { error: updErr } = await supabase.from("profiles").update({ cover_url: signed.signedUrl } as any).eq("id", profile.id);
@@ -144,7 +145,7 @@ function MePage() {
       refreshProfile();
     } catch (e: any) {
       toast.dismiss(t);
-      toast.error(e.message ?? "Upload failed");
+      toast.error(friendlyUploadError(e));
     } finally {
       setCoverUploading(false);
     }
