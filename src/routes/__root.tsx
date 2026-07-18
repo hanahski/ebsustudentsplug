@@ -124,11 +124,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     scripts: [
       {
-        async: true,
-        src: "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3085170424128475",
-        crossOrigin: "anonymous",
-      },
-      {
         children: `(function(){try{var t=localStorage.getItem('sp-theme');if(!t){t='light';localStorage.setItem('sp-theme',t);}if(t==='dark')document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark');}catch(e){}})();`,
       },
       {
