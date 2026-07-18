@@ -164,7 +164,7 @@ export function AdminAiPanel() {
     }
   }
 
-  const clear = () => {
+  const clear = async () => {
     if (!(await confirm({ title: "Clear console history?", description: "All console messages will be removed.", confirmText: "Clear" }))) return;
     setMsgs([]);
     seenIds.current.clear();
