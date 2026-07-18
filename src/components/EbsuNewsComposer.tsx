@@ -121,8 +121,9 @@ export function EbsuNewsComposer() {
 
   const [type, setType] = useState<PostType>("news");
   const [title, setTitle] = useState("");
-  const [bodyText, setBodyText] = useState("");
-  const [inlineImages, setInlineImages] = useState<string[]>([]);
+  // Story body is now HTML — the StoryEditor renders images inline so writers
+  // see the true published layout while composing.
+  const [bodyHtml, setBodyHtml] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [breaking, setBreaking] = useState(false);
   const [publish, setPublish] = useState(true);
@@ -142,13 +143,13 @@ export function EbsuNewsComposer() {
   const [publishing, setPublishing] = useState(false);
   const [touched, setTouched] = useState<{ title?: boolean; body?: boolean; source?: boolean; schedule?: boolean }>({});
   const fileRef = useRef<HTMLInputElement | null>(null);
-  const inlineFileRef = useRef<HTMLInputElement | null>(null);
-  const bodyRef = useRef<HTMLTextAreaElement | null>(null);
-  const [inlineUploading, setInlineUploading] = useState(false);
 
   const slug = slugCustom ?? slugify(title);
-  const wordCount = useMemo(() => bodyText.split(/\s+/).filter(Boolean).length, [bodyText]);
+  const bodyPlain = useMemo(() => stripHtml(bodyHtml), [bodyHtml]);
+  const hasInlineImg = /<img\b/i.test(bodyHtml);
+  const wordCount = useMemo(() => bodyPlain.split(/\s+/).filter(Boolean).length, [bodyPlain]);
   const readMins = Math.max(1, Math.round(wordCount / 220));
+
 
   // Inline validation
   const titleTrim = title.trim();
