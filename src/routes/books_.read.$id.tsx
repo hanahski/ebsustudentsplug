@@ -21,7 +21,7 @@ export const Route = createFileRoute("/books_/read/$id")({
   loader: async ({ params }) => {
     const { data } = await supabase
       .from("library_books")
-      .select("id,title,author,description,cover_url,price,is_free")
+      .select("id,title,author,description,cover_url,price_credits")
       .eq("id", params.id)
       .maybeSingle();
     return { book: data };
@@ -37,7 +37,7 @@ export const Route = createFileRoute("/books_/read/$id")({
     }
     const desc = String(b.description ?? "").slice(0, 160) || `Read ${b.title}${b.author ? ` by ${b.author}` : ""} on StudentsPlug Library.`;
     const title = `${b.title}${b.author ? ` — ${b.author}` : ""} | StudentsPlug Library`;
-    const priceNum = Number(b.price ?? 0);
+    const priceNum = Number(b.price_credits ?? 0);
     return {
       meta: [
         { title },
@@ -62,7 +62,7 @@ export const Route = createFileRoute("/books_/read/$id")({
             url,
             offers: {
               "@type": "Offer",
-              price: b.is_free ? 0 : priceNum,
+              price: priceNum,
               priceCurrency: "NGN",
               availability: "https://schema.org/InStock",
               url,
