@@ -243,11 +243,12 @@ export function EbsuNewsComposer() {
     finally { setAiBusy(""); }
   };
 
-  const canGoNext = step === 0 ? true : step === 1 ? title.trim().length >= 4 && bodyText.trim().length >= 10 : true;
+  const canGoNext = step === 0 ? true : step === 1 ? !titleError && !bodyError && !scheduleError : true;
 
   const publishNow = async (asDraft = false) => {
-    if (title.trim().length < 4) { setStep(1); return toast.error("Add a title (min 4 chars)"); }
-    if (bodyText.trim().length < 10) { setStep(1); return toast.error("Write a bit more in the body"); }
+    if (titleError) { setTouched((t) => ({ ...t, title: true })); setStep(1); return toast.error(titleError); }
+    if (bodyError) { setTouched((t) => ({ ...t, body: true })); setStep(1); return toast.error(bodyError); }
+    if (scheduleError) { setTouched((t) => ({ ...t, schedule: true })); setStep(1); setShowAdvanced(true); return toast.error(scheduleError); }
     setPublishing(true);
     try {
       const html = sanitizeHtml(textToHtml(bodyText));
