@@ -48,9 +48,11 @@ export function PdfReader({ url, title, onClose, downloadName }: Props) {
       try {
         setLoading(true);
         setError(null);
-        const pdfjs: any = await import("pdfjs-dist/build/pdf.mjs");
-        const workerSrc = (await import("pdfjs-dist/build/pdf.worker.mjs?url")).default;
-        pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+        const pdfjs: any = await import(
+          /* @vite-ignore */ "https://esm.sh/pdfjs-dist@4.7.76/build/pdf.mjs"
+        );
+        pdfjs.GlobalWorkerOptions.workerSrc =
+          "https://esm.sh/pdfjs-dist@4.7.76/build/pdf.worker.mjs";
         const doc = await pdfjs.getDocument({ url, withCredentials: false }).promise;
         if (cancelled) return;
         docRef.current = doc;
