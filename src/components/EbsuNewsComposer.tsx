@@ -209,7 +209,37 @@ export function EbsuNewsComposer() {
     } finally { setUploading(false); }
   };
 
-  const aiHeadline = async () => {
+  const onInlineImage = async (file: File) => {
+    if (!user) return;
+    if (!file.type.startsWith("image/")) return toast.error("Pick an image file");
+    if (file.size > 8 * 1024 * 1024) return toast.error("Image must be under 8 MB");
+    setInlineUploading(true);
+    try {
+      const ext = (file.name.split(".").pop() || "png").toLowerCase();
+      const path = `${user.id}/${Date.now()}-inline.${ext}`;
+      const { error } = await supabase.storage.from("post-images").upload(path, file, { contentType: file.type, upsert: false });
+      if (error) throw error;
+      const { data } = supabase.storage.from("post-images").getPublicUrl(path);
+      const token = `\n\n[img:${data.publicUrl}]\n\n`;
+      const ta = bodyRef.current;
+      if (ta) {
+        const start = ta.selectionStart ?? bodyText.length;
+        const end = ta.selectionEnd ?? bodyText.length;
+        const next = bodyText.slice(0, start) + token + bodyText.slice(end);
+        setBodyText(next);
+        requestAnimationFrame(() => {
+          ta.focus();
+          const pos = start + token.length;
+          ta.setSelectionRange(pos, pos);
+        });
+      } else {
+        setBodyText((b) => b + token);
+      }
+      toast.success("Image added to story");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Upload failed");
+    } finally { setInlineUploading(false); }
+  };
     const src = bodyText || title;
     if (src.trim().length < 6) return toast.info("Type a few words first");
     setAiBusy("title");
