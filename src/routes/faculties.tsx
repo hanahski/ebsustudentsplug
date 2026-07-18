@@ -188,9 +188,34 @@ function Catalogue() {
   const courseCount = DEPARTMENTS.filter(isCourse).length;
 
 
+  const swipe = usePageSwipeToBio();
+
   return (
     <AppShell>
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div
+        className="max-w-5xl mx-auto space-y-6 relative"
+        {...swipe.handlers}
+        style={{
+          transform: `translateX(${swipe.dx}px)`,
+          transition: swipe.dx === 0 ? "transform 220ms ease" : "none",
+          touchAction: "pan-y",
+        }}
+      >
+        {/* Swipe-left reveal hint */}
+        <div
+          className="fixed top-1/2 right-2 -translate-y-1/2 z-40 pointer-events-none"
+          style={{
+            opacity: Math.min(1, Math.abs(swipe.dx) / swipe.threshold),
+            transform: `translateY(-50%) translateX(${swipe.active ? 0 : 20}px)`,
+            transition: "opacity 120ms ease, transform 200ms ease",
+          }}
+        >
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-primary-foreground bg-primary rounded-full px-3 py-1.5 shadow-glow">
+            <Crown className="w-3.5 h-3.5" />
+            School Bio
+          </div>
+        </div>
+
         {/* Header */}
         <header className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-primary/12 via-card to-card p-6 shadow-card">
           <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full bg-primary/25 blur-3xl" aria-hidden />
