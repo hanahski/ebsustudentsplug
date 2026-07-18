@@ -240,6 +240,8 @@ export function EbsuNewsComposer() {
       toast.error(e?.message ?? "Upload failed");
     } finally { setInlineUploading(false); }
   };
+
+  const aiHeadline = async () => {
     const src = bodyText || title;
     if (src.trim().length < 6) return toast.info("Type a few words first");
     setAiBusy("title");
