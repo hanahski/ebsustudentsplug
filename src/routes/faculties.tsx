@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { Input } from "@/components/ui/input";
-import { Search, GraduationCap, Sparkles } from "lucide-react";
+import { Search, GraduationCap, Sparkles, Crown, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/faculties")({
   component: Catalogue,
