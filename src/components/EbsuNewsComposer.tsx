@@ -39,11 +39,17 @@ function stripHtml(html: string) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 // Convert plain-text (with blank-line paragraphs) into simple HTML so users can just type.
+// Also converts inline image tokens `[img:URL]` into <img> tags.
 function textToHtml(text: string) {
   const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   return text
     .split(/\n\s*\n/)
-    .map((p) => `<p>${esc(p).replace(/\n/g, "<br/>")}</p>`)
+    .map((p) => {
+      const trimmed = p.trim();
+      const m = trimmed.match(/^\[img:(https?:\/\/[^\]\s]+)\]$/);
+      if (m) return `<p><img src="${m[1]}" alt="" loading="eager" style="max-width:100%;border-radius:12px;" /></p>`;
+      return `<p>${esc(p).replace(/\n/g, "<br/>")}</p>`;
+    })
     .join("");
 }
 function htmlToText(html: string) {
