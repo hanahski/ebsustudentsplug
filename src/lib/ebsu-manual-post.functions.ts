@@ -198,10 +198,10 @@ export const adminListPendingSubmissions = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(50);
 
-    const ids = Array.from(new Set((rows ?? []).map((r: any) => r.submitted_by).filter(Boolean)));
+    const ids = Array.from(new Set((rows ?? []).map((r: any) => r.submitted_by).filter(Boolean))) as string[];
     let profiles: Record<string, any> = {};
     if (ids.length) {
-      const { data: profs } = await supabaseAdmin
+      const { data: profs } = await (supabaseAdmin as any)
         .from("profiles")
         .select("id, display_name, avatar_key, source_name, is_trusted_source")
         .in("id", ids);
@@ -209,6 +209,7 @@ export const adminListPendingSubmissions = createServerFn({ method: "GET" })
     }
     return { rows: (rows ?? []).map((r: any) => ({ ...r, submitter: profiles[r.submitted_by] ?? null })) };
   });
+
 
 export const adminReviewNewsSubmission = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
