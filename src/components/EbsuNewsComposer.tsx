@@ -151,13 +151,14 @@ export function EbsuNewsComposer() {
   // Inline validation
   const titleTrim = title.trim();
   const bodyTrim = bodyText.trim();
+  const hasStoryContent = !!bodyTrim || inlineImages.length > 0;
   const titleError =
     !titleTrim ? "Headline is required"
     : titleTrim.length < 4 ? `Add ${4 - titleTrim.length} more character${4 - titleTrim.length === 1 ? "" : "s"} (minimum 4)`
     : null;
   const bodyError =
-    !bodyTrim ? "Your story is required"
-    : bodyTrim.length < 10 ? `Write ${10 - bodyTrim.length} more character${10 - bodyTrim.length === 1 ? "" : "s"} (minimum 10)`
+    !hasStoryContent ? "Your story is required"
+    : bodyTrim && bodyTrim.length < 10 ? `Write ${10 - bodyTrim.length} more character${10 - bodyTrim.length === 1 ? "" : "s"} (minimum 10)`
     : null;
   const sourceInputError = (() => {
     const v = sourceInput.trim();
