@@ -185,7 +185,11 @@ export function EbsuNewsPanel() {
 
   return (
     <div className="space-y-5">
+      <NewsSubmissionsPanel />
+      <VerifiedSourcesPanel />
+
       {/* Composer */}
+
       <div className="bg-card border rounded-3xl p-5 shadow-card">
         <div className="flex items-center gap-2 mb-3">
           <Sparkles className="w-5 h-5 text-primary" />
