@@ -169,17 +169,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     return (
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <AppBridgeMount />
-          <VideoSWRegister />
-          <KeyboardAware />
-          <GoogleTranslateBridge />
-          <AuthStatusBanner />
-          <RouteLoadingIndicator />
-          
-          <NetworkStatus />
-          <Outlet />
-          <VerifyEmailDialog />
-          <Toaster richColors position="top-center" />
+          <ConfirmProvider>
+            <AppBridgeMount />
+            <VideoSWRegister />
+            <KeyboardAware />
+            <GoogleTranslateBridge />
+            <AuthStatusBanner />
+            <RouteLoadingIndicator />
+            
+            <NetworkStatus />
+            <Outlet />
+            <VerifyEmailDialog />
+            <Toaster richColors position="top-center" />
+          </ConfirmProvider>
         </AuthProvider>
 
       </QueryClientProvider>
