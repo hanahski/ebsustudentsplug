@@ -1,7 +1,6 @@
 import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { renderArticleHtml } from "@/lib/render-article";
 import { AppShell } from "@/components/AppShell";
 import { getBlogPost } from "@/lib/blog.functions";
 
@@ -110,9 +109,10 @@ function BlogPostPage() {
             })}
           </p>
         </header>
-        <div className="prose prose-sm max-w-none dark:prose-invert sm:prose-base prose-headings:font-display">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>
-        </div>
+        <div
+          className="prose prose-sm max-w-none dark:prose-invert sm:prose-base prose-headings:font-display prose-img:rounded-xl"
+          dangerouslySetInnerHTML={{ __html: renderArticleHtml(post.content) }}
+        />
       </article>
     </AppShell>
   );

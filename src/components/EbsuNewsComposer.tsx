@@ -42,13 +42,23 @@ function stripHtml(html: string) {
 // Also converts inline image tokens `[img:URL]` into <img> tags.
 function textToHtml(text: string) {
   const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const IMG = /\[img:\s*(https?:\/\/[^\]]+?)\s*\]/gi;
   return text
     .split(/\n\s*\n/)
     .map((p) => {
-      const trimmed = p.trim();
-      const m = trimmed.match(/^\[img:(https?:\/\/[^\]\s]+)\]$/);
-      if (m) return `<p><img src="${m[1]}" alt="" loading="eager" style="max-width:100%;border-radius:12px;" /></p>`;
-      return `<p>${esc(p).replace(/\n/g, "<br/>")}</p>`;
+      // Render each paragraph, replacing inline [img:URL] tokens (even mid-paragraph,
+      // and even when the URL wrapped onto a new line inside the brackets).
+      const parts = p.split(IMG);
+      let out = "";
+      for (let i = 0; i < parts.length; i++) {
+        if (i % 2 === 1) {
+          const url = parts[i].replace(/\s+/g, "");
+          out += `</p><p><img src="${url}" alt="" loading="eager" style="max-width:100%;border-radius:12px;" /></p><p>`;
+        } else {
+          out += esc(parts[i]).replace(/\n/g, "<br/>");
+        }
+      }
+      return `<p>${out}</p>`.replace(/<p>\s*<\/p>/g, "");
     })
     .join("");
 }
@@ -120,7 +130,6 @@ export function EbsuNewsComposer() {
   const titleError =
     !titleTrim ? "Headline is required"
     : titleTrim.length < 4 ? `Add ${4 - titleTrim.length} more character${4 - titleTrim.length === 1 ? "" : "s"} (minimum 4)`
-    : titleTrim.length > 180 ? "Try to keep it under 180 characters for better readability"
     : null;
   const bodyError =
     !bodyTrim ? "Your story is required"
@@ -421,7 +430,6 @@ export function EbsuNewsComposer() {
                   <Input
                     id="np-title"
                     value={title}
-                    maxLength={200}
                     onChange={(e) => setTitle(e.target.value)}
                     onBlur={() => setTouched((t) => ({ ...t, title: true }))}
                     placeholder="Say it in one sharp line…"
@@ -435,7 +443,7 @@ export function EbsuNewsComposer() {
                       {touched.title && titleError ? titleError : "A clear, specific headline works best."}
                     </span>
                     <span className={`tabular-nums ${title.length > 180 ? "text-amber-500" : "text-muted-foreground"}`}>
-                      {title.length}/200
+                      {title.length}
                     </span>
                   </div>
                 </div>
@@ -505,7 +513,7 @@ export function EbsuNewsComposer() {
                           {aiBusy === "summary" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />} Auto
                         </button>
                       </div>
-                      <Textarea value={summary} maxLength={400} rows={2} onChange={(e) => setSummary(e.target.value)} placeholder="1-2 sentences shown on the feed card" />
+                      <Textarea value={summary} rows={2} onChange={(e) => setSummary(e.target.value)} placeholder="1-2 sentences shown on the feed card" />
                     </div>
 
                     <div>

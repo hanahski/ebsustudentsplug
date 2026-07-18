@@ -3,8 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { ArrowLeft, ExternalLink, Calendar } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { renderArticleHtml } from "@/lib/render-article";
 
 
 
@@ -99,9 +98,10 @@ function NewsArticlePage() {
           <img src={a.image_url} alt="" className="w-full rounded-2xl mb-6 shadow-card" />
         )}
 
-        <div className="prose prose-sm sm:prose-base max-w-none dark:prose-invert prose-headings:font-display">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{a.body ?? ""}</ReactMarkdown>
-        </div>
+        <div
+          className="prose prose-sm sm:prose-base max-w-none dark:prose-invert prose-headings:font-display prose-img:rounded-xl"
+          dangerouslySetInnerHTML={{ __html: renderArticleHtml(a.body) }}
+        />
 
         {sources.length > 0 && (
           <div className="mt-8 pt-6 border-t">
