@@ -152,6 +152,8 @@ function ProfilePage() {
                   >
                     <Send className="w-4 h-4 mr-1.5" /> Message
                   </Button>
+                    <ReportDialog target={{ kind: "user", id: p.id }} />
+                  </div>
                 )}
               </div>
             </div>
