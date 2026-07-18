@@ -170,7 +170,7 @@ export const publishManualEbsuPost = createServerFn({ method: "POST" })
 export const listMyNewsSubmissions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data } = await context.supabase
+    const { data } = await (context.supabase as any)
       .from("news_articles")
       .select("id, slug, title, status, created_at, reviewed_at, rejection_reason, image_url")
       .eq("submitted_by", context.userId)
@@ -178,6 +178,7 @@ export const listMyNewsSubmissions = createServerFn({ method: "GET" })
       .limit(30);
     return { rows: data ?? [] };
   });
+
 
 async function assertAdmin(ctx: { userId: string; supabase: any }) {
   const { data } = await ctx.supabase
