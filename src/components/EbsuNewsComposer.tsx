@@ -94,6 +94,10 @@ function uniqueImages(urls: string[]) {
   return Array.from(new Set(urls.filter(Boolean)));
 }
 
+function hasInlineImageToken(text: string) {
+  return /\[img:\s*https?:\/\/[^\]]+?\s*\]/i.test(text);
+}
+
 export function EbsuNewsComposer() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -207,6 +211,17 @@ export function EbsuNewsComposer() {
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  // Convert any existing/pasted image tokens into visual previews so users never
+  // have to work with the long storage URL in the writing box.
+  useEffect(() => {
+    if (!hasInlineImageToken(bodyText)) return;
+    const extracted = extractInlineImages(bodyText);
+    setBodyText(extracted.cleanText);
+    if (extracted.urls.length) {
+      setInlineImages((prev) => uniqueImages([...prev, ...extracted.urls]));
+    }
+  }, [bodyText]);
 
   function resetAll() {
     setStep(0); setType("news"); setTitle(""); setBodyText(""); setImageUrl(null);
