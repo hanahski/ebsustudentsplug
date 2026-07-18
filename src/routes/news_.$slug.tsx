@@ -18,6 +18,7 @@ import {
 import { StoryEditor } from "@/components/StoryEditor";
 import { ShimmerImage } from "@/components/ShimmerImage";
 import { deleteEbsuArticle, updateEbsuArticle } from "@/lib/ebsu-manual-post.functions";
+import { InArticleAd } from "@/components/InArticleAd";
 import { toast } from "sonner";
 
 
