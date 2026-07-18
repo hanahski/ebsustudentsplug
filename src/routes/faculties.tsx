@@ -362,16 +362,13 @@ function Catalogue() {
                   );
                   return (
                     <li key={name}>
-                      <SwipeToBio>
-                        {isOpenable ? (
-                          <Link to="/course/name/$name" params={{ name }}>{inner}</Link>
-                        ) : id ? (
-                          <Link to="/department/$id" params={{ id }}>{inner}</Link>
-                        ) : (
-                          // Non-course departments are informational only.
-                          <div>{inner}</div>
-                        )}
-                      </SwipeToBio>
+                      {isOpenable ? (
+                        <Link to="/course/name/$name" params={{ name }}>{inner}</Link>
+                      ) : id ? (
+                        <Link to="/department/$id" params={{ id }}>{inner}</Link>
+                      ) : (
+                        <div>{inner}</div>
+                      )}
                     </li>
                   );
                 })}
