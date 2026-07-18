@@ -327,3 +327,45 @@ export const aiAssistNews = createServerFn({ method: "POST" })
     });
     return { text: (out || "").trim().replace(/^```(?:html)?\s*|\s*```$/g, "") };
   });
+
+
+// Delete an EBSU article — admins or legit/verified sources.
+export const deleteEbsuArticle = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertCanPost(context as any);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("news_articles").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// Update an EBSU article — admins or legit/verified sources.
+export const updateEbsuArticle = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({
+    id: z.string().uuid(),
+    title: z.string().trim().min(4).max(200).optional(),
+    summary: z.string().trim().max(400).nullable().optional(),
+    body: z.string().min(10).max(60_000).optional(),
+    imageUrl: z.string().url().nullable().optional(),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertCanPost(context as any);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const patch: Record<string, any> = {};
+    if (data.title !== undefined) patch.title = data.title;
+    if (data.summary !== undefined) patch.summary = data.summary;
+    if (data.body !== undefined) patch.body = data.body;
+    if (data.imageUrl !== undefined) patch.image_url = data.imageUrl;
+    const { data: row, error } = await supabaseAdmin
+      .from("news_articles")
+      .update(patch)
+      .eq("id", data.id)
+      .select("id, slug")
+      .single();
+    if (error) throw new Error(error.message);
+    if (row?.slug) pingIndexNowServer([`/news/${row.slug}`, "/news", "/sitemap.xml"]);
+    return { ok: true, slug: row.slug };
+  });
