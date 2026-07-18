@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { Input } from "@/components/ui/input";
-import { Search, GraduationCap, Sparkles } from "lucide-react";
+import { Search, GraduationCap, Sparkles, Crown, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/faculties")({
   component: Catalogue,
@@ -232,7 +232,31 @@ function Catalogue() {
           </div>
         </header>
 
-        {/* Groups */}
+        {/* School Biography entry — the faces behind EBSU */}
+        <Link
+          to="/school-biography"
+          className="group relative overflow-hidden rounded-3xl border bg-card p-4 md:p-5 flex items-center gap-4 shadow-card hover:shadow-glow hover:-translate-y-0.5 transition-all"
+        >
+          <div
+            className="absolute -top-12 -right-10 w-52 h-52 rounded-full blur-3xl opacity-40 group-hover:opacity-70 transition"
+            style={{ background: "conic-gradient(from 0deg, #f59e0b, #ef4444, #8b5cf6, #06b6d4, #f59e0b)" }}
+            aria-hidden
+          />
+          <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 text-white flex items-center justify-center shadow-glow shrink-0">
+            <Crown className="w-6 h-6" />
+          </div>
+          <div className="relative min-w-0 flex-1">
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-bold uppercase tracking-wider">
+              <Sparkles className="w-3 h-3" /> New
+            </div>
+            <div className="font-bold text-base leading-tight mt-0.5">School Biography</div>
+            <p className="text-xs text-muted-foreground truncate">
+              SUG · DVCs · Course reps · Coordinators — meet the faces of EBSU.
+            </p>
+          </div>
+          <ArrowRight className="relative w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition" />
+        </Link>
+
         {grouped.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
             No {mode === "courses" ? "course" : "department"} matches "{q}".
