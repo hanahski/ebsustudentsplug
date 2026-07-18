@@ -4,13 +4,18 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
-import { ArrowLeft, ExternalLink, Calendar, Pencil, Trash2, Loader2, X, Save } from "lucide-react";
+import { ArrowLeft, ExternalLink, Calendar, Pencil, Trash2, Loader2, X, Save, ShieldAlert } from "lucide-react";
 import { renderArticleHtml } from "@/lib/render-article";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { StoryEditor } from "@/components/StoryEditor";
 import { deleteEbsuArticle, updateEbsuArticle } from "@/lib/ebsu-manual-post.functions";
 import { toast } from "sonner";
 
@@ -74,7 +79,7 @@ export const Route = createFileRoute("/news_/$slug")({
 function NewsArticlePage() {
   const { slug } = Route.useParams();
   const navigate = useNavigate();
-  const { isAdmin, profile } = useAuth();
+  const { isAdmin, profile, user } = useAuth();
   const canManage = isAdmin || !!(profile as any)?.is_legit || !!(profile as any)?.is_verified_source;
 
   const { data: a, refetch } = useQuery({
@@ -132,8 +137,9 @@ function NewsArticlePage() {
     }
   };
 
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const onDelete = async () => {
-    if (!confirm("Delete this article? This can't be undone.")) return;
+    setConfirmDelete(false);
     setDeleting(true);
     try {
       await deleteFn({ data: { id: a.id } });
@@ -157,7 +163,7 @@ function NewsArticlePage() {
               <Button size="sm" variant="outline" onClick={openEdit}>
                 <Pencil className="w-3.5 h-3.5 mr-1" /> Edit
               </Button>
-              <Button size="sm" variant="destructive" onClick={onDelete} disabled={deleting}>
+              <Button size="sm" variant="destructive" onClick={() => setConfirmDelete(true)} disabled={deleting}>
                 {deleting ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Trash2 className="w-3.5 h-3.5 mr-1" />}
                 Delete
               </Button>
@@ -221,8 +227,14 @@ function NewsArticlePage() {
               <Input value={form.imageUrl} placeholder="https://…" onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} />
             </div>
             <div>
-              <label className="text-xs font-semibold text-muted-foreground">Body (HTML supported)</label>
-              <Textarea rows={12} value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} />
+              <label className="text-xs font-semibold text-muted-foreground">Body</label>
+              <StoryEditor
+                value={form.body}
+                onChange={(html) => setForm((f) => ({ ...f, body: html }))}
+                userId={user?.id}
+                placeholder="Write the article. Drag or paste images anywhere."
+                minHeight={280}
+              />
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
@@ -234,6 +246,31 @@ function NewsArticlePage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-2">
+              <div className="w-9 h-9 rounded-full bg-destructive/15 flex items-center justify-center">
+                <ShieldAlert className="w-5 h-5 text-destructive" />
+              </div>
+              <AlertDialogTitle>Delete this article?</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription className="pt-1">
+              "{a.title}" will be permanently removed from EBSU News. This can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={onDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete article
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }
