@@ -3,10 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
-import { Newspaper, RotateCw, GraduationCap } from "lucide-react";
+import { Newspaper, RotateCw, GraduationCap, BadgeCheck, ExternalLink } from "lucide-react";
 import { EbsuNewsComposer } from "@/components/EbsuNewsComposer";
 import { ShimmerImage } from "@/components/ShimmerImage";
 const feessaTvLogo = { url: "/feessa-tv-logo.jpeg" };
+const FEESSA_HANDLE = "FEESSA TV";
 
 
 export const Route = createFileRoute("/news")({
@@ -67,6 +68,21 @@ function NewsPage() {
     staleTime: 60_000,
   });
 
+  // Look up the FEESSA TV account by display name so we can link the logo
+  // to their in-app profile.
+  const { data: feessa } = useQuery({
+    queryKey: ["feessa-tv-profile"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_key, is_legit, is_verified, bio")
+        .ilike("display_name", FEESSA_HANDLE)
+        .maybeSingle();
+      return data;
+    },
+    staleTime: 5 * 60_000,
+  });
+
   return (
     <AppShell>
       <div className="max-w-5xl mx-auto">
@@ -92,26 +108,8 @@ function NewsPage() {
             <p className="text-sm sm:text-base text-muted-foreground mt-2 max-w-xl">
               Fresh EBSU stories, announcements and student voices — refreshed all day, every day.
             </p>
-            <div
-              className="mt-4 inline-flex items-center gap-2"
-              aria-label="FEESSA TV — Your Faculty. Your Voice. Your Legacy."
-            >
-              <div className="relative inline-block">
-                <img
-                  src={feessaTvLogo.url}
-                  alt="FEESSA TV"
-                  className="h-14 sm:h-16 w-auto object-contain drop-shadow-lg"
-                />
-                <span
-                  className="absolute -top-1 -left-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500 text-white shadow-lg ring-2 ring-background"
-                  title="Legit verified"
-                >
-                  <svg viewBox="0 0 24 24" className="w-2.5 h-2.5" fill="currentColor" aria-hidden>
-                    <path d="M12 2l8 3v6c0 5-3.5 9.5-8 11-4.5-1.5-8-6-8-11V5l8-3zm-1 13l6-6-1.4-1.4L11 12.2 8.4 9.6 7 11l4 4z" />
-                  </svg>
-                </span>
-              </div>
-            </div>
+
+            <FeessaCard profile={feessa} />
           </div>
         </section>
 
@@ -120,6 +118,47 @@ function NewsPage() {
       <EbsuNewsComposer />
     </AppShell>
   );
+}
+
+/** Verified source card for FEESSA TV. Links to their in-app profile
+ *  (looked up by display name). Falls back to a static badge when the
+ *  profile hasn't been created yet. */
+function FeessaCard({ profile }: { profile: any | null | undefined }) {
+  const to = profile?.id ? (`/profile/${profile.id}` as const) : null;
+  const Content = (
+    <div className="group relative mt-5 inline-flex items-center gap-3 pl-3 pr-4 py-2 rounded-2xl border border-emerald-500/25 bg-gradient-to-br from-emerald-500/[0.08] via-background/60 to-sky-500/[0.06] backdrop-blur shadow-[0_8px_30px_-12px_rgba(16,185,129,0.35)] hover:shadow-[0_10px_40px_-8px_rgba(16,185,129,0.5)] hover:border-emerald-400/50 transition-all">
+      <div className="relative shrink-0">
+        <div className="absolute -inset-1 rounded-full bg-emerald-400/30 blur-md opacity-70 group-hover:opacity-100 transition" aria-hidden />
+        <img
+          src={feessaTvLogo.url}
+          alt="FEESSA TV"
+          className="relative h-12 w-12 sm:h-14 sm:w-14 rounded-full object-cover ring-2 ring-emerald-400/60 shadow-lg"
+        />
+        <span
+          className="absolute -bottom-0.5 -right-0.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white ring-2 ring-background shadow"
+          title="Verified news source"
+        >
+          <BadgeCheck className="w-3 h-3" strokeWidth={3} />
+        </span>
+      </div>
+      <div className="min-w-0">
+        <div className="flex items-center gap-1.5">
+          <span className="font-bold font-display text-sm sm:text-base leading-tight">FEESSA TV</span>
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Verified</span>
+        </div>
+        <p className="text-[11px] sm:text-xs text-muted-foreground leading-snug">
+          Your Faculty. Your Voice. Your Legacy.
+        </p>
+        {to && (
+          <p className="text-[10px] text-primary/80 mt-0.5 inline-flex items-center gap-0.5 group-hover:underline">
+            Visit profile <ExternalLink className="w-2.5 h-2.5" />
+          </p>
+        )}
+      </div>
+    </div>
+  );
+  if (to) return <Link to={to} className="block w-fit">{Content}</Link>;
+  return Content;
 }
 
 function EbsuFeed({ articles, loading }: { articles: any[]; loading: boolean }) {
