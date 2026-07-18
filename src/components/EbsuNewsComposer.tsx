@@ -514,7 +514,7 @@ export function EbsuNewsComposer() {
                           {aiBusy === "summary" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />} Auto
                         </button>
                       </div>
-                      <Textarea value={summary} maxLength={400} rows={2} onChange={(e) => setSummary(e.target.value)} placeholder="1-2 sentences shown on the feed card" />
+                      <Textarea value={summary} rows={2} onChange={(e) => setSummary(e.target.value)} placeholder="1-2 sentences shown on the feed card" />
                     </div>
 
                     <div>
