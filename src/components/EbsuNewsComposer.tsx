@@ -293,8 +293,9 @@ export function EbsuNewsComposer() {
                 </span>
               </div>
               <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                {perms?.isAdmin ? "Admin" : "Legit"}
+                {perms?.isAdmin ? "Admin" : perms?.isTrusted ? "Trusted source" : perms?.isVerifiedSource ? "Verified source" : "Legit"}
               </span>
+
             </div>
             <div className="flex gap-1.5">
               {[0, 1, 2].map((i) => (
