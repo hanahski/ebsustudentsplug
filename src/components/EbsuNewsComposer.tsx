@@ -370,25 +370,41 @@ export function EbsuNewsComposer() {
                 {/* Title */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-sm font-bold">Headline</label>
+                    <label htmlFor="np-title" className="text-sm font-bold">
+                      Headline <span className="text-destructive" aria-hidden>*</span>
+                    </label>
                     <button onClick={aiHeadline} disabled={aiBusy === "title"} className="text-[11px] flex items-center gap-1 text-primary font-semibold hover:underline disabled:opacity-50">
                       {aiBusy === "title" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />} Suggest
                     </button>
                   </div>
                   <Input
+                    id="np-title"
                     value={title}
                     maxLength={200}
                     onChange={(e) => setTitle(e.target.value)}
+                    onBlur={() => setTouched((t) => ({ ...t, title: true }))}
                     placeholder="Say it in one sharp line…"
-                    className="text-base"
+                    className={`text-base ${touched.title && titleError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                    aria-invalid={!!(touched.title && titleError)}
+                    aria-describedby="np-title-help"
                     autoFocus
                   />
+                  <div id="np-title-help" className="mt-1 flex items-center justify-between text-[11px]">
+                    <span className={touched.title && titleError ? "text-destructive font-semibold" : "text-muted-foreground"}>
+                      {touched.title && titleError ? titleError : "A clear, specific headline works best."}
+                    </span>
+                    <span className={`tabular-nums ${title.length > 180 ? "text-amber-500" : "text-muted-foreground"}`}>
+                      {title.length}/200
+                    </span>
+                  </div>
                 </div>
 
                 {/* Body — plain text */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-sm font-bold">Your story</label>
+                    <label htmlFor="np-body" className="text-sm font-bold">
+                      Your story <span className="text-destructive" aria-hidden>*</span>
+                    </label>
                     <div className="flex items-center gap-3">
                       <span className="text-[11px] text-muted-foreground">{wordCount} words · {readMins} min</span>
                       <button onClick={aiPolish} disabled={aiBusy === "body"} className="text-[11px] flex items-center gap-1 text-primary font-semibold hover:underline disabled:opacity-50">
@@ -397,13 +413,21 @@ export function EbsuNewsComposer() {
                     </div>
                   </div>
                   <Textarea
+                    id="np-body"
                     value={bodyText}
                     onChange={(e) => setBodyText(e.target.value)}
+                    onBlur={() => setTouched((t) => ({ ...t, body: true }))}
                     placeholder={"Just type naturally. Leave a blank line between paragraphs.\n\nExample:\nEBSU released the new academic calendar today.\n\nExams start on…"}
                     rows={10}
-                    className="text-[15px] leading-relaxed resize-none"
+                    className={`text-[15px] leading-relaxed resize-none ${touched.body && bodyError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                    aria-invalid={!!(touched.body && bodyError)}
+                    aria-describedby="np-body-help"
                   />
+                  <p id="np-body-help" className={`mt-1 text-[11px] ${touched.body && bodyError ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
+                    {touched.body && bodyError ? bodyError : "Tip: leave a blank line between paragraphs."}
+                  </p>
                 </div>
+
 
                 {type === "news" && (
                   <label className="flex items-center justify-between p-3 rounded-xl border bg-amber-500/5 border-amber-500/20 cursor-pointer">
