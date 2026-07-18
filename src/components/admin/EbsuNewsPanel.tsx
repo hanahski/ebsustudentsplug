@@ -17,6 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, Sparkles, Newspaper, ExternalLink, RotateCw, Wand2, ImagePlus } from "lucide-react";
+import { NewsSubmissionsPanel, VerifiedSourcesPanel } from "./NewsSubmissionsPanel";
+
 
 export function EbsuNewsPanel() {
   const qc = useQueryClient();
@@ -185,7 +187,11 @@ export function EbsuNewsPanel() {
 
   return (
     <div className="space-y-5">
+      <NewsSubmissionsPanel />
+      <VerifiedSourcesPanel />
+
       {/* Composer */}
+
       <div className="bg-card border rounded-3xl p-5 shadow-card">
         <div className="flex items-center gap-2 mb-3">
           <Sparkles className="w-5 h-5 text-primary" />

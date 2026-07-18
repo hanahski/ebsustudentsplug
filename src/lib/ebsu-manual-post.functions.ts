@@ -35,16 +35,24 @@ async function assertCanPost(ctx: { userId: string; supabase: any }) {
     .eq("user_id", ctx.userId)
     .eq("role", "admin")
     .maybeSingle();
-  if (role) return { isAdmin: true, isLegit: true } as const;
+  if (role) return { isAdmin: true, isVerifiedSource: true, isTrusted: true, sourceName: null as string | null, displayName: "Admin" } as const;
   const { data: prof } = await ctx.supabase
     .from("profiles")
-    .select("is_legit, display_name")
+    .select("is_legit, is_verified_source, is_trusted_source, source_name, display_name")
     .eq("id", ctx.userId)
     .maybeSingle();
-  if (!prof?.is_legit) {
-    throw new Error("Only verified legit-badge users and admins can post EBSU news.");
+  // Allow legacy is_legit users OR new is_verified_source. Admin flips these in the panel.
+  const allowed = !!(prof?.is_verified_source || prof?.is_legit);
+  if (!allowed) {
+    throw new Error("Only verified sources and admins can post EBSU news.");
   }
-  return { isAdmin: false, isLegit: true, displayName: prof.display_name as string } as const;
+  return {
+    isAdmin: false,
+    isVerifiedSource: !!prof?.is_verified_source,
+    isTrusted: !!prof?.is_trusted_source,
+    sourceName: (prof?.source_name as string) ?? null,
+    displayName: (prof?.display_name as string) ?? "StudentsPlug Writer",
+  } as const;
 }
 
 // Public flag the client uses to show/hide the FAB.
@@ -53,11 +61,18 @@ export const canPostEbsuNews = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     try {
       const r = await assertCanPost(context as any);
-      return { allowed: true, isAdmin: r.isAdmin };
+      return {
+        allowed: true,
+        isAdmin: r.isAdmin,
+        isVerifiedSource: r.isVerifiedSource,
+        isTrusted: r.isTrusted,
+        sourceName: r.sourceName,
+      };
     } catch {
-      return { allowed: false, isAdmin: false };
+      return { allowed: false, isAdmin: false, isVerifiedSource: false, isTrusted: false, sourceName: null };
     }
   });
+
 
 const PostInput = z.object({
   type: z.enum(["news", "announcement", "blog"]),
@@ -123,11 +138,15 @@ export const publishManualEbsuPost = createServerFn({ method: "POST" })
       if (!exists) break;
       slug = `${slug}-${Math.random().toString(36).slice(2, 5)}`;
     }
-    const { data: row, error } = await supabaseAdmin
+    // Admins publish immediately. Verified sources create a pending submission —
+    // the DB trigger auto-publishes for trusted sources.
+    const isAdmin = perms.isAdmin;
+    const initialStatus = isAdmin ? (data.publish ? "published" : "draft") : "pending";
+    const { data: row, error } = await (supabaseAdmin as any)
       .from("news_articles")
       .insert({
         category: "ebsu",
-        status: data.publish ? "published" : "draft",
+        status: initialStatus,
         title: `${prefix}${finalTitle}`.slice(0, 200),
         slug,
         summary: (data.summary || "").slice(0, 300) || null,
@@ -135,14 +154,139 @@ export const publishManualEbsuPost = createServerFn({ method: "POST" })
         image_url: data.imageUrl ?? null,
         source_urls: data.sourceUrls ?? [],
         author_id: context.userId,
-        published_at: publishedAt,
+        submitted_by: context.userId,
+        published_at: isAdmin && data.publish ? publishedAt : null,
       })
-      .select("id, slug")
+      .select("id, slug, status")
       .single();
     if (error) throw new Error(error.message);
-    if (data.publish) pingIndexNowServer([`/news/${row.slug}`, "/news", "/sitemap.xml"]);
-    return { id: row.id, slug: row.slug, type: data.type };
+    if (row.status === "published") pingIndexNowServer([`/news/${row.slug}`, "/news", "/sitemap.xml"]);
+    return { id: row.id, slug: row.slug, type: data.type, status: row.status as string };
   });
+
+
+// ============ Submissions: user + admin ============
+
+export const listMyNewsSubmissions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await (context.supabase as any)
+      .from("news_articles")
+      .select("id, slug, title, status, created_at, reviewed_at, rejection_reason, image_url")
+      .eq("submitted_by", context.userId)
+      .order("created_at", { ascending: false })
+      .limit(30);
+    return { rows: data ?? [] };
+  });
+
+
+async function assertAdmin(ctx: { userId: string; supabase: any }) {
+  const { data } = await ctx.supabase
+    .from("user_roles").select("role").eq("user_id", ctx.userId).eq("role", "admin").maybeSingle();
+  if (!data) throw new Error("admin only");
+}
+
+export const adminListPendingSubmissions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context as any);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows } = await (supabaseAdmin as any)
+      .from("news_articles")
+      .select("id, slug, title, summary, body, image_url, created_at, submitted_by")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    const ids = Array.from(new Set((rows ?? []).map((r: any) => r.submitted_by).filter(Boolean))) as string[];
+    let profiles: Record<string, any> = {};
+    if (ids.length) {
+      const { data: profs } = await (supabaseAdmin as any)
+        .from("profiles")
+        .select("id, display_name, avatar_key, source_name, is_trusted_source")
+        .in("id", ids);
+      profiles = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p]));
+    }
+    return { rows: (rows ?? []).map((r: any) => ({ ...r, submitter: profiles[r.submitted_by] ?? null })) };
+  });
+
+
+export const adminReviewNewsSubmission = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({
+    articleId: z.string().uuid(),
+    decision: z.enum(["approve", "reject"]),
+    reason: z.string().max(500).optional(),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as any);
+    const { error } = await (context.supabase as any).rpc("admin_review_submission", {
+      _article_id: data.articleId,
+      _decision: data.decision,
+      _reason: data.reason ?? null,
+    });
+
+    if (error) throw new Error(error.message);
+    if (data.decision === "approve") {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: row } = await supabaseAdmin
+        .from("news_articles").select("slug").eq("id", data.articleId).maybeSingle();
+      if (row?.slug) pingIndexNowServer([`/news/${row.slug}`, "/news", "/sitemap.xml"]);
+    }
+    return { ok: true };
+  });
+
+export const adminSearchSourceCandidates = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ query: z.string().trim().min(1).max(80) }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as any);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const like = `%${data.query}%`;
+    const { data: rows } = await supabaseAdmin
+      .from("profiles")
+      .select("id, display_name, email, avatar_key, is_verified_source, is_trusted_source, source_name, is_legit")
+      .or(`display_name.ilike.${like},email.ilike.${like},source_name.ilike.${like}`)
+      .limit(15);
+    return { rows: rows ?? [] };
+  });
+
+export const adminListVerifiedSources = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context as any);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows } = await (supabaseAdmin as any)
+      .from("profiles")
+      .select("id, display_name, email, avatar_key, is_verified_source, is_trusted_source, source_name")
+      .eq("is_verified_source", true)
+      .order("source_name", { ascending: true, nullsFirst: false })
+      .limit(100);
+    return { rows: rows ?? [] };
+
+  });
+
+export const adminSetSourceFlags = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({
+    userId: z.string().uuid(),
+    isVerifiedSource: z.boolean().nullable().optional(),
+    isTrustedSource: z.boolean().nullable().optional(),
+    sourceName: z.string().max(80).nullable().optional(),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as any);
+    const { error } = await (context.supabase as any).rpc("admin_set_source_flags", {
+      _user_id: data.userId,
+      _is_verified_source: data.isVerifiedSource ?? null,
+      _is_trusted_source: data.isTrustedSource ?? null,
+      _source_name: data.sourceName ?? null,
+    });
+
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 
 // Small AI helper — title suggestions, summary, rewrite polish.
 export const aiAssistNews = createServerFn({ method: "POST" })

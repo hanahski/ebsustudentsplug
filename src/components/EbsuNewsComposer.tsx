@@ -241,11 +241,14 @@ export function EbsuNewsComposer() {
       const path = res.type === "blog" ? `/blog/${res.slug}` : `/news/${res.slug}`;
       setSaved({ url: `${window.location.origin}${path}` });
       try { localStorage.removeItem(DRAFT_KEY); } catch {}
-      toast.success(asDraft || !publish ? "Draft saved" : "Published!");
+      const isPending = (res as any).status === "pending";
+      if (isPending) toast.success("Submitted for review");
+      else toast.success(asDraft || !publish ? "Draft saved" : "Published!");
       setStep(3);
-      if (!asDraft && publish) {
+      if (!asDraft && publish && !isPending) {
         setTimeout(() => { setOpen(false); resetAll(); setSaved(null); navigate({ to: path }); }, 1200);
       }
+
     } catch (e: any) {
       toast.error(e?.message ?? "Publish failed");
     } finally { setPublishing(false); }
@@ -293,8 +296,9 @@ export function EbsuNewsComposer() {
                 </span>
               </div>
               <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                {perms?.isAdmin ? "Admin" : "Legit"}
+                {perms?.isAdmin ? "Admin" : perms?.isTrusted ? "Trusted source" : perms?.isVerifiedSource ? "Verified source" : "Legit"}
               </span>
+
             </div>
             <div className="flex gap-1.5">
               {[0, 1, 2].map((i) => (
