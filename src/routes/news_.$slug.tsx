@@ -79,7 +79,7 @@ export const Route = createFileRoute("/news_/$slug")({
 function NewsArticlePage() {
   const { slug } = Route.useParams();
   const navigate = useNavigate();
-  const { isAdmin, profile } = useAuth();
+  const { isAdmin, profile, user } = useAuth();
   const canManage = isAdmin || !!(profile as any)?.is_legit || !!(profile as any)?.is_verified_source;
 
   const { data: a, refetch } = useQuery({
