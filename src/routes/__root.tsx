@@ -106,6 +106,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/9173903f-b206-4e77-b154-2dc17a1baf06" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "StudentsPlug" },
+      { name: "application-name", content: "StudentsPlug" },
+      { name: "apple-mobile-web-app-title", content: "StudentsPlug" },
       { name: "google-site-verification", content: "i-0kx77maRBfwhVjm9vXMTclPH33sCj_Ea9I6p-0MHM" },
     ],
     links: [
@@ -134,7 +137,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               name: "StudentsPlug",
               alternateName: "EBSU StudentsPlug",
               url: "https://ebsustudentsplug.fun/",
-              logo: "https://ebsustudentsplug.fun/favicon.ico",
+              logo: "https://ebsustudentsplug.fun/brand-logo.png",
               description: "Student knowledge hub for Ebonyi State University (EBSU) — past questions, study notes, free textbooks, hostel and apartment listings, campus news, marketplace, and Plug AI.",
               areaServed: { "@type": "Country", name: "Nigeria" },
               knowsAbout: ["Ebonyi State University", "EBSU past questions", "EBSU admissions", "Nigerian student life", "student accommodation Abakaliki"],
