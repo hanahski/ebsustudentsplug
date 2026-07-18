@@ -5,7 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Newspaper, RotateCw, GraduationCap } from "lucide-react";
 import { EbsuNewsComposer } from "@/components/EbsuNewsComposer";
-import feessaTvLogo from "@/assets/feessa-tv-logo.jpeg.asset.json";
+const feessaTvLogo = { url: "/feessa-tv-logo.jpeg" };
 
 
 export const Route = createFileRoute("/news")({
@@ -78,18 +78,15 @@ function NewsPage() {
             <p className="text-sm sm:text-base text-muted-foreground mt-2 max-w-xl">
               Fresh EBSU stories, announcements and student voices — refreshed all day, every day.
             </p>
-            <a
-              href="https://www.youtube.com/@feessatv"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 inline-flex items-center gap-2 group"
+            <div
+              className="mt-4 inline-flex items-center gap-2"
               aria-label="FEESSA TV — Your Faculty. Your Voice. Your Legacy."
             >
               <div className="relative inline-block">
                 <img
                   src={feessaTvLogo.url}
                   alt="FEESSA TV"
-                  className="h-14 sm:h-16 w-auto object-contain group-hover:scale-105 transition drop-shadow-lg"
+                  className="h-14 sm:h-16 w-auto object-contain drop-shadow-lg"
                 />
                 <span
                   className="absolute -top-1 -left-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500 text-white shadow-lg ring-2 ring-background"
@@ -100,7 +97,7 @@ function NewsPage() {
                   </svg>
                 </span>
               </div>
-            </a>
+            </div>
           </div>
         </section>
 
