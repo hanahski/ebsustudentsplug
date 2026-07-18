@@ -75,6 +75,29 @@ function htmlToText(html: string) {
     .trim();
 }
 
+const INLINE_IMG_TOKEN = /\[img:\s*(https?:\/\/[^\]]+?)\s*\]/gi;
+
+function extractInlineImages(text: string) {
+  const urls: string[] = [];
+  const cleanText = text
+    .replace(INLINE_IMG_TOKEN, (_m, url: string) => {
+      const clean = url.replace(/\s+/g, "");
+      if (clean) urls.push(clean);
+      return "\n\n";
+    })
+    .replace(/\n{3,}/g, "\n\n")
+    .trimStart();
+  return { cleanText, urls };
+}
+
+function uniqueImages(urls: string[]) {
+  return Array.from(new Set(urls.filter(Boolean)));
+}
+
+function hasInlineImageToken(text: string) {
+  return /\[img:\s*https?:\/\/[^\]]+?\s*\]/i.test(text);
+}
+
 export function EbsuNewsComposer() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -97,6 +120,7 @@ export function EbsuNewsComposer() {
   const [type, setType] = useState<PostType>("news");
   const [title, setTitle] = useState("");
   const [bodyText, setBodyText] = useState("");
+  const [inlineImages, setInlineImages] = useState<string[]>([]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [breaking, setBreaking] = useState(false);
   const [publish, setPublish] = useState(true);
@@ -127,13 +151,14 @@ export function EbsuNewsComposer() {
   // Inline validation
   const titleTrim = title.trim();
   const bodyTrim = bodyText.trim();
+  const hasStoryContent = !!bodyTrim || inlineImages.length > 0;
   const titleError =
     !titleTrim ? "Headline is required"
     : titleTrim.length < 4 ? `Add ${4 - titleTrim.length} more character${4 - titleTrim.length === 1 ? "" : "s"} (minimum 4)`
     : null;
   const bodyError =
-    !bodyTrim ? "Your story is required"
-    : bodyTrim.length < 10 ? `Write ${10 - bodyTrim.length} more character${10 - bodyTrim.length === 1 ? "" : "s"} (minimum 10)`
+    !hasStoryContent ? "Your story is required"
+    : bodyTrim && bodyTrim.length < 10 ? `Write ${10 - bodyTrim.length} more character${10 - bodyTrim.length === 1 ? "" : "s"} (minimum 10)`
     : null;
   const sourceInputError = (() => {
     const v = sourceInput.trim();
@@ -154,11 +179,11 @@ export function EbsuNewsComposer() {
     if (!open) return;
     const t = setTimeout(() => {
       try {
-        localStorage.setItem(DRAFT_KEY, JSON.stringify({ type, title, bodyText, imageUrl, breaking, summary, tags, sourceUrls }));
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({ type, title, bodyText, inlineImages, imageUrl, breaking, summary, tags, sourceUrls }));
       } catch {}
     }, 800);
     return () => clearTimeout(t);
-  }, [open, type, title, bodyText, imageUrl, breaking, summary, tags, sourceUrls]);
+  }, [open, type, title, bodyText, inlineImages, imageUrl, breaking, summary, tags, sourceUrls]);
 
   // Load draft
   useEffect(() => {
@@ -169,7 +194,16 @@ export function EbsuNewsComposer() {
       const d = JSON.parse(raw);
       if (d.type) setType(d.type);
       if (!title && d.title) setTitle(d.title);
-      if (!bodyText && d.bodyText) setBodyText(d.bodyText);
+      if (!bodyText && d.bodyText) {
+        const extracted = extractInlineImages(d.bodyText);
+        setBodyText(extracted.cleanText);
+        if (extracted.urls.length) {
+          setInlineImages((prev) => uniqueImages([...prev, ...extracted.urls]));
+        }
+      }
+      if (Array.isArray(d.inlineImages) && !inlineImages.length) {
+        setInlineImages((prev) => uniqueImages([...prev, ...d.inlineImages.filter((x: unknown): x is string => typeof x === "string")]));
+      }
       if (!imageUrl && d.imageUrl) setImageUrl(d.imageUrl);
       if (typeof d.breaking === "boolean") setBreaking(d.breaking);
       if (!summary && d.summary) setSummary(d.summary);
@@ -179,8 +213,20 @@ export function EbsuNewsComposer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
+  // Convert any existing/pasted image tokens into visual previews so users never
+  // have to work with the long storage URL in the writing box.
+  useEffect(() => {
+    if (!hasInlineImageToken(bodyText)) return;
+    const extracted = extractInlineImages(bodyText);
+    setBodyText(extracted.cleanText);
+    if (extracted.urls.length) {
+      setInlineImages((prev) => uniqueImages([...prev, ...extracted.urls]));
+    }
+  }, [bodyText]);
+
   function resetAll() {
     setStep(0); setType("news"); setTitle(""); setBodyText(""); setImageUrl(null);
+    setInlineImages([]);
     setBreaking(false); setPublish(true); setSummary(""); setTags([]); setSourceUrls([]);
     setSlugCustom(null); setSchedule(""); setShowAdvanced(false);
     try { localStorage.removeItem(DRAFT_KEY); } catch {}
@@ -229,21 +275,8 @@ export function EbsuNewsComposer() {
       const { error } = await supabase.storage.from("post-images").upload(path, file, { contentType: file.type, upsert: false });
       if (error) throw error;
       const { data } = supabase.storage.from("post-images").getPublicUrl(path);
-      const token = `\n\n[img:${data.publicUrl}]\n\n`;
-      const ta = bodyRef.current;
-      if (ta) {
-        const start = ta.selectionStart ?? bodyText.length;
-        const end = ta.selectionEnd ?? bodyText.length;
-        const next = bodyText.slice(0, start) + token + bodyText.slice(end);
-        setBodyText(next);
-        requestAnimationFrame(() => {
-          ta.focus();
-          const pos = start + token.length;
-          ta.setSelectionRange(pos, pos);
-        });
-      } else {
-        setBodyText((b) => b + token);
-      }
+      setInlineImages((prev) => uniqueImages([...prev, data.publicUrl]));
+      requestAnimationFrame(() => bodyRef.current?.focus());
       toast.success("Image added to story");
     } catch (e: any) {
       toast.error(e?.message ?? "Upload failed");
@@ -301,7 +334,8 @@ export function EbsuNewsComposer() {
     if (scheduleError) { setTouched((t) => ({ ...t, schedule: true })); setStep(1); setShowAdvanced(true); return toast.error(scheduleError); }
     setPublishing(true);
     try {
-      const html = sanitizeHtml(textToHtml(bodyText));
+      const storyWithImages = [bodyText, ...inlineImages.map((url) => `[img:${url}]`)].filter(Boolean).join("\n\n");
+      const html = sanitizeHtml(textToHtml(storyWithImages));
       const res = await publishFn({
         data: {
           type,
@@ -336,7 +370,16 @@ export function EbsuNewsComposer() {
   const onKey = useCallback((e: React.KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); publishNow(); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, bodyText, imageUrl, publish, breaking, schedule, type, slug, summary, tags, sourceUrls]);
+  }, [title, bodyText, inlineImages, imageUrl, publish, breaking, schedule, type, slug, summary, tags, sourceUrls]);
+
+  const updateBodyText = (value: string) => {
+    const extracted = extractInlineImages(value);
+    setBodyText(extracted.cleanText);
+    if (extracted.urls.length) {
+      setInlineImages((prev) => uniqueImages([...prev, ...extracted.urls]));
+      toast.success(extracted.urls.length === 1 ? "Image converted to preview" : "Images converted to previews");
+    }
+  };
 
   if (!perms?.allowed) return null;
 
@@ -475,7 +518,7 @@ export function EbsuNewsComposer() {
                     id="np-body"
                     ref={bodyRef}
                     value={bodyText}
-                    onChange={(e) => setBodyText(e.target.value)}
+                    onChange={(e) => updateBodyText(e.target.value)}
                     onBlur={() => setTouched((t) => ({ ...t, body: true }))}
                     placeholder={"Just type naturally. Leave a blank line between paragraphs.\n\nTip: tap 'Add image' to drop a photo right inside your story."}
                     rows={10}
@@ -484,8 +527,25 @@ export function EbsuNewsComposer() {
                     aria-describedby="np-body-help"
                   />
                   <p id="np-body-help" className={`mt-1 text-[11px] ${touched.body && bodyError ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
-                    {touched.body && bodyError ? bodyError : "Tip: leave a blank line between paragraphs. Inline photos show as [img:…] here and render as images when published."}
+                    {touched.body && bodyError ? bodyError : "Tip: leave a blank line between paragraphs. Added photos appear as previews here and publish as real images."}
                   </p>
+                  {inlineImages.length > 0 && (
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      {inlineImages.map((url) => (
+                        <div key={url} className="relative overflow-hidden rounded-xl border bg-muted aspect-[16/10]">
+                          <img src={url} alt="Story image preview" className="h-full w-full object-cover" loading="eager" />
+                          <button
+                            type="button"
+                            onClick={() => setInlineImages((prev) => prev.filter((x) => x !== url))}
+                            className="absolute right-1.5 top-1.5 rounded-full bg-background/90 p-1 shadow hover:bg-background"
+                            aria-label="Remove story image"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
 
