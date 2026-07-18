@@ -106,6 +106,9 @@ export function EbsuNewsComposer() {
   const [publishing, setPublishing] = useState(false);
   const [touched, setTouched] = useState<{ title?: boolean; body?: boolean; source?: boolean; schedule?: boolean }>({});
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const inlineFileRef = useRef<HTMLInputElement | null>(null);
+  const bodyRef = useRef<HTMLTextAreaElement | null>(null);
+  const [inlineUploading, setInlineUploading] = useState(false);
 
   const slug = slugCustom ?? slugify(title);
   const wordCount = useMemo(() => bodyText.split(/\s+/).filter(Boolean).length, [bodyText]);
