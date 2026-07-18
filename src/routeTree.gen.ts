@@ -111,6 +111,7 @@ import { Route as ApiPublicVoiceCloneRouteImport } from './routes/api/public/voi
 import { Route as ApiPublicVocalSplitV2RouteImport } from './routes/api/public/vocal-split-v2'
 import { Route as ApiPublicVocalSplitRouteImport } from './routes/api/public/vocal-split'
 import { Route as ApiPublicVirtualNumberRouteImport } from './routes/api/public/virtual-number'
+import { Route as ApiPublicProxyPdfRouteImport } from './routes/api/public/proxy-pdf'
 import { Route as ApiPublicPlugAiRouteImport } from './routes/api/public/plug-ai'
 import { Route as ApiNewsReadRouteImport } from './routes/api/news.read'
 import { Route as EarnCreditsBattlePlayMatchIdRouteImport } from './routes/earn-credits.battle.play.$matchId'
@@ -638,6 +639,11 @@ const ApiPublicVirtualNumberRoute = ApiPublicVirtualNumberRouteImport.update({
   path: '/api/public/virtual-number',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicProxyPdfRoute = ApiPublicProxyPdfRouteImport.update({
+  id: '/api/public/proxy-pdf',
+  path: '/api/public/proxy-pdf',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPlugAiRoute = ApiPublicPlugAiRouteImport.update({
   id: '/api/public/plug-ai',
   path: '/api/public/plug-ai',
@@ -824,6 +830,7 @@ export interface FileRoutesByFullPath {
   '/notes/': typeof NotesIndexRoute
   '/api/news/read': typeof ApiNewsReadRoute
   '/api/public/plug-ai': typeof ApiPublicPlugAiRoute
+  '/api/public/proxy-pdf': typeof ApiPublicProxyPdfRoute
   '/api/public/virtual-number': typeof ApiPublicVirtualNumberRoute
   '/api/public/vocal-split': typeof ApiPublicVocalSplitRoute
   '/api/public/vocal-split-v2': typeof ApiPublicVocalSplitV2Route
@@ -941,6 +948,7 @@ export interface FileRoutesByTo {
   '/notes': typeof NotesIndexRoute
   '/api/news/read': typeof ApiNewsReadRoute
   '/api/public/plug-ai': typeof ApiPublicPlugAiRoute
+  '/api/public/proxy-pdf': typeof ApiPublicProxyPdfRoute
   '/api/public/virtual-number': typeof ApiPublicVirtualNumberRoute
   '/api/public/vocal-split': typeof ApiPublicVocalSplitRoute
   '/api/public/vocal-split-v2': typeof ApiPublicVocalSplitV2Route
@@ -1062,6 +1070,7 @@ export interface FileRoutesById {
   '/notes/': typeof NotesIndexRoute
   '/api/news/read': typeof ApiNewsReadRoute
   '/api/public/plug-ai': typeof ApiPublicPlugAiRoute
+  '/api/public/proxy-pdf': typeof ApiPublicProxyPdfRoute
   '/api/public/virtual-number': typeof ApiPublicVirtualNumberRoute
   '/api/public/vocal-split': typeof ApiPublicVocalSplitRoute
   '/api/public/vocal-split-v2': typeof ApiPublicVocalSplitV2Route
@@ -1184,6 +1193,7 @@ export interface FileRouteTypes {
     | '/notes/'
     | '/api/news/read'
     | '/api/public/plug-ai'
+    | '/api/public/proxy-pdf'
     | '/api/public/virtual-number'
     | '/api/public/vocal-split'
     | '/api/public/vocal-split-v2'
@@ -1301,6 +1311,7 @@ export interface FileRouteTypes {
     | '/notes'
     | '/api/news/read'
     | '/api/public/plug-ai'
+    | '/api/public/proxy-pdf'
     | '/api/public/virtual-number'
     | '/api/public/vocal-split'
     | '/api/public/vocal-split-v2'
@@ -1421,6 +1432,7 @@ export interface FileRouteTypes {
     | '/notes/'
     | '/api/news/read'
     | '/api/public/plug-ai'
+    | '/api/public/proxy-pdf'
     | '/api/public/virtual-number'
     | '/api/public/vocal-split'
     | '/api/public/vocal-split-v2'
@@ -1517,6 +1529,7 @@ export interface RootRouteChildren {
   EarnCreditsIndexRoute: typeof EarnCreditsIndexRoute
   NotesIndexRoute: typeof NotesIndexRoute
   ApiPublicPlugAiRoute: typeof ApiPublicPlugAiRoute
+  ApiPublicProxyPdfRoute: typeof ApiPublicProxyPdfRoute
   ApiPublicVirtualNumberRoute: typeof ApiPublicVirtualNumberRoute
   ApiPublicVocalSplitRoute: typeof ApiPublicVocalSplitRoute
   ApiPublicVocalSplitV2Route: typeof ApiPublicVocalSplitV2Route
@@ -2256,6 +2269,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicVirtualNumberRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/proxy-pdf': {
+      id: '/api/public/proxy-pdf'
+      path: '/api/public/proxy-pdf'
+      fullPath: '/api/public/proxy-pdf'
+      preLoaderRoute: typeof ApiPublicProxyPdfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/plug-ai': {
       id: '/api/public/plug-ai'
       path: '/api/public/plug-ai'
@@ -2562,6 +2582,7 @@ const rootRouteChildren: RootRouteChildren = {
   EarnCreditsIndexRoute: EarnCreditsIndexRoute,
   NotesIndexRoute: NotesIndexRoute,
   ApiPublicPlugAiRoute: ApiPublicPlugAiRoute,
+  ApiPublicProxyPdfRoute: ApiPublicProxyPdfRoute,
   ApiPublicVirtualNumberRoute: ApiPublicVirtualNumberRoute,
   ApiPublicVocalSplitRoute: ApiPublicVocalSplitRoute,
   ApiPublicVocalSplitV2Route: ApiPublicVocalSplitV2Route,

@@ -248,9 +248,12 @@ function ReadBookPage() {
     } catch {}
   }, [cachedPdfStorageKey]);
 
-  // Direct PDF link (no caching needed) — feed it straight to the reader.
+  // Direct PDF link — pipe it through our same-origin proxy so pdf.js can
+  // fetch it without CORS/range errors from openstax/libretexts/gutenberg.
   useEffect(() => {
-    if (detected.pdfUrl && !cachedPdfUrl) setCachedPdfUrl(detected.pdfUrl);
+    if (detected.pdfUrl && !cachedPdfUrl) {
+      setCachedPdfUrl(`/api/public/proxy-pdf?url=${encodeURIComponent(detected.pdfUrl)}`);
+    }
   }, [detected.pdfUrl, cachedPdfUrl]);
 
   // The moment a user owns a non-Gutenberg book, mirror to Cloud and open the reader.
