@@ -7,7 +7,7 @@ import { purchaseLibraryBook } from "@/lib/library-purchase.functions";
 import { handleEmailNotVerified } from "@/components/VerifyEmailDialog";
 
 import { ensureLibraryCatalog } from "@/lib/library-books.functions";
-import { fetchLibraryBooksClient } from "@/lib/library-books.client";
+import { fetchLibraryBooksClient } from "@/lib/library-books-browser";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import {
