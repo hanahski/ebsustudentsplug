@@ -137,7 +137,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               name: "StudentsPlug",
               alternateName: "EBSU StudentsPlug",
               url: "https://ebsustudentsplug.fun/",
-              logo: "https://ebsustudentsplug.fun/favicon.ico",
+              logo: "https://ebsustudentsplug.fun/brand-logo.png",
               description: "Student knowledge hub for Ebonyi State University (EBSU) — past questions, study notes, free textbooks, hostel and apartment listings, campus news, marketplace, and Plug AI.",
               areaServed: { "@type": "Country", name: "Nigeria" },
               knowsAbout: ["Ebonyi State University", "EBSU past questions", "EBSU admissions", "Nigerian student life", "student accommodation Abakaliki"],
