@@ -61,11 +61,11 @@ function SecurityPage() {
     if (!user?.email) return toast.error("No email on this account");
     setBusy(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(user.email);
-      if (error) throw error;
+      const { sendRecoveryOtp } = await import("@/lib/password-reset-otp.functions");
+      await sendRecoveryOtp({ data: { email: user.email } });
       toast.success("Code sent to your email");
-      await nav({ to: "/verify-otp", search: { email: user.email, redirect: "/me/security", mode: "recovery" } });
-    } catch (err: any) { toast.error(err.message); }
+      await nav({ to: "/reset-password", search: { email: user.email } });
+    } catch (err: any) { toast.error(err.message || "Could not send code"); }
     finally { setBusy(false); }
   };
 
