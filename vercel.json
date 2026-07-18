@@ -1,0 +1,21 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://ebsustudentsplug.lovable.app/api/:path*"
+    },
+    {
+      "source": "/_serverFn/:path*",
+      "destination": "https://ebsustudentsplug.lovable.app/_serverFn/:path*"
+    },
+    {
+      "source": "/lovable/:path*",
+      "destination": "https://ebsustudentsplug.lovable.app/lovable/:path*"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "https://ebsustudentsplug.lovable.app/sitemap.xml"
+    }
+  ]
+}
