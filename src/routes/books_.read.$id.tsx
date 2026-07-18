@@ -62,7 +62,7 @@ export const Route = createFileRoute("/books_/read/$id")({
             url,
             offers: {
               "@type": "Offer",
-              price: b.is_free ? 0 : priceNum,
+              price: priceNum,
               priceCurrency: "NGN",
               availability: "https://schema.org/InStock",
               url,
