@@ -41,13 +41,17 @@ function AvatarPage() {
     try {
       const enhanced = await enhanceImageFile(file);
       const ext = (enhanced.name.split(".").pop() || "jpg").toLowerCase();
-      const path = `${profile.id}/avatar-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("covers").upload(path, enhanced, { upsert: true, contentType: enhanced.type });
-      if (upErr) throw upErr;
+      const { path } = await safeUserUpload({
+        bucket: "covers",
+        file: enhanced,
+        filename: `avatar-${Date.now()}.${ext}`,
+        contentType: enhanced.type,
+        upsert: true,
+      });
       const { data: signed, error: sErr } = await supabase.storage.from("covers").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
       if (sErr) throw sErr;
       await save(signed.signedUrl);
-    } catch (e: any) { toast.error(e.message ?? "Upload failed"); }
+    } catch (e: any) { toast.error(friendlyUploadError(e)); }
     finally { setUploading(false); }
   };
 
