@@ -137,8 +137,9 @@ function NewsArticlePage() {
     }
   };
 
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const onDelete = async () => {
-    if (!confirm("Delete this article? This can't be undone.")) return;
+    setConfirmDelete(false);
     setDeleting(true);
     try {
       await deleteFn({ data: { id: a.id } });
