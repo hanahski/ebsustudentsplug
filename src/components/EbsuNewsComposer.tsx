@@ -98,11 +98,38 @@ export function EbsuNewsComposer() {
   const [uploading, setUploading] = useState(false);
   const [aiBusy, setAiBusy] = useState<"" | "title" | "body" | "summary" | "cover">("");
   const [publishing, setPublishing] = useState(false);
+  const [touched, setTouched] = useState<{ title?: boolean; body?: boolean; source?: boolean; schedule?: boolean }>({});
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   const slug = slugCustom ?? slugify(title);
   const wordCount = useMemo(() => bodyText.split(/\s+/).filter(Boolean).length, [bodyText]);
   const readMins = Math.max(1, Math.round(wordCount / 220));
+
+  // Inline validation
+  const titleTrim = title.trim();
+  const bodyTrim = bodyText.trim();
+  const titleError =
+    !titleTrim ? "Headline is required"
+    : titleTrim.length < 4 ? `Add ${4 - titleTrim.length} more character${4 - titleTrim.length === 1 ? "" : "s"} (minimum 4)`
+    : titleTrim.length > 180 ? "Try to keep it under 180 characters for better readability"
+    : null;
+  const bodyError =
+    !bodyTrim ? "Your story is required"
+    : bodyTrim.length < 10 ? `Write ${10 - bodyTrim.length} more character${10 - bodyTrim.length === 1 ? "" : "s"} (minimum 10)`
+    : null;
+  const sourceInputError = (() => {
+    const v = sourceInput.trim();
+    if (!v) return null;
+    try { const u = new URL(v); if (!/^https?:$/.test(u.protocol)) return "Link must start with http:// or https://"; return null; }
+    catch { return "That doesn't look like a valid link"; }
+  })();
+  const scheduleError = (() => {
+    if (!schedule) return null;
+    const d = new Date(schedule);
+    if (isNaN(d.getTime())) return "Pick a valid date and time";
+    if (d.getTime() < Date.now() - 60_000) return "Schedule must be in the future";
+    return null;
+  })();
 
   // Autosave
   useEffect(() => {
