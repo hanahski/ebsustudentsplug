@@ -606,7 +606,18 @@ export function EbsuNewsComposer() {
               )}
               <div className="flex-1" />
               {step === 1 && (
-                <Button size="sm" onClick={() => setStep(2)} disabled={!canGoNext} className="min-w-[100px]">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    if (!canGoNext) {
+                      setTouched((t) => ({ ...t, title: true, body: true, schedule: !!schedule || t.schedule }));
+                      toast.error(titleError || bodyError || scheduleError || "Fix the highlighted fields");
+                      return;
+                    }
+                    setStep(2);
+                  }}
+                  className="min-w-[100px]"
+                >
                   Next <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               )}
