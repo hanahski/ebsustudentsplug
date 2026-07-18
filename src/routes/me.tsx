@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { LogOut, Coins, Camera, Ticket, Bookmark, ShieldCheck, Library, Shield, UserCog, Award, KeyRound, LayoutDashboard, Settings as SettingsIcon, Megaphone, Users } from "lucide-react";
 import { enhanceImageFile } from "@/lib/image-enhance";
+import { safeUserUpload, friendlyUploadError } from "@/lib/safe-upload";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AvatarLightbox } from "@/components/AvatarLightbox";
 import { VerifyStudentDialog } from "@/components/VerifyStudentDialog";
