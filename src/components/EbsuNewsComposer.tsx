@@ -448,24 +448,35 @@ export function EbsuNewsComposer() {
                     </label>
                     <div className="flex items-center gap-3">
                       <span className="text-[11px] text-muted-foreground">{wordCount} words · {readMins} min</span>
+                      <button onClick={() => inlineFileRef.current?.click()} disabled={inlineUploading} className="text-[11px] flex items-center gap-1 text-primary font-semibold hover:underline disabled:opacity-50">
+                        {inlineUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ImageIcon className="w-3 h-3" />} Add image
+                      </button>
                       <button onClick={aiPolish} disabled={aiBusy === "body"} className="text-[11px] flex items-center gap-1 text-primary font-semibold hover:underline disabled:opacity-50">
                         {aiBusy === "body" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wand2 className="w-3 h-3" />} Polish
                       </button>
                     </div>
                   </div>
+                  <input
+                    ref={inlineFileRef}
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) onInlineImage(f); e.target.value = ""; }}
+                  />
                   <Textarea
                     id="np-body"
+                    ref={bodyRef}
                     value={bodyText}
                     onChange={(e) => setBodyText(e.target.value)}
                     onBlur={() => setTouched((t) => ({ ...t, body: true }))}
-                    placeholder={"Just type naturally. Leave a blank line between paragraphs.\n\nExample:\nEBSU released the new academic calendar today.\n\nExams start on…"}
+                    placeholder={"Just type naturally. Leave a blank line between paragraphs.\n\nTip: tap 'Add image' to drop a photo right inside your story."}
                     rows={10}
                     className={`text-[15px] leading-relaxed resize-none ${touched.body && bodyError ? "border-destructive focus-visible:ring-destructive" : ""}`}
                     aria-invalid={!!(touched.body && bodyError)}
                     aria-describedby="np-body-help"
                   />
                   <p id="np-body-help" className={`mt-1 text-[11px] ${touched.body && bodyError ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
-                    {touched.body && bodyError ? bodyError : "Tip: leave a blank line between paragraphs."}
+                    {touched.body && bodyError ? bodyError : "Tip: leave a blank line between paragraphs. Inline photos show as [img:…] here and render as images when published."}
                   </p>
                 </div>
 
