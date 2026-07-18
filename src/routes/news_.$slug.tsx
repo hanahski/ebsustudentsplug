@@ -139,8 +139,8 @@ function NewsArticlePage() {
     }
   };
 
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const onDelete = async () => {
+
     setConfirmDelete(false);
     setDeleting(true);
     try {
