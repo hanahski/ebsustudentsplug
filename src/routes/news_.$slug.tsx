@@ -96,8 +96,10 @@ function NewsArticlePage() {
   const [deleting, setDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ title: "", summary: "", body: "", imageUrl: "" });
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (!a) return <AppShell><p className="text-sm text-muted-foreground py-8 text-center">Loading…</p></AppShell>;
+
 
   const sources: string[] = Array.isArray(a.source_urls) ? (a.source_urls as any[]).filter((x): x is string => typeof x === "string") : [];
 
@@ -137,8 +139,8 @@ function NewsArticlePage() {
     }
   };
 
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const onDelete = async () => {
+
     setConfirmDelete(false);
     setDeleting(true);
     try {
