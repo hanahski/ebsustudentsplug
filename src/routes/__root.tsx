@@ -9,6 +9,7 @@ import { VideoSWRegister } from "@/components/VideoSWRegister";
 import { KeyboardAware } from "@/components/KeyboardAware";
 import { GoogleTranslateBridge } from "@/components/GoogleTranslateBridge";
 import { VerifyEmailDialog } from "@/components/VerifyEmailDialog";
+import { ConfirmProvider } from "@/components/ConfirmProvider";
 
 
 import appCss from "../styles.css?url";
@@ -168,17 +169,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     return (
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <AppBridgeMount />
-          <VideoSWRegister />
-          <KeyboardAware />
-          <GoogleTranslateBridge />
-          <AuthStatusBanner />
-          <RouteLoadingIndicator />
-          
-          <NetworkStatus />
-          <Outlet />
-          <VerifyEmailDialog />
-          <Toaster richColors position="top-center" />
+          <ConfirmProvider>
+            <AppBridgeMount />
+            <VideoSWRegister />
+            <KeyboardAware />
+            <GoogleTranslateBridge />
+            <AuthStatusBanner />
+            <RouteLoadingIndicator />
+            
+            <NetworkStatus />
+            <Outlet />
+            <VerifyEmailDialog />
+            <Toaster richColors position="top-center" />
+          </ConfirmProvider>
         </AuthProvider>
 
       </QueryClientProvider>

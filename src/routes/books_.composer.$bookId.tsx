@@ -1,3 +1,4 @@
+import { confirm } from "@/components/ConfirmProvider";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -861,8 +862,8 @@ function ComposerEditorPage() {
                   <Button
                     size="icon"
                     variant="ghost"
-                    onClick={() => {
-                      if (confirm("Delete this chapter?")) deleteChapter.mutate(active.id);
+                    onClick={async () => {
+                      if (await confirm({ title: "Delete this chapter?", variant: "destructive", confirmText: "Delete chapter", icon: "trash" })) deleteChapter.mutate(active.id);
                     }}
                     title="Delete chapter"
                   >

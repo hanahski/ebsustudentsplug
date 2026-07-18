@@ -1,3 +1,4 @@
+import { confirm } from "@/components/ConfirmProvider";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import ReactMarkdown from "react-markdown";
@@ -163,8 +164,8 @@ export function AdminAiPanel() {
     }
   }
 
-  const clear = () => {
-    if (!confirm("Clear console history?")) return;
+  const clear = async () => {
+    if (!(await confirm({ title: "Clear console history?", description: "All console messages will be removed.", confirmText: "Clear" }))) return;
     setMsgs([]);
     seenIds.current.clear();
     localStorage.removeItem(KEY);

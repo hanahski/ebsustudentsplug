@@ -1,3 +1,4 @@
+import { confirm } from "@/components/ConfirmProvider";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -205,7 +206,7 @@ function ListingDetail() {
     refetch();
   };
   const del = async () => {
-    if (!confirm("Delete this listing?")) return;
+    if (!(await confirm({ title: "Delete this listing?", description: "It will be removed from the market immediately.", variant: "destructive", confirmText: "Delete listing", icon: "trash" }))) return;
     const { error } = await supabase.from("market_listings").delete().eq("id", id);
     if (error) toast.error(error.message);
     else { toast.success("Deleted"); nav({ to: "/market" }); }

@@ -1,3 +1,4 @@
+import { confirm } from "@/components/ConfirmProvider";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -135,7 +136,7 @@ function PostPage() {
 
   const canDelete = user && (user.id === post.author_id);
   const remove = async () => {
-    if (!confirm("Delete this post?")) return;
+    if (!(await confirm({ title: "Delete this post?", description: "It will be permanently removed.", variant: "destructive", confirmText: "Delete post", icon: "trash" }))) return;
     const { error } = await supabase.from("posts").delete().eq("id", id);
     if (error) toast.error(error.message); else { toast.success("Deleted"); nav({ to: "/" }); }
   };
