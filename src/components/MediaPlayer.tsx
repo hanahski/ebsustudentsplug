@@ -11,6 +11,7 @@ import { getSocialEmbed } from "@/lib/video-embed";
 import { AvatarVisualizer } from "./AvatarVisualizer";
 import { parseTimeFragment } from "@/lib/trim";
 import { resolveStorageUrl } from "@/lib/storage-url";
+import { ShimmerImage } from "./ShimmerImage";
 
 /** Resolve a possibly-private Supabase storage URL to a signed URL once. */
 function useResolvedUrl(url: string): string | null {
