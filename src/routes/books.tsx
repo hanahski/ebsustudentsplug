@@ -6,7 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { purchaseLibraryBook } from "@/lib/library-purchase.functions";
 import { handleEmailNotVerified } from "@/components/VerifyEmailDialog";
 
-import { getLibraryBooks, ensureLibraryCatalog } from "@/lib/library-books.functions";
+import { ensureLibraryCatalog } from "@/lib/library-books.functions";
+import { fetchLibraryBooksClient } from "@/lib/library-books.client";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import {
