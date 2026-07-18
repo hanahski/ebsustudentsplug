@@ -17,6 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, Sparkles, Newspaper, ExternalLink, RotateCw, Wand2, ImagePlus } from "lucide-react";
+import { NewsSubmissionsPanel, VerifiedSourcesPanel } from "./NewsSubmissionsPanel";
+
 
 export function EbsuNewsPanel() {
   const qc = useQueryClient();
