@@ -5,6 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Newspaper, RotateCw, GraduationCap } from "lucide-react";
 import { EbsuNewsComposer } from "@/components/EbsuNewsComposer";
+import { ShimmerImage } from "@/components/ShimmerImage";
 const feessaTvLogo = { url: "/feessa-tv-logo.jpeg" };
 
 

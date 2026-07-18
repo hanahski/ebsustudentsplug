@@ -420,11 +420,11 @@ export function MediaPlayer({ url: rawUrl, type, title, avatarKey, postId }: Pro
   if (kind === "image") {
 
     return (
-      <img
+      <ShimmerImage
         src={url}
         alt={title ?? "media"}
-        loading="lazy"
-        className="w-full rounded-2xl border bg-muted object-contain max-h-[80vh]"
+        wrapperClassName="w-full rounded-2xl border bg-muted max-h-[80vh] flex items-center justify-center"
+        className="w-full h-auto max-h-[80vh] object-contain rounded-2xl"
       />
     );
   }

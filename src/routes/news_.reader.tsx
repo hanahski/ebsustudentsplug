@@ -296,7 +296,7 @@ function NewsReaderPage() {
                   ),
                   img: ({ node, ...props }: any) => (
                     // eslint-disable-next-line jsx-a11y/alt-text
-                    <img loading="lazy" {...props} className="rounded-2xl shadow-card mx-auto my-4" />
+                    <img loading="eager" decoding="async" {...props} className="rounded-2xl shadow-card mx-auto my-4" />
                   ),
                   a: ({ node, children, ...props }: any) => (
                     <span

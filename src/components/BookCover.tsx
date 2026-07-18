@@ -39,7 +39,7 @@ export function BookCover({ title, author, src, className, imageClassName }: Boo
         <img
           src={resolvedSrc}
           alt={`Cover of ${title}`}
-          loading="lazy"
+          loading="eager"
           decoding="async"
           onError={() => setFailed(true)}
           className={cn("h-full w-full object-cover", imageClassName)}
