@@ -16,6 +16,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { StoryEditor } from "@/components/StoryEditor";
+import { ShimmerImage } from "@/components/ShimmerImage";
 import { deleteEbsuArticle, updateEbsuArticle } from "@/lib/ebsu-manual-post.functions";
 import { toast } from "sonner";
 
@@ -185,7 +186,13 @@ function NewsArticlePage() {
         </div>
 
         {a.image_url && (
-          <img src={a.image_url} alt="" className="w-full rounded-2xl mb-6 shadow-card" />
+          <ShimmerImage
+            src={a.image_url}
+            alt=""
+            aspect="16 / 9"
+            wrapperClassName="w-full rounded-2xl mb-6 shadow-card bg-muted"
+            className="w-full h-full object-cover"
+          />
         )}
 
         <div

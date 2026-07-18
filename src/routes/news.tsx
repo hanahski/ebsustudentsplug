@@ -153,9 +153,13 @@ function EbsuFeed({ articles, loading }: { articles: any[]; loading: boolean }) 
           className="group bg-card border rounded-2xl overflow-hidden shadow-card hover:shadow-glow hover:-translate-y-0.5 transition flex flex-col"
         >
           {a.image_url && (
-            <div className="aspect-[16/9] overflow-hidden bg-muted">
-              <img src={a.image_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-            </div>
+            <ShimmerImage
+              src={a.image_url}
+              alt=""
+              aspect="16 / 9"
+              wrapperClassName="bg-muted"
+              className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+            />
           )}
           <div className="p-4 flex flex-col flex-1">
             <div className="text-[11px] font-bold uppercase tracking-wider text-primary mb-1.5">EBSU · {timeAgo(a.published_at)}</div>
