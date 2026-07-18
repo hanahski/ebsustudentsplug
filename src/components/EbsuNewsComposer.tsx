@@ -42,13 +42,23 @@ function stripHtml(html: string) {
 // Also converts inline image tokens `[img:URL]` into <img> tags.
 function textToHtml(text: string) {
   const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const IMG = /\[img:\s*(https?:\/\/[^\]]+?)\s*\]/gi;
   return text
     .split(/\n\s*\n/)
     .map((p) => {
-      const trimmed = p.trim();
-      const m = trimmed.match(/^\[img:(https?:\/\/[^\]\s]+)\]$/);
-      if (m) return `<p><img src="${m[1]}" alt="" loading="eager" style="max-width:100%;border-radius:12px;" /></p>`;
-      return `<p>${esc(p).replace(/\n/g, "<br/>")}</p>`;
+      // Render each paragraph, replacing inline [img:URL] tokens (even mid-paragraph,
+      // and even when the URL wrapped onto a new line inside the brackets).
+      const parts = p.split(IMG);
+      let out = "";
+      for (let i = 0; i < parts.length; i++) {
+        if (i % 2 === 1) {
+          const url = parts[i].replace(/\s+/g, "");
+          out += `</p><p><img src="${url}" alt="" loading="eager" style="max-width:100%;border-radius:12px;" /></p><p>`;
+        } else {
+          out += esc(parts[i]).replace(/\n/g, "<br/>");
+        }
+      }
+      return `<p>${out}</p>`.replace(/<p>\s*<\/p>/g, "");
     })
     .join("");
 }
