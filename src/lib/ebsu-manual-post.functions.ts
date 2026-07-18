@@ -191,12 +191,13 @@ export const adminListPendingSubmissions = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context as any);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows } = await supabaseAdmin
+    const { data: rows } = await (supabaseAdmin as any)
       .from("news_articles")
       .select("id, slug, title, summary, body, image_url, created_at, submitted_by")
       .eq("status", "pending")
       .order("created_at", { ascending: false })
       .limit(50);
+
     const ids = Array.from(new Set((rows ?? []).map((r: any) => r.submitted_by).filter(Boolean)));
     let profiles: Record<string, any> = {};
     if (ids.length) {
