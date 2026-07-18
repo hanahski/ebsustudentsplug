@@ -1,9 +1,18 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
-import { ArrowLeft, ExternalLink, Calendar } from "lucide-react";
+import { ArrowLeft, ExternalLink, Calendar, Pencil, Trash2, Loader2, X, Save } from "lucide-react";
 import { renderArticleHtml } from "@/lib/render-article";
+import { useAuth } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { deleteEbsuArticle, updateEbsuArticle } from "@/lib/ebsu-manual-post.functions";
+import { toast } from "sonner";
 
 
 
@@ -64,7 +73,11 @@ export const Route = createFileRoute("/news_/$slug")({
 
 function NewsArticlePage() {
   const { slug } = Route.useParams();
-  const { data: a } = useQuery({
+  const navigate = useNavigate();
+  const { isAdmin, profile } = useAuth();
+  const canManage = isAdmin || !!(profile as any)?.is_legit || !!(profile as any)?.is_verified_source;
+
+  const { data: a, refetch } = useQuery({
     queryKey: ["news-article", slug],
     queryFn: async () => {
       const { data } = await supabase.from("news_articles").select("*").eq("slug", slug).maybeSingle();
@@ -72,16 +85,85 @@ function NewsArticlePage() {
     },
   });
 
+  const deleteFn = useServerFn(deleteEbsuArticle);
+  const updateFn = useServerFn(updateEbsuArticle);
+  const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ title: "", summary: "", body: "", imageUrl: "" });
+
   if (!a) return <AppShell><p className="text-sm text-muted-foreground py-8 text-center">Loading…</p></AppShell>;
 
   const sources: string[] = Array.isArray(a.source_urls) ? (a.source_urls as any[]).filter((x): x is string => typeof x === "string") : [];
 
+  const openEdit = () => {
+    setForm({
+      title: a.title ?? "",
+      summary: a.summary ?? "",
+      body: a.body ?? "",
+      imageUrl: a.image_url ?? "",
+    });
+    setEditing(true);
+  };
+
+  const onSave = async () => {
+    if (!form.title.trim() || form.body.trim().length < 10) {
+      toast.error("Title and body are required.");
+      return;
+    }
+    setSaving(true);
+    try {
+      await updateFn({
+        data: {
+          id: a.id,
+          title: form.title.trim(),
+          summary: form.summary.trim() || null,
+          body: form.body,
+          imageUrl: form.imageUrl.trim() || null,
+        },
+      });
+      toast.success("Article updated");
+      setEditing(false);
+      await refetch();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to update");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const onDelete = async () => {
+    if (!confirm("Delete this article? This can't be undone.")) return;
+    setDeleting(true);
+    try {
+      await deleteFn({ data: { id: a.id } });
+      toast.success("Article deleted");
+      navigate({ to: "/news" });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to delete");
+      setDeleting(false);
+    }
+  };
+
   return (
     <AppShell>
       <article className="max-w-3xl mx-auto">
-        <Link to="/news" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
-          <ArrowLeft className="w-4 h-4" /> All news
-        </Link>
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <Link to="/news" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="w-4 h-4" /> All news
+          </Link>
+          {canManage && (
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" onClick={openEdit}>
+                <Pencil className="w-3.5 h-3.5 mr-1" /> Edit
+              </Button>
+              <Button size="sm" variant="destructive" onClick={onDelete} disabled={deleting}>
+                {deleting ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Trash2 className="w-3.5 h-3.5 mr-1" />}
+                Delete
+              </Button>
+            </div>
+          )}
+        </div>
 
         <div className="inline-block text-xs font-bold uppercase tracking-wider text-primary mb-2">
           EBSU News
@@ -118,6 +200,40 @@ function NewsArticlePage() {
           </div>
         )}
       </article>
+
+      <Dialog open={editing} onOpenChange={setEditing}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-display font-bold text-lg">Edit article</h3>
+            <button onClick={() => setEditing(false)} className="p-1 rounded hover:bg-muted"><X className="w-4 h-4" /></button>
+          </div>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground">Title</label>
+              <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground">Summary</label>
+              <Textarea rows={2} value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground">Cover image URL</label>
+              <Input value={form.imageUrl} placeholder="https://…" onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground">Body (HTML supported)</label>
+              <Textarea rows={12} value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
+              <Button onClick={onSave} disabled={saving}>
+                {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
+                Save changes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
