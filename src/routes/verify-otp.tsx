@@ -30,6 +30,14 @@ function VerifyOtpPage() {
   const [busy, setBusy] = useState(false);
   const [resendIn, setResendIn] = useState(0);
 
+  // Recovery uses the Gmail-backed /reset-password flow (sends from
+  // studentsplug@gmail.com), not Supabase's default sender.
+  useEffect(() => {
+    if (isRecovery) {
+      nav({ to: "/reset-password", search: { email: emailParam } });
+    }
+  }, [isRecovery, emailParam, nav]);
+
   useEffect(() => {
     if (resendIn <= 0) return;
     const t = setTimeout(() => setResendIn((s) => s - 1), 1000);
