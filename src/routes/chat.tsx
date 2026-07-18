@@ -1558,7 +1558,7 @@ function PlugAiPane({ meId, onBack }: { meId: string; onBack: () => void }) {
     }
   };
 
-  const clear = () => {
+  const clear = async () => {
     if (!(await confirm({ title: "Clear this conversation?", description: "Your chat history with Plug AI will be deleted.", variant: "destructive", confirmText: "Clear chat" }))) return;
     setMsgs([]);
     setPendingImages([]);
