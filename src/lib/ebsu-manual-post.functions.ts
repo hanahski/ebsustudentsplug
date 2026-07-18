@@ -35,16 +35,24 @@ async function assertCanPost(ctx: { userId: string; supabase: any }) {
     .eq("user_id", ctx.userId)
     .eq("role", "admin")
     .maybeSingle();
-  if (role) return { isAdmin: true, isLegit: true } as const;
+  if (role) return { isAdmin: true, isVerifiedSource: true, isTrusted: true, sourceName: null as string | null, displayName: "Admin" } as const;
   const { data: prof } = await ctx.supabase
     .from("profiles")
-    .select("is_legit, display_name")
+    .select("is_legit, is_verified_source, is_trusted_source, source_name, display_name")
     .eq("id", ctx.userId)
     .maybeSingle();
-  if (!prof?.is_legit) {
-    throw new Error("Only verified legit-badge users and admins can post EBSU news.");
+  // Allow legacy is_legit users OR new is_verified_source. Admin flips these in the panel.
+  const allowed = !!(prof?.is_verified_source || prof?.is_legit);
+  if (!allowed) {
+    throw new Error("Only verified sources and admins can post EBSU news.");
   }
-  return { isAdmin: false, isLegit: true, displayName: prof.display_name as string } as const;
+  return {
+    isAdmin: false,
+    isVerifiedSource: !!prof?.is_verified_source,
+    isTrusted: !!prof?.is_trusted_source,
+    sourceName: (prof?.source_name as string) ?? null,
+    displayName: (prof?.display_name as string) ?? "StudentsPlug Writer",
+  } as const;
 }
 
 // Public flag the client uses to show/hide the FAB.
@@ -53,11 +61,18 @@ export const canPostEbsuNews = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     try {
       const r = await assertCanPost(context as any);
-      return { allowed: true, isAdmin: r.isAdmin };
+      return {
+        allowed: true,
+        isAdmin: r.isAdmin,
+        isVerifiedSource: r.isVerifiedSource,
+        isTrusted: r.isTrusted,
+        sourceName: r.sourceName,
+      };
     } catch {
-      return { allowed: false, isAdmin: false };
+      return { allowed: false, isAdmin: false, isVerifiedSource: false, isTrusted: false, sourceName: null };
     }
   });
+
 
 const PostInput = z.object({
   type: z.enum(["news", "announcement", "blog"]),
