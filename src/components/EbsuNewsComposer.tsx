@@ -175,10 +175,11 @@ export function EbsuNewsComposer() {
   };
   const addSource = () => {
     const v = sourceInput.trim();
-    if (!v) return;
-    try { new URL(v); } catch { toast.error("Enter a valid URL"); return; }
-    if (sourceUrls.length >= 8) return;
-    setSourceUrls((p) => [...p, v]); setSourceInput("");
+    if (!v) { setTouched((t) => ({ ...t, source: true })); toast.error("Paste a link first"); return; }
+    if (sourceInputError) { setTouched((t) => ({ ...t, source: true })); toast.error(sourceInputError); return; }
+    if (sourceUrls.includes(v)) { toast.info("That source is already added"); return; }
+    if (sourceUrls.length >= 8) { toast.error("You can add up to 8 sources"); return; }
+    setSourceUrls((p) => [...p, v]); setSourceInput(""); setTouched((t) => ({ ...t, source: false }));
   };
 
   const onFile = async (file: File) => {
