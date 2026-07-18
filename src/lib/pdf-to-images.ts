@@ -9,10 +9,11 @@ export async function pdfToImages(
 ): Promise<PageImage[]> {
   const { maxPages = 20, scale = 2, onProgress } = opts;
 
-  const pdfjs: any = await import("pdfjs-dist/build/pdf.mjs");
-  // Worker via CDN — avoids bundler quirks
-  const workerSrc = (await import("pdfjs-dist/build/pdf.worker.mjs?url")).default;
-  pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+  const pdfjs: any = await import(
+    /* @vite-ignore */ "https://esm.sh/pdfjs-dist@4.7.76/build/pdf.mjs"
+  );
+  pdfjs.GlobalWorkerOptions.workerSrc =
+    "https://esm.sh/pdfjs-dist@4.7.76/build/pdf.worker.mjs";
 
   const buf = await file.arrayBuffer();
   const doc = await pdfjs.getDocument({ data: buf }).promise;
