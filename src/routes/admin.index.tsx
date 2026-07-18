@@ -949,8 +949,22 @@ function AdminBanners() {
         <Button onClick={add} disabled={uploading || !title}>Add banner</Button>
       </div>
 
+      <div className={`rounded-2xl border p-3 flex items-center justify-between gap-3 ${defaultsHidden ? "bg-amber-500/10 border-amber-500/30" : "bg-card"}`}>
+        <div className="min-w-0">
+          <p className="font-semibold text-sm">Built-in banners</p>
+          <p className="text-[11px] text-muted-foreground line-clamp-2">
+            {defaultsHidden
+              ? "Hidden site-wide. Only your custom banners show on the home carousel."
+              : "The 4 default StudentsPlug banners are visible when there are no custom banners left."}
+          </p>
+        </div>
+        <Button size="sm" variant={defaultsHidden ? "default" : "outline"} onClick={toggleDefaults}>
+          {defaultsHidden ? "Restore built-ins" : "Hide built-ins"}
+        </Button>
+      </div>
+
       <div className="space-y-2">
-        {(data ?? []).map((b: any, idx: number) => {
+        {visibleRows.map((b: any, idx: number) => {
           const stats = ctr?.get(b.id);
           const imp = stats?.impressions ?? 0;
           const clk = stats?.clicks ?? 0;
