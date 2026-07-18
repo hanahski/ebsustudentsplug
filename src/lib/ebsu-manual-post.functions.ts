@@ -276,12 +276,13 @@ export const adminSetSourceFlags = createServerFn({ method: "POST" })
   }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as any);
-    const { error } = await context.supabase.rpc("admin_set_source_flags", {
+    const { error } = await (context.supabase as any).rpc("admin_set_source_flags", {
       _user_id: data.userId,
       _is_verified_source: data.isVerifiedSource ?? null,
       _is_trusted_source: data.isTrustedSource ?? null,
       _source_name: data.sourceName ?? null,
     });
+
     if (error) throw new Error(error.message);
     return { ok: true };
   });
