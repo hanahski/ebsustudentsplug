@@ -37,7 +37,7 @@ export const Route = createFileRoute("/books_/read/$id")({
     }
     const desc = String(b.description ?? "").slice(0, 160) || `Read ${b.title}${b.author ? ` by ${b.author}` : ""} on StudentsPlug Library.`;
     const title = `${b.title}${b.author ? ` — ${b.author}` : ""} | StudentsPlug Library`;
-    const priceNum = Number(b.price ?? 0);
+    const priceNum = Number(b.price_credits ?? 0);
     return {
       meta: [
         { title },
