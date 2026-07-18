@@ -463,7 +463,7 @@ export function EbsuNewsComposer() {
                   </div>
                 </div>
 
-                {/* Body — plain text */}
+                {/* Body — rich inline editor with drag & drop images */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label htmlFor="np-body" className="text-sm font-bold">
@@ -471,54 +471,25 @@ export function EbsuNewsComposer() {
                     </label>
                     <div className="flex items-center gap-3">
                       <span className="text-[11px] text-muted-foreground">{wordCount} words · {readMins} min</span>
-                      <button onClick={() => inlineFileRef.current?.click()} disabled={inlineUploading} className="text-[11px] flex items-center gap-1 text-primary font-semibold hover:underline disabled:opacity-50">
-                        {inlineUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ImageIcon className="w-3 h-3" />} Add image
-                      </button>
                       <button onClick={aiPolish} disabled={aiBusy === "body"} className="text-[11px] flex items-center gap-1 text-primary font-semibold hover:underline disabled:opacity-50">
                         {aiBusy === "body" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wand2 className="w-3 h-3" />} Polish
                       </button>
                     </div>
                   </div>
-                  <input
-                    ref={inlineFileRef}
-                    type="file"
-                    accept="image/*"
-                    hidden
-                    onChange={(e) => { const f = e.target.files?.[0]; if (f) onInlineImage(f); e.target.value = ""; }}
-                  />
-                  <Textarea
-                    id="np-body"
-                    ref={bodyRef}
-                    value={bodyText}
-                    onChange={(e) => updateBodyText(e.target.value)}
-                    onBlur={() => setTouched((t) => ({ ...t, body: true }))}
-                    placeholder={"Just type naturally. Leave a blank line between paragraphs.\n\nTip: tap 'Add image' to drop a photo right inside your story."}
-                    rows={10}
-                    className={`text-[15px] leading-relaxed resize-none ${touched.body && bodyError ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                    aria-invalid={!!(touched.body && bodyError)}
-                    aria-describedby="np-body-help"
+                  <StoryEditor
+                    value={bodyHtml}
+                    onChange={setBodyHtml}
+                    userId={user?.id}
+                    placeholder={"Just type naturally. Drag an image right into your story to see the layout."}
+                    minHeight={260}
+                    invalid={!!(touched.body && bodyError)}
+                    ariaDescribedBy="np-body-help"
                   />
                   <p id="np-body-help" className={`mt-1 text-[11px] ${touched.body && bodyError ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
-                    {touched.body && bodyError ? bodyError : "Tip: leave a blank line between paragraphs. Added photos appear as previews here and publish as real images."}
+                    {touched.body && bodyError ? bodyError : "Drag & drop, paste, or tap Add image — photos appear exactly where they'll publish."}
                   </p>
-                  {inlineImages.length > 0 && (
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      {inlineImages.map((url) => (
-                        <div key={url} className="relative overflow-hidden rounded-xl border bg-muted aspect-[16/10]">
-                          <img src={url} alt="Story image preview" className="h-full w-full object-cover" loading="eager" />
-                          <button
-                            type="button"
-                            onClick={() => setInlineImages((prev) => prev.filter((x) => x !== url))}
-                            className="absolute right-1.5 top-1.5 rounded-full bg-background/90 p-1 shadow hover:bg-background"
-                            aria-label="Remove story image"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
+
 
 
                 {type === "news" && (
