@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
@@ -99,62 +99,47 @@ function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
 
-function SwipeToBio({ children }: { children: ReactNode }) {
+function usePageSwipeToBio() {
   const navigate = useNavigate();
   const startX = useRef<number | null>(null);
   const startY = useRef<number | null>(null);
   const [dx, setDx] = useState(0);
   const [locked, setLocked] = useState<null | "h" | "v">(null);
-  const THRESHOLD = 80;
+  const THRESHOLD = 90;
+  const MAX = 180;
 
   const reset = () => { startX.current = null; startY.current = null; setDx(0); setLocked(null); };
 
-  return (
-    <div
-      className="relative overflow-hidden rounded-2xl"
-      onTouchStart={(e) => {
-        const t = e.touches[0];
-        startX.current = t.clientX; startY.current = t.clientY; setLocked(null); setDx(0);
-      }}
-      onTouchMove={(e) => {
-        if (startX.current == null || startY.current == null) return;
-        const t = e.touches[0];
-        const rawDx = t.clientX - startX.current;
-        const rawDy = t.clientY - startY.current;
-        if (locked == null) {
-          if (Math.abs(rawDx) > 8 || Math.abs(rawDy) > 8) {
-            setLocked(Math.abs(rawDx) > Math.abs(rawDy) ? "h" : "v");
-          }
-        }
-        if (locked === "h" && rawDx < 0) {
-          e.preventDefault();
-          setDx(Math.max(rawDx, -140));
-        }
-      }}
-      onTouchEnd={() => {
-        if (locked === "h" && dx <= -THRESHOLD) {
-          navigate({ to: "/school-biography" });
-        }
-        reset();
-      }}
-      onTouchCancel={reset}
-    >
-      {/* Reveal layer */}
-      <div
-        className="absolute inset-y-0 right-0 flex items-center justify-end pr-4 pointer-events-none"
-        style={{ width: Math.min(140, Math.abs(dx)), opacity: Math.min(1, Math.abs(dx) / THRESHOLD) }}
-      >
-        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-primary-foreground bg-primary rounded-full px-2.5 py-1 shadow-glow">
-          <Crown className="w-3 h-3" />
-          School Bio
-        </div>
-      </div>
-      <div style={{ transform: `translateX(${dx}px)`, transition: dx === 0 ? "transform 200ms ease" : "none" }}>
-        {children}
-      </div>
-    </div>
-  );
+  const handlers = {
+    onTouchStart: (e: React.TouchEvent) => {
+      const t = e.touches[0];
+      startX.current = t.clientX; startY.current = t.clientY; setLocked(null); setDx(0);
+    },
+    onTouchMove: (e: React.TouchEvent) => {
+      if (startX.current == null || startY.current == null) return;
+      const t = e.touches[0];
+      const rx = t.clientX - startX.current;
+      const ry = t.clientY - startY.current;
+      if (locked == null && (Math.abs(rx) > 10 || Math.abs(ry) > 10)) {
+        setLocked(Math.abs(rx) > Math.abs(ry) * 1.2 ? "h" : "v");
+      }
+      if (locked === "h" && rx < 0) {
+        setDx(Math.max(rx, -MAX));
+      }
+    },
+    onTouchEnd: () => {
+      if (locked === "h" && dx <= -THRESHOLD) {
+        navigate({ to: "/school-biography" });
+      }
+      reset();
+    },
+    onTouchCancel: reset,
+  };
+
+  return { handlers, dx, active: locked === "h" && dx < 0, threshold: THRESHOLD };
 }
+
+
 
 function Catalogue() {
   const [q, setQ] = useState("");
@@ -203,9 +188,34 @@ function Catalogue() {
   const courseCount = DEPARTMENTS.filter(isCourse).length;
 
 
+  const swipe = usePageSwipeToBio();
+
   return (
     <AppShell>
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div
+        className="max-w-5xl mx-auto space-y-6 relative"
+        {...swipe.handlers}
+        style={{
+          transform: `translateX(${swipe.dx}px)`,
+          transition: swipe.dx === 0 ? "transform 220ms ease" : "none",
+          touchAction: "pan-y",
+        }}
+      >
+        {/* Swipe-left reveal hint */}
+        <div
+          className="fixed top-1/2 right-2 -translate-y-1/2 z-40 pointer-events-none"
+          style={{
+            opacity: Math.min(1, Math.abs(swipe.dx) / swipe.threshold),
+            transform: `translateY(-50%) translateX(${swipe.active ? 0 : 20}px)`,
+            transition: "opacity 120ms ease, transform 200ms ease",
+          }}
+        >
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-primary-foreground bg-primary rounded-full px-3 py-1.5 shadow-glow">
+            <Crown className="w-3.5 h-3.5" />
+            School Bio
+          </div>
+        </div>
+
         {/* Header */}
         <header className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-primary/12 via-card to-card p-6 shadow-card">
           <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full bg-primary/25 blur-3xl" aria-hidden />
@@ -362,16 +372,13 @@ function Catalogue() {
                   );
                   return (
                     <li key={name}>
-                      <SwipeToBio>
-                        {isOpenable ? (
-                          <Link to="/course/name/$name" params={{ name }}>{inner}</Link>
-                        ) : id ? (
-                          <Link to="/department/$id" params={{ id }}>{inner}</Link>
-                        ) : (
-                          // Non-course departments are informational only.
-                          <div>{inner}</div>
-                        )}
-                      </SwipeToBio>
+                      {isOpenable ? (
+                        <Link to="/course/name/$name" params={{ name }}>{inner}</Link>
+                      ) : id ? (
+                        <Link to="/department/$id" params={{ id }}>{inner}</Link>
+                      ) : (
+                        <div>{inner}</div>
+                      )}
                     </li>
                   );
                 })}
