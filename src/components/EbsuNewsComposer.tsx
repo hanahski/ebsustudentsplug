@@ -130,7 +130,6 @@ export function EbsuNewsComposer() {
   const titleError =
     !titleTrim ? "Headline is required"
     : titleTrim.length < 4 ? `Add ${4 - titleTrim.length} more character${4 - titleTrim.length === 1 ? "" : "s"} (minimum 4)`
-    : titleTrim.length > 180 ? "Try to keep it under 180 characters for better readability"
     : null;
   const bodyError =
     !bodyTrim ? "Your story is required"
