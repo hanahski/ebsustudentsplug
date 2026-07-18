@@ -98,11 +98,38 @@ export function EbsuNewsComposer() {
   const [uploading, setUploading] = useState(false);
   const [aiBusy, setAiBusy] = useState<"" | "title" | "body" | "summary" | "cover">("");
   const [publishing, setPublishing] = useState(false);
+  const [touched, setTouched] = useState<{ title?: boolean; body?: boolean; source?: boolean; schedule?: boolean }>({});
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   const slug = slugCustom ?? slugify(title);
   const wordCount = useMemo(() => bodyText.split(/\s+/).filter(Boolean).length, [bodyText]);
   const readMins = Math.max(1, Math.round(wordCount / 220));
+
+  // Inline validation
+  const titleTrim = title.trim();
+  const bodyTrim = bodyText.trim();
+  const titleError =
+    !titleTrim ? "Headline is required"
+    : titleTrim.length < 4 ? `Add ${4 - titleTrim.length} more character${4 - titleTrim.length === 1 ? "" : "s"} (minimum 4)`
+    : titleTrim.length > 180 ? "Try to keep it under 180 characters for better readability"
+    : null;
+  const bodyError =
+    !bodyTrim ? "Your story is required"
+    : bodyTrim.length < 10 ? `Write ${10 - bodyTrim.length} more character${10 - bodyTrim.length === 1 ? "" : "s"} (minimum 10)`
+    : null;
+  const sourceInputError = (() => {
+    const v = sourceInput.trim();
+    if (!v) return null;
+    try { const u = new URL(v); if (!/^https?:$/.test(u.protocol)) return "Link must start with http:// or https://"; return null; }
+    catch { return "That doesn't look like a valid link"; }
+  })();
+  const scheduleError = (() => {
+    if (!schedule) return null;
+    const d = new Date(schedule);
+    if (isNaN(d.getTime())) return "Pick a valid date and time";
+    if (d.getTime() < Date.now() - 60_000) return "Schedule must be in the future";
+    return null;
+  })();
 
   // Autosave
   useEffect(() => {
@@ -148,10 +175,11 @@ export function EbsuNewsComposer() {
   };
   const addSource = () => {
     const v = sourceInput.trim();
-    if (!v) return;
-    try { new URL(v); } catch { toast.error("Enter a valid URL"); return; }
-    if (sourceUrls.length >= 8) return;
-    setSourceUrls((p) => [...p, v]); setSourceInput("");
+    if (!v) { setTouched((t) => ({ ...t, source: true })); toast.error("Paste a link first"); return; }
+    if (sourceInputError) { setTouched((t) => ({ ...t, source: true })); toast.error(sourceInputError); return; }
+    if (sourceUrls.includes(v)) { toast.info("That source is already added"); return; }
+    if (sourceUrls.length >= 8) { toast.error("You can add up to 8 sources"); return; }
+    setSourceUrls((p) => [...p, v]); setSourceInput(""); setTouched((t) => ({ ...t, source: false }));
   };
 
   const onFile = async (file: File) => {
@@ -215,11 +243,12 @@ export function EbsuNewsComposer() {
     finally { setAiBusy(""); }
   };
 
-  const canGoNext = step === 0 ? true : step === 1 ? title.trim().length >= 4 && bodyText.trim().length >= 10 : true;
+  const canGoNext = step === 0 ? true : step === 1 ? !titleError && !bodyError && !scheduleError : true;
 
   const publishNow = async (asDraft = false) => {
-    if (title.trim().length < 4) { setStep(1); return toast.error("Add a title (min 4 chars)"); }
-    if (bodyText.trim().length < 10) { setStep(1); return toast.error("Write a bit more in the body"); }
+    if (titleError) { setTouched((t) => ({ ...t, title: true })); setStep(1); return toast.error(titleError); }
+    if (bodyError) { setTouched((t) => ({ ...t, body: true })); setStep(1); return toast.error(bodyError); }
+    if (scheduleError) { setTouched((t) => ({ ...t, schedule: true })); setStep(1); setShowAdvanced(true); return toast.error(scheduleError); }
     setPublishing(true);
     try {
       const html = sanitizeHtml(textToHtml(bodyText));
@@ -341,25 +370,41 @@ export function EbsuNewsComposer() {
                 {/* Title */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-sm font-bold">Headline</label>
+                    <label htmlFor="np-title" className="text-sm font-bold">
+                      Headline <span className="text-destructive" aria-hidden>*</span>
+                    </label>
                     <button onClick={aiHeadline} disabled={aiBusy === "title"} className="text-[11px] flex items-center gap-1 text-primary font-semibold hover:underline disabled:opacity-50">
                       {aiBusy === "title" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />} Suggest
                     </button>
                   </div>
                   <Input
+                    id="np-title"
                     value={title}
                     maxLength={200}
                     onChange={(e) => setTitle(e.target.value)}
+                    onBlur={() => setTouched((t) => ({ ...t, title: true }))}
                     placeholder="Say it in one sharp line…"
-                    className="text-base"
+                    className={`text-base ${touched.title && titleError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                    aria-invalid={!!(touched.title && titleError)}
+                    aria-describedby="np-title-help"
                     autoFocus
                   />
+                  <div id="np-title-help" className="mt-1 flex items-center justify-between text-[11px]">
+                    <span className={touched.title && titleError ? "text-destructive font-semibold" : "text-muted-foreground"}>
+                      {touched.title && titleError ? titleError : "A clear, specific headline works best."}
+                    </span>
+                    <span className={`tabular-nums ${title.length > 180 ? "text-amber-500" : "text-muted-foreground"}`}>
+                      {title.length}/200
+                    </span>
+                  </div>
                 </div>
 
                 {/* Body — plain text */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-sm font-bold">Your story</label>
+                    <label htmlFor="np-body" className="text-sm font-bold">
+                      Your story <span className="text-destructive" aria-hidden>*</span>
+                    </label>
                     <div className="flex items-center gap-3">
                       <span className="text-[11px] text-muted-foreground">{wordCount} words · {readMins} min</span>
                       <button onClick={aiPolish} disabled={aiBusy === "body"} className="text-[11px] flex items-center gap-1 text-primary font-semibold hover:underline disabled:opacity-50">
@@ -368,13 +413,21 @@ export function EbsuNewsComposer() {
                     </div>
                   </div>
                   <Textarea
+                    id="np-body"
                     value={bodyText}
                     onChange={(e) => setBodyText(e.target.value)}
+                    onBlur={() => setTouched((t) => ({ ...t, body: true }))}
                     placeholder={"Just type naturally. Leave a blank line between paragraphs.\n\nExample:\nEBSU released the new academic calendar today.\n\nExams start on…"}
                     rows={10}
-                    className="text-[15px] leading-relaxed resize-none"
+                    className={`text-[15px] leading-relaxed resize-none ${touched.body && bodyError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                    aria-invalid={!!(touched.body && bodyError)}
+                    aria-describedby="np-body-help"
                   />
+                  <p id="np-body-help" className={`mt-1 text-[11px] ${touched.body && bodyError ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
+                    {touched.body && bodyError ? bodyError : "Tip: leave a blank line between paragraphs."}
+                  </p>
                 </div>
+
 
                 {type === "news" && (
                   <label className="flex items-center justify-between p-3 rounded-xl border bg-amber-500/5 border-amber-500/20 cursor-pointer">
@@ -425,9 +478,20 @@ export function EbsuNewsComposer() {
                       <div>
                         <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1 mb-1.5"><Link2 className="w-3 h-3" /> Sources</label>
                         <div className="flex gap-2">
-                          <Input value={sourceInput} onChange={(e) => setSourceInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addSource())} placeholder="https://…" />
-                          <Button type="button" variant="outline" size="sm" onClick={addSource}>Add</Button>
+                          <Input
+                            value={sourceInput}
+                            onChange={(e) => setSourceInput(e.target.value)}
+                            onBlur={() => setTouched((t) => ({ ...t, source: true }))}
+                            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addSource())}
+                            placeholder="https://…"
+                            aria-invalid={!!(touched.source && sourceInputError)}
+                            className={touched.source && sourceInputError ? "border-destructive focus-visible:ring-destructive" : ""}
+                          />
+                          <Button type="button" variant="outline" size="sm" onClick={addSource} disabled={!!sourceInputError}>Add</Button>
                         </div>
+                        <p className={`mt-1 text-[11px] ${touched.source && sourceInputError ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
+                          {touched.source && sourceInputError ? sourceInputError : "Paste the link and press Enter. Up to 8 sources."}
+                        </p>
                         {sourceUrls.length > 0 && (
                           <ul className="mt-2 space-y-1">
                             {sourceUrls.map((u) => (
@@ -443,8 +507,19 @@ export function EbsuNewsComposer() {
 
                     <div>
                       <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1 mb-1.5"><CalIcon className="w-3 h-3" /> Schedule</label>
-                      <Input type="datetime-local" value={schedule} onChange={(e) => setSchedule(e.target.value)} />
+                      <Input
+                        type="datetime-local"
+                        value={schedule}
+                        onChange={(e) => setSchedule(e.target.value)}
+                        onBlur={() => setTouched((t) => ({ ...t, schedule: true }))}
+                        aria-invalid={!!(touched.schedule && scheduleError)}
+                        className={touched.schedule && scheduleError ? "border-destructive focus-visible:ring-destructive" : ""}
+                      />
+                      <p className={`mt-1 text-[11px] ${touched.schedule && scheduleError ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
+                        {touched.schedule && scheduleError ? scheduleError : "Leave empty to publish immediately."}
+                      </p>
                     </div>
+
 
                     <div>
                       <label className="text-xs font-bold uppercase text-muted-foreground mb-1.5 block">URL slug</label>
@@ -531,7 +606,18 @@ export function EbsuNewsComposer() {
               )}
               <div className="flex-1" />
               {step === 1 && (
-                <Button size="sm" onClick={() => setStep(2)} disabled={!canGoNext} className="min-w-[100px]">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    if (!canGoNext) {
+                      setTouched((t) => ({ ...t, title: true, body: true, schedule: !!schedule || t.schedule }));
+                      toast.error(titleError || bodyError || scheduleError || "Fix the highlighted fields");
+                      return;
+                    }
+                    setStep(2);
+                  }}
+                  className="min-w-[100px]"
+                >
                   Next <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               )}
