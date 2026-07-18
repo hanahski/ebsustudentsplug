@@ -1008,8 +1008,9 @@ function SchoolBiographyPage() {
     const ok = await confirm({
       title: `Delete ${p.name}?`,
       description: "This profile will be removed from the school biography.",
-      confirmLabel: "Delete",
-      destructive: true,
+      confirmText: "Delete",
+      variant: "destructive",
+      icon: "trash",
     });
     if (!ok) return;
     try {
