@@ -36,11 +36,11 @@ export function InArticleAd({ slot }: { slot?: string }) {
       <ins
         ref={insRef as any}
         className="adsbygoogle"
-        style={{ display: "block" }}
+        style={{ display: "block", textAlign: "center" }}
+        data-ad-layout="in-article"
+        data-ad-format="fluid"
         data-ad-client={AD_CLIENT}
-        data-ad-slot={slot ?? "8200107531"}
-        data-ad-format="auto"
-        data-full-width-responsive="true"
+        {...(slot ? { "data-ad-slot": slot } : { "data-ad-slot": "0000000000" })}
       />
     </div>
   );
