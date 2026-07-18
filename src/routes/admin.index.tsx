@@ -799,7 +799,7 @@ function AdminBanners() {
       variant,
       publish_at: publishAt ? new Date(publishAt).toISOString() : null,
       expire_at: expireAt ? new Date(expireAt).toISOString() : null,
-      rotation_seconds: Math.max(2, Math.min(30, Number(rotationSeconds) || 6)),
+      rotation_seconds: Math.max(2, Math.min(300, Number(rotationSeconds) || 6)),
     } as any);
     if (error) toast.error(error.message);
     else {
