@@ -1250,6 +1250,26 @@ function AdminTicketRoster({ ticketId, onBack }: { ticketId: string; onBack: () 
           <Button size="sm" variant="outline" onClick={createShare}>
             <Share2 className="w-3.5 h-3.5 mr-1" /> Create share link
           </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={async () => {
+              if (!(await confirm({
+                title: `Delete "${ticket?.title ?? "this ticket"}"?`,
+                description: `This wipes the event, all ${sold} purchase${sold === 1 ? "" : "s"} and every scan. This cannot be undone.`,
+                variant: "destructive",
+                confirmText: "Delete event",
+                icon: "trash",
+              }))) return;
+              const { error } = await supabase.from("tickets").delete().eq("id", ticketId);
+              if (error) { toast.error(error.message); return; }
+              toast.success("Ticket deleted");
+              qc.invalidateQueries({ queryKey: ["admin-ticket-sales-overview"] });
+              onBack();
+            }}
+          >
+            <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete event
+          </Button>
         </div>
       </div>
 
