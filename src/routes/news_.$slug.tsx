@@ -163,7 +163,7 @@ function NewsArticlePage() {
               <Button size="sm" variant="outline" onClick={openEdit}>
                 <Pencil className="w-3.5 h-3.5 mr-1" /> Edit
               </Button>
-              <Button size="sm" variant="destructive" onClick={onDelete} disabled={deleting}>
+              <Button size="sm" variant="destructive" onClick={() => setConfirmDelete(true)} disabled={deleting}>
                 {deleting ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Trash2 className="w-3.5 h-3.5 mr-1" />}
                 Delete
               </Button>
