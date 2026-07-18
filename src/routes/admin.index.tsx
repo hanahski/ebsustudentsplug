@@ -1029,15 +1029,15 @@ function AdminBanners() {
                   <input
                     type="number"
                     min={2}
-                    max={30}
+                    max={300}
                     defaultValue={Number(b.rotation_seconds) || 6}
                     onBlur={async (e) => {
-                      const v = Math.max(2, Math.min(30, Number(e.target.value) || 6));
+                      const v = Math.max(2, Math.min(300, Number(e.target.value) || 6));
                       if (v === (Number(b.rotation_seconds) || 6)) return;
                       const { error } = await supabase.from("banner_slides").update({ rotation_seconds: v } as any).eq("id", b.id);
                       if (error) toast.error(error.message); else { toast.success("Timing saved"); refetch(); }
                     }}
-                    className="w-14 h-7 px-2 rounded border bg-background text-[11px]"
+                    className="w-16 h-7 px-2 rounded border bg-background text-[11px]"
                   />
                   <span className="text-[11px] text-muted-foreground">seconds</span>
                 </div>
