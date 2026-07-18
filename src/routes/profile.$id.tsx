@@ -18,6 +18,7 @@ import { SpecialBadges } from "@/components/SpecialBadges";
 import { AdminCrownBadge, useIsAdminUser } from "@/components/AdminCrownBadge";
 import { useIsAdmin } from "@/lib/admin-ids";
 import { getOrCreateDmThread } from "@/lib/dm";
+import { ReportDialog } from "@/components/ReportDialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/profile/$id")({ component: ProfilePage });
