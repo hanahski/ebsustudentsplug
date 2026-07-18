@@ -172,11 +172,10 @@ function MePage() {
     setCoverVideoUploading(true);
     try {
       const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
-      const path = `${profile.id}/cover-video-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from("covers")
-        .upload(path, file, { upsert: true, contentType: file.type });
-      if (upErr) throw upErr;
+      const { path } = await safeUserUpload({
+        bucket: "covers", file, filename: `cover-video-${Date.now()}.${ext}`,
+        contentType: file.type, upsert: true,
+      });
       const { data: signed, error: sErr } = await supabase.storage.from("covers").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
       if (sErr) throw sErr;
       const { error: updErr } = await supabase
@@ -187,7 +186,7 @@ function MePage() {
       toast.success("Cover video updated");
       refreshProfile();
     } catch (e: any) {
-      toast.error(e.message ?? "Upload failed");
+      toast.error(friendlyUploadError(e));
     } finally {
       setCoverVideoUploading(false);
     }
