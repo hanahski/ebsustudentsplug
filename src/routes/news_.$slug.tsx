@@ -227,8 +227,14 @@ function NewsArticlePage() {
               <Input value={form.imageUrl} placeholder="https://…" onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} />
             </div>
             <div>
-              <label className="text-xs font-semibold text-muted-foreground">Body (HTML supported)</label>
-              <Textarea rows={12} value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} />
+              <label className="text-xs font-semibold text-muted-foreground">Body</label>
+              <StoryEditor
+                value={form.body}
+                onChange={(html) => setForm((f) => ({ ...f, body: html }))}
+                userId={user?.id}
+                placeholder="Write the article. Drag or paste images anywhere."
+                minHeight={280}
+              />
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
@@ -240,6 +246,31 @@ function NewsArticlePage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-2">
+              <div className="w-9 h-9 rounded-full bg-destructive/15 flex items-center justify-center">
+                <ShieldAlert className="w-5 h-5 text-destructive" />
+              </div>
+              <AlertDialogTitle>Delete this article?</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription className="pt-1">
+              "{a.title}" will be permanently removed from EBSU News. This can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={onDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete article
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }
