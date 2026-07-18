@@ -431,7 +431,6 @@ export function EbsuNewsComposer() {
                   <Input
                     id="np-title"
                     value={title}
-                    maxLength={200}
                     onChange={(e) => setTitle(e.target.value)}
                     onBlur={() => setTouched((t) => ({ ...t, title: true }))}
                     placeholder="Say it in one sharp line…"
@@ -445,7 +444,7 @@ export function EbsuNewsComposer() {
                       {touched.title && titleError ? titleError : "A clear, specific headline works best."}
                     </span>
                     <span className={`tabular-nums ${title.length > 180 ? "text-amber-500" : "text-muted-foreground"}`}>
-                      {title.length}/200
+                      {title.length}
                     </span>
                   </div>
                 </div>
