@@ -478,9 +478,20 @@ export function EbsuNewsComposer() {
                       <div>
                         <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1 mb-1.5"><Link2 className="w-3 h-3" /> Sources</label>
                         <div className="flex gap-2">
-                          <Input value={sourceInput} onChange={(e) => setSourceInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addSource())} placeholder="https://…" />
-                          <Button type="button" variant="outline" size="sm" onClick={addSource}>Add</Button>
+                          <Input
+                            value={sourceInput}
+                            onChange={(e) => setSourceInput(e.target.value)}
+                            onBlur={() => setTouched((t) => ({ ...t, source: true }))}
+                            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addSource())}
+                            placeholder="https://…"
+                            aria-invalid={!!(touched.source && sourceInputError)}
+                            className={touched.source && sourceInputError ? "border-destructive focus-visible:ring-destructive" : ""}
+                          />
+                          <Button type="button" variant="outline" size="sm" onClick={addSource} disabled={!!sourceInputError}>Add</Button>
                         </div>
+                        <p className={`mt-1 text-[11px] ${touched.source && sourceInputError ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
+                          {touched.source && sourceInputError ? sourceInputError : "Paste the link and press Enter. Up to 8 sources."}
+                        </p>
                         {sourceUrls.length > 0 && (
                           <ul className="mt-2 space-y-1">
                             {sourceUrls.map((u) => (
@@ -496,8 +507,19 @@ export function EbsuNewsComposer() {
 
                     <div>
                       <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1 mb-1.5"><CalIcon className="w-3 h-3" /> Schedule</label>
-                      <Input type="datetime-local" value={schedule} onChange={(e) => setSchedule(e.target.value)} />
+                      <Input
+                        type="datetime-local"
+                        value={schedule}
+                        onChange={(e) => setSchedule(e.target.value)}
+                        onBlur={() => setTouched((t) => ({ ...t, schedule: true }))}
+                        aria-invalid={!!(touched.schedule && scheduleError)}
+                        className={touched.schedule && scheduleError ? "border-destructive focus-visible:ring-destructive" : ""}
+                      />
+                      <p className={`mt-1 text-[11px] ${touched.schedule && scheduleError ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
+                        {touched.schedule && scheduleError ? scheduleError : "Leave empty to publish immediately."}
+                      </p>
                     </div>
+
 
                     <div>
                       <label className="text-xs font-bold uppercase text-muted-foreground mb-1.5 block">URL slug</label>
