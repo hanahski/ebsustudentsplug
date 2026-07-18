@@ -16,10 +16,23 @@ export const Route = createFileRoute("/news")({
       { name: "description", content: "Fresh EBSU campus news, announcements and student stories — updated daily on StudentsPlug." },
       { property: "og:title", content: "EBSU News — Campus stories & updates" },
       { property: "og:description", content: "Fresh EBSU campus news, announcements and student stories, refreshed daily." },
-      { property: "og:type", content: "article" },
-      { property: "og:url", content: "https://ebsustudentplug.fun/news" },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://ebsustudentsplug.fun/news" },
     ],
-    links: [{ rel: "canonical", href: "https://ebsustudentplug.fun/news" }],
+    links: [{ rel: "canonical", href: "https://ebsustudentsplug.fun/news" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "EBSU News",
+          url: "https://ebsustudentsplug.fun/news",
+          about: "Ebonyi State University campus news, announcements and student updates",
+          isPartOf: { "@type": "WebSite", name: "StudentsPlug", url: "https://ebsustudentsplug.fun/" },
+        }),
+      },
+    ],
   }),
 });
 
