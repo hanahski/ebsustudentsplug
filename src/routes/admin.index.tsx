@@ -1,3 +1,4 @@
+import { confirm } from "@/components/ConfirmProvider";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Switch } from "@/components/ui/switch";

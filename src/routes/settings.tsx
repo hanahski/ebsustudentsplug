@@ -1,3 +1,4 @@
+import { confirm } from "@/components/ConfirmProvider";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";

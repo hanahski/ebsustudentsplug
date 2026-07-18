@@ -1,6 +1,7 @@
 // EBSU News Composer — friendly 3-step guided flow.
 // Visible only to admins and legit-badge users. Publishes to news_articles (news/announcement)
 // or blog_posts (blog) via server functions.
+import { confirm } from "@/components/ConfirmProvider";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
