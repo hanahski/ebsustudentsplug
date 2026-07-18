@@ -21,7 +21,7 @@ export const Route = createFileRoute("/books_/read/$id")({
   loader: async ({ params }) => {
     const { data } = await supabase
       .from("library_books")
-      .select("id,title,author,description,cover_url,price,is_free")
+      .select("id,title,author,description,cover_url,price_credits")
       .eq("id", params.id)
       .maybeSingle();
     return { book: data };
