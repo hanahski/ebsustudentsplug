@@ -9,6 +9,7 @@ import { VideoSWRegister } from "@/components/VideoSWRegister";
 import { KeyboardAware } from "@/components/KeyboardAware";
 import { GoogleTranslateBridge } from "@/components/GoogleTranslateBridge";
 import { VerifyEmailDialog } from "@/components/VerifyEmailDialog";
+import { ConfirmProvider } from "@/components/ConfirmProvider";
 
 
 import appCss from "../styles.css?url";
