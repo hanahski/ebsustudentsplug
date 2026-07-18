@@ -1,7 +1,6 @@
 import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { renderArticleHtml } from "@/lib/render-article";
 import { AppShell } from "@/components/AppShell";
 import { getBlogPost } from "@/lib/blog.functions";
 
