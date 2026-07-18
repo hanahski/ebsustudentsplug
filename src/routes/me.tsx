@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { LogOut, Coins, Camera, Ticket, Bookmark, ShieldCheck, Library, Shield, UserCog, Award, KeyRound, LayoutDashboard, Settings as SettingsIcon, Megaphone, Users } from "lucide-react";
 import { enhanceImageFile } from "@/lib/image-enhance";
+import { safeUserUpload, friendlyUploadError } from "@/lib/safe-upload";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AvatarLightbox } from "@/components/AvatarLightbox";
 import { VerifyStudentDialog } from "@/components/VerifyStudentDialog";
@@ -132,9 +133,10 @@ function MePage() {
       toast.dismiss(t);
       if (enhanced !== file) toast.success("Cover enhanced");
       const ext = (enhanced.name.split(".").pop() || "jpg").toLowerCase();
-      const path = `${profile.id}/cover-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("covers").upload(path, enhanced, { upsert: true, contentType: enhanced.type });
-      if (upErr) throw upErr;
+      const { path } = await safeUserUpload({
+        bucket: "covers", file: enhanced, filename: `cover-${Date.now()}.${ext}`,
+        contentType: enhanced.type, upsert: true,
+      });
       const { data: signed, error: sErr } = await supabase.storage.from("covers").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
       if (sErr) throw sErr;
       const { error: updErr } = await supabase.from("profiles").update({ cover_url: signed.signedUrl } as any).eq("id", profile.id);
@@ -143,7 +145,7 @@ function MePage() {
       refreshProfile();
     } catch (e: any) {
       toast.dismiss(t);
-      toast.error(e.message ?? "Upload failed");
+      toast.error(friendlyUploadError(e));
     } finally {
       setCoverUploading(false);
     }
@@ -170,11 +172,10 @@ function MePage() {
     setCoverVideoUploading(true);
     try {
       const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
-      const path = `${profile.id}/cover-video-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from("covers")
-        .upload(path, file, { upsert: true, contentType: file.type });
-      if (upErr) throw upErr;
+      const { path } = await safeUserUpload({
+        bucket: "covers", file, filename: `cover-video-${Date.now()}.${ext}`,
+        contentType: file.type, upsert: true,
+      });
       const { data: signed, error: sErr } = await supabase.storage.from("covers").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
       if (sErr) throw sErr;
       const { error: updErr } = await supabase
@@ -185,7 +186,7 @@ function MePage() {
       toast.success("Cover video updated");
       refreshProfile();
     } catch (e: any) {
-      toast.error(e.message ?? "Upload failed");
+      toast.error(friendlyUploadError(e));
     } finally {
       setCoverVideoUploading(false);
     }
@@ -212,9 +213,10 @@ function MePage() {
       toast.dismiss(t);
       if (enhanced !== file) toast.success("Photo enhanced");
       const ext = (enhanced.name.split(".").pop() || "jpg").toLowerCase();
-      const path = `${profile.id}/avatar-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("covers").upload(path, enhanced, { upsert: true, contentType: enhanced.type });
-      if (upErr) throw upErr;
+      const { path } = await safeUserUpload({
+        bucket: "covers", file: enhanced, filename: `avatar-${Date.now()}.${ext}`,
+        contentType: enhanced.type, upsert: true,
+      });
       const { data: signed, error: sErr } = await supabase.storage.from("covers").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
       if (sErr) throw sErr;
       setAvatar(signed.signedUrl);
@@ -224,7 +226,7 @@ function MePage() {
       refreshProfile();
     } catch (e: any) {
       toast.dismiss(t);
-      toast.error(e.message ?? "Upload failed");
+      toast.error(friendlyUploadError(e));
     } finally {
       setPhotoUploading(false);
     }
