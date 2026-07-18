@@ -18,6 +18,7 @@ import { SpecialBadges } from "@/components/SpecialBadges";
 import { AdminCrownBadge, useIsAdminUser } from "@/components/AdminCrownBadge";
 import { useIsAdmin } from "@/lib/admin-ids";
 import { getOrCreateDmThread } from "@/lib/dm";
+import { ReportDialog } from "@/components/ReportDialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/profile/$id")({ component: ProfilePage });
@@ -113,9 +114,9 @@ function ProfilePage() {
                   {p.academic_level && <Badge variant="secondary">{p.academic_level} level</Badge>}
                 </div>
                 {!isMe && (
-                  <Button
+                  <div className="mt-3 flex items-center gap-2 flex-wrap">
+                    <Button
                     size="sm"
-                    className="mt-3"
                     disabled={dmBusy}
                     onClick={async () => {
                       if (!user) { navigate({ to: "/login", search: { redirect: `/profile/${p.id}` } }); return; }
@@ -132,6 +133,8 @@ function ProfilePage() {
                   >
                     <Send className="w-4 h-4 mr-1.5" /> Message
                   </Button>
+                    <ReportDialog target={{ kind: "user", id: p.id }} />
+                  </div>
                 )}
               </div>
             </div>
