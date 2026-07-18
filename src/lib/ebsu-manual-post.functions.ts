@@ -359,7 +359,7 @@ export const updateEbsuArticle = createServerFn({ method: "POST" })
     if (data.summary !== undefined) patch.summary = data.summary;
     if (data.body !== undefined) patch.body = data.body;
     if (data.imageUrl !== undefined) patch.image_url = data.imageUrl;
-    const { data: row, error } = await supabaseAdmin
+    const { data: row, error } = await (supabaseAdmin as any)
       .from("news_articles")
       .update(patch)
       .eq("id", data.id)
