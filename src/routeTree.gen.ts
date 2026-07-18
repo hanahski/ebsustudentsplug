@@ -16,6 +16,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as SchoolBiographyRouteImport } from './routes/school-biography'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReportRouteImport } from './routes/report'
@@ -162,6 +163,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SchoolBiographyRoute = SchoolBiographyRouteImport.update({
+  id: '/school-biography',
+  path: '/school-biography',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SavedRoute = SavedRouteImport.update({
@@ -760,6 +766,7 @@ export interface FileRoutesByFullPath {
   '/report': typeof ReportRoute
   '/reset-password': typeof ResetPasswordRoute
   '/saved': typeof SavedRoute
+  '/school-biography': typeof SchoolBiographyRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -880,6 +887,7 @@ export interface FileRoutesByTo {
   '/report': typeof ReportRoute
   '/reset-password': typeof ResetPasswordRoute
   '/saved': typeof SavedRoute
+  '/school-biography': typeof SchoolBiographyRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -1000,6 +1008,7 @@ export interface FileRoutesById {
   '/report': typeof ReportRoute
   '/reset-password': typeof ResetPasswordRoute
   '/saved': typeof SavedRoute
+  '/school-biography': typeof SchoolBiographyRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -1123,6 +1132,7 @@ export interface FileRouteTypes {
     | '/report'
     | '/reset-password'
     | '/saved'
+    | '/school-biography'
     | '/search'
     | '/settings'
     | '/sitemap.xml'
@@ -1243,6 +1253,7 @@ export interface FileRouteTypes {
     | '/report'
     | '/reset-password'
     | '/saved'
+    | '/school-biography'
     | '/search'
     | '/settings'
     | '/sitemap.xml'
@@ -1362,6 +1373,7 @@ export interface FileRouteTypes {
     | '/report'
     | '/reset-password'
     | '/saved'
+    | '/school-biography'
     | '/search'
     | '/settings'
     | '/sitemap.xml'
@@ -1484,6 +1496,7 @@ export interface RootRouteChildren {
   ReportRoute: typeof ReportRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SavedRoute: typeof SavedRoute
+  SchoolBiographyRoute: typeof SchoolBiographyRoute
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -1602,6 +1615,13 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/school-biography': {
+      id: '/school-biography'
+      path: '/school-biography'
+      fullPath: '/school-biography'
+      preLoaderRoute: typeof SchoolBiographyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/saved': {
@@ -2537,6 +2557,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReportRoute: ReportRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SavedRoute: SavedRoute,
+  SchoolBiographyRoute: SchoolBiographyRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
