@@ -119,8 +119,6 @@ function MarketPage() {
   const [kind, setKind] = useState<string>("all");
   const [showSold, setShowSold] = useState(false);
   const [listingLimit, setListingLimit] = useState(30);
-  const getBooksFn = useServerFn(getLibraryBooks);
-  const getPopularNovelsFn = useServerFn(getPopularNovels);
   // Fresh randomized set on every mount of the market feed.
   const [feedSeed] = useState(() => Math.random().toString(36).slice(2));
 
@@ -150,17 +148,25 @@ function MarketPage() {
     queryKey: ["market-books", kind, debouncedQ, feedSeed],
     placeholderData: keepPreviousData,
     enabled: kind === "books" || kind === "all",
-    queryFn: () => {
-      // Feed shows 50 randomised popular novels; when the user filters/searches
-      // or opens the dedicated Books tab, fall back to the full catalog query.
-      if (kind === "all" && !debouncedQ) {
-        return getPopularNovelsFn({ data: { limit: 50 } });
-      }
-      return getBooksFn({
-        data: { category: "all", query: debouncedQ, limit: kind === "all" ? 50 : 120 },
+    // Browser-side query against Supabase — no server fn, so books populate
+    // instantly the moment you open Book Plug, on every host.
+    queryFn: async () => {
+      const rows = await fetchLibraryBooksClient({
+        category: "all",
+        query: debouncedQ,
+        limit: kind === "all" ? 50 : 120,
       });
+      if (kind === "all" && !debouncedQ) {
+        // shuffle so the shelf feels fresh each visit
+        const arr = [...rows];
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      }
+      return rows;
     },
-    // Don't cache the randomised set — every visit gets a new draw.
     staleTime: 0,
     gcTime: 0,
   });
