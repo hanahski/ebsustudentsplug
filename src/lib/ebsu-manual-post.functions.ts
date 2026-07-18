@@ -256,13 +256,14 @@ export const adminListVerifiedSources = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context as any);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows } = await supabaseAdmin
+    const { data: rows } = await (supabaseAdmin as any)
       .from("profiles")
       .select("id, display_name, email, avatar_key, is_verified_source, is_trusted_source, source_name")
       .eq("is_verified_source", true)
       .order("source_name", { ascending: true, nullsFirst: false })
       .limit(100);
     return { rows: rows ?? [] };
+
   });
 
 export const adminSetSourceFlags = createServerFn({ method: "POST" })
