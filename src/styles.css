@@ -19,6 +19,22 @@ a[href*="lovable.app"][target="_blank"][class*="badge"] {
   pointer-events: none !important;
 }
 
+/* Shimmer skeleton for image placeholders */
+.shimmer-skeleton {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 0%,
+    hsl(var(--muted-foreground) / 0.12) 50%,
+    hsl(var(--muted)) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-slide 1.4s ease-in-out infinite;
+}
+@keyframes shimmer-slide {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

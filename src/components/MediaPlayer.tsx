@@ -11,6 +11,7 @@ import { getSocialEmbed } from "@/lib/video-embed";
 import { AvatarVisualizer } from "./AvatarVisualizer";
 import { parseTimeFragment } from "@/lib/trim";
 import { resolveStorageUrl } from "@/lib/storage-url";
+import { ShimmerImage } from "./ShimmerImage";
 
 /** Resolve a possibly-private Supabase storage URL to a signed URL once. */
 function useResolvedUrl(url: string): string | null {
@@ -420,11 +421,11 @@ export function MediaPlayer({ url: rawUrl, type, title, avatarKey, postId }: Pro
   if (kind === "image") {
 
     return (
-      <img
+      <ShimmerImage
         src={url}
         alt={title ?? "media"}
-        loading="lazy"
-        className="w-full rounded-2xl border bg-muted object-contain max-h-[80vh]"
+        wrapperClassName="w-full rounded-2xl border bg-muted max-h-[80vh] flex items-center justify-center"
+        className="w-full h-auto max-h-[80vh] object-contain rounded-2xl"
       />
     );
   }
