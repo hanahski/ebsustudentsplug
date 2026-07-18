@@ -196,12 +196,37 @@ function NewsArticlePage() {
           />
         )}
 
-        <div
-          className="prose prose-sm sm:prose-base max-w-none dark:prose-invert prose-headings:font-display prose-img:rounded-xl"
-          dangerouslySetInnerHTML={{ __html: renderArticleHtml(a.body) }}
-        />
+        {(() => {
+          const html = renderArticleHtml(a.body);
+          // Split at the middle-most </p> so the ad sits between paragraphs.
+          const marker = "</p>";
+          const mid = Math.floor(html.length / 2);
+          let splitAt = html.indexOf(marker, mid);
+          if (splitAt === -1) splitAt = html.lastIndexOf(marker, mid);
+          const [first, rest] =
+            splitAt > 0
+              ? [html.slice(0, splitAt + marker.length), html.slice(splitAt + marker.length)]
+              : [html, ""];
+          return (
+            <>
+              <div
+                className="prose prose-sm sm:prose-base max-w-none dark:prose-invert prose-headings:font-display prose-img:rounded-xl"
+                dangerouslySetInnerHTML={{ __html: first }}
+              />
+              {rest && <InArticleAd />}
+              {rest && (
+                <div
+                  className="prose prose-sm sm:prose-base max-w-none dark:prose-invert prose-headings:font-display prose-img:rounded-xl"
+                  dangerouslySetInnerHTML={{ __html: rest }}
+                />
+              )}
+              <InArticleAd />
+            </>
+          );
+        })()}
 
       </article>
+
 
       <Dialog open={editing} onOpenChange={setEditing}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
