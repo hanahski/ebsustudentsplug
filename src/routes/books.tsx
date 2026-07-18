@@ -236,13 +236,11 @@ function BooksPage() {
     placeholderData: keepPreviousData,
     initialData: () => readCachedBooks(cat, tag, q),
     queryFn: () =>
-      getBooksFn({
-        data: {
-          category: cat as any,
-          tag: tag as any,
-          query: q,
-          limit: 160,
-        },
+      fetchLibraryBooksClient({
+        category: cat as any,
+        tag: tag as any,
+        query: q,
+        limit: 160,
       }),
     staleTime: 10 * 60_000,
     gcTime: 24 * 60 * 60_000,
