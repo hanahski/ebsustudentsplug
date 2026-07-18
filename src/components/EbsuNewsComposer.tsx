@@ -22,6 +22,8 @@ import { sanitizeHtml } from "@/lib/sanitize-html";
 import { useAuth } from "@/lib/auth";
 import { canPostEbsuNews, publishManualEbsuPost, aiAssistNews } from "@/lib/ebsu-manual-post.functions";
 import { generatePostImage } from "@/lib/generate-post-image.functions";
+import { StoryEditor } from "@/components/StoryEditor";
+
 
 type PostType = "news" | "announcement" | "blog";
 const DRAFT_KEY = "ebsu-composer-draft-v2";
