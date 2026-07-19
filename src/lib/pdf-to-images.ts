@@ -9,11 +9,9 @@ export async function pdfToImages(
 ): Promise<PageImage[]> {
   const { maxPages = 20, scale = 2, onProgress } = opts;
 
-  const pdfjs: any = await import(
-    /* @vite-ignore */ "https://esm.sh/pdfjs-dist@4.7.76/build/pdf.mjs"
-  );
-  pdfjs.GlobalWorkerOptions.workerSrc =
-    "https://esm.sh/pdfjs-dist@4.7.76/build/pdf.worker.mjs";
+  const pdfjs: any = await import("pdfjs-dist/build/pdf.mjs");
+  const workerSrc = (await import("pdfjs-dist/build/pdf.worker.mjs?url")).default;
+  pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 
   const buf = await file.arrayBuffer();
   const doc = await pdfjs.getDocument({ data: buf }).promise;
@@ -27,7 +25,7 @@ export async function pdfToImages(
     canvas.width = Math.floor(viewport.width);
     canvas.height = Math.floor(viewport.height);
     const ctx = canvas.getContext("2d")!;
-    await page.render({ canvasContext: ctx, viewport }).promise;
+    await page.render({ canvas, canvasContext: ctx, viewport }).promise;
     out.push({ page: p, dataUrl: canvas.toDataURL("image/png") });
     onProgress?.(p, total);
     page.cleanup();

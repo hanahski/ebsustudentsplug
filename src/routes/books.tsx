@@ -34,17 +34,13 @@ import { toast } from "sonner";
 import { SaveButton } from "@/components/SaveButton";
 import { BookCover } from "@/components/BookCover";
 import { BookShape } from "@/components/market/BookShape";
-import { PdfReader } from "@/components/PdfReader";
+import { FlipBookReader } from "@/components/FlipBookReader";
 
-const MAX_INAPP_PDF_BYTES = 8 * 1024 * 1024; // 8MB
-
-async function pdfSizeBytes(url: string): Promise<number | null> {
-  try {
-    const r = await fetch(url, { method: "HEAD", mode: "cors" });
-    const len = r.headers.get("content-length");
-    if (len) return Number(len);
-  } catch {}
-  return null;
+function proxyPdfUrl(url: string): string {
+  if (!url) return url;
+  if (url.startsWith("/api/public/proxy-pdf")) return url;
+  if (url.startsWith("/") || url.startsWith(window.location.origin)) return url;
+  return `/api/public/proxy-pdf?url=${encodeURIComponent(url)}`;
 }
 
 export const Route = createFileRoute("/books")({
@@ -463,26 +459,12 @@ function BookCard({
   const [readerUrl, setReaderUrl] = useState<string | null>(null);
   const [openingReader, setOpeningReader] = useState(false);
 
-  const openPdfInReader = async (url: string) => {
+  const openPdfInReader = (url: string) => {
     setOpeningReader(true);
-    const t = toast.loading("Opening reader…");
-    try {
-      const size = await pdfSizeBytes(url);
-      if (size && size > MAX_INAPP_PDF_BYTES) {
-        toast.dismiss(t);
-        toast.info(`File is ${(size / (1024 * 1024)).toFixed(1)}MB — downloading instead of opening in reader.`);
-        await silentDownload(url, `${book.title}.pdf`.replace(/[^\w\d.\-]+/g, "_"));
-      } else {
-        setReaderUrl(url);
-        toast.dismiss(t);
-      }
-    } catch {
-      toast.dismiss(t);
-      toast.error("Couldn't open reader — downloading instead.");
-      await silentDownload(url, `${book.title}.pdf`.replace(/[^\w\d.\-]+/g, "_"));
-    } finally {
+    setReaderUrl(proxyPdfUrl(url));
+    window.setTimeout(() => {
       setOpeningReader(false);
-    }
+    }, 250);
   };
 
   return (
@@ -592,10 +574,11 @@ function BookCard({
         )}
       </div>
       {readerUrl && (
-        <PdfReader
+        <FlipBookReader
           url={readerUrl}
+          kind="pdf"
           title={book.title}
-          downloadName={book.title}
+          bookId={book.id}
           onClose={() => setReaderUrl(null)}
         />
       )}

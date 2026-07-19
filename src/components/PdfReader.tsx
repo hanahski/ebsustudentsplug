@@ -27,6 +27,27 @@ type Props = {
   downloadName?: string;
 };
 
+function proxyPdfUrl(url: string): string {
+  if (!url || url.startsWith("/api/public/proxy-pdf")) return url;
+  if (url.startsWith("/") || url.startsWith(window.location.origin)) return url;
+  return `/api/public/proxy-pdf?url=${encodeURIComponent(url)}`;
+}
+
+async function fetchPdfBuffer(url: string): Promise<ArrayBuffer> {
+  const urls = [url, proxyPdfUrl(url)].filter((u, i, arr) => u && arr.indexOf(u) === i);
+  let lastError: unknown = null;
+  for (const u of urls) {
+    try {
+      const res = await fetch(u, { credentials: "omit" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.arrayBuffer();
+    } catch (e) {
+      lastError = e;
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Could not download PDF");
+}
+
 export function PdfReader({ url, title, onClose, downloadName }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -48,12 +69,16 @@ export function PdfReader({ url, title, onClose, downloadName }: Props) {
       try {
         setLoading(true);
         setError(null);
-        const pdfjs: any = await import(
-          /* @vite-ignore */ "https://esm.sh/pdfjs-dist@4.7.76/build/pdf.mjs"
-        );
-        pdfjs.GlobalWorkerOptions.workerSrc =
-          "https://esm.sh/pdfjs-dist@4.7.76/build/pdf.worker.mjs";
-        const doc = await pdfjs.getDocument({ url, withCredentials: false }).promise;
+        const pdfjs: any = await import("pdfjs-dist/build/pdf.mjs");
+        const workerSrc = (await import("pdfjs-dist/build/pdf.worker.mjs?url")).default;
+        pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+        const data = await fetchPdfBuffer(url);
+        const doc = await pdfjs.getDocument({
+          data,
+          disableAutoFetch: true,
+          disableStream: true,
+          isEvalSupported: false,
+        }).promise;
         if (cancelled) return;
         docRef.current = doc;
         setTotal(doc.numPages);
@@ -104,7 +129,7 @@ export function PdfReader({ url, title, onClose, downloadName }: Props) {
       try {
         renderTaskRef.current?.cancel?.();
       } catch {/* ignore */}
-      renderTaskRef.current = pdfPage.render({ canvasContext: ctx, viewport });
+      renderTaskRef.current = pdfPage.render({ canvas, canvasContext: ctx, viewport });
       await renderTaskRef.current.promise;
     } catch (e: any) {
       if (e?.name !== "RenderingCancelledException") {
