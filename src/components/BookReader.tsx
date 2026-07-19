@@ -9,6 +9,67 @@ const ReactReader = lazy(async () => {
   return { default: mod.ReactReader };
 });
 
+export type BookReaderFormat = "pdf" | "epub" | "mobi" | "azw" | "azw3" | "fb2" | "cbz";
+
+const READABLE_FORMATS = ["pdf", "epub", "mobi", "azw", "azw3", "fb2", "cbz"] as const;
+
+export function normalizeBookReaderFormat(format: string | null | undefined): BookReaderFormat | null {
+  const f = String(format ?? "").toLowerCase();
+  if (f === "kindle" || f === "kf8" || f === "kfx") return "mobi";
+  return (READABLE_FORMATS as readonly string[]).includes(f) ? (f as BookReaderFormat) : null;
+}
+
+function extractOriginalUrl(input: string): string {
+  try {
+    const u = new URL(input, window.location.href);
+    const proxied = u.pathname === "/api/public/proxy-pdf" ? u.searchParams.get("url") : null;
+    return proxied ? new URL(proxied, window.location.href).toString() : u.toString();
+  } catch {
+    return input;
+  }
+}
+
+function extensionFromUrl(input: string): BookReaderFormat | null {
+  try {
+    const pathname = new URL(input, window.location.href).pathname.toLowerCase();
+    const match = /\.(epub|pdf|mobi|azw3?|fb2|cbz)(?:$|[._-])/i.exec(pathname);
+    return normalizeBookReaderFormat(match?.[1]);
+  } catch {
+    return normalizeBookReaderFormat(/\.(epub|pdf|mobi|azw3?|fb2|cbz)(\?|#|$)/i.exec(input)?.[1]);
+  }
+}
+
+function looksLikeHtml(bytes: Uint8Array, type: string) {
+  const head = new TextDecoder().decode(bytes.slice(0, 96)).trimStart().toLowerCase();
+  if (head.startsWith("<?xml") || head.includes("<fictionbook")) return false;
+  if (head.startsWith("<!doctype") || head.startsWith("<html") || head.includes("<body")) return true;
+  return (type.includes("html") || type.includes("text/plain")) && head.startsWith("<");
+}
+
+function detectFileFormat(bytes: Uint8Array, type: string, sourceUrl: string, hint?: BookReaderFormat | null): BookReaderFormat | null {
+  if (bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) return "pdf";
+  if (type.includes("pdf")) return "pdf";
+  if (type.includes("epub")) return "epub";
+  if (type.includes("mobipocket") || type.includes("kindle")) return "mobi";
+  if (bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04) {
+    return hint ?? extensionFromUrl(sourceUrl) ?? "epub";
+  }
+  const text = new TextDecoder().decode(bytes.slice(0, 128));
+  if (text.includes("BOOKMOBI") || text.includes("TEXtREAd")) return hint ?? "mobi";
+  if (text.trimStart().startsWith("<?xml") || text.includes("<FictionBook")) return "fb2";
+  return hint ?? extensionFromUrl(sourceUrl);
+}
+
+async function fetchWithTimeout(url: string, creds: RequestCredentials, timeoutMs = 35_000) {
+  const controller = new AbortController();
+  const t = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { credentials: creds, redirect: "follow", signal: controller.signal });
+  } finally {
+    window.clearTimeout(t);
+  }
+}
+
 /**
  * Universal fullscreen book reader. Wraps react-book-reader (foliate-js) so
  * every format — EPUB, MOBI, KF8/AZW3, FB2, CBZ, PDF — opens in the same
@@ -24,11 +85,13 @@ export function BookReader({
   url,
   title,
   bookId,
+  formatHint,
   onClose,
 }: {
   url: string;
   title: string;
   bookId: string;
+  formatHint?: BookReaderFormat | null;
   onClose: () => void;
 }) {
   const locKey = `book-loc:${bookId}`;
@@ -58,10 +121,7 @@ export function BookReader({
       // Worker, then public CORS proxies as a fallback so books still open
       // even if our proxy route hasn't been redeployed yet or is auth-gated
       // on a private preview.
-      const abs = (() => {
-        try { return new URL(url, window.location.href).toString(); }
-        catch { return url; }
-      })();
+      const abs = extractOriginalUrl(url);
       const sameOrigin = (() => {
         try { return new URL(abs).origin === window.location.origin; }
         catch { return false; }
@@ -79,7 +139,7 @@ export function BookReader({
       let lastErr: unknown = null;
       for (const c of candidates) {
         try {
-          const r = await fetch(c.url, { credentials: c.creds, redirect: "follow" });
+          const r = await fetchWithTimeout(c.url, c.creds);
           if (r.ok) { res = r; break; }
           lastErr = new Error(`${c.label} → HTTP ${r.status}`);
         } catch (e) {
@@ -91,11 +151,15 @@ export function BookReader({
 
         const blob = await res.blob();
         if (cancelled) return;
-        // Give foliate a filename hint so it picks the right parser.
-        const guessedExt =
-          /\.(epub|pdf|mobi|azw3?|fb2|cbz)(\?|#|$)/i.exec(url)?.[1]?.toLowerCase() ??
-          (blob.type.includes("epub") ? "epub" :
-           blob.type.includes("pdf")  ? "pdf"  : "epub");
+        const header = new Uint8Array(await blob.slice(0, 2048).arrayBuffer());
+        const contentType = (blob.type || res.headers.get("content-type") || "").toLowerCase();
+        if (looksLikeHtml(header, contentType)) {
+          throw new Error("This source is a web page, not a readable book file. Pick a PDF, EPUB, MOBI/AZW3, FB2, or CBZ format.");
+        }
+        const guessedExt = detectFileFormat(header, contentType, abs, formatHint);
+        if (!guessedExt) {
+          throw new Error("Unsupported book file. Use PDF, EPUB, MOBI/AZW3, FB2, or CBZ.");
+        }
         const name = `${(title || "book").replace(/[^\w.-]+/g, "_")}.${guessedExt}`;
         setFile(new File([blob], name, { type: blob.type || "application/octet-stream" }));
       } catch (e) {
@@ -103,7 +167,7 @@ export function BookReader({
       }
     })();
     return () => { cancelled = true; };
-  }, [url, title]);
+  }, [url, title, formatHint]);
 
   return (
     <div

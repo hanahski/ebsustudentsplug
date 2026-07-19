@@ -12,7 +12,7 @@ import { BookOpen, Loader2, Download, ExternalLink, Coins, ArrowLeft } from "luc
 import { toast } from "sonner";
 import { BookCover } from "@/components/BookCover";
 import { SwipeBookReader } from "@/components/SwipeBookReader";
-import { BookReader } from "@/components/BookReader";
+import { BookReader, type BookReaderFormat } from "@/components/BookReader";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/books_/read/$id")({
@@ -120,8 +120,7 @@ function ReadBookPage() {
   // "How do you want to enjoy this book?" chooser — shown once per owned book.
   const [chooserOpen, setChooserOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"read" | "download" | null>(null);
-  const [pdfReaderOpen, setPdfReaderOpen] = useState(false);
-  const [epubReaderOpen, setEpubReaderOpen] = useState(false);
+  const [bookReader, setBookReader] = useState<{ url: string; format: BookReaderFormat } | null>(null);
   const chooserSeenKey = `book-chooser-seen:${id}`;
 
   const { data: book, isLoading } = useQuery({
@@ -270,8 +269,11 @@ function ReadBookPage() {
     setCacheError(null);
     (async () => {
       try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token;
         const res = await fetch(`/api/public/hooks/cache-book-pdf?id=${book.id}`, {
           signal: ctrl.signal,
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
         const json = await res.json();
         if (cancelled) return;
@@ -335,10 +337,10 @@ function ReadBookPage() {
   // If the user chose "Read in app" before the cached PDF finished preparing,
   // auto-open the reader the moment the cached URL is ready.
   useEffect(() => {
-    if (viewMode === "read" && cachedPdfUrl && !pdfReaderOpen) {
-      setPdfReaderOpen(true);
+    if (viewMode === "read" && cachedPdfUrl && !bookReader) {
+      setBookReader({ url: cachedPdfUrl, format: "pdf" });
     }
-  }, [viewMode, cachedPdfUrl, pdfReaderOpen]);
+  }, [viewMode, cachedPdfUrl, bookReader]);
 
 
   return (
@@ -417,7 +419,7 @@ function ReadBookPage() {
                       <Button
                         size="sm"
                         variant="default"
-                        onClick={() => cachedPdfUrl && setPdfReaderOpen(true)}
+                        onClick={() => cachedPdfUrl && setBookReader({ url: cachedPdfUrl, format: "pdf" })}
                         disabled={!cachedPdfUrl || cacheLoading}
                         title="Read in the in-app PDF reader"
                       >
@@ -447,7 +449,7 @@ function ReadBookPage() {
                     <Button
                       size="sm"
                       variant="default"
-                      onClick={() => setEpubReaderOpen(true)}
+                      onClick={() => setBookReader({ url: epubUrl, format: "epub" })}
                       title="Read EPUB in the in-app reader"
                     >
                       <BookOpen className="w-3.5 h-3.5 mr-1" /> Read EPUB
@@ -572,22 +574,22 @@ function ReadBookPage() {
                   <div className="p-8 text-center space-y-3">
                     <BookOpen className="w-8 h-8 mx-auto text-primary" />
                     <p className="text-sm">This book is available in EPUB — read it right here.</p>
-                    <Button onClick={() => setEpubReaderOpen(true)}>
+                    <Button onClick={() => setBookReader({ url: epubUrl, format: "epub" })}>
                       <BookOpen className="w-4 h-4 mr-1" /> Read EPUB in app
                     </Button>
                   </div>
                 ) : detected.kindleOnly && kindleUrl ? (
                   <div className="p-8 text-center space-y-3">
-                    <Download className="w-8 h-8 mx-auto text-primary" />
-                    <p className="text-sm">This book is only offered in Kindle format.</p>
-                    <Button asChild>
+                    <BookOpen className="w-8 h-8 mx-auto text-primary" />
+                    <p className="text-sm">This book is available as a Kindle file — open it in the reader.</p>
+                    <Button onClick={() => setBookReader({ url: kindleUrl, format: "mobi" })}>
+                      <BookOpen className="w-4 h-4 mr-1" /> Read Kindle in app
+                    </Button>
+                    <Button variant="outline" asChild>
                       <a href={kindleUrl} download>
-                        <Download className="w-4 h-4 mr-1" /> Download Kindle file
+                        <Download className="w-4 h-4 mr-1" /> Download file
                       </a>
                     </Button>
-                    <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                      Open with the free Kindle app (iOS / Android / desktop) or send to your Kindle device.
-                    </p>
                   </div>
                 ) : (
                   <div className="p-8 text-center text-muted-foreground">
@@ -627,8 +629,9 @@ function ReadBookPage() {
                 try { window.localStorage.setItem(chooserSeenKey, "1"); } catch { /* no-op */ }
                 // Prefer EPUB reader if the book is an EPUB; otherwise open the
                 // in-app PDF reader (once the cached PDF is ready).
-                if (canReadEpub && epubUrl) setEpubReaderOpen(true);
-                else if (cachedPdfUrl) setPdfReaderOpen(true);
+                if (canReadEpub && epubUrl) setBookReader({ url: epubUrl, format: "epub" });
+                else if (cachedPdfUrl) setBookReader({ url: cachedPdfUrl, format: "pdf" });
+                else if (kindleUrl) setBookReader({ url: kindleUrl, format: "mobi" });
                 else if (!cacheLoading) toast.info("Preparing your book… we'll open it in a second.");
               }}
               className="rounded-2xl border p-4 text-left hover:border-primary hover:shadow-glow transition group"
@@ -662,21 +665,13 @@ function ReadBookPage() {
         </DialogContent>
       </Dialog>
 
-      {pdfReaderOpen && cachedPdfUrl && book && (
+      {bookReader && book && (
         <BookReader
-          url={cachedPdfUrl}
+          url={bookReader.url}
+          formatHint={bookReader.format}
           title={book.title}
           bookId={book.id}
-          onClose={() => setPdfReaderOpen(false)}
-        />
-      )}
-
-      {epubReaderOpen && epubUrl && book && (
-        <BookReader
-          url={epubUrl}
-          title={book.title}
-          bookId={book.id}
-          onClose={() => setEpubReaderOpen(false)}
+          onClose={() => setBookReader(null)}
         />
       )}
     </AppShell>
