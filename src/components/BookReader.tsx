@@ -69,7 +69,7 @@ function detectFileFormat(bytes: Uint8Array, type: string, sourceUrl: string, hi
   return hint ?? extensionFromUrl(sourceUrl);
 }
 
-async function fetchWithTimeout(url: string, creds: RequestCredentials, timeoutMs = 35_000) {
+async function fetchWithTimeout(url: string, creds: RequestCredentials, timeoutMs = 45_000) {
   const controller = new AbortController();
   const t = window.setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -77,6 +77,35 @@ async function fetchWithTimeout(url: string, creds: RequestCredentials, timeoutM
   } finally {
     window.clearTimeout(t);
   }
+}
+
+async function readBodyWithProgress(
+  res: Response,
+  onProgress: (loaded: number, total: number) => void,
+): Promise<Blob> {
+  const total = Number(res.headers.get("content-length") ?? 0);
+  if (!res.body || !("getReader" in res.body)) return res.blob();
+  const reader = (res.body as ReadableStream<Uint8Array>).getReader();
+  const chunks: Uint8Array[] = [];
+  let loaded = 0;
+  // Throttle progress updates so we don't thrash React on every network chunk.
+  let lastPost = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) {
+      chunks.push(value);
+      loaded += value.byteLength;
+      const now = Date.now();
+      if (now - lastPost > 120) {
+        lastPost = now;
+        onProgress(loaded, total);
+      }
+    }
+  }
+  onProgress(loaded, total);
+  const type = res.headers.get("content-type") || "application/octet-stream";
+  return new Blob(chunks as BlobPart[], { type });
 }
 
 /**
