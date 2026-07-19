@@ -40,9 +40,9 @@ function extensionFromUrl(input: string): BookReaderFormat | null {
 }
 
 function looksLikeHtml(bytes: Uint8Array, type: string) {
-  if (!type.includes("html") && !type.includes("text/plain")) return false;
   const head = new TextDecoder().decode(bytes.slice(0, 96)).trimStart().toLowerCase();
-  return head.startsWith("<!doctype") || head.startsWith("<html") || head.startsWith("<") || head.includes("<body");
+  if (head.startsWith("<!doctype") || head.startsWith("<html") || head.includes("<body")) return true;
+  return (type.includes("html") || type.includes("text/plain")) && head.startsWith("<");
 }
 
 function detectFileFormat(bytes: Uint8Array, type: string, sourceUrl: string, hint?: BookReaderFormat | null): BookReaderFormat | null {
