@@ -24,30 +24,16 @@ export function AuthStatusBanner() {
 
   // Signed-out: no banner.
   if (!user && (!error || isAuthError)) return null;
-  // Signed in without error: no banner.
-  if (user && !error) return null;
+  // Signed in: the user has a live session, so "session expired" is a lie —
+  // suppress auth-error banners entirely for signed-in users. Stale errors
+  // from the initial getSession() call before the token refresh completed
+  // used to spam this banner even though the refresh succeeded.
+  if (user) return null;
   // Ignore benign permission errors (e.g. has_role) — don't nag the user.
   if (/permission denied/i.test(raw)) return null;
 
   const baseClasses =
     "fixed inset-x-0 top-0 z-[60] flex items-center justify-between gap-3 px-4 py-2 text-xs font-medium backdrop-blur-sm";
-
-  if (user && error && isAuthError) {
-    return (
-      <div className={`${baseClasses} bg-muted/90 text-muted-foreground border-b border-border`}>
-        <div className="flex items-center gap-2">
-          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-          <span>Your session expired. Sign in again to continue.</span>
-        </div>
-        <button
-          onClick={async () => { await signOut(); window.location.href = "/login"; }}
-          className="shrink-0 rounded bg-foreground/10 px-2 py-0.5 text-[11px] hover:bg-foreground/20"
-        >
-          Sign in again
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div className={`${baseClasses} bg-destructive/90 text-destructive-foreground`}>
