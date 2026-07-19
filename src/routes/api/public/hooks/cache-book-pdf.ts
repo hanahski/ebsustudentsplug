@@ -1,7 +1,6 @@
 // Downloads an external PDF for a library_book and mirrors it to the book-pdfs bucket.
 // Idempotent: if the row already points at our bucket, we just return that URL.
 import { createFileRoute } from "@tanstack/react-router";
-import { requireCronSecret } from "@/lib/cron-auth.server";
 
 const BUCKET = "book-pdfs";
 
@@ -182,14 +181,38 @@ async function cacheById(id: string) {
   return { ok: true, cached_url: signed.signedUrl, already: false };
 }
 
+async function authorizeCacheRequest(request: Request, id: string): Promise<Response | null> {
+  const secret = process.env.CRON_SECRET;
+  const auth = request.headers.get("authorization") ?? "";
+  if (secret && auth === `Bearer ${secret}`) return null;
+
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+  if (!token) return Response.json({ ok: false, error: "unauthorized" }, { status: 401 });
+
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: userRes, error: userErr } = await supabaseAdmin.auth.getUser(token);
+  const userId = userRes?.user?.id;
+  if (userErr || !userId) return Response.json({ ok: false, error: "unauthorized" }, { status: 401 });
+
+  const { data: owned, error } = await supabaseAdmin
+    .from("library_book_purchases")
+    .select("book_id")
+    .eq("book_id", id)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) return Response.json({ ok: false, error: error.message }, { status: 500 });
+  if (!owned) return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
+  return null;
+}
+
 export const Route = createFileRoute("/api/public/hooks/cache-book-pdf")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const unauthorized = requireCronSecret(request);
-        if (unauthorized) return unauthorized;
         const id = new URL(request.url).searchParams.get("id");
         if (!id) return Response.json({ ok: false, error: "missing id" }, { status: 400 });
+        const unauthorized = await authorizeCacheRequest(request, id);
+        if (unauthorized) return unauthorized;
         try {
           const out = await cacheById(id);
           return Response.json(out, { status: out.ok ? 200 : 400 });
