@@ -1,14 +1,22 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, X, AlertCircle, BookOpen, Sun, Moon, Coffee, Type, Minus, Plus } from "lucide-react";
 
 
 // react-book-reader is browser-only (foliate-js touches window/DOM at import
-// time). Load it lazily so it never lands in the SSR bundle.
+// time). Load it lazily so it never lands in the SSR bundle. We also kick
+// off the import as soon as this module is evaluated so the ~1MB reader
+// bundle is warm by the time the user's book bytes finish downloading —
+// otherwise the reader would appear "stuck" while the chunk is fetched.
+const readerImport = () => import("react-book-reader");
 const ReactReader = lazy(async () => {
-  const mod = await import("react-book-reader");
+  const mod = await readerImport();
   return { default: mod.ReactReader };
 });
+if (typeof window !== "undefined") {
+  // Fire and forget — cached by the browser for the real render.
+  readerImport().catch(() => {});
+}
 
 export type BookReaderFormat = "pdf" | "epub" | "mobi" | "azw" | "azw3" | "fb2" | "cbz";
 
