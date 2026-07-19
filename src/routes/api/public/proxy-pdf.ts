@@ -12,14 +12,31 @@ const ALLOWED_HOSTS = [
   "cnx.org",
   "batch.libretexts.org",
   "libretexts.org",
+  "commons.libretexts.org",
   "www.gutenberg.org",
   "gutenberg.org",
+  "gutendex.com",
+  "www.gutendex.com",
   "open.umn.edu",
   "www.freebookcentre.net",
+  "freebookcentre.net",
   "bccampus.ca",
   "pressbooks.bccampus.ca",
   "open.bccampus.ca",
+  "collection.bccampus.ca",
+  "obooko.com",
+  "www.obooko.com",
+  "archive.org",
+  "ia800000.us.archive.org",
+  "ia600000.us.archive.org",
+  "standardebooks.org",
+  "www.standardebooks.org",
+  "manybooks.net",
+  "www.manybooks.net",
+  "feedbooks.com",
+  "www.feedbooks.com",
 ];
+
 
 function isAllowed(u: URL) {
   return ALLOWED_HOSTS.some((h) => u.hostname === h || u.hostname.endsWith("." + h));
