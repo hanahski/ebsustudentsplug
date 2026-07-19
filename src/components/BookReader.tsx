@@ -327,15 +327,38 @@ export function BookReader({
             <Button size="sm" variant="outline" onClick={onClose} className="rounded-full">Close reader</Button>
           </div>
         ) : !file ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 animate-fade-in">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 animate-fade-in px-6">
             <div className="relative">
               <div className="absolute inset-0 animate-ping rounded-2xl bg-primary/20" />
               <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 ring-1 ring-primary/30">
                 <BookOpen className="h-6 w-6 text-primary" />
               </div>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Preparing your book…
+            <div className="flex flex-col items-center gap-2 w-full max-w-xs">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Preparing your book…
+              </div>
+              {progress && (progress.loaded > 0 || progress.total > 0) && (
+                <>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted/60">
+                    <div
+                      className="h-full bg-primary transition-all duration-200"
+                      style={{
+                        width: progress.total
+                          ? `${Math.min(100, Math.round((progress.loaded / progress.total) * 100))}%`
+                          : "40%",
+                      }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground tabular-nums">
+                    {(progress.loaded / (1024 * 1024)).toFixed(1)} MB
+                    {progress.total ? ` / ${(progress.total / (1024 * 1024)).toFixed(1)} MB` : ""}
+                  </p>
+                </>
+              )}
+              <Button size="sm" variant="ghost" onClick={onClose} className="mt-2 text-xs text-muted-foreground">
+                Cancel
+              </Button>
             </div>
           </div>
         ) : (
