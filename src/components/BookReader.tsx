@@ -1,14 +1,22 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, X, AlertCircle, BookOpen, Sun, Moon, Coffee, Type, Minus, Plus } from "lucide-react";
 
 
 // react-book-reader is browser-only (foliate-js touches window/DOM at import
-// time). Load it lazily so it never lands in the SSR bundle.
+// time). Load it lazily so it never lands in the SSR bundle. We also kick
+// off the import as soon as this module is evaluated so the ~1MB reader
+// bundle is warm by the time the user's book bytes finish downloading —
+// otherwise the reader would appear "stuck" while the chunk is fetched.
+const readerImport = () => import("react-book-reader");
 const ReactReader = lazy(async () => {
-  const mod = await import("react-book-reader");
+  const mod = await readerImport();
   return { default: mod.ReactReader };
 });
+if (typeof window !== "undefined") {
+  // Fire and forget — cached by the browser for the real render.
+  readerImport().catch(() => {});
+}
 
 export type BookReaderFormat = "pdf" | "epub" | "mobi" | "azw" | "azw3" | "fb2" | "cbz";
 
@@ -61,7 +69,7 @@ function detectFileFormat(bytes: Uint8Array, type: string, sourceUrl: string, hi
   return hint ?? extensionFromUrl(sourceUrl);
 }
 
-async function fetchWithTimeout(url: string, creds: RequestCredentials, timeoutMs = 35_000) {
+async function fetchWithTimeout(url: string, creds: RequestCredentials, timeoutMs = 45_000) {
   const controller = new AbortController();
   const t = window.setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -69,6 +77,35 @@ async function fetchWithTimeout(url: string, creds: RequestCredentials, timeoutM
   } finally {
     window.clearTimeout(t);
   }
+}
+
+async function readBodyWithProgress(
+  res: Response,
+  onProgress: (loaded: number, total: number) => void,
+): Promise<Blob> {
+  const total = Number(res.headers.get("content-length") ?? 0);
+  if (!res.body || !("getReader" in res.body)) return res.blob();
+  const reader = (res.body as ReadableStream<Uint8Array>).getReader();
+  const chunks: Uint8Array[] = [];
+  let loaded = 0;
+  // Throttle progress updates so we don't thrash React on every network chunk.
+  let lastPost = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) {
+      chunks.push(value);
+      loaded += value.byteLength;
+      const now = Date.now();
+      if (now - lastPost > 120) {
+        lastPost = now;
+        onProgress(loaded, total);
+      }
+    }
+  }
+  onProgress(loaded, total);
+  const type = res.headers.get("content-type") || "application/octet-stream";
+  return new Blob(chunks as BlobPart[], { type });
 }
 
 /**
@@ -99,6 +136,8 @@ export function BookReader({
   const [location, setLocation] = useState<string | number | undefined>(undefined);
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<{ loaded: number; total: number } | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     try {
@@ -117,6 +156,7 @@ export function BookReader({
     let cancelled = false;
     setError(null);
     setFile(null);
+    setProgress({ loaded: 0, total: 0 });
     (async () => {
       // Try multiple fetch strategies in order — a same-origin proxy on our
       // Worker, then public CORS proxies as a fallback so books still open
@@ -139,6 +179,7 @@ export function BookReader({
       let res: Response | null = null;
       let lastErr: unknown = null;
       for (const c of candidates) {
+        if (cancelled) return;
         try {
           const r = await fetchWithTimeout(c.url, c.creds);
           if (r.ok) { res = r; break; }
@@ -150,7 +191,9 @@ export function BookReader({
       try {
         if (!res) throw (lastErr instanceof Error ? lastErr : new Error("Download failed"));
 
-        const blob = await res.blob();
+        const blob = await readBodyWithProgress(res, (loaded, total) => {
+          if (!cancelled) setProgress({ loaded, total });
+        });
         if (cancelled) return;
         const header = new Uint8Array(await blob.slice(0, 2048).arrayBuffer());
         const contentType = (blob.type || res.headers.get("content-type") || "").toLowerCase();
@@ -167,7 +210,10 @@ export function BookReader({
         if (!cancelled) setError((e as Error)?.message || "Could not load this book");
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      abortRef.current?.abort();
+    };
   }, [url, title, formatHint]);
 
   const themeKey = "book-reader-theme";
@@ -281,15 +327,38 @@ export function BookReader({
             <Button size="sm" variant="outline" onClick={onClose} className="rounded-full">Close reader</Button>
           </div>
         ) : !file ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 animate-fade-in">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 animate-fade-in px-6">
             <div className="relative">
               <div className="absolute inset-0 animate-ping rounded-2xl bg-primary/20" />
               <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 ring-1 ring-primary/30">
                 <BookOpen className="h-6 w-6 text-primary" />
               </div>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Preparing your book…
+            <div className="flex flex-col items-center gap-2 w-full max-w-xs">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Preparing your book…
+              </div>
+              {progress && (progress.loaded > 0 || progress.total > 0) && (
+                <>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted/60">
+                    <div
+                      className="h-full bg-primary transition-all duration-200"
+                      style={{
+                        width: progress.total
+                          ? `${Math.min(100, Math.round((progress.loaded / progress.total) * 100))}%`
+                          : "40%",
+                      }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground tabular-nums">
+                    {(progress.loaded / (1024 * 1024)).toFixed(1)} MB
+                    {progress.total ? ` / ${(progress.total / (1024 * 1024)).toFixed(1)} MB` : ""}
+                  </p>
+                </>
+              )}
+              <Button size="sm" variant="ghost" onClick={onClose} className="mt-2 text-xs text-muted-foreground">
+                Cancel
+              </Button>
             </div>
           </div>
         ) : (
