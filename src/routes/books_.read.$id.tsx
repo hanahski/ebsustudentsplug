@@ -673,17 +673,19 @@ function ReadBookPage() {
       </Dialog>
 
       {pdfReaderOpen && cachedPdfUrl && book && (
-        <PdfReader
+        <FlipBookReader
           url={cachedPdfUrl}
+          kind="pdf"
           title={book.title}
-          downloadName={book.title}
+          bookId={book.id}
           onClose={() => setPdfReaderOpen(false)}
         />
       )}
 
       {epubReaderOpen && epubUrl && book && (
-        <EpubReader
+        <FlipBookReader
           url={epubUrl}
+          kind="epub"
           title={book.title}
           bookId={book.id}
           onClose={() => setEpubReaderOpen(false)}
