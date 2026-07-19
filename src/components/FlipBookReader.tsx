@@ -101,11 +101,35 @@ export function FlipBookReader({
 
 /* ---------------- PDF extraction ---------------- */
 
+let _pdfjsPromise: Promise<any> | null = null;
 async function loadPdfJs(): Promise<any> {
-  const pdfjs: any = await import("pdfjs-dist/build/pdf.mjs");
-  const workerSrc = (await import("pdfjs-dist/build/pdf.worker.mjs?url")).default;
-  pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
-  return pdfjs;
+  if (_pdfjsPromise) return _pdfjsPromise;
+  _pdfjsPromise = (async () => {
+    const pdfjs: any = await import("pdfjs-dist/build/pdf.mjs");
+    try {
+      // Prefer a real module worker — the ?url import only sets a src string,
+      // and pdf.js's default worker bootstrap fails silently on some hosts,
+      // which is exactly what leaves the reader stuck on "Preparing pages…".
+      const worker = new Worker(
+        new URL("pdfjs-dist/build/pdf.worker.mjs", import.meta.url),
+        { type: "module" },
+      );
+      pdfjs.GlobalWorkerOptions.workerPort = worker;
+    } catch {
+      const workerSrc = (await import("pdfjs-dist/build/pdf.worker.mjs?url")).default;
+      pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+    }
+    return pdfjs;
+  })();
+  return _pdfjsPromise;
+}
+
+function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(`${label} timed out`)), ms);
+    p.then((v) => { clearTimeout(t); resolve(v); },
+           (e) => { clearTimeout(t); reject(e); });
+  });
 }
 
 async function extractPdfChapters(
@@ -124,16 +148,27 @@ async function extractPdfChapters(
   } catch (e: any) {
     throw new Error("This PDF couldn't be downloaded. Try again on a stable connection.");
   }
+  if (!data || data.byteLength < 5) {
+    throw new Error("This PDF is empty.");
+  }
   let doc: any;
   try {
-    doc = await pdfjs.getDocument({
-      data,
-      disableAutoFetch: true,
-      disableStream: true,
-      isEvalSupported: false,
-    }).promise;
-  } catch {
-    throw new Error("This PDF is damaged or password-protected.");
+    doc = await withTimeout(
+      pdfjs.getDocument({
+        data,
+        disableAutoFetch: true,
+        disableStream: true,
+        isEvalSupported: false,
+      }).promise,
+      30000,
+      "Opening PDF",
+    );
+  } catch (e: any) {
+    throw new Error(
+      e?.message?.includes("timed out")
+        ? "This PDF is taking too long to open. The worker may be blocked."
+        : "This PDF is damaged or password-protected.",
+    );
   }
   const numPages = doc.numPages;
 
