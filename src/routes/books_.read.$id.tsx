@@ -499,16 +499,6 @@ function ReadBookPage() {
                       />
                     )}
                   </div>
-                ) : gid && embedUrl ? (
-                  <div className="w-full bg-black" style={{ height: "75vh" }}>
-                    <iframe
-                      src={embedUrl}
-                      title={book.title}
-                      className="w-full h-full border-0"
-                      allow="fullscreen"
-                      allowFullScreen
-                    />
-                  </div>
                 ) : shouldCachePdf ? (
                   <div className="p-8 text-center text-muted-foreground space-y-3">
                     {cacheLoading ? (
