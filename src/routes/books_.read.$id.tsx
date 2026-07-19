@@ -230,7 +230,7 @@ function ReadBookPage() {
   const txtUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}.txt.utf-8` : null;
   const kindleUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}.kf8.images` : detected.kindleUrl;
   const detailsUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}` : (book?.read_url ?? null);
-  const canReadEpub = !!epubUrl && !gid; // Gutenberg still uses HTML embed
+  const canReadEpub = !!epubUrl; // flip reader can handle Gutenberg EPUB too
 
   const [cacheError, setCacheError] = useState<string | null>(null);
 
