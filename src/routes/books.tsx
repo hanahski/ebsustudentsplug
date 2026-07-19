@@ -480,11 +480,28 @@ function BookCard({
   const [readerSource, setReaderSource] = useState<{ url: string; format: BookReaderFormat } | null>(null);
   const [openingReader, setOpeningReader] = useState(false);
   const readable = readerSourceFor(book);
+  const canPrepareReadable = book.source === "freebookcentre";
 
-  const openInReader = (source: { url: string; format: BookReaderFormat }) => {
+  const openInReader = async (source: { url: string; format: BookReaderFormat } | null) => {
     setOpeningReader(true);
-    setReaderSource(source);
-    window.setTimeout(() => setOpeningReader(false), 250);
+    try {
+      if (source) {
+        setReaderSource(source);
+        return;
+      }
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      const res = await fetch(`/api/public/hooks/cache-book-pdf?id=${book.id}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok || !json.cached_url) throw new Error(json?.error ?? "Could not prepare this book");
+      setReaderSource({ url: json.cached_url, format: "pdf" });
+    } catch (e) {
+      toast.error((e as Error)?.message || "Could not open this book");
+    } finally {
+      window.setTimeout(() => setOpeningReader(false), 250);
+    }
   };
 
   return (
@@ -553,7 +570,7 @@ function BookCard({
                 <Check className="w-3.5 h-3.5 mr-1" /> Read
               </Link>
             </Button>
-          ) : readable ? (
+          ) : readable || canPrepareReadable ? (
             <div className="flex flex-col gap-2">
               <Button
                 size="sm"
