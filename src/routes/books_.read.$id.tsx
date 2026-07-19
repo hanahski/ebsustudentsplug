@@ -269,8 +269,11 @@ function ReadBookPage() {
     setCacheError(null);
     (async () => {
       try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token;
         const res = await fetch(`/api/public/hooks/cache-book-pdf?id=${book.id}`, {
           signal: ctrl.signal,
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
         const json = await res.json();
         if (cancelled) return;
