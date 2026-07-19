@@ -12,7 +12,7 @@ import { BookOpen, Loader2, Download, ExternalLink, Coins, ArrowLeft } from "luc
 import { toast } from "sonner";
 import { BookCover } from "@/components/BookCover";
 import { SwipeBookReader } from "@/components/SwipeBookReader";
-import { FlipBookReader } from "@/components/FlipBookReader";
+import { BookReader } from "@/components/BookReader";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/books_/read/$id")({
@@ -663,9 +663,8 @@ function ReadBookPage() {
       </Dialog>
 
       {pdfReaderOpen && cachedPdfUrl && book && (
-        <FlipBookReader
+        <BookReader
           url={cachedPdfUrl}
-          kind="pdf"
           title={book.title}
           bookId={book.id}
           onClose={() => setPdfReaderOpen(false)}
@@ -673,9 +672,8 @@ function ReadBookPage() {
       )}
 
       {epubReaderOpen && epubUrl && book && (
-        <FlipBookReader
+        <BookReader
           url={epubUrl}
-          kind="epub"
           title={book.title}
           bookId={book.id}
           onClose={() => setEpubReaderOpen(false)}
