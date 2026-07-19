@@ -12,8 +12,7 @@ import { BookOpen, Loader2, Download, ExternalLink, Coins, ArrowLeft } from "luc
 import { toast } from "sonner";
 import { BookCover } from "@/components/BookCover";
 import { SwipeBookReader } from "@/components/SwipeBookReader";
-import { PdfReader } from "@/components/PdfReader";
-import { EpubReader } from "@/components/EpubReader";
+import { FlipBookReader } from "@/components/FlipBookReader";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/books_/read/$id")({
@@ -226,12 +225,12 @@ function ReadBookPage() {
   // Everything else → cache as PDF so it opens in the in-app PDF reader.
   const shouldCachePdf =
     !!book && !gid && !userBookId && !detected.kindleOnly && !detected.epubUrl;
-  const embedUrl = gid ? `https://www.gutenberg.org/cache/epub/${gid}/pg${gid}-images.html` : null;
+  // (Gutenberg HTML iframe removed — we now open the EPUB in the flip reader.)
   const epubUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}.epub3.images` : detected.epubUrl;
   const txtUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}.txt.utf-8` : null;
   const kindleUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}.kf8.images` : detected.kindleUrl;
   const detailsUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}` : (book?.read_url ?? null);
-  const canReadEpub = !!epubUrl && !gid; // Gutenberg still uses HTML embed
+  const canReadEpub = !!epubUrl; // flip reader can handle Gutenberg EPUB too
 
   const [cacheError, setCacheError] = useState<string | null>(null);
 
@@ -500,16 +499,6 @@ function ReadBookPage() {
                       />
                     )}
                   </div>
-                ) : gid && embedUrl ? (
-                  <div className="w-full bg-black" style={{ height: "75vh" }}>
-                    <iframe
-                      src={embedUrl}
-                      title={book.title}
-                      className="w-full h-full border-0"
-                      allow="fullscreen"
-                      allowFullScreen
-                    />
-                  </div>
                 ) : shouldCachePdf ? (
                   <div className="p-8 text-center text-muted-foreground space-y-3">
                     {cacheLoading ? (
@@ -674,17 +663,19 @@ function ReadBookPage() {
       </Dialog>
 
       {pdfReaderOpen && cachedPdfUrl && book && (
-        <PdfReader
+        <FlipBookReader
           url={cachedPdfUrl}
+          kind="pdf"
           title={book.title}
-          downloadName={book.title}
+          bookId={book.id}
           onClose={() => setPdfReaderOpen(false)}
         />
       )}
 
       {epubReaderOpen && epubUrl && book && (
-        <EpubReader
+        <FlipBookReader
           url={epubUrl}
+          kind="epub"
           title={book.title}
           bookId={book.id}
           onClose={() => setEpubReaderOpen(false)}
