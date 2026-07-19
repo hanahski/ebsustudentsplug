@@ -136,6 +136,8 @@ export function BookReader({
   const [location, setLocation] = useState<string | number | undefined>(undefined);
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<{ loaded: number; total: number } | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     try {
@@ -154,6 +156,7 @@ export function BookReader({
     let cancelled = false;
     setError(null);
     setFile(null);
+    setProgress({ loaded: 0, total: 0 });
     (async () => {
       // Try multiple fetch strategies in order — a same-origin proxy on our
       // Worker, then public CORS proxies as a fallback so books still open
@@ -176,6 +179,7 @@ export function BookReader({
       let res: Response | null = null;
       let lastErr: unknown = null;
       for (const c of candidates) {
+        if (cancelled) return;
         try {
           const r = await fetchWithTimeout(c.url, c.creds);
           if (r.ok) { res = r; break; }
@@ -187,7 +191,9 @@ export function BookReader({
       try {
         if (!res) throw (lastErr instanceof Error ? lastErr : new Error("Download failed"));
 
-        const blob = await res.blob();
+        const blob = await readBodyWithProgress(res, (loaded, total) => {
+          if (!cancelled) setProgress({ loaded, total });
+        });
         if (cancelled) return;
         const header = new Uint8Array(await blob.slice(0, 2048).arrayBuffer());
         const contentType = (blob.type || res.headers.get("content-type") || "").toLowerCase();
@@ -204,7 +210,10 @@ export function BookReader({
         if (!cancelled) setError((e as Error)?.message || "Could not load this book");
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      abortRef.current?.abort();
+    };
   }, [url, title, formatHint]);
 
   const themeKey = "book-reader-theme";
