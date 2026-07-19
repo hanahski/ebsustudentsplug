@@ -54,21 +54,41 @@ export function BookReader({
     setError(null);
     setFile(null);
     (async () => {
-      try {
-        // Route cross-origin URLs through our same-origin proxy to dodge CORS.
-        let fetchUrl = url;
+      // Try multiple fetch strategies in order — a same-origin proxy on our
+      // Worker, then public CORS proxies as a fallback so books still open
+      // even if our proxy route hasn't been redeployed yet or is auth-gated
+      // on a private preview.
+      const abs = (() => {
+        try { return new URL(url, window.location.href).toString(); }
+        catch { return url; }
+      })();
+      const sameOrigin = (() => {
+        try { return new URL(abs).origin === window.location.origin; }
+        catch { return false; }
+      })();
+      const candidates: Array<{ label: string; url: string; creds: RequestCredentials }> = [];
+      if (sameOrigin) {
+        candidates.push({ label: "direct", url: abs, creds: "include" });
+      } else {
+        candidates.push({ label: "same-origin proxy", url: `/api/public/proxy-pdf?url=${encodeURIComponent(abs)}`, creds: "include" });
+        candidates.push({ label: "corsproxy.io", url: `https://corsproxy.io/?url=${encodeURIComponent(abs)}`, creds: "omit" });
+        candidates.push({ label: "allorigins", url: `https://api.allorigins.win/raw?url=${encodeURIComponent(abs)}`, creds: "omit" });
+        candidates.push({ label: "direct", url: abs, creds: "omit" });
+      }
+      let res: Response | null = null;
+      let lastErr: unknown = null;
+      for (const c of candidates) {
         try {
-          const u = new URL(url, window.location.href);
-          if (u.origin !== window.location.origin) {
-            fetchUrl = `/api/public/proxy-pdf?url=${encodeURIComponent(u.toString())}`;
-          }
-        } catch { /* relative url — leave as-is */ }
-        let res = await fetch(fetchUrl, { credentials: "omit" });
-        if (!res.ok && fetchUrl !== url) {
-          // Proxy rejected (host not allow-listed) — retry direct.
-          res = await fetch(url, { credentials: "omit" });
+          const r = await fetch(c.url, { credentials: c.creds, redirect: "follow" });
+          if (r.ok) { res = r; break; }
+          lastErr = new Error(`${c.label} → HTTP ${r.status}`);
+        } catch (e) {
+          lastErr = e;
         }
-        if (!res.ok) throw new Error(`Download failed (${res.status})`);
+      }
+      try {
+        if (!res) throw (lastErr instanceof Error ? lastErr : new Error("Download failed"));
+
         const blob = await res.blob();
         if (cancelled) return;
         // Give foliate a filename hint so it picks the right parser.
