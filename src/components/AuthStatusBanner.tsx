@@ -4,7 +4,7 @@ import { AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export function AuthStatusBanner() {
-  const { user, error, signOut } = useAuth();
+  const { user, error } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [visible, setVisible] = useState(true);
 
