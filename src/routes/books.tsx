@@ -574,9 +574,8 @@ function BookCard({
         )}
       </div>
       {readerUrl && (
-        <FlipBookReader
+        <BookReader
           url={readerUrl}
-          kind="pdf"
           title={book.title}
           bookId={book.id}
           onClose={() => setReaderUrl(null)}
