@@ -115,7 +115,17 @@ async function extractPdfChapters(
   onProgress: (done: number, total: number) => void,
 ): Promise<Chapter[]> {
   const pdfjs = await loadPdfJs();
-  const doc = await pdfjs.getDocument({ url, withCredentials: false }).promise;
+  let doc: any;
+  try {
+    doc = await pdfjs.getDocument({
+      url,
+      withCredentials: false,
+      disableAutoFetch: true,
+      disableStream: false,
+    }).promise;
+  } catch (e: any) {
+    throw new Error("This PDF couldn't be downloaded. Try again on a stable connection.");
+  }
   const numPages = doc.numPages;
 
   // Attempt to derive chapter ranges from the PDF outline.
@@ -139,7 +149,6 @@ async function extractPdfChapters(
       };
       await walk(outline);
       flat.sort((a, b) => a.page - b.page);
-      // De-dupe consecutive same-page anchors.
       const dedup: typeof flat = [];
       for (const f of flat) {
         if (!dedup.length || dedup[dedup.length - 1].page !== f.page) dedup.push(f);
@@ -172,19 +181,14 @@ async function extractPdfChapters(
     const r = ranges[ci];
     const parts: string[] = [];
     for (let p = r.from; p <= r.to; p++) {
-      const page = await doc.getPage(p);
-      const hasImage = await pageHasImage(page).catch(() => false);
-      if (hasImage) {
-        const dataUrl = await renderPageToJpeg(page, 1.4).catch(() => null);
-        if (dataUrl) {
-          parts.push(
-            `<figure><img src="${dataUrl}" alt="Page ${p}" style="max-width:100%;border-radius:8px" /></figure>`,
-          );
-        }
+      try {
+        const page = await doc.getPage(p);
+        const text = await pageTextToHtml(page).catch(() => "");
+        if (text) parts.push(text);
+        try { page.cleanup(); } catch { /* ignore */ }
+      } catch {
+        // Skip broken page but keep going.
       }
-      const text = await pageTextToHtml(page);
-      if (text) parts.push(text);
-      page.cleanup();
       done++;
       onProgress(done, numPages);
     }
@@ -195,33 +199,11 @@ async function extractPdfChapters(
       content: parts.join("\n") || "<p><em>(no text on these pages)</em></p>",
     });
   }
-  await doc.destroy();
+  try { await doc.destroy(); } catch { /* ignore */ }
+  if (!chapters.length) throw new Error("This PDF has no readable pages.");
   return chapters;
 }
 
-async function pageHasImage(page: any): Promise<boolean> {
-  try {
-    const ops = await page.getOperatorList();
-    const OPS = (page as any).constructor?.OPS || {};
-    const targets = [OPS.paintImageXObject, OPS.paintJpegXObject, OPS.paintInlineImageXObject].filter(
-      (v) => typeof v === "number",
-    );
-    if (!targets.length) return false;
-    return ops.fnArray.some((fn: number) => targets.includes(fn));
-  } catch {
-    return false;
-  }
-}
-
-async function renderPageToJpeg(page: any, scale = 1.4): Promise<string> {
-  const viewport = page.getViewport({ scale });
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.floor(viewport.width);
-  canvas.height = Math.floor(viewport.height);
-  const ctx = canvas.getContext("2d")!;
-  await page.render({ canvasContext: ctx, viewport }).promise;
-  return canvas.toDataURL("image/jpeg", 0.72);
-}
 
 async function pageTextToHtml(page: any): Promise<string> {
   const tc = await page.getTextContent();
