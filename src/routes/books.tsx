@@ -34,7 +34,7 @@ import { toast } from "sonner";
 import { SaveButton } from "@/components/SaveButton";
 import { BookCover } from "@/components/BookCover";
 import { BookShape } from "@/components/market/BookShape";
-import { FlipBookReader } from "@/components/FlipBookReader";
+import { BookReader } from "@/components/BookReader";
 
 function proxyPdfUrl(url: string): string {
   if (!url) return url;
