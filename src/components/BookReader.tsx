@@ -41,6 +41,7 @@ function extensionFromUrl(input: string): BookReaderFormat | null {
 
 function looksLikeHtml(bytes: Uint8Array, type: string) {
   const head = new TextDecoder().decode(bytes.slice(0, 96)).trimStart().toLowerCase();
+  if (head.startsWith("<?xml") || head.includes("<fictionbook")) return false;
   if (head.startsWith("<!doctype") || head.startsWith("<html") || head.includes("<body")) return true;
   return (type.includes("html") || type.includes("text/plain")) && head.startsWith("<");
 }
