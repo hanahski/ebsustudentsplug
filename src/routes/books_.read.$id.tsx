@@ -225,7 +225,7 @@ function ReadBookPage() {
   // Everything else → cache as PDF so it opens in the in-app PDF reader.
   const shouldCachePdf =
     !!book && !gid && !userBookId && !detected.kindleOnly && !detected.epubUrl;
-  const embedUrl = gid ? `https://www.gutenberg.org/cache/epub/${gid}/pg${gid}-images.html` : null;
+  // (Gutenberg HTML iframe removed — we now open the EPUB in the flip reader.)
   const epubUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}.epub3.images` : detected.epubUrl;
   const txtUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}.txt.utf-8` : null;
   const kindleUrl = gid ? `https://www.gutenberg.org/ebooks/${gid}.kf8.images` : detected.kindleUrl;
