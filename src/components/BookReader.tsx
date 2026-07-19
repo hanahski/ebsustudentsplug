@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, X, AlertCircle } from "lucide-react";
+import { Loader2, X, AlertCircle, BookOpen, Sun, Moon, Coffee, Type, Minus, Plus } from "lucide-react";
+
 
 // react-book-reader is browser-only (foliate-js touches window/DOM at import
 // time). Load it lazily so it never lands in the SSR bundle.
