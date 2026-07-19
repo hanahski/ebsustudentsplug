@@ -21,10 +21,15 @@ export async function resolveAuthUid(): Promise<string | null> {
 
 /** Turn a raw Storage / PostgREST error into a message a user can act on. */
 export function friendlyUploadError(err: any): string {
-  const msg = String(err?.message ?? err ?? "").toLowerCase();
+  const raw = String(err?.message ?? err ?? "");
+  const msg = raw.toLowerCase();
   if (!msg) return "Upload failed. Please try again.";
-  if (msg.includes("row-level security") || msg.includes("policy") || msg.includes("unauthorized")) {
+  if (msg.includes("jwt") || msg.includes("invalid token") || msg.includes("token is expired")) {
     return "Your session expired. Sign in again and retry.";
+  }
+  if (msg.includes("row-level security") || msg.includes("policy") || msg.includes("unauthorized") || msg.includes("permission")) {
+    // Surface the real reason instead of a misleading "session expired".
+    return `Upload blocked: ${raw}`.slice(0, 240);
   }
   if (msg.includes("exceeded") || msg.includes("payload too large") || msg.includes("size")) {
     return "That file is too large. Try a shorter or smaller version.";
@@ -35,7 +40,7 @@ export function friendlyUploadError(err: any): string {
   if (msg.includes("network") || msg.includes("failed to fetch")) {
     return "Network hiccup. Check your internet and retry.";
   }
-  return err?.message || "Upload failed. Please try again.";
+  return raw || "Upload failed. Please try again.";
 }
 
 /**
@@ -56,6 +61,17 @@ export async function safeUserUpload(opts: {
     e.code = "SIGNED_OUT";
     throw e;
   }
+  // Make sure the storage client uses the freshest access token — without this
+  // it can send a stale header captured at page-load time and PostgREST rejects
+  // the upload with an RLS-looking error.
+  try {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (token && typeof (supabase.storage as any).setAuth === "function") {
+      (supabase.storage as any).setAuth(token);
+    }
+  } catch {}
+
   const safe = opts.filename.replace(/[^a-zA-Z0-9._-]/g, "_");
   const path = `${uid}/${Date.now()}-${safe}`;
   const { error } = await supabase.storage.from(opts.bucket).upload(path, opts.file, {
