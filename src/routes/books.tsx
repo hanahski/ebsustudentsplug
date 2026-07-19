@@ -459,12 +459,16 @@ function BookCard({
   const [readerUrl, setReaderUrl] = useState<string | null>(null);
   const [openingReader, setOpeningReader] = useState(false);
 
-  const openPdfInReader = (url: string) => {
+  // Foliate-js reader supports every format we ship — always prefer opening
+  // in-app instead of prompting a download.
+  const READABLE = ["epub", "pdf", "kindle", "mobi", "azw3", "fb2", "cbz"] as const;
+  const readableKey = READABLE.find((k) => formats[k]);
+  const readableUrl = readableKey ? formats[readableKey] : (book.source_url as string | undefined);
+
+  const openInReader = (url: string) => {
     setOpeningReader(true);
     setReaderUrl(proxyPdfUrl(url));
-    window.setTimeout(() => {
-      setOpeningReader(false);
-    }, 250);
+    window.setTimeout(() => setOpeningReader(false), 250);
   };
 
   return (
@@ -525,7 +529,7 @@ function BookCard({
           </span>
         </div>
 
-        {/* Action — every book requires Unlock first, then reveals read/download. */}
+        {/* Action — every book requires Unlock first, then always opens in reader. */}
         {owned ? (
           isEbsu ? (
             <Button size="sm" variant="secondary" asChild className="w-full">
@@ -533,26 +537,24 @@ function BookCard({
                 <Check className="w-3.5 h-3.5 mr-1" /> Read
               </Link>
             </Button>
-          ) : hasFormats ? (
+          ) : readableUrl ? (
             <div className="flex flex-col gap-2">
-              {formats.pdf && (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  disabled={openingReader}
-                  onClick={() => openPdfInReader(formats.pdf)}
-                  className="w-full"
-                >
-                  {openingReader ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <>
-                      <BookOpen className="w-3.5 h-3.5 mr-1" /> Read PDF
-                    </>
-                  )}
-                </Button>
-              )}
-              <DownloadPicker formats={formats} keys={orderedKeys} />
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={openingReader}
+                onClick={() => openInReader(readableUrl)}
+                className="w-full"
+              >
+                {openingReader ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <>
+                    <BookOpen className="w-3.5 h-3.5 mr-1" /> Read
+                  </>
+                )}
+              </Button>
+              {hasFormats && <DownloadPicker formats={formats} keys={orderedKeys} />}
             </div>
           ) : (
             <Button size="sm" variant="outline" asChild className="w-full">
