@@ -20,7 +20,7 @@ import { extractTextFromImage } from "@/lib/ocr.functions";
 import { pdfToImages } from "@/lib/pdf-to-images";
 import { PastQuestionArticle } from "@/components/PastQuestionArticle";
 import { MediaPlayer } from "@/components/MediaPlayer";
-import { PdfReader } from "@/components/PdfReader";
+import { BookReader } from "@/components/BookReader";
 import { VerifyStudentDialog } from "@/components/VerifyStudentDialog";
 import { PlugShareActions, extractPlugShare } from "@/components/PlugShareActions";
 
