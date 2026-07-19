@@ -55,7 +55,19 @@ export function BookReader({
     setFile(null);
     (async () => {
       try {
-        const res = await fetch(url, { credentials: "omit" });
+        // Route cross-origin URLs through our same-origin proxy to dodge CORS.
+        let fetchUrl = url;
+        try {
+          const u = new URL(url, window.location.href);
+          if (u.origin !== window.location.origin) {
+            fetchUrl = `/api/public/proxy-pdf?url=${encodeURIComponent(u.toString())}`;
+          }
+        } catch { /* relative url — leave as-is */ }
+        let res = await fetch(fetchUrl, { credentials: "omit" });
+        if (!res.ok && fetchUrl !== url) {
+          // Proxy rejected (host not allow-listed) — retry direct.
+          res = await fetch(url, { credentials: "omit" });
+        }
         if (!res.ok) throw new Error(`Download failed (${res.status})`);
         const blob = await res.blob();
         if (cancelled) return;
