@@ -251,10 +251,10 @@ function PostPage() {
                   <p className="text-sm text-muted-foreground">Preparing PDF preview…</p>
                 )}
                 {pdfUrl && pdfOpen && (
-                  <PdfReader
+                  <BookReader
                     url={pdfUrl}
                     title={post.file_name ?? "PDF"}
-                    downloadName={post.file_name ?? undefined}
+                    bookId={post.id}
                     onClose={() => setPdfOpen(false)}
                   />
                 )}
