@@ -1042,6 +1042,7 @@ function SchoolBiographyPage() {
   return (
     <AppShell>
       <div className="max-w-6xl mx-auto space-y-6">
+        <CatalogueTabs />
         {/* Header */}
         <header className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-primary/10 via-card to-card p-6 shadow-card">
           <div
