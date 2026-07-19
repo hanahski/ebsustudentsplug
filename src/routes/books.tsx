@@ -34,14 +34,7 @@ import { toast } from "sonner";
 import { SaveButton } from "@/components/SaveButton";
 import { BookCover } from "@/components/BookCover";
 import { BookShape } from "@/components/market/BookShape";
-import { BookReader } from "@/components/BookReader";
-
-function proxyPdfUrl(url: string): string {
-  if (!url) return url;
-  if (url.startsWith("/api/public/proxy-pdf")) return url;
-  if (url.startsWith("/") || url.startsWith(window.location.origin)) return url;
-  return `/api/public/proxy-pdf?url=${encodeURIComponent(url)}`;
-}
+import { BookReader, normalizeBookReaderFormat, type BookReaderFormat } from "@/components/BookReader";
 
 export const Route = createFileRoute("/books")({
   component: BooksPage,
@@ -133,6 +126,7 @@ const FORMAT_META: Record<string, { label: string; short: string; tone: string }
 };
 
 const FORMAT_ORDER = ["pdf", "epub", "kindle", "pages_zip", "html_zip", "lms", "blueprint"] as const;
+const READER_FORMAT_ORDER = ["epub", "pdf", "kindle", "mobi", "azw3", "azw", "fb2", "cbz"] as const;
 
 const SOURCE_META: Record<string, { label: string }> = {
   openstax: { label: "OpenStax" },
@@ -148,6 +142,33 @@ function formatCredits(v: unknown) {
   const n = Number(v);
   if (!Number.isFinite(n)) return "0";
   return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+}
+
+function readableFormatFromUrl(url: string | null | undefined): BookReaderFormat | null {
+  if (!url) return null;
+  try {
+    return normalizeBookReaderFormat(/\.(epub|pdf|mobi|azw3?|fb2|cbz)(?:$|[?#._-])/i.exec(new URL(url, window.location.href).pathname)?.[1]);
+  } catch {
+    return normalizeBookReaderFormat(/\.(epub|pdf|mobi|azw3?|fb2|cbz)(\?|#|$)/i.exec(url)?.[1]);
+  }
+}
+
+function readerSourceFor(book: any): { url: string; format: BookReaderFormat } | null {
+  const formats: Record<string, string> = book?.download_formats ?? {};
+  for (const key of READER_FORMAT_ORDER) {
+    const url = formats[key];
+    const format = normalizeBookReaderFormat(key);
+    if (url && format) return { url, format };
+  }
+  if (/^gutenberg-\d+$/i.test(book?.openlibrary_key ?? "")) {
+    const id = String(book.openlibrary_key).replace(/^gutenberg-/i, "");
+    return { url: `https://www.gutenberg.org/ebooks/${id}.epub3.images`, format: "epub" };
+  }
+  for (const url of [book?.download_url, book?.file_url, book?.read_url, book?.source_url]) {
+    const format = readableFormatFromUrl(url);
+    if (url && format) return { url, format };
+  }
+  return null;
 }
 
 const BOOK_SPINES = [
@@ -456,18 +477,13 @@ function BookCard({
   const source = SOURCE_META[book.source]?.label;
   const isEbsu = book.source === "user";
 
-  const [readerUrl, setReaderUrl] = useState<string | null>(null);
+  const [readerSource, setReaderSource] = useState<{ url: string; format: BookReaderFormat } | null>(null);
   const [openingReader, setOpeningReader] = useState(false);
+  const readable = readerSourceFor(book);
 
-  // Foliate-js reader supports every format we ship — always prefer opening
-  // in-app instead of prompting a download.
-  const READABLE = ["epub", "pdf", "kindle", "mobi", "azw3", "fb2", "cbz"] as const;
-  const readableKey = READABLE.find((k) => formats[k]);
-  const readableUrl = readableKey ? formats[readableKey] : (book.source_url as string | undefined);
-
-  const openInReader = (url: string) => {
+  const openInReader = (source: { url: string; format: BookReaderFormat }) => {
     setOpeningReader(true);
-    setReaderUrl(proxyPdfUrl(url));
+    setReaderSource(source);
     window.setTimeout(() => setOpeningReader(false), 250);
   };
 
@@ -537,13 +553,13 @@ function BookCard({
                 <Check className="w-3.5 h-3.5 mr-1" /> Read
               </Link>
             </Button>
-          ) : readableUrl ? (
+          ) : readable ? (
             <div className="flex flex-col gap-2">
               <Button
                 size="sm"
                 variant="secondary"
                 disabled={openingReader}
-                onClick={() => openInReader(readableUrl)}
+                onClick={() => openInReader(readable)}
                 className="w-full"
               >
                 {openingReader ? (
@@ -575,12 +591,13 @@ function BookCard({
           </Button>
         )}
       </div>
-      {readerUrl && (
+      {readerSource && (
         <BookReader
-          url={readerUrl}
+          url={readerSource.url}
+          formatHint={readerSource.format}
           title={book.title}
           bookId={book.id}
-          onClose={() => setReaderUrl(null)}
+          onClose={() => setReaderSource(null)}
         />
       )}
     </div>
