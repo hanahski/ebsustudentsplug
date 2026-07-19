@@ -102,11 +102,9 @@ export function FlipBookReader({
 /* ---------------- PDF extraction ---------------- */
 
 async function loadPdfJs(): Promise<any> {
-  const pdfjs: any = await import(
-    /* @vite-ignore */ "https://esm.sh/pdfjs-dist@4.7.76/build/pdf.mjs"
-  );
-  pdfjs.GlobalWorkerOptions.workerSrc =
-    "https://esm.sh/pdfjs-dist@4.7.76/build/pdf.worker.mjs";
+  const pdfjs: any = await import("pdfjs-dist/build/pdf.mjs");
+  const workerSrc = (await import("pdfjs-dist/build/pdf.worker.mjs?url")).default;
+  pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
   return pdfjs;
 }
 
@@ -115,16 +113,27 @@ async function extractPdfChapters(
   onProgress: (done: number, total: number) => void,
 ): Promise<Chapter[]> {
   const pdfjs = await loadPdfJs();
+  // Fetch the whole PDF up-front — many upstream sources don't support
+  // HTTP range requests, which breaks pdf.js streaming. A single buffered
+  // download is slower but works everywhere.
+  let data: ArrayBuffer;
+  try {
+    const res = await fetch(url, { credentials: "omit" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    data = await res.arrayBuffer();
+  } catch (e: any) {
+    throw new Error("This PDF couldn't be downloaded. Try again on a stable connection.");
+  }
   let doc: any;
   try {
     doc = await pdfjs.getDocument({
-      url,
-      withCredentials: false,
+      data,
       disableAutoFetch: true,
-      disableStream: false,
+      disableStream: true,
+      isEvalSupported: false,
     }).promise;
-  } catch (e: any) {
-    throw new Error("This PDF couldn't be downloaded. Try again on a stable connection.");
+  } catch {
+    throw new Error("This PDF is damaged or password-protected.");
   }
   const numPages = doc.numPages;
 
