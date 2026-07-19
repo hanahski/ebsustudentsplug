@@ -192,6 +192,9 @@ function Catalogue() {
 
   return (
     <AppShell>
+      <div className="max-w-5xl mx-auto">
+        <CatalogueTabs />
+      </div>
       <div
         className="max-w-5xl mx-auto space-y-6 relative"
         {...swipe.handlers}
