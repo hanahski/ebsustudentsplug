@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, X, AlertCircle, BookOpen, Sun, Moon, Coffee, Type, Minus, Plus } from "lucide-react";
+import { Loader2, X, AlertCircle } from "lucide-react";
 
 
 // react-book-reader is browser-only (foliate-js touches window/DOM at import
@@ -216,32 +216,6 @@ export function BookReader({
     };
   }, [url, title, formatHint]);
 
-  const themeKey = "book-reader-theme";
-  const sizeKey = "book-reader-size";
-  const [theme, setTheme] = useState<"light" | "sepia" | "dark">("sepia");
-  const [fontScale, setFontScale] = useState<number>(100);
-
-  useEffect(() => {
-    try {
-      const t = window.localStorage.getItem(themeKey) as "light" | "sepia" | "dark" | null;
-      const s = Number(window.localStorage.getItem(sizeKey));
-      if (t) setTheme(t);
-      if (s && s >= 80 && s <= 160) setFontScale(s);
-    } catch { /* ignore */ }
-  }, []);
-
-  useEffect(() => {
-    try { window.localStorage.setItem(themeKey, theme); } catch { /* ignore */ }
-  }, [theme]);
-  useEffect(() => {
-    try { window.localStorage.setItem(sizeKey, String(fontScale)); } catch { /* ignore */ }
-  }, [fontScale]);
-
-  const surface =
-    theme === "light" ? "bg-white text-zinc-900"
-    : theme === "sepia" ? "bg-[#f5ecd7] text-[#3b2f1e]"
-    : "bg-[#0f1115] text-zinc-100";
-
   return (
     <div
       className="fixed inset-0 flex flex-col bg-background"
@@ -249,117 +223,47 @@ export function BookReader({
       role="dialog"
       aria-label={`Reading ${title}`}
     >
-      {/* Header */}
-      <div className="relative shrink-0 border-b border-border/60 bg-gradient-to-r from-primary/10 via-background to-primary/5 backdrop-blur-xl">
-        <div className="flex items-center gap-3 px-4 py-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary shadow-inner ring-1 ring-primary/20">
-            <BookOpen className="h-4 w-4" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Now reading</p>
-            <p className="truncate text-sm font-semibold font-display leading-tight">{title}</p>
-          </div>
-          <Button size="icon" variant="ghost" onClick={onClose} aria-label="Close reader" className="h-9 w-9 rounded-full hover:bg-destructive/10 hover:text-destructive">
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Toolbar */}
-        <div className="flex items-center justify-between gap-2 px-4 pb-3">
-          <div className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-card/70 p-1 shadow-sm">
-            {([
-              { k: "light", icon: Sun, label: "Light" },
-              { k: "sepia", icon: Coffee, label: "Sepia" },
-              { k: "dark", icon: Moon, label: "Dark" },
-            ] as const).map(({ k, icon: Icon, label }) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => setTheme(k)}
-                aria-label={label}
-                aria-pressed={theme === k}
-                className={`flex h-7 w-7 items-center justify-center rounded-full transition-all ${
-                  theme === k
-                    ? "bg-primary text-primary-foreground shadow-sm scale-105"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" />
-              </button>
-            ))}
-          </div>
-
-          <div className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-card/70 p-1 shadow-sm">
-            <button
-              type="button"
-              onClick={() => setFontScale((s) => Math.max(80, s - 10))}
-              aria-label="Smaller text"
-              className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
-            >
-              <Minus className="h-3.5 w-3.5" />
-            </button>
-            <div className="flex items-center gap-1 px-2 text-[11px] font-semibold tabular-nums text-foreground/80">
-              <Type className="h-3 w-3" /> {fontScale}%
-            </div>
-            <button
-              type="button"
-              onClick={() => setFontScale((s) => Math.min(160, s + 10))}
-              aria-label="Larger text"
-              className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
-            >
-              <Plus className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
+      <div className="flex items-center justify-between gap-3 px-4 py-2 border-b bg-card shrink-0">
+        <p className="truncate text-sm font-semibold">{title}</p>
+        <Button size="icon" variant="ghost" onClick={onClose} aria-label="Close reader">
+          <X className="h-4 w-4" />
+        </Button>
       </div>
 
-      {/* Reader surface */}
-      <div className={`flex-1 relative transition-colors duration-300 ${surface}`}>
+      <div className="flex-1 relative">
         {error ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-center px-6 animate-fade-in">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-destructive/10 ring-1 ring-destructive/20">
-              <AlertCircle className="h-8 w-8 text-destructive" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-base font-semibold font-display">Couldn't open this book</p>
-              <p className="text-xs text-muted-foreground max-w-sm leading-relaxed">{error}</p>
-            </div>
-            <Button size="sm" variant="outline" onClick={onClose} className="rounded-full">Close reader</Button>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center px-6">
+            <AlertCircle className="h-8 w-8 text-destructive" />
+            <p className="text-sm font-semibold">Couldn't open this book</p>
+            <p className="text-xs text-muted-foreground max-w-sm">{error}</p>
+            <Button size="sm" variant="outline" onClick={onClose}>Close</Button>
           </div>
         ) : !file ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 animate-fade-in px-6">
-            <div className="relative">
-              <div className="absolute inset-0 animate-ping rounded-2xl bg-primary/20" />
-              <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 ring-1 ring-primary/30">
-                <BookOpen className="h-6 w-6 text-primary" />
-              </div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Preparing your book…
             </div>
-            <div className="flex flex-col items-center gap-2 w-full max-w-xs">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Preparing your book…
-              </div>
-              {progress && (progress.loaded > 0 || progress.total > 0) && (
-                <>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted/60">
-                    <div
-                      className="h-full bg-primary transition-all duration-200"
-                      style={{
-                        width: progress.total
-                          ? `${Math.min(100, Math.round((progress.loaded / progress.total) * 100))}%`
-                          : "40%",
-                      }}
-                    />
-                  </div>
-                  <p className="text-[10px] text-muted-foreground tabular-nums">
-                    {(progress.loaded / (1024 * 1024)).toFixed(1)} MB
-                    {progress.total ? ` / ${(progress.total / (1024 * 1024)).toFixed(1)} MB` : ""}
-                  </p>
-                </>
-              )}
-              <Button size="sm" variant="ghost" onClick={onClose} className="mt-2 text-xs text-muted-foreground">
-                Cancel
-              </Button>
-            </div>
+            {progress && (progress.loaded > 0 || progress.total > 0) && (
+              <>
+                <div className="h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full bg-primary transition-all"
+                    style={{
+                      width: progress.total
+                        ? `${Math.min(100, Math.round((progress.loaded / progress.total) * 100))}%`
+                        : "40%",
+                    }}
+                  />
+                </div>
+                <p className="text-[10px] text-muted-foreground tabular-nums">
+                  {(progress.loaded / (1024 * 1024)).toFixed(1)} MB
+                  {progress.total ? ` / ${(progress.total / (1024 * 1024)).toFixed(1)} MB` : ""}
+                </p>
+              </>
+            )}
+            <Button size="sm" variant="ghost" onClick={onClose} className="text-xs text-muted-foreground">
+              Cancel
+            </Button>
           </div>
         ) : (
           <Suspense
@@ -369,10 +273,7 @@ export function BookReader({
               </div>
             }
           >
-            <div
-              className="absolute inset-0"
-              style={{ fontSize: `${fontScale}%` }}
-            >
+            <div className="absolute inset-0">
               <ReactReader
                 url={file as unknown as string}
                 title={title}
