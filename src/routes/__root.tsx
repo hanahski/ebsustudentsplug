@@ -13,7 +13,7 @@ import { ConfirmProvider } from "@/components/ConfirmProvider";
 
 
 import appCss from "../styles.css?url";
-import brandLogoUrl from "@/assets/brand-logo.png";
+const brandLogoUrl = "/brand-logo.png";
 
 function NotFoundComponent() {
   return (
@@ -113,8 +113,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", type: "image/png", href: brandLogoUrl },
-      { rel: "apple-touch-icon", href: brandLogoUrl },
+      { rel: "icon", type: "image/png", sizes: "512x512", href: "/favicon.png" },
+      { rel: "shortcut icon", type: "image/png", href: "/favicon.png" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
       { rel: "preload", as: "image", href: brandLogoUrl, fetchPriority: "high" },
       { rel: "preconnect", href: "https://toklqndkqjglcxhaeagb.supabase.co", crossOrigin: "anonymous" },
       { rel: "dns-prefetch", href: "https://toklqndkqjglcxhaeagb.supabase.co" },
