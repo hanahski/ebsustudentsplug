@@ -26,7 +26,14 @@ export const SchoolBioProfile = z.object({
   department: z.string().max(160).optional().nullable(),
   level: z.string().max(40).optional().nullable(),
   session: z.string().max(40).optional().nullable(),
-  avatar_url: z.string().url().optional().nullable(),
+  avatar_url: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((v) => (v && v.trim() ? v.trim() : null))
+    .refine((v) => v === null || /^https?:\/\//i.test(v) || v.startsWith("data:"), {
+      message: "Invalid url",
+    }),
   short_bio: z.string().max(220).optional().nullable(),
   long_bio: z.string().max(6000).optional().nullable(),
   quote: z.string().max(400).optional().nullable(),
