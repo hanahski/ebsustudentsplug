@@ -128,6 +128,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children: `(function(){try{var t=localStorage.getItem('sp-theme');if(!t){t='light';localStorage.setItem('sp-theme',t);}if(t==='dark')document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark');}catch(e){}})();`,
       },
       {
+        children: `(function(){try{var CANON='https://ebsustudentsplug.fun';function sync(){try{var h=(location.hostname||'').toLowerCase();var url=CANON+location.pathname+location.search;var head=document.head;if(!head)return;var link=head.querySelector('link[rel="canonical"]');if(!link){link=document.createElement('link');link.setAttribute('rel','canonical');head.appendChild(link);}link.setAttribute('href',url);var og=head.querySelector('meta[property="og:url"]');if(!og){og=document.createElement('meta');og.setAttribute('property','og:url');head.appendChild(og);}og.setAttribute('content',url);var isLovable=h.endsWith('.lovable.app');var rb=head.querySelector('meta[name="robots"][data-sp-guard="1"]');if(isLovable){if(!rb){rb=document.createElement('meta');rb.setAttribute('name','robots');rb.setAttribute('data-sp-guard','1');head.appendChild(rb);}rb.setAttribute('content','noindex, nofollow');}else if(rb){rb.parentNode.removeChild(rb);}}catch(e){}}sync();var _ps=history.pushState;history.pushState=function(){var r=_ps.apply(this,arguments);sync();return r;};var _rs=history.replaceState;history.replaceState=function(){var r=_rs.apply(this,arguments);sync();return r;};window.addEventListener('popstate',sync);}catch(e){}})();`,
+      },
+      {
         type: "application/ld+json",
         children: JSON.stringify({
           "@context": "https://schema.org",
