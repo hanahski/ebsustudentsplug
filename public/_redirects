@@ -1,6 +1,6 @@
 # Cloudflare Pages redirect rules (also respected by Lovable hosting).
 # Force every .lovable.app origin (published, preview, project--) to the canonical custom domain.
-https://ebsustudentsplug.lovable.app/* https://ebsustudentsplug.fun/:splat 301!
+https://sp-origin.lovable.app/* https://ebsustudentsplug.fun/:splat 301!
 https://*.lovable.app/* https://ebsustudentsplug.fun/:splat 301!
 
 # Consolidate www to the bare domain.
