@@ -86,7 +86,8 @@ export function HeroCarousel() {
       });
       // Split out the "hide built-in banners" sentinel so it never renders.
       const defaultsOff = live.some((r) => r.title === DEFAULTS_OFF_MARKER);
-      const visible = live.filter((r) => r.title !== DEFAULTS_OFF_MARKER);
+      const hideAll = live.some((r) => r.title === HIDE_ALL_MARKER);
+      const visible = live.filter((r) => r.title !== DEFAULTS_OFF_MARKER && r.title !== HIDE_ALL_MARKER);
       const resolved = await resolveBannerUrls(visible as any[]);
       if (typeof window !== "undefined") {
         resolved.forEach((b: any) => {
@@ -96,7 +97,7 @@ export function HeroCarousel() {
           }
         });
       }
-      return { rows: resolved, defaultsOff };
+      return { rows: resolved, defaultsOff, hideAll };
     },
     staleTime: 5 * 60_000,
     gcTime: 30 * 60_000,
