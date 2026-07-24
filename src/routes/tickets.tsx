@@ -108,10 +108,36 @@ function BrowseTickets() {
   const nav = useNavigate();
   const qc = useQueryClient();
   const [buyingId, setBuyingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { data: isAdmin } = useQuery({
+    queryKey: ["is-admin", user?.id],
+    enabled: !!user,
+    queryFn: async () => getIsAdminUser(user!.id),
+  });
   const { data, isLoading } = useQuery({
     queryKey: ["tickets-browse"],
     queryFn: async () => (await supabase.from("tickets").select("*").order("created_at", { ascending: false }).limit(60)).data ?? [],
   });
+
+  const deleteTicket = async (t: any) => {
+    const ok = await confirmDialog({
+      title: `Delete "${t.title}"?`,
+      description: "This wipes the ticket and all its purchases. This cannot be undone.",
+      confirmText: "Delete",
+      destructive: true,
+    } as any);
+    if (!ok) return;
+    setDeletingId(t.id);
+    try {
+      await adminDeleteTicket({ data: { ticketId: t.id } });
+      toast.success("Ticket wiped");
+      qc.invalidateQueries({ queryKey: ["tickets-browse"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Delete failed");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const buyAndDownload = async (ticket: any) => {
     if (!user) { nav({ to: "/login" }); return; }
