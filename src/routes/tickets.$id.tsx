@@ -215,7 +215,15 @@ function TicketDetail() {
   return (
     <AppShell>
       <div className="space-y-4 max-w-xl mx-auto">
-        <Link to="/tickets" className="text-xs text-primary inline-flex items-center gap-1"><ArrowLeft className="w-3 h-3" />All tickets</Link>
+        <div className="flex items-center justify-between">
+          <Link to="/tickets" className="text-xs text-primary inline-flex items-center gap-1"><ArrowLeft className="w-3 h-3" />All tickets</Link>
+          {isAdmin && (
+            <Button variant="destructive" size="sm" onClick={handleDelete} disabled={deleting}>
+              {deleting ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Trash2 className="w-4 h-4 mr-1" />}
+              {deleting ? "Deleting…" : "Delete ticket"}
+            </Button>
+          )}
+        </div>
         <div className="bg-card border rounded-3xl overflow-hidden shadow-card">
           <img src={t.photo_url} alt={t.title} className="w-full h-72 object-cover" />
           <div className="p-5 space-y-3">
