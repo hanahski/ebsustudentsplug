@@ -20,7 +20,7 @@ import { cleanListingDescription } from "@/lib/clean-description";
 import { getIsAdminUser } from "@/lib/admin-role";
 import { handleEmailNotVerified } from "@/components/VerifyEmailDialog";
 import { adminDeleteTicket } from "@/lib/tickets-admin.functions";
-import { useConfirm } from "@/components/ConfirmProvider";
+import { confirm as confirmDialog } from "@/components/ConfirmProvider";
 
 
 export const Route = createFileRoute("/tickets")({ component: TicketsPage });
