@@ -697,6 +697,7 @@ function BannerLivePreview({ title, subtitle, imageUrl, ctaLabel, layout, accent
 
 
 const DEFAULTS_OFF_MARKER = "__DEFAULTS_OFF__";
+const HIDE_ALL_MARKER = "__HIDE_ALL_BANNERS__";
 
 function AdminBanners() {
   const { data, refetch } = useQuery({
@@ -707,8 +708,10 @@ function AdminBanners() {
     },
   });
   const defaultsOffRow = (data ?? []).find((r: any) => r.title === DEFAULTS_OFF_MARKER);
-  const visibleRows = (data ?? []).filter((r: any) => r.title !== DEFAULTS_OFF_MARKER);
+  const hideAllRow = (data ?? []).find((r: any) => r.title === HIDE_ALL_MARKER);
+  const visibleRows = (data ?? []).filter((r: any) => r.title !== DEFAULTS_OFF_MARKER && r.title !== HIDE_ALL_MARKER);
   const defaultsHidden = !!(defaultsOffRow && (defaultsOffRow as any).is_active);
+  const allHidden = !!(hideAllRow && (hideAllRow as any).is_active);
   const toggleDefaults = async () => {
     if (defaultsOffRow) {
       const { error } = await supabase
@@ -727,6 +730,26 @@ function AdminBanners() {
       if (error) return toast.error(error.message);
     }
     toast.success(defaultsHidden ? "Built-in banners restored" : "Built-in banners hidden");
+    refetch();
+  };
+  const toggleHideAll = async () => {
+    if (hideAllRow) {
+      const { error } = await supabase
+        .from("banner_slides")
+        .update({ is_active: !allHidden } as any)
+        .eq("id", (hideAllRow as any).id);
+      if (error) return toast.error(error.message);
+    } else {
+      const { error } = await supabase.from("banner_slides").insert({
+        title: HIDE_ALL_MARKER,
+        subtitle: "Hides ALL home banners (built-in + custom) site-wide.",
+        layout: "text-only",
+        is_active: true,
+        sort_order: 10000,
+      } as any);
+      if (error) return toast.error(error.message);
+    }
+    toast.success(allHidden ? "Banners restored" : "All banners hidden site-wide");
     refetch();
   };
 
@@ -988,6 +1011,20 @@ function AdminBanners() {
         </div>
         <Button size="sm" variant={defaultsHidden ? "default" : "outline"} onClick={toggleDefaults}>
           {defaultsHidden ? "Restore built-ins" : "Hide built-ins"}
+        </Button>
+      </div>
+
+      <div className={`rounded-2xl border p-3 flex items-center justify-between gap-3 ${allHidden ? "bg-red-500/10 border-red-500/30" : "bg-card"}`}>
+        <div className="min-w-0">
+          <p className="font-semibold text-sm">Hide ALL banners</p>
+          <p className="text-[11px] text-muted-foreground line-clamp-2">
+            {allHidden
+              ? "The home carousel is completely hidden site-wide (built-in + custom). Persists across refreshes."
+              : "Master switch — hides every banner (built-in and custom) on the home page."}
+          </p>
+        </div>
+        <Button size="sm" variant={allHidden ? "default" : "destructive"} onClick={toggleHideAll}>
+          {allHidden ? "Show banners" : "Hide all banners"}
         </Button>
       </div>
 

@@ -66,6 +66,7 @@ function logBannerEvent(bannerId: string | undefined, kind: "impression" | "clic
 }
 
 const DEFAULTS_OFF_MARKER = "__DEFAULTS_OFF__";
+const HIDE_ALL_MARKER = "__HIDE_ALL_BANNERS__";
 
 export function HeroCarousel() {
   const { data: admin } = useQuery({
@@ -85,7 +86,8 @@ export function HeroCarousel() {
       });
       // Split out the "hide built-in banners" sentinel so it never renders.
       const defaultsOff = live.some((r) => r.title === DEFAULTS_OFF_MARKER);
-      const visible = live.filter((r) => r.title !== DEFAULTS_OFF_MARKER);
+      const hideAll = live.some((r) => r.title === HIDE_ALL_MARKER);
+      const visible = live.filter((r) => r.title !== DEFAULTS_OFF_MARKER && r.title !== HIDE_ALL_MARKER);
       const resolved = await resolveBannerUrls(visible as any[]);
       if (typeof window !== "undefined") {
         resolved.forEach((b: any) => {
@@ -95,7 +97,7 @@ export function HeroCarousel() {
           }
         });
       }
-      return { rows: resolved, defaultsOff };
+      return { rows: resolved, defaultsOff, hideAll };
     },
     staleTime: 5 * 60_000,
     gcTime: 30 * 60_000,
@@ -117,7 +119,7 @@ export function HeroCarousel() {
     rotationMs: Math.max(2000, Math.min(300000, (Number(b.rotation_seconds) || 6) * 1000)),
   }));
 
-  const slides = admin?.defaultsOff ? adminSlides : [...adminSlides, ...defaultSlides];
+  const slides = admin?.hideAll ? [] : (admin?.defaultsOff ? adminSlides : [...adminSlides, ...defaultSlides]);
   if (slides.length === 0) return null;
 
   const [i, setI] = useState(0);
