@@ -87,13 +87,41 @@ function TicketDetail() {
   const qc = useQueryClient();
   const nav = useNavigate();
   const [busy, setBusy] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [composed, setComposed] = useState<string | null>(null);
   const [composing, setComposing] = useState(false);
+
+  const { data: isAdmin } = useQuery({
+    queryKey: ["is-admin", user?.id],
+    enabled: !!user,
+    queryFn: async () => getIsAdminUser(user!.id),
+  });
 
   const { data: t, isLoading } = useQuery({
     queryKey: ["ticket", id],
     queryFn: async () => (await supabase.from("tickets").select("*, uploader:profiles!tickets_uploader_id_fkey(display_name)").eq("id", id).maybeSingle()).data,
   });
+
+  const handleDelete = async () => {
+    if (!t) return;
+    const ok = await confirmDialog({
+      title: `Delete "${t.title}"?`,
+      description: "This wipes the ticket and all its purchases. This cannot be undone.",
+      confirmText: "Delete",
+      destructive: true,
+    } as any);
+    if (!ok) return;
+    setDeleting(true);
+    try {
+      await adminDeleteTicket({ data: { ticketId: t.id } });
+      toast.success("Ticket wiped");
+      qc.invalidateQueries({ queryKey: ["tickets-browse"] });
+      nav({ to: "/tickets" });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Delete failed");
+      setDeleting(false);
+    }
+  };
 
   const composeAndDownload = async (ticket: any, buyerIndex: number | undefined, qrToken: string, openedWindow?: Window | null) => {
     if (!qrToken) throw new Error("Ticket QR is not ready yet");
