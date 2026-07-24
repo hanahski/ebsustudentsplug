@@ -307,7 +307,7 @@ function NewPostPage() {
           type="submit"
           form="post-new-form"
           size="sm"
-          disabled={busy || scanning || !title.trim()}
+          disabled={busy || scanning || !title.trim() || feedLocked}
           className="rounded-full h-9 px-4 font-bold shadow-glow"
         >
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-3.5 h-3.5 mr-1" />Post</>}
@@ -661,8 +661,9 @@ function NewPostPage() {
                 <Sparkles className="w-3.5 h-3.5 text-primary" />
                 <span className="truncate">{title.trim() ? `“${title.trim()}”` : "Ready when you are."}</span>
               </div>
-              <Button type="submit" disabled={busy || scanning} className="flex-1 sm:flex-none sm:min-w-[180px]">
-                {busy ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Posting…</> : "Publish post"}
+              <Button type="submit" disabled={busy || scanning || feedLocked} className="flex-1 sm:flex-none sm:min-w-[180px]">
+                {feedLocked ? <><Lock className="w-4 h-4 mr-2" />Feed locked by admin</> : null}
+                {!feedLocked && (busy ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Posting…</> : "Publish post")}
               </Button>
             </div>
           </div>
