@@ -224,6 +224,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   });
   const { asUser: viewAsUser, setAsUser: setViewAsUser } = useAdminView();
   const showAdminUi = isAdmin && !viewAsUser;
+  const { data: feedLock } = useQuery({
+    queryKey: ["feed-lock"],
+    queryFn: () => getFeedLock(),
+    staleTime: 30_000,
+  });
+  const feedLockedForMe = !!feedLock?.locked && !isAdmin;
   return (
     <div className="min-h-screen flex flex-col">
       
