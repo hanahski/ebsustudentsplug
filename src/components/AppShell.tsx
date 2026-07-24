@@ -297,14 +297,15 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Link
             to={user ? "/post/new" : "/login"}
             search={user ? undefined : { redirect: "/post/new" }}
-            aria-label="Create a post"
-            className="group relative inline-flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-full text-sm font-bold text-primary-foreground bg-gradient-to-br from-primary via-primary to-accent shadow-glow hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition"
+            aria-label={feedLockedForMe ? "Post feed locked by admin" : "Create a post"}
+            title={feedLockedForMe ? (feedLock?.message ?? "Admin locked the post feed") : "Create a post"}
+            className={`group relative inline-flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-full text-sm font-bold text-primary-foreground shadow-glow hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition ${feedLockedForMe ? "bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600" : "bg-gradient-to-br from-primary via-primary to-accent"}`}
           >
             <span className="absolute inset-0 rounded-full bg-gradient-to-br from-white/30 to-transparent opacity-0 group-hover:opacity-100 transition" aria-hidden />
             <span className="relative w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
-              <PlusCircle className="w-4 h-4" />
+              {feedLockedForMe ? <KeyRound className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
             </span>
-            <span className="relative hidden sm:inline">Post</span>
+            <span className="relative hidden sm:inline">{feedLockedForMe ? "Locked" : "Post"}</span>
           </Link>
 
           {user ? (
