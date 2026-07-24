@@ -13,19 +13,19 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://ebsustudentsplug.lovable.app/api/:path*"
+      "destination": "https://sp-origin.lovable.app/api/:path*"
     },
     {
       "source": "/_serverFn/:path*",
-      "destination": "https://ebsustudentsplug.lovable.app/_serverFn/:path*"
+      "destination": "https://sp-origin.lovable.app/_serverFn/:path*"
     },
     {
       "source": "/lovable/:path*",
-      "destination": "https://ebsustudentsplug.lovable.app/lovable/:path*"
+      "destination": "https://sp-origin.lovable.app/lovable/:path*"
     },
     {
       "source": "/sitemap.xml",
-      "destination": "https://ebsustudentsplug.lovable.app/sitemap.xml"
+      "destination": "https://sp-origin.lovable.app/sitemap.xml"
     }
   ]
 }
