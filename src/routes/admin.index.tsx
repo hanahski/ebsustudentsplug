@@ -697,6 +697,7 @@ function BannerLivePreview({ title, subtitle, imageUrl, ctaLabel, layout, accent
 
 
 const DEFAULTS_OFF_MARKER = "__DEFAULTS_OFF__";
+const HIDE_ALL_MARKER = "__HIDE_ALL_BANNERS__";
 
 function AdminBanners() {
   const { data, refetch } = useQuery({
