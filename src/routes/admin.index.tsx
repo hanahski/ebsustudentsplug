@@ -24,6 +24,7 @@ import { AdminAiPanel } from "@/components/admin/AdminAiPanel";
 import { AdminAiBankPanel } from "@/components/admin/AdminAiBankPanel";
 import { ToolAiPanel } from "@/components/admin/ToolAiPanel";
 import { EbsuNewsPanel } from "@/components/admin/EbsuNewsPanel";
+import { FeedLockPanel } from "@/components/admin/FeedLockPanel";
 import { AdminIntegrations } from "@/components/admin/AdminIntegrations";
 import { resolveBannerUrls } from "@/lib/banner-url";
 import { claimSeedAdminRole, getIsAdminUser } from "@/lib/admin-role";
@@ -199,6 +200,7 @@ function AdminDashboard() {
   };
   return (
     <div className="space-y-5">
+      <FeedLockPanel />
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         <StatCard label="Online now" value={stats?.online_count} icon={Users} tint="success" i={0} />
         <StatCard label="Signups today" value={stats?.signups_today} icon={Sparkles} tint="warn" i={1} />
