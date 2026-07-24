@@ -50,6 +50,13 @@ function NewPostPage() {
   const { user, profile, loading } = useAuth();
   const isAdmin = useIsAdmin(user?.id);
   const nav = useNavigate();
+  const { data: feedLock } = useQuery({
+    queryKey: ["feed-lock"],
+    queryFn: () => getFeedLock(),
+    staleTime: 15_000,
+  });
+  const feedLocked = !!feedLock?.locked && !isAdmin;
+  const feedLockMessage = feedLock?.message ?? "Admin has locked the post feed. Posting is temporarily disabled.";
   const [verifyOpen, setVerifyOpen] = useState(false);
   const { course: presetCourse, type: presetType } = Route.useSearch();
   const [type, setType] = useState(presetType || "general");
