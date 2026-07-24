@@ -45,10 +45,12 @@ export function ShimmerImage({
           src={src}
           alt={alt}
           loading="eager"
-          decoding="async"
+          decoding="sync"
+          // @ts-ignore - fetchpriority is valid HTML
+          fetchpriority="high"
           onLoad={(e) => { setLoaded(true); onLoad?.(e); }}
           onError={(e) => { setErrored(true); onError?.(e); }}
-          className={`${className} transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+          className={`${className} transition-opacity duration-150 ${loaded ? "opacity-100" : "opacity-0"}`}
         />
       )}
     </div>

@@ -273,8 +273,8 @@ function SlideView({
         alt={s.title}
         className="relative w-full h-full object-cover md:object-contain"
         loading="eager"
-        fetchPriority={eager ? "high" : "auto"}
-        decoding="async"
+        fetchPriority="high"
+        decoding="sync"
         draggable={false}
         onLoad={onImageLoad}
         onError={onImageLoad}

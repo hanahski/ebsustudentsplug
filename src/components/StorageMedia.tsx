@@ -45,5 +45,5 @@ export function StorageMedia({ url, alt, className, loading = "eager", as, video
       />
     );
   }
-  return <img src={resolved} alt={alt ?? ""} loading={loading} className={className} />;
+  return <img src={resolved} alt={alt ?? ""} loading="eager" decoding="sync" className={className} />;
 }
