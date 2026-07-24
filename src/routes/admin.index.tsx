@@ -1014,6 +1014,20 @@ function AdminBanners() {
         </Button>
       </div>
 
+      <div className={`rounded-2xl border p-3 flex items-center justify-between gap-3 ${allHidden ? "bg-red-500/10 border-red-500/30" : "bg-card"}`}>
+        <div className="min-w-0">
+          <p className="font-semibold text-sm">Hide ALL banners</p>
+          <p className="text-[11px] text-muted-foreground line-clamp-2">
+            {allHidden
+              ? "The home carousel is completely hidden site-wide (built-in + custom). Persists across refreshes."
+              : "Master switch — hides every banner (built-in and custom) on the home page."}
+          </p>
+        </div>
+        <Button size="sm" variant={allHidden ? "default" : "destructive"} onClick={toggleHideAll}>
+          {allHidden ? "Show banners" : "Hide all banners"}
+        </Button>
+      </div>
+
       <div className="space-y-2">
         {visibleRows.map((b: any, idx: number) => {
           const stats = ctr?.get(b.id);
