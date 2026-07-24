@@ -6,9 +6,12 @@ import { useAuth } from "@/lib/auth";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowLeft, Ticket as TicketIcon, ShoppingCart, CheckCircle2, Download, Loader2 } from "lucide-react";
+import { ArrowLeft, Ticket as TicketIcon, ShoppingCart, CheckCircle2, Download, Loader2, Trash2 } from "lucide-react";
 import { composeTicketImage, downloadTicketPdf, ticketFilename } from "@/lib/ticket-composer";
 import { handleEmailNotVerified } from "@/components/VerifyEmailDialog";
+import { adminDeleteTicket } from "@/lib/tickets-admin.functions";
+import { getIsAdminUser } from "@/lib/admin-role";
+import { confirm as confirmDialog } from "@/components/ConfirmProvider";
 
 
 export const Route = createFileRoute("/tickets/$id")({
