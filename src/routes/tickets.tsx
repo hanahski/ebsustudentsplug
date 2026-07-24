@@ -13,12 +13,14 @@ import { Switch } from "@/components/ui/switch";
 import { encodePlugShare } from "@/components/PlugShareActions";
 import { pingIndexNow } from "@/lib/indexnow";
 import { toast } from "sonner";
-import { Ticket, Upload, QrCode, Lock, Loader2, Download, Megaphone, Eye, EyeOff, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { Ticket, Upload, QrCode, Lock, Loader2, Download, Megaphone, Eye, EyeOff, ShieldCheck, CheckCircle2, Trash2 } from "lucide-react";
 import { TicketShape } from "@/components/market/TicketShape";
 import { composeTicketImage, downloadTicketPdf, ticketFilename, composeVerifiedQr } from "@/lib/ticket-composer";
 import { cleanListingDescription } from "@/lib/clean-description";
 import { getIsAdminUser } from "@/lib/admin-role";
 import { handleEmailNotVerified } from "@/components/VerifyEmailDialog";
+import { adminDeleteTicket } from "@/lib/tickets-admin.functions";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 
 export const Route = createFileRoute("/tickets")({ component: TicketsPage });
