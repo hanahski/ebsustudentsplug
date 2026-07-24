@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, ScanLine, Eye, ShieldCheck, ShieldAlert, Sparkles, Upload, Wand2, ImageIcon, X, PenLine, FileText, Link2, Image as ImageLucide, Type, BookOpen, Megaphone, ClipboardList, NotebookPen, Newspaper, Hash, ChevronLeft, Send } from "lucide-react";
+import { Loader2, ScanLine, Eye, ShieldCheck, ShieldAlert, Sparkles, Upload, Wand2, ImageIcon, X, PenLine, FileText, Link2, Image as ImageLucide, Type, BookOpen, Megaphone, ClipboardList, NotebookPen, Newspaper, Hash, ChevronLeft, Send, KeyRound, Lock } from "lucide-react";
+import { getFeedLock } from "@/lib/feed-lock.functions";
 import { MathText } from "@/components/MathText";
 import { MediaPlayer } from "@/components/MediaPlayer";
 import { extractTextFromImage } from "@/lib/ocr.functions";
@@ -49,6 +50,13 @@ function NewPostPage() {
   const { user, profile, loading } = useAuth();
   const isAdmin = useIsAdmin(user?.id);
   const nav = useNavigate();
+  const { data: feedLock } = useQuery({
+    queryKey: ["feed-lock"],
+    queryFn: () => getFeedLock(),
+    staleTime: 15_000,
+  });
+  const feedLocked = !!feedLock?.locked && !isAdmin;
+  const feedLockMessage = feedLock?.message ?? "Admin has locked the post feed. Posting is temporarily disabled.";
   const [verifyOpen, setVerifyOpen] = useState(false);
   const { course: presetCourse, type: presetType } = Route.useSearch();
   const [type, setType] = useState(presetType || "general");
@@ -172,6 +180,7 @@ function NewPostPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) { toast.error("Please sign in first"); nav({ to: "/login" }); return; }
+    if (feedLocked) { toast.error(feedLockMessage); return; }
     if (!profile?.is_verified && !isAdmin) {
       toast.error("Please verify you're an EBSU student before posting");
       setVerifyOpen(true);
@@ -298,7 +307,7 @@ function NewPostPage() {
           type="submit"
           form="post-new-form"
           size="sm"
-          disabled={busy || scanning || !title.trim()}
+          disabled={busy || scanning || !title.trim() || feedLocked}
           className="rounded-full h-9 px-4 font-bold shadow-glow"
         >
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-3.5 h-3.5 mr-1" />Post</>}
@@ -321,6 +330,21 @@ function NewPostPage() {
           </div>
         </header>
 
+
+        {feedLocked && (
+          <div className="mb-4 border-2 border-amber-500/50 bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-background rounded-2xl p-4 flex items-start gap-3">
+            <div className="w-11 h-11 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 relative">
+              <KeyRound className="w-5 h-5" />
+              <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center shadow">
+                <Lock className="w-3 h-3" />
+              </span>
+            </div>
+            <div className="flex-1">
+              <p className="font-bold text-sm">Post feed is locked</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{feedLockMessage}</p>
+            </div>
+          </div>
+        )}
 
         {profile && !profile.is_verified && !isAdmin && (
           <div className="mb-4 border-2 border-primary/40 bg-gradient-to-br from-primary/10 via-accent/10 to-background rounded-2xl p-4 flex items-start gap-3">
@@ -652,8 +676,9 @@ function NewPostPage() {
                 <Sparkles className="w-3.5 h-3.5 text-primary" />
                 <span className="truncate">{title.trim() ? `“${title.trim()}”` : "Ready when you are."}</span>
               </div>
-              <Button type="submit" disabled={busy || scanning} className="flex-1 sm:flex-none sm:min-w-[180px]">
-                {busy ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Posting…</> : "Publish post"}
+              <Button type="submit" disabled={busy || scanning || feedLocked} className="flex-1 sm:flex-none sm:min-w-[180px]">
+                {feedLocked ? <><Lock className="w-4 h-4 mr-2" />Feed locked by admin</> : null}
+                {!feedLocked && (busy ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Posting…</> : "Publish post")}
               </Button>
             </div>
           </div>
