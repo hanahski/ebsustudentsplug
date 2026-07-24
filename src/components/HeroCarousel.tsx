@@ -119,7 +119,7 @@ export function HeroCarousel() {
     rotationMs: Math.max(2000, Math.min(300000, (Number(b.rotation_seconds) || 6) * 1000)),
   }));
 
-  const slides = admin?.defaultsOff ? adminSlides : [...adminSlides, ...defaultSlides];
+  const slides = admin?.hideAll ? [] : (admin?.defaultsOff ? adminSlides : [...adminSlides, ...defaultSlides]);
   if (slides.length === 0) return null;
 
   const [i, setI] = useState(0);
