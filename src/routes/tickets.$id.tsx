@@ -6,9 +6,12 @@ import { useAuth } from "@/lib/auth";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowLeft, Ticket as TicketIcon, ShoppingCart, CheckCircle2, Download, Loader2 } from "lucide-react";
+import { ArrowLeft, Ticket as TicketIcon, ShoppingCart, CheckCircle2, Download, Loader2, Trash2 } from "lucide-react";
 import { composeTicketImage, downloadTicketPdf, ticketFilename } from "@/lib/ticket-composer";
 import { handleEmailNotVerified } from "@/components/VerifyEmailDialog";
+import { adminDeleteTicket } from "@/lib/tickets-admin.functions";
+import { getIsAdminUser } from "@/lib/admin-role";
+import { confirm as confirmDialog } from "@/components/ConfirmProvider";
 
 
 export const Route = createFileRoute("/tickets/$id")({
@@ -84,13 +87,41 @@ function TicketDetail() {
   const qc = useQueryClient();
   const nav = useNavigate();
   const [busy, setBusy] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [composed, setComposed] = useState<string | null>(null);
   const [composing, setComposing] = useState(false);
+
+  const { data: isAdmin } = useQuery({
+    queryKey: ["is-admin", user?.id],
+    enabled: !!user,
+    queryFn: async () => getIsAdminUser(user!.id),
+  });
 
   const { data: t, isLoading } = useQuery({
     queryKey: ["ticket", id],
     queryFn: async () => (await supabase.from("tickets").select("*, uploader:profiles!tickets_uploader_id_fkey(display_name)").eq("id", id).maybeSingle()).data,
   });
+
+  const handleDelete = async () => {
+    if (!t) return;
+    const ok = await confirmDialog({
+      title: `Delete "${t.title}"?`,
+      description: "This wipes the ticket and all its purchases. This cannot be undone.",
+      confirmText: "Delete",
+      destructive: true,
+    } as any);
+    if (!ok) return;
+    setDeleting(true);
+    try {
+      await adminDeleteTicket({ data: { ticketId: t.id } });
+      toast.success("Ticket wiped");
+      qc.invalidateQueries({ queryKey: ["tickets-browse"] });
+      nav({ to: "/tickets" });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Delete failed");
+      setDeleting(false);
+    }
+  };
 
   const composeAndDownload = async (ticket: any, buyerIndex: number | undefined, qrToken: string, openedWindow?: Window | null) => {
     if (!qrToken) throw new Error("Ticket QR is not ready yet");
@@ -184,7 +215,15 @@ function TicketDetail() {
   return (
     <AppShell>
       <div className="space-y-4 max-w-xl mx-auto">
-        <Link to="/tickets" className="text-xs text-primary inline-flex items-center gap-1"><ArrowLeft className="w-3 h-3" />All tickets</Link>
+        <div className="flex items-center justify-between">
+          <Link to="/tickets" className="text-xs text-primary inline-flex items-center gap-1"><ArrowLeft className="w-3 h-3" />All tickets</Link>
+          {isAdmin && (
+            <Button variant="destructive" size="sm" onClick={handleDelete} disabled={deleting}>
+              {deleting ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Trash2 className="w-4 h-4 mr-1" />}
+              {deleting ? "Deleting…" : "Delete ticket"}
+            </Button>
+          )}
+        </div>
         <div className="bg-card border rounded-3xl overflow-hidden shadow-card">
           <img src={t.photo_url} alt={t.title} className="w-full h-72 object-cover" />
           <div className="p-5 space-y-3">

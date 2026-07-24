@@ -13,12 +13,14 @@ import { Switch } from "@/components/ui/switch";
 import { encodePlugShare } from "@/components/PlugShareActions";
 import { pingIndexNow } from "@/lib/indexnow";
 import { toast } from "sonner";
-import { Ticket, Upload, QrCode, Lock, Loader2, Download, Megaphone, Eye, EyeOff, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { Ticket, Upload, QrCode, Lock, Loader2, Download, Megaphone, Eye, EyeOff, ShieldCheck, CheckCircle2, Trash2 } from "lucide-react";
 import { TicketShape } from "@/components/market/TicketShape";
 import { composeTicketImage, downloadTicketPdf, ticketFilename, composeVerifiedQr } from "@/lib/ticket-composer";
 import { cleanListingDescription } from "@/lib/clean-description";
 import { getIsAdminUser } from "@/lib/admin-role";
 import { handleEmailNotVerified } from "@/components/VerifyEmailDialog";
+import { adminDeleteTicket } from "@/lib/tickets-admin.functions";
+import { confirm as confirmDialog } from "@/components/ConfirmProvider";
 
 
 export const Route = createFileRoute("/tickets")({ component: TicketsPage });
@@ -106,10 +108,36 @@ function BrowseTickets() {
   const nav = useNavigate();
   const qc = useQueryClient();
   const [buyingId, setBuyingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { data: isAdmin } = useQuery({
+    queryKey: ["is-admin", user?.id],
+    enabled: !!user,
+    queryFn: async () => getIsAdminUser(user!.id),
+  });
   const { data, isLoading } = useQuery({
     queryKey: ["tickets-browse"],
     queryFn: async () => (await supabase.from("tickets").select("*").order("created_at", { ascending: false }).limit(60)).data ?? [],
   });
+
+  const deleteTicket = async (t: any) => {
+    const ok = await confirmDialog({
+      title: `Delete "${t.title}"?`,
+      description: "This wipes the ticket and all its purchases. This cannot be undone.",
+      confirmText: "Delete",
+      destructive: true,
+    } as any);
+    if (!ok) return;
+    setDeletingId(t.id);
+    try {
+      await adminDeleteTicket({ data: { ticketId: t.id } });
+      toast.success("Ticket wiped");
+      qc.invalidateQueries({ queryKey: ["tickets-browse"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Delete failed");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const buyAndDownload = async (ticket: any) => {
     if (!user) { nav({ to: "/login" }); return; }
@@ -181,10 +209,25 @@ function BrowseTickets() {
               </div>
             </TicketShape>
           </Link>
-          <Button type="button" onClick={() => buyAndDownload(t)} disabled={buyingId === t.id} className="mt-3 w-full">
-            {buyingId === t.id ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Ticket className="w-4 h-4 mr-1" />}
-            {buyingId === t.id ? "Downloading PDF…" : t.pay_mode === "credits" ? `Buy for ${t.price} cr` : `Buy for ₦${Number(t.price).toLocaleString()}`}
-          </Button>
+          <div className="mt-3 flex gap-2">
+            <Button type="button" onClick={() => buyAndDownload(t)} disabled={buyingId === t.id} className="flex-1">
+              {buyingId === t.id ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Ticket className="w-4 h-4 mr-1" />}
+              {buyingId === t.id ? "Downloading PDF…" : t.pay_mode === "credits" ? `Buy for ${t.price} cr` : `Buy for ₦${Number(t.price).toLocaleString()}`}
+            </Button>
+            {isAdmin && (
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                onClick={() => deleteTicket(t)}
+                disabled={deletingId === t.id}
+                aria-label="Delete ticket"
+                title="Admin: delete ticket"
+              >
+                {deletingId === t.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              </Button>
+            )}
+          </div>
         </div>
       ))}
     </div>
