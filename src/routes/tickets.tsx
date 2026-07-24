@@ -209,10 +209,25 @@ function BrowseTickets() {
               </div>
             </TicketShape>
           </Link>
-          <Button type="button" onClick={() => buyAndDownload(t)} disabled={buyingId === t.id} className="mt-3 w-full">
-            {buyingId === t.id ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Ticket className="w-4 h-4 mr-1" />}
-            {buyingId === t.id ? "Downloading PDF…" : t.pay_mode === "credits" ? `Buy for ${t.price} cr` : `Buy for ₦${Number(t.price).toLocaleString()}`}
-          </Button>
+          <div className="mt-3 flex gap-2">
+            <Button type="button" onClick={() => buyAndDownload(t)} disabled={buyingId === t.id} className="flex-1">
+              {buyingId === t.id ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Ticket className="w-4 h-4 mr-1" />}
+              {buyingId === t.id ? "Downloading PDF…" : t.pay_mode === "credits" ? `Buy for ${t.price} cr` : `Buy for ₦${Number(t.price).toLocaleString()}`}
+            </Button>
+            {isAdmin && (
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                onClick={() => deleteTicket(t)}
+                disabled={deletingId === t.id}
+                aria-label="Delete ticket"
+                title="Admin: delete ticket"
+              >
+                {deletingId === t.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              </Button>
+            )}
+          </div>
         </div>
       ))}
     </div>
