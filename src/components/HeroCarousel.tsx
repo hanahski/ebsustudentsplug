@@ -66,6 +66,7 @@ function logBannerEvent(bannerId: string | undefined, kind: "impression" | "clic
 }
 
 const DEFAULTS_OFF_MARKER = "__DEFAULTS_OFF__";
+const HIDE_ALL_MARKER = "__HIDE_ALL_BANNERS__";
 
 export function HeroCarousel() {
   const { data: admin } = useQuery({
