@@ -13,10 +13,11 @@ const canonicalRedirectMiddleware = createMiddleware().server(
     const url = new URL(request.url);
     const host = url.hostname.toLowerCase();
 
-    // 1) Redirect any .lovable.app host (published, preview, project--) to the
-    // canonical custom domain so visitors and crawlers always land on .fun.
-    // 2) Consolidate www.ebsustudentsplug.fun to the bare domain.
-    if (host.endsWith(".lovable.app") || host === "www.ebsustudentsplug.fun") {
+    // Only consolidate www → bare domain. Do NOT redirect *.lovable.app —
+    // Vercel proxies /_serverFn/* and /api/* to ebsustudentsplug.lovable.app,
+    // and redirecting that host back to .fun breaks the proxy round-trip
+    // (Vercel doesn't follow the 301 and returns the Lovable 404 HTML).
+    if (host === "www.ebsustudentsplug.fun") {
       const target = new URL(
         url.pathname + url.search + url.hash,
         `https://${CANONICAL_DOMAIN}`,
