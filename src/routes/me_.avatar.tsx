@@ -9,6 +9,15 @@ import { toast } from "sonner";
 import { Camera, Trash2 } from "lucide-react";
 import { enhanceImageFile } from "@/lib/image-enhance";
 import { safeUserUpload, friendlyUploadError } from "@/lib/safe-upload";
+import { uploadAvatar } from "@/lib/upload-avatar.functions";
+
+async function fileToBase64(file: File | Blob): Promise<string> {
+  const buf = await file.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  let s = "";
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s);
+}
 
 export const Route = createFileRoute("/me_/avatar")({
   component: AvatarPage,
@@ -41,16 +50,28 @@ function AvatarPage() {
     try {
       const enhanced = await enhanceImageFile(file);
       const ext = (enhanced.name.split(".").pop() || "jpg").toLowerCase();
-      const { path } = await safeUserUpload({
-        bucket: "covers",
-        file: enhanced,
-        filename: `avatar-${Date.now()}.${ext}`,
-        contentType: enhanced.type,
-        upsert: true,
-      });
-      const { data: signed, error: sErr } = await supabase.storage.from("covers").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-      if (sErr) throw sErr;
-      await save(signed.signedUrl);
+      try {
+        const { path } = await safeUserUpload({
+          bucket: "covers",
+          file: enhanced,
+          filename: `avatar-${Date.now()}.${ext}`,
+          contentType: enhanced.type,
+          upsert: true,
+        });
+        const { data: signed, error: sErr } = await supabase.storage.from("covers").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+        if (sErr) throw sErr;
+        await save(signed.signedUrl);
+      } catch (clientErr: any) {
+        // Fall back to server-side upload (admin client) so a stale client
+        // session doesn't block the user from changing their picture.
+        const base64 = await fileToBase64(enhanced);
+        const res = await uploadAvatar({
+          data: { base64, contentType: enhanced.type || "image/jpeg", ext },
+        });
+        setAvatar(res.url);
+        toast.success("Avatar updated");
+        refreshProfile();
+      }
     } catch (e: any) { toast.error(friendlyUploadError(e)); }
     finally { setUploading(false); }
   };

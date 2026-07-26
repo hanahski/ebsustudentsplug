@@ -213,15 +213,29 @@ function MePage() {
       toast.dismiss(t);
       if (enhanced !== file) toast.success("Photo enhanced");
       const ext = (enhanced.name.split(".").pop() || "jpg").toLowerCase();
-      const { path } = await safeUserUpload({
-        bucket: "covers", file: enhanced, filename: `avatar-${Date.now()}.${ext}`,
-        contentType: enhanced.type, upsert: true,
-      });
-      const { data: signed, error: sErr } = await supabase.storage.from("covers").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-      if (sErr) throw sErr;
-      setAvatar(signed.signedUrl);
-      const { error: updErr } = await supabase.from("profiles").update({ avatar_key: signed.signedUrl } as any).eq("id", profile.id);
-      if (updErr) throw updErr;
+      try {
+        const { path } = await safeUserUpload({
+          bucket: "covers", file: enhanced, filename: `avatar-${Date.now()}.${ext}`,
+          contentType: enhanced.type, upsert: true,
+        });
+        const { data: signed, error: sErr } = await supabase.storage.from("covers").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+        if (sErr) throw sErr;
+        setAvatar(signed.signedUrl);
+        const { error: updErr } = await supabase.from("profiles").update({ avatar_key: signed.signedUrl } as any).eq("id", profile.id);
+        if (updErr) throw updErr;
+      } catch (clientErr: any) {
+        // Fallback: upload through the server so a stale client session
+        // doesn't block signed-in users from changing their picture.
+        const { uploadAvatar } = await import("@/lib/upload-avatar.functions");
+        const buf = await enhanced.arrayBuffer();
+        const bytes = new Uint8Array(buf);
+        let s = "";
+        for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+        const res = await uploadAvatar({
+          data: { base64: btoa(s), contentType: enhanced.type || "image/jpeg", ext },
+        });
+        setAvatar(res.url);
+      }
       toast.success("Photo updated");
       refreshProfile();
     } catch (e: any) {
