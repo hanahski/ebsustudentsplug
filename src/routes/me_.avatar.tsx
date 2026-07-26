@@ -50,16 +50,28 @@ function AvatarPage() {
     try {
       const enhanced = await enhanceImageFile(file);
       const ext = (enhanced.name.split(".").pop() || "jpg").toLowerCase();
-      const { path } = await safeUserUpload({
-        bucket: "covers",
-        file: enhanced,
-        filename: `avatar-${Date.now()}.${ext}`,
-        contentType: enhanced.type,
-        upsert: true,
-      });
-      const { data: signed, error: sErr } = await supabase.storage.from("covers").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-      if (sErr) throw sErr;
-      await save(signed.signedUrl);
+      try {
+        const { path } = await safeUserUpload({
+          bucket: "covers",
+          file: enhanced,
+          filename: `avatar-${Date.now()}.${ext}`,
+          contentType: enhanced.type,
+          upsert: true,
+        });
+        const { data: signed, error: sErr } = await supabase.storage.from("covers").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+        if (sErr) throw sErr;
+        await save(signed.signedUrl);
+      } catch (clientErr: any) {
+        // Fall back to server-side upload (admin client) so a stale client
+        // session doesn't block the user from changing their picture.
+        const base64 = await fileToBase64(enhanced);
+        const res = await uploadAvatar({
+          data: { base64, contentType: enhanced.type || "image/jpeg", ext },
+        });
+        setAvatar(res.url);
+        toast.success("Avatar updated");
+        refreshProfile();
+      }
     } catch (e: any) { toast.error(friendlyUploadError(e)); }
     finally { setUploading(false); }
   };
