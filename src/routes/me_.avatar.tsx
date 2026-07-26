@@ -9,6 +9,15 @@ import { toast } from "sonner";
 import { Camera, Trash2 } from "lucide-react";
 import { enhanceImageFile } from "@/lib/image-enhance";
 import { safeUserUpload, friendlyUploadError } from "@/lib/safe-upload";
+import { uploadAvatar } from "@/lib/upload-avatar.functions";
+
+async function fileToBase64(file: File | Blob): Promise<string> {
+  const buf = await file.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  let s = "";
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s);
+}
 
 export const Route = createFileRoute("/me_/avatar")({
   component: AvatarPage,
