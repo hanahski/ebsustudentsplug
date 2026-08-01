@@ -281,7 +281,7 @@ function AdminUsers() {
       return (await query).data ?? [];
     },
   });
-  const { data: adminIds } = useQuery({
+  const { data: adminIds, refetch: refetchAdmins } = useQuery({
     queryKey: ["admin-ids"],
     queryFn: async () => new Set(((await supabase.from("user_roles").select("user_id").eq("role", "admin")).data ?? []).map((r) => r.user_id)),
   });
@@ -298,13 +298,21 @@ function AdminUsers() {
     const { error } = await supabase.rpc("admin_set_rank" as any, { _user_id: uid, _tier: tier, _step: step });
     if (error) toast.error(error.message); else { toast.success("Rank set"); refetch(); }
   };
+  const [roleBusy, setRoleBusy] = useState<string | null>(null);
   const toggleAdmin = async (uid: string, currentlyAdmin: boolean) => {
-    const op = currentlyAdmin
-      ? supabase.from("user_roles").delete().eq("user_id", uid).eq("role", "admin")
-      : supabase.from("user_roles").insert({ user_id: uid, role: "admin" });
-    const { error } = await op;
-    if (error) toast.error(error.message); else { toast.success(currentlyAdmin ? "Admin removed" : "Admin granted"); refetch(); }
+    setRoleBusy(uid);
+    try {
+      await setAdminRole({ data: { userId: uid, value: !currentlyAdmin } });
+      toast.success(currentlyAdmin ? "Admin revoked" : "Admin granted");
+      await refetchAdmins();
+      refetch();
+    } catch (e) {
+      toast.error((e as Error).message || "Couldn't update admin role");
+    } finally {
+      setRoleBusy(null);
+    }
   };
+
 
   return (
     <div className="space-y-3">
