@@ -364,9 +364,10 @@ function AdminUsers() {
                 ) : (
                   <Button size="sm" variant="outline" onClick={() => setStatus(u.id, "active")}><CheckCircle2 className="w-3 h-3 mr-1" />Reactivate</Button>
                 )}
-                <Button size="sm" variant={isUserAdmin ? "destructive" : "outline"} onClick={() => toggleAdmin(u.id, isUserAdmin)}>
-                  {isUserAdmin ? "Revoke admin" : "Make admin"}
+                <Button size="sm" disabled={roleBusy === u.id} variant={isUserAdmin ? "destructive" : "outline"} onClick={() => toggleAdmin(u.id, isUserAdmin)}>
+                  {roleBusy === u.id ? "Saving…" : isUserAdmin ? "Revoke admin" : "Make admin"}
                 </Button>
+
               </div>
             </div>
           );
