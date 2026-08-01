@@ -161,9 +161,10 @@ export function SpecialBadges({
   /** Optional override — when true the user gets only the gold admin badge. */
   isAdmin?: boolean;
 }) {
-  if (!profile) return null;
-  const isAdminHook = useIsAdmin(profile.id ?? null);
+  // Hooks must run unconditionally — never early-return before this call.
+  const isAdminHook = useIsAdmin(profile?.id ?? null);
   const admin = isAdmin ?? isAdminHook;
+  if (!profile) return null;
   if (admin) {
     return (
       <span className={cn("inline-flex items-center gap-1", className)}>

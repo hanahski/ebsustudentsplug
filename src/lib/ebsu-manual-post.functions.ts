@@ -38,19 +38,19 @@ async function assertCanPost(ctx: { userId: string; supabase: any }) {
   if (role) return { isAdmin: true, isVerifiedSource: true, isTrusted: true, sourceName: null as string | null, displayName: "Admin" } as const;
   const { data: prof } = await ctx.supabase
     .from("profiles")
-    .select("is_legit, is_verified_source, is_trusted_source, source_name, display_name")
+    .select("is_legit, is_sure_plug, display_name")
     .eq("id", ctx.userId)
     .maybeSingle();
-  // Allow legacy is_legit users OR new is_verified_source. Admin flips these in the panel.
-  const allowed = !!(prof?.is_verified_source || prof?.is_legit);
+  // The Legit badge is the news-source badge. Sure Plug = trusted (auto-publish).
+  const allowed = !!prof?.is_legit;
   if (!allowed) {
-    throw new Error("Only verified sources and admins can post EBSU news.");
+    throw new Error("Only Legit-badge users and admins can post EBSU news.");
   }
   return {
     isAdmin: false,
-    isVerifiedSource: !!prof?.is_verified_source,
-    isTrusted: !!prof?.is_trusted_source,
-    sourceName: (prof?.source_name as string) ?? null,
+    isVerifiedSource: true,
+    isTrusted: !!prof?.is_sure_plug,
+    sourceName: (prof?.display_name as string) ?? null,
     displayName: (prof?.display_name as string) ?? "StudentsPlug Writer",
   } as const;
 }
@@ -257,10 +257,17 @@ export const adminSearchSourceCandidates = createServerFn({ method: "POST" })
     const like = `%${data.query}%`;
     const { data: rows } = await supabaseAdmin
       .from("profiles")
-      .select("id, display_name, email, avatar_key, is_verified_source, is_trusted_source, source_name, is_legit")
-      .or(`display_name.ilike.${like},email.ilike.${like},source_name.ilike.${like}`)
+      .select("id, display_name, email, avatar_key, is_legit, is_sure_plug")
+      .or(`display_name.ilike.${like},email.ilike.${like}`)
       .limit(15);
-    return { rows: rows ?? [] };
+    return {
+      rows: (rows ?? []).map((r: any) => ({
+        ...r,
+        is_verified_source: !!r.is_legit,
+        is_trusted_source: !!r.is_sure_plug,
+        source_name: r.display_name,
+      })),
+    };
   });
 
 export const adminListVerifiedSources = createServerFn({ method: "GET" })
@@ -270,12 +277,18 @@ export const adminListVerifiedSources = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await (supabaseAdmin as any)
       .from("profiles")
-      .select("id, display_name, email, avatar_key, is_verified_source, is_trusted_source, source_name")
-      .eq("is_verified_source", true)
-      .order("source_name", { ascending: true, nullsFirst: false })
+      .select("id, display_name, email, avatar_key, is_legit, is_sure_plug")
+      .eq("is_legit", true)
+      .order("display_name", { ascending: true, nullsFirst: false })
       .limit(100);
-    return { rows: rows ?? [] };
-
+    return {
+      rows: (rows ?? []).map((r: any) => ({
+        ...r,
+        is_verified_source: !!r.is_legit,
+        is_trusted_source: !!r.is_sure_plug,
+        source_name: r.display_name,
+      })),
+    };
   });
 
 export const adminSetSourceFlags = createServerFn({ method: "POST" })
@@ -288,16 +301,22 @@ export const adminSetSourceFlags = createServerFn({ method: "POST" })
   }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as any);
-    const { error } = await (context.supabase as any).rpc("admin_set_source_flags", {
-      _user_id: data.userId,
-      _is_verified_source: data.isVerifiedSource ?? null,
-      _is_trusted_source: data.isTrustedSource ?? null,
-      _source_name: data.sourceName ?? null,
-    });
-
-    if (error) throw new Error(error.message);
+    // Verified source == Legit badge, trusted == Sure Plug badge.
+    if (typeof data.isVerifiedSource === "boolean") {
+      const { error } = await (context.supabase as any).rpc("admin_set_badge", {
+        _user_id: data.userId, _badge: "legit", _value: data.isVerifiedSource,
+      });
+      if (error) throw new Error(error.message);
+    }
+    if (typeof data.isTrustedSource === "boolean") {
+      const { error } = await (context.supabase as any).rpc("admin_set_badge", {
+        _user_id: data.userId, _badge: "sure_plug", _value: data.isTrustedSource,
+      });
+      if (error) throw new Error(error.message);
+    }
     return { ok: true };
   });
+
 
 
 // Small AI helper — title suggestions, summary, rewrite polish.
