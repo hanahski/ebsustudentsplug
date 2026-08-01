@@ -28,6 +28,8 @@ import { FeedLockPanel } from "@/components/admin/FeedLockPanel";
 import { AdminIntegrations } from "@/components/admin/AdminIntegrations";
 import { resolveBannerUrls } from "@/lib/banner-url";
 import { claimSeedAdminRole, getIsAdminUser } from "@/lib/admin-role";
+import { setAdminRole } from "@/lib/admin-roles.functions";
+
 
 export const Route = createFileRoute("/admin/")({ component: AdminPanel });
 
@@ -281,7 +283,7 @@ function AdminUsers() {
       return (await query).data ?? [];
     },
   });
-  const { data: adminIds } = useQuery({
+  const { data: adminIds, refetch: refetchAdmins } = useQuery({
     queryKey: ["admin-ids"],
     queryFn: async () => new Set(((await supabase.from("user_roles").select("user_id").eq("role", "admin")).data ?? []).map((r) => r.user_id)),
   });
@@ -298,13 +300,21 @@ function AdminUsers() {
     const { error } = await supabase.rpc("admin_set_rank" as any, { _user_id: uid, _tier: tier, _step: step });
     if (error) toast.error(error.message); else { toast.success("Rank set"); refetch(); }
   };
+  const [roleBusy, setRoleBusy] = useState<string | null>(null);
   const toggleAdmin = async (uid: string, currentlyAdmin: boolean) => {
-    const op = currentlyAdmin
-      ? supabase.from("user_roles").delete().eq("user_id", uid).eq("role", "admin")
-      : supabase.from("user_roles").insert({ user_id: uid, role: "admin" });
-    const { error } = await op;
-    if (error) toast.error(error.message); else { toast.success(currentlyAdmin ? "Admin removed" : "Admin granted"); refetch(); }
+    setRoleBusy(uid);
+    try {
+      await setAdminRole({ data: { userId: uid, value: !currentlyAdmin } });
+      toast.success(currentlyAdmin ? "Admin revoked" : "Admin granted");
+      await refetchAdmins();
+      refetch();
+    } catch (e) {
+      toast.error((e as Error).message || "Couldn't update admin role");
+    } finally {
+      setRoleBusy(null);
+    }
   };
+
 
   return (
     <div className="space-y-3">
@@ -354,9 +364,10 @@ function AdminUsers() {
                 ) : (
                   <Button size="sm" variant="outline" onClick={() => setStatus(u.id, "active")}><CheckCircle2 className="w-3 h-3 mr-1" />Reactivate</Button>
                 )}
-                <Button size="sm" variant={isUserAdmin ? "destructive" : "outline"} onClick={() => toggleAdmin(u.id, isUserAdmin)}>
-                  {isUserAdmin ? "Revoke admin" : "Make admin"}
+                <Button size="sm" disabled={roleBusy === u.id} variant={isUserAdmin ? "destructive" : "outline"} onClick={() => toggleAdmin(u.id, isUserAdmin)}>
+                  {roleBusy === u.id ? "Saving…" : isUserAdmin ? "Revoke admin" : "Make admin"}
                 </Button>
+
               </div>
             </div>
           );
