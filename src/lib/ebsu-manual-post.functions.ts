@@ -38,19 +38,19 @@ async function assertCanPost(ctx: { userId: string; supabase: any }) {
   if (role) return { isAdmin: true, isVerifiedSource: true, isTrusted: true, sourceName: null as string | null, displayName: "Admin" } as const;
   const { data: prof } = await ctx.supabase
     .from("profiles")
-    .select("is_legit, is_verified_source, is_trusted_source, source_name, display_name")
+    .select("is_legit, is_sure_plug, display_name")
     .eq("id", ctx.userId)
     .maybeSingle();
-  // Allow legacy is_legit users OR new is_verified_source. Admin flips these in the panel.
-  const allowed = !!(prof?.is_verified_source || prof?.is_legit);
+  // The Legit badge is the news-source badge. Sure Plug = trusted (auto-publish).
+  const allowed = !!prof?.is_legit;
   if (!allowed) {
-    throw new Error("Only verified sources and admins can post EBSU news.");
+    throw new Error("Only Legit-badge users and admins can post EBSU news.");
   }
   return {
     isAdmin: false,
-    isVerifiedSource: !!prof?.is_verified_source,
-    isTrusted: !!prof?.is_trusted_source,
-    sourceName: (prof?.source_name as string) ?? null,
+    isVerifiedSource: true,
+    isTrusted: !!prof?.is_sure_plug,
+    sourceName: (prof?.display_name as string) ?? null,
     displayName: (prof?.display_name as string) ?? "StudentsPlug Writer",
   } as const;
 }
