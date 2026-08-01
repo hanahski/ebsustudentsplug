@@ -28,6 +28,8 @@ import { FeedLockPanel } from "@/components/admin/FeedLockPanel";
 import { AdminIntegrations } from "@/components/admin/AdminIntegrations";
 import { resolveBannerUrls } from "@/lib/banner-url";
 import { claimSeedAdminRole, getIsAdminUser } from "@/lib/admin-role";
+import { setAdminRole } from "@/lib/admin-roles.functions";
+
 
 export const Route = createFileRoute("/admin/")({ component: AdminPanel });
 
