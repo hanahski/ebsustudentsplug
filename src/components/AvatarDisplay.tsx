@@ -82,9 +82,9 @@ export function AvatarDisplay({
         width={size}
         height={size}
         loading="eager"
-        decoding="sync"
-        // @ts-ignore - fetchpriority is valid HTML
-        fetchpriority="high"
+        decoding="async"
+        fetchPriority="auto"
+
         referrerPolicy="no-referrer"
         draggable={false}
         style={{ width: size, height: size }}

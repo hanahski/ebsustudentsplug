@@ -45,14 +45,16 @@ export function ShimmerImage({
           src={src}
           alt={alt}
           loading="eager"
-          decoding="sync"
-          // @ts-ignore - fetchpriority is valid HTML
-          fetchpriority="high"
+          // async decode keeps the main thread free so many images can finish
+          // in parallel instead of blocking each other
+          decoding="async"
+          fetchPriority={(rest as any).fetchPriority ?? "auto"}
           onLoad={(e) => { setLoaded(true); onLoad?.(e); }}
           onError={(e) => { setErrored(true); onError?.(e); }}
           className={`${className} transition-opacity duration-150 ${loaded ? "opacity-100" : "opacity-0"}`}
         />
       )}
+
     </div>
   );
 }
