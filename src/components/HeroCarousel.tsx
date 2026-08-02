@@ -280,7 +280,7 @@ function SlideView({
         className="relative w-full h-full object-cover md:object-contain"
         loading="eager"
         fetchPriority="high"
-        decoding="sync"
+        decoding="async"
         draggable={false}
         onLoad={onImageLoad}
         onError={onImageLoad}
