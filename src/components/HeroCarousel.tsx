@@ -90,13 +90,17 @@ export function HeroCarousel() {
       const visible = live.filter((r) => r.title !== DEFAULTS_OFF_MARKER && r.title !== HIDE_ALL_MARKER);
       const resolved = await resolveBannerUrls(visible as any[]);
       if (typeof window !== "undefined") {
-        resolved.forEach((b: any) => {
-          if (b.image_url) {
-            const img = new Image();
-            img.src = b.image_url;
-          }
+        // Only warm the first two slides. Prefetching every banner at once
+        // saturates the connection so NOTHING finishes quickly.
+        resolved.slice(0, 2).forEach((b: any, idx: number) => {
+          if (!b.image_url) return;
+          const img = new Image();
+          img.decoding = "async";
+          (img as any).fetchPriority = idx === 0 ? "high" : "low";
+          img.src = b.image_url;
         });
       }
+
       return { rows: resolved, defaultsOff, hideAll };
     },
     staleTime: 5 * 60_000,
