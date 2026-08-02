@@ -16,9 +16,9 @@ export const Route = createFileRoute("/contact")({
         property: "og:description",
         content: "Get support or send feedback to the StudentsPlug team.",
       },
-      { property: "og:url", content: "https://ebsustudentplug.fun/contact" },
+      { property: "og:url", content: "https://ebsustudentsplug.fun/contact" },
     ],
-    links: [{ rel: "canonical", href: "https://ebsustudentplug.fun/contact" }],
+    links: [{ rel: "canonical", href: "https://ebsustudentsplug.fun/contact" }],
   }),
   component: ContactPage,
 });
