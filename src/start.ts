@@ -32,6 +32,18 @@ const canonicalRedirectMiddleware = createMiddleware().server(
       });
     }
 
+    // Keep the Lovable-hosted origin out of Google without redirecting it —
+    // Vercel still proxies /_serverFn/* and /api/* to that host.
+    if (host.endsWith(".lovable.app")) {
+      const response = await next();
+      try {
+        response.headers.set("X-Robots-Tag", "noindex, nofollow");
+      } catch {
+        /* immutable headers — ignore */
+      }
+      return response;
+    }
+
     return next();
   },
 );
