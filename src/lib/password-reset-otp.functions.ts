@@ -4,8 +4,8 @@ const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_mail/gmail/v1"
 const OTP_TTL_MS = 10 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
 const SENDER_DISPLAY_NAME = "StudentsPlug Support";
-const APP_URL = "https://ebsustudentplug.fun";
-const LOGO_URL = "https://ebsustudentplug.fun/__l5e/assets-v1/05672a98-a2df-4f83-aa5e-749269614f72/studentsplug-logo.png";
+const APP_URL = "https://ebsustudentsplug.fun";
+const LOGO_URL = "https://ebsustudentsplug.fun/__l5e/assets-v1/05672a98-a2df-4f83-aa5e-749269614f72/studentsplug-logo.png";
 
 async function findUserByEmail(email: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -66,7 +66,7 @@ export const sendRecoveryOtp = createServerFn({ method: "POST" })
     const subject = `Your StudentsPlug password reset code: ${code}`;
     const html = renderResetHtml(code);
     const text = `StudentsPlug — Password reset\n\nYour password reset code is: ${code}\n\nThis code expires in 10 minutes. Never share it with anyone — StudentsPlug staff will never ask for it.\n\nIf you didn't request this, ignore this email; your password stays unchanged.\n\n— StudentsPlug Support\n${APP_URL}`;
-    const msgId = `<reset-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}@ebsustudentplug.fun>`;
+    const msgId = `<reset-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}@ebsustudentsplug.fun>`;
     const boundary = `sp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
     const mime = [
       `From: ${SENDER_DISPLAY_NAME} <${fromAddress}>`,
@@ -208,7 +208,7 @@ function renderResetHtml(code: string): string {
         </td></tr>
         <tr><td style="padding:20px 32px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;">
           <span style="color:#64748b;font-size:12px;font-weight:600;">StudentsPlug Support</span>
-          <div style="margin-top:8px;color:#94a3b8;font-size:11px;"><a href="${APP_URL}" style="color:#3b82f6;text-decoration:none;">ebsustudentplug.fun</a></div>
+          <div style="margin-top:8px;color:#94a3b8;font-size:11px;"><a href="${APP_URL}" style="color:#3b82f6;text-decoration:none;">ebsustudentsplug.fun</a></div>
         </td></tr>
       </table>
     </td></tr>
