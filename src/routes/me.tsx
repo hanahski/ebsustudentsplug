@@ -123,6 +123,13 @@ function MePage() {
     }
   };
 
+  const fileToBase64 = async (f: File | Blob) => {
+    const bytes = new Uint8Array(await f.arrayBuffer());
+    let s = "";
+    for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return btoa(s);
+  };
+
   const uploadCover = async (file: File) => {
     if (!profile) return;
     if (file.size > 5 * 1024 * 1024) { toast.error("Cover must be under 5MB"); return; }
@@ -133,14 +140,22 @@ function MePage() {
       toast.dismiss(t);
       if (enhanced !== file) toast.success("Cover enhanced");
       const ext = (enhanced.name.split(".").pop() || "jpg").toLowerCase();
-      const { path } = await safeUserUpload({
-        bucket: "covers", file: enhanced, filename: `cover-${Date.now()}.${ext}`,
-        contentType: enhanced.type, upsert: true,
-      });
-      const { data: signed, error: sErr } = await supabase.storage.from("covers").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-      if (sErr) throw sErr;
-      const { error: updErr } = await supabase.from("profiles").update({ cover_url: signed.signedUrl } as any).eq("id", profile.id);
-      if (updErr) throw updErr;
+      try {
+        const { path } = await safeUserUpload({
+          bucket: "covers", file: enhanced, filename: `cover-${Date.now()}.${ext}`,
+          contentType: enhanced.type, upsert: true,
+        });
+        const { data: signed, error: sErr } = await supabase.storage.from("covers").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+        if (sErr) throw sErr;
+        const { error: updErr } = await supabase.from("profiles").update({ cover_url: signed.signedUrl } as any).eq("id", profile.id);
+        if (updErr) throw updErr;
+      } catch {
+        // Server-side relay so a stale client session can't block the upload.
+        const { uploadProfileMedia } = await import("@/lib/upload-avatar.functions");
+        await uploadProfileMedia({
+          data: { base64: await fileToBase64(enhanced), contentType: enhanced.type || "image/jpeg", ext, kind: "cover" },
+        });
+      }
       toast.success("Cover updated");
       refreshProfile();
     } catch (e: any) {
@@ -172,17 +187,24 @@ function MePage() {
     setCoverVideoUploading(true);
     try {
       const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
-      const { path } = await safeUserUpload({
-        bucket: "covers", file, filename: `cover-video-${Date.now()}.${ext}`,
-        contentType: file.type, upsert: true,
-      });
-      const { data: signed, error: sErr } = await supabase.storage.from("covers").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-      if (sErr) throw sErr;
-      const { error: updErr } = await supabase
-        .from("profiles")
-        .update({ cover_video_url: signed.signedUrl } as any)
-        .eq("id", profile.id);
-      if (updErr) throw updErr;
+      try {
+        const { path } = await safeUserUpload({
+          bucket: "covers", file, filename: `cover-video-${Date.now()}.${ext}`,
+          contentType: file.type, upsert: true,
+        });
+        const { data: signed, error: sErr } = await supabase.storage.from("covers").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+        if (sErr) throw sErr;
+        const { error: updErr } = await supabase
+          .from("profiles")
+          .update({ cover_video_url: signed.signedUrl } as any)
+          .eq("id", profile.id);
+        if (updErr) throw updErr;
+      } catch {
+        const { uploadProfileMedia } = await import("@/lib/upload-avatar.functions");
+        await uploadProfileMedia({
+          data: { base64: await fileToBase64(file), contentType: file.type || "video/mp4", ext, kind: "cover_video" },
+        });
+      }
       toast.success("Cover video updated");
       refreshProfile();
     } catch (e: any) {
@@ -191,6 +213,7 @@ function MePage() {
       setCoverVideoUploading(false);
     }
   };
+
 
   const removeCoverVideo = async () => {
     if (!profile) return;
