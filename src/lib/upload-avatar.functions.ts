@@ -82,11 +82,15 @@ export const uploadProfileMedia = createServerFn({ method: "POST" })
       .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
     if (signed.error) throw new Error(signed.error.message);
 
-    const column = data.kind === "cover_video" ? "cover_video_url" : "cover_url";
+    const patch =
+      data.kind === "cover_video"
+        ? { cover_video_url: signed.data.signedUrl }
+        : { cover_url: signed.data.signedUrl };
     const { error: pErr } = await supabaseAdmin
       .from("profiles")
-      .update({ [column]: signed.data.signedUrl })
+      .update(patch)
       .eq("id", userId);
+
     if (pErr) throw new Error(pErr.message);
 
     return { url: signed.data.signedUrl };
