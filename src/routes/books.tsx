@@ -32,6 +32,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { SaveButton } from "@/components/SaveButton";
+import { ShareBookButton } from "@/components/ShareBookButton";
+
 import { BookCover } from "@/components/BookCover";
 import { BookShape } from "@/components/market/BookShape";
 import { BookReader, normalizeBookReaderFormat, type BookReaderFormat } from "@/components/BookReader";
