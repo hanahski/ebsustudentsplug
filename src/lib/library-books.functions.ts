@@ -30,6 +30,7 @@ const catalogInput = z.object({
       "open_textbook_library",
       "libretexts",
       "bccampus",
+      "obooko",
     ])
     .default("all"),
   limit: z.number().int().min(1).max(200).default(120),
@@ -43,7 +44,9 @@ const ALL_SOURCES = [
   "open_textbook_library",
   "libretexts",
   "bccampus",
+  "obooko",
 ];
+
 
 const FORMAT_TAGS = new Set(["pdf", "epub", "kindle", "html_zip", "pages_zip", "lms", "blueprint"]);
 
@@ -71,13 +74,15 @@ export const getLibraryBooks = createServerFn({ method: "GET" })
       data.tag === "gutenberg" ||
       data.tag === "open_textbook_library" ||
       data.tag === "libretexts" ||
-      data.tag === "bccampus"
+      data.tag === "bccampus" ||
+      data.tag === "obooko"
     ) {
       query = query.eq("source", data.tag);
     } else if (data.tag === "ebsu" || data.tag === "studentsplug") {
       query = query.eq("source", "user");
     } else if (data.tag === "others") {
-      query = query.in("source", ["freebookcentre"]);
+      query = query.in("source", ["freebookcentre", "obooko"]);
+
     } else {
       query = query.in("source", ALL_SOURCES);
     }
