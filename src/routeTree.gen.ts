@@ -129,6 +129,7 @@ import { Route as ApiPublicHooksCacheBookPdfRouteImport } from './routes/api/pub
 import { Route as ApiPublicHooksAutoEbsuNewsRouteImport } from './routes/api/public/hooks/auto-ebsu-news'
 import { Route as ApiPublicHooksAdminResetPasswordRouteImport } from './routes/api/public/hooks/admin-reset-password'
 import { Route as ApiPublicHooksAdminAiPulseRouteImport } from './routes/api/public/hooks/admin-ai-pulse'
+import { Route as ApiPublicOgBookIdRouteImport } from './routes/api/public/og/book.$id'
 
 const VerifyOtpRoute = VerifyOtpRouteImport.update({
   id: '/verify-otp',
@@ -743,6 +744,11 @@ const ApiPublicHooksAdminAiPulseRoute =
     path: '/api/public/hooks/admin-ai-pulse',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicOgBookIdRoute = ApiPublicOgBookIdRouteImport.update({
+  id: '/api/public/og/book/$id',
+  path: '/api/public/og/book/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -865,6 +871,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/sync-obooko': typeof ApiPublicHooksSyncObookoRoute
   '/api/public/hooks/sync-openstax': typeof ApiPublicHooksSyncOpenstaxRoute
   '/earn-credits/battle/play/$matchId': typeof EarnCreditsBattlePlayMatchIdRoute
+  '/api/public/og/book/$id': typeof ApiPublicOgBookIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -984,6 +991,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/sync-obooko': typeof ApiPublicHooksSyncObookoRoute
   '/api/public/hooks/sync-openstax': typeof ApiPublicHooksSyncOpenstaxRoute
   '/earn-credits/battle/play/$matchId': typeof EarnCreditsBattlePlayMatchIdRoute
+  '/api/public/og/book/$id': typeof ApiPublicOgBookIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -1107,6 +1115,7 @@ export interface FileRoutesById {
   '/api/public/hooks/sync-obooko': typeof ApiPublicHooksSyncObookoRoute
   '/api/public/hooks/sync-openstax': typeof ApiPublicHooksSyncOpenstaxRoute
   '/earn-credits/battle/play/$matchId': typeof EarnCreditsBattlePlayMatchIdRoute
+  '/api/public/og/book/$id': typeof ApiPublicOgBookIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1231,6 +1240,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/sync-obooko'
     | '/api/public/hooks/sync-openstax'
     | '/earn-credits/battle/play/$matchId'
+    | '/api/public/og/book/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1350,6 +1360,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/sync-obooko'
     | '/api/public/hooks/sync-openstax'
     | '/earn-credits/battle/play/$matchId'
+    | '/api/public/og/book/$id'
   id:
     | '__root__'
     | '/'
@@ -1472,6 +1483,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/sync-obooko'
     | '/api/public/hooks/sync-openstax'
     | '/earn-credits/battle/play/$matchId'
+    | '/api/public/og/book/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1564,6 +1576,7 @@ export interface RootRouteChildren {
   ApiPublicHooksSyncLibrarySourcesRoute: typeof ApiPublicHooksSyncLibrarySourcesRoute
   ApiPublicHooksSyncObookoRoute: typeof ApiPublicHooksSyncObookoRoute
   ApiPublicHooksSyncOpenstaxRoute: typeof ApiPublicHooksSyncOpenstaxRoute
+  ApiPublicOgBookIdRoute: typeof ApiPublicOgBookIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2408,6 +2421,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksAdminAiPulseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/og/book/$id': {
+      id: '/api/public/og/book/$id'
+      path: '/api/public/og/book/$id'
+      fullPath: '/api/public/og/book/$id'
+      preLoaderRoute: typeof ApiPublicOgBookIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -2625,6 +2645,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksSyncLibrarySourcesRoute: ApiPublicHooksSyncLibrarySourcesRoute,
   ApiPublicHooksSyncObookoRoute: ApiPublicHooksSyncObookoRoute,
   ApiPublicHooksSyncOpenstaxRoute: ApiPublicHooksSyncOpenstaxRoute,
+  ApiPublicOgBookIdRoute: ApiPublicOgBookIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

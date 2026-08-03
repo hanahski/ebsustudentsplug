@@ -12,6 +12,8 @@ import { BookOpen, Loader2, Download, ExternalLink, Coins, ArrowLeft } from "luc
 import { toast } from "sonner";
 import { BookCover } from "@/components/BookCover";
 import { SwipeBookReader } from "@/components/SwipeBookReader";
+import { ShareBookButton } from "@/components/ShareBookButton";
+
 import { BookReader, type BookReaderFormat } from "@/components/BookReader";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -37,6 +39,10 @@ export const Route = createFileRoute("/books_/read/$id")({
     const desc = String(b.description ?? "").slice(0, 160) || `Read ${b.title}${b.author ? ` by ${b.author}` : ""} on StudentsPlug Library.`;
     const title = `${b.title}${b.author ? ` — ${b.author}` : ""} | StudentsPlug Library`;
     const priceNum = Number(b.price_credits ?? 0);
+    // Social crawlers only render raster images, and many upstream covers are
+    // SVG or missing — /api/public/og/book/:id always resolves to a real
+    // JPEG (the cover when possible, otherwise the branded library card).
+    const ogImage = `https://ebsustudentsplug.fun/api/public/og/book/${params.id}`;
     return {
       meta: [
         { title },
@@ -45,8 +51,17 @@ export const Route = createFileRoute("/books_/read/$id")({
         { property: "og:description", content: desc },
         { property: "og:type", content: "book" },
         { property: "og:url", content: url },
-        ...(b.cover_url ? [{ property: "og:image", content: b.cover_url }, { name: "twitter:image", content: b.cover_url }] : []),
+        { property: "og:site_name", content: "StudentsPlug" },
+        { property: "og:image", content: ogImage },
+        { property: "og:image:width", content: "1200" },
+        { property: "og:image:height", content: "630" },
+        { property: "og:image:alt", content: `${b.title} cover` },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: desc },
+        { name: "twitter:image", content: ogImage },
       ],
+
       links: [{ rel: "canonical", href: url }],
       scripts: [
         {
@@ -380,6 +395,10 @@ function ReadBookPage() {
               <div className="flex-1 min-w-0">
                 <h1 className="text-lg font-bold font-display leading-tight">{book.title}</h1>
                 <p className="text-sm text-muted-foreground">{book.author}</p>
+                <div className="mt-2">
+                  <ShareBookButton id={book.id} title={book.title} author={book.author} label="Share book" />
+                </div>
+
                 <div className="flex gap-2 mt-2 flex-wrap text-xs">
                   <span className="capitalize px-2 py-0.5 rounded-full bg-muted">
                     {book.category}

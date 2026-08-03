@@ -110,7 +110,8 @@ const TAG_GROUPS: Array<{ label: string; tags: Array<{ key: string; label: strin
       { key: "open_textbook_library", label: "Open Textbook" },
       { key: "gutenberg", label: "Gutenberg" },
       { key: "libretexts", label: "LibreTexts" },
-      { key: "bccampus", label: "BCcampus" },
+      { key: "obooko", label: "Obooko" },
+
     ],
   },
 ];
@@ -514,6 +515,15 @@ function BookCard({
         thumbUrl={book.cover_url}
         className="absolute top-2 right-2 z-20"
       />
+      <ShareBookButton
+        id={book.id}
+        title={book.title}
+        author={book.author}
+        size="icon"
+        variant="secondary"
+        className="absolute top-11 right-2 z-20 h-8 w-8 rounded-full shadow-sm"
+      />
+
 
       {/* Format badges (top-left, stacked). */}
       <div className="absolute top-2 left-3 z-20 flex flex-col gap-1 items-start max-w-[70%]">

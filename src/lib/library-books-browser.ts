@@ -21,7 +21,9 @@ const ALL_SOURCES = [
   "open_textbook_library",
   "libretexts",
   "bccampus",
+  "obooko",
 ];
+
 
 const FORMAT_TAGS = new Set([
   "pdf",
@@ -59,16 +61,18 @@ export async function fetchLibraryBooksClient(input: LibraryCatalogInput = {}) {
     tag === "gutenberg" ||
     tag === "open_textbook_library" ||
     tag === "libretexts" ||
-    tag === "bccampus"
+    tag === "bccampus" ||
+    tag === "obooko"
   ) {
     query = query.eq("source", tag);
   } else if (tag === "ebsu" || tag === "studentsplug") {
     query = query.eq("source", "user");
   } else if (tag === "others") {
-    query = query.in("source", ["freebookcentre"]);
+    query = query.in("source", ["freebookcentre", "obooko"]);
   } else {
     query = query.in("source", ALL_SOURCES);
   }
+
 
   if (FORMAT_TAGS.has(tag)) {
     query = query.not(`download_formats->>${tag}`, "is", null);
