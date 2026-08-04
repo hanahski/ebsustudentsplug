@@ -20,6 +20,11 @@ function parseStorageUrl(url: string) {
   }
 }
 
+/** Public image proxy that rasterises SVG/WebP/GIF into a 1200x630 JPEG card. */
+function rasterizeUrl(cover: string) {
+  return `https://images.weserv.nl/?url=${encodeURIComponent(cover)}&w=1200&h=630&fit=contain&cbg=0D131B&output=jpg&q=82`;
+}
+
 export const Route = createFileRoute("/api/public/og/book/$id")({
   server: {
     handlers: {
@@ -80,16 +85,10 @@ export const Route = createFileRoute("/api/public/og/book/$id")({
             });
           }
 
-          // Formats we can't decode (svg/webp/gif) — still serve the book's own
-          // image bytes so the preview isn't a generic card.
-          if (/^image\//.test(contentType) && !contentType.includes("svg")) {
-            return new Response(bytes.slice().buffer as ArrayBuffer, {
-              status: 200,
-              headers: {
-                "Content-Type": contentType,
-                "Cache-Control": "public, max-age=86400, s-maxage=604800",
-              },
-            });
+          // Formats we can't decode in-process (svg/webp/gif): rasterise the
+          // book's own cover to the same 1200x630 card via the image proxy.
+          if (/^image\//.test(contentType) || /\.svg(\?|$)/i.test(cover)) {
+            return redirect(rasterizeUrl(cover));
           }
         } catch {
           // fall through to the branded fallback
