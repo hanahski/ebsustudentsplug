@@ -70,7 +70,7 @@ export const Route = createFileRoute("/api/public/og/book/$id")({
           const raster = decodeImage(bytes, contentType);
           if (raster && raster.width > 1 && raster.height > 1) {
             const card = buildOgCard(raster);
-            return new Response(card, {
+            return new Response(card.slice().buffer as ArrayBuffer, {
               status: 200,
               headers: {
                 "Content-Type": "image/jpeg",
@@ -83,7 +83,7 @@ export const Route = createFileRoute("/api/public/og/book/$id")({
           // Formats we can't decode (svg/webp/gif) — still serve the book's own
           // image bytes so the preview isn't a generic card.
           if (/^image\//.test(contentType) && !contentType.includes("svg")) {
-            return new Response(bytes, {
+            return new Response(bytes.slice().buffer as ArrayBuffer, {
               status: 200,
               headers: {
                 "Content-Type": contentType,
