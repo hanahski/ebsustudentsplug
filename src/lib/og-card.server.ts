@@ -30,14 +30,24 @@ export function decodeImage(bytes: Uint8Array, contentType: string): Raster | nu
   return null;
 }
 
-/** Bilinear sample of `src` at normalised coords, written into dst pixel index. */
+/** Bilinear sample of `src` at float coords, written into dst pixel index. */
 function sample(src: Raster, x: number, y: number, out: Uint8Array, di: number, scale: number) {
-  const xi = Math.min(src.width - 1, Math.max(0, Math.round(x)));
-  const yi = Math.min(src.height - 1, Math.max(0, Math.round(y)));
-  const si = (yi * src.width + xi) * 4;
-  out[di] = src.data[si] * scale;
-  out[di + 1] = src.data[si + 1] * scale;
-  out[di + 2] = src.data[si + 2] * scale;
+  const x0 = Math.min(src.width - 1, Math.max(0, Math.floor(x)));
+  const y0 = Math.min(src.height - 1, Math.max(0, Math.floor(y)));
+  const x1 = Math.min(src.width - 1, x0 + 1);
+  const y1 = Math.min(src.height - 1, y0 + 1);
+  const fx = x - x0;
+  const fy = y - y0;
+  const idx = (yy: number, xx: number) => (yy * src.width + xx) * 4;
+  const a = idx(y0, x0);
+  const b = idx(y0, x1);
+  const c = idx(y1, x0);
+  const d = idx(y1, x1);
+  for (let ch = 0; ch < 3; ch++) {
+    const top = src.data[a + ch] * (1 - fx) + src.data[b + ch] * fx;
+    const bot = src.data[c + ch] * (1 - fx) + src.data[d + ch] * fx;
+    out[di + ch] = (top * (1 - fy) + bot * fy) * scale;
+  }
   out[di + 3] = 255;
 }
 
