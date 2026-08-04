@@ -6,40 +6,21 @@
 // pass-through.
 import { createFileRoute } from "@tanstack/react-router";
 
-const ALLOWED_HOSTS = [
-  "assets.openstax.org",
-  "openstax.org",
-  "cnx.org",
-  "batch.libretexts.org",
-  "libretexts.org",
-  "commons.libretexts.org",
-  "www.gutenberg.org",
-  "gutenberg.org",
-  "gutendex.com",
-  "www.gutendex.com",
-  "open.umn.edu",
-  "www.freebookcentre.net",
-  "freebookcentre.net",
-  "bccampus.ca",
-  "pressbooks.bccampus.ca",
-  "open.bccampus.ca",
-  "collection.bccampus.ca",
-  "obooko.com",
-  "www.obooko.com",
-  "archive.org",
-  "ia800000.us.archive.org",
-  "ia600000.us.archive.org",
-  "standardebooks.org",
-  "www.standardebooks.org",
-  "manybooks.net",
-  "www.manybooks.net",
-  "feedbooks.com",
-  "www.feedbooks.com",
-];
+// Blocked network space (SSRF guard). Anything else public is allowed: our
+// catalog links to hundreds of publisher domains (Open Textbook Library
+// alone spans stephendavies.org, web.ung.edu, …), and a fixed allowlist made
+// those books unreadable in the in-app reader.
+const PRIVATE_HOST =
+  /^(localhost|.*\.local|.*\.internal|0\.0\.0\.0|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1\]?$)/i;
 
+// Only document payloads may be streamed back.
+const DOC_TYPE =
+  /(application\/(pdf|epub\+zip|epub|x-mobipocket-ebook|vnd\.amazon\.ebook|octet-stream|zip)|text\/plain)/i;
 
 function isAllowed(u: URL) {
-  return ALLOWED_HOSTS.some((h) => u.hostname === h || u.hostname.endsWith("." + h));
+  if (u.protocol !== "https:" && u.protocol !== "http:") return false;
+  if (PRIVATE_HOST.test(u.hostname)) return false;
+  return true;
 }
 
 const CORS = {
@@ -58,9 +39,10 @@ async function handle(request: Request) {
   } catch {
     return new Response("Bad url", { status: 400, headers: CORS });
   }
-  if (target.protocol !== "https:" || !isAllowed(target)) {
+  if (!isAllowed(target)) {
     return new Response("Host not allowed", { status: 403, headers: CORS });
   }
+
   const forward: Record<string, string> = {
     "user-agent": "StudentsPlug/1.0 (+pdf-proxy)",
   };
@@ -76,6 +58,10 @@ async function handle(request: Request) {
   for (const k of pass) {
     const v = upstream.headers.get(k);
     if (v) headers.set(k, v);
+  }
+  const upstreamType = upstream.headers.get("content-type") ?? "";
+  if (upstream.ok && upstreamType && !DOC_TYPE.test(upstreamType)) {
+    return new Response("Not a document", { status: 415, headers: CORS });
   }
   if (!headers.get("content-type")) headers.set("content-type", "application/pdf");
   headers.set("cache-control", "public, max-age=86400");

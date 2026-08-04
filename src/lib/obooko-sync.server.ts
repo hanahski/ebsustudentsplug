@@ -8,6 +8,7 @@
 // a flat 3.0-credit price ("3-star average") for every obooko book, which
 // admins can adjust in the library editor later.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { resolveObookoFormatsBatch } from "@/lib/obooko-formats.server";
 
 const BASE = "https://www.obooko.com";
 const UA = "StudentsPlug/1.0 (+library-sync)";
@@ -148,6 +149,20 @@ export async function syncObooko(maxPagesPerCategory = 80) {
     await crawlCategory(cat.slug, cat.category, found, maxPagesPerCategory);
   }
   const rows = [...found.values()];
+  // Resolve the real PDF/EPUB file URLs so unlocked obooko books open in the
+  // in-app reader instead of dead-ending on the obooko landing page.
+  const resolved = await resolveObookoFormatsBatch(rows, 12);
+  let withFile = 0;
+  for (const row of rows) {
+    const formats = resolved.get(row.source_url) ?? {};
+    const primary = formats.pdf ?? formats.epub ?? null;
+    if (primary) {
+      row.download_formats = formats;
+      row.download_url = primary;
+      row.read_url = primary;
+      withFile += 1;
+    }
+  }
   let rowsUpserted = 0;
   for (let i = 0; i < rows.length; i += 200) {
     const batch = rows.slice(i, i + 200);
@@ -157,5 +172,5 @@ export async function syncObooko(maxPagesPerCategory = 80) {
     if (error) throw new Error(error.message);
     rowsUpserted += batch.length;
   }
-  return { source: "obooko", booksFound: rows.length, rowsUpserted };
+  return { source: "obooko", booksFound: rows.length, rowsUpserted, withFile };
 }
