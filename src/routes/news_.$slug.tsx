@@ -84,8 +84,12 @@ function NewsArticlePage() {
   const { isAdmin, profile, user } = useAuth();
   const canManage = isAdmin || !!(profile as any)?.is_legit || !!(profile as any)?.is_verified_source;
 
+  const { article: ssrArticle } = Route.useLoaderData();
   const { data: a, refetch } = useQuery({
     queryKey: ["news-article", slug],
+    // Seed with loader data so the article body + cover image are inside the
+    // server-rendered HTML (Google, Bing and AI crawlers don't run JS).
+    initialData: (ssrArticle as any) ?? undefined,
     queryFn: async () => {
       const { data } = await supabase.from("news_articles").select("*").eq("slug", slug).maybeSingle();
       return data;

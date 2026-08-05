@@ -99,6 +99,8 @@ function TicketDetail() {
 
   const { data: t, isLoading } = useQuery({
     queryKey: ["ticket", id],
+    // SSR seed → ticket text/image is in the crawlable HTML.
+    initialData: (Route.useLoaderData().ticket as any) ?? undefined,
     queryFn: async () => (await supabase.from("tickets").select("*, uploader:profiles!tickets_uploader_id_fkey(display_name)").eq("id", id).maybeSingle()).data,
   });
 
