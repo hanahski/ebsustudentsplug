@@ -26,13 +26,14 @@ import { extractProductSpecs, stripProductMarker } from "@/lib/product-specs";
 export const Route = createFileRoute("/products")({
   component: ProductsPage,
   loader: async () => {
-    const { data } = await supabase
+    const { data, error: err } = await supabase
       .from("market_listings")
       .select("*")
       .eq("listing_kind" as any, "products")
       .eq("is_sold", false)
       .order("created_at", { ascending: false })
       .limit(30);
+    console.log("[ssr-products]", data?.length, JSON.stringify(err ?? null));
     return { products: data ?? [] };
   },
   head: () => ({
