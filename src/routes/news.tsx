@@ -12,6 +12,18 @@ const FEESSA_HANDLE = "FEESSA TV";
 
 export const Route = createFileRoute("/news")({
   component: NewsPage,
+  // Server loader → the news list (titles, summaries, cover images) is inside
+  // the crawlable HTML instead of a client-only "Loading…" shell.
+  loader: async () => {
+    const { data } = await supabase
+      .from("news_articles")
+      .select("id, title, slug, summary, image_url, published_at, source_urls")
+      .eq("category", "ebsu")
+      .eq("status", "published")
+      .order("published_at", { ascending: false })
+      .limit(60);
+    return { articles: data ?? [] };
+  },
   head: () => ({
     meta: [
       { title: "EBSU News — Campus stories, announcements & updates" },
@@ -54,6 +66,7 @@ const timeAgo = (iso: string | null) => {
 function NewsPage() {
   const { data: ebsuArticles = [], isFetching: ebsuFetching, refetch: refetchEbsu } = useQuery({
     queryKey: ["ebsu-news-public"],
+    initialData: (Route.useLoaderData().articles as any) ?? undefined,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("news_articles")

@@ -42,6 +42,16 @@ const spineFor = (id: string) => {
 
 export const Route = createFileRoute("/market/")({
   component: MarketPage,
+  loader: async () => {
+    const { data } = await supabase
+      .from("market_listings")
+      .select("*")
+      .neq("listing_kind" as any, "advert")
+      .eq("is_sold", false)
+      .order("created_at", { ascending: false })
+      .limit(30);
+    return { listings: data ?? [] };
+  },
   head: () => ({
     meta: [
       { title: "EBSU Market — Hostels, apartments, textbooks & student deals" },
@@ -125,6 +135,7 @@ function MarketPage() {
   const { data: listings, isLoading, isFetching } = useQuery({
     queryKey: ["market", kind, debouncedQ, showSold, listingLimit],
     placeholderData: keepPreviousData,
+    initialData: (Route.useLoaderData().listings as any) ?? undefined,
     enabled: kind !== "books",
     queryFn: async () => {
       let query = supabase

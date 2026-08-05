@@ -25,6 +25,16 @@ import { extractProductSpecs, stripProductMarker } from "@/lib/product-specs";
 
 export const Route = createFileRoute("/products")({
   component: ProductsPage,
+  loader: async () => {
+    const { data } = await supabase
+      .from("market_listings")
+      .select("*")
+      .eq("listing_kind" as any, "products")
+      .eq("is_sold", false)
+      .order("created_at", { ascending: false })
+      .limit(30);
+    return { products: data ?? [] };
+  },
   head: () => ({
     meta: [
       { title: "Products — StudentsPlug" },
@@ -75,6 +85,8 @@ function ProductsPage() {
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ["products", cat, debouncedQ, sort, showSold, limit],
     placeholderData: keepPreviousData,
+    // Seed the default view from the server loader → crawlable product HTML.
+    initialData: (Route.useLoaderData().products as any) ?? undefined,
     queryFn: async () => {
       let query = supabase
         .from("market_listings")
