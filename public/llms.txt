@@ -13,6 +13,9 @@ StudentsPlug is a social + study + marketplace platform built for Nigerian unive
 - [Courses](https://ebsustudentsplug.fun/courses): Free university-level textbooks and OpenCourseWare curated for Nigerian students.
 - [Notes](https://ebsustudentsplug.fun/notes): Past questions, study notes, and assignment helpers.
 - [Books](https://ebsustudentsplug.fun/books): Free digital library with novels, textbooks, and student-composed books.
+- [Products](https://ebsustudentsplug.fun/products): Student-listed phones, fashion, hostel essentials and campus services with prices in Naira.
+- [Tickets](https://ebsustudentsplug.fun/tickets): Tickets for EBSU parties, concerts, shows and conferences.
+- [School Biography](https://ebsustudentsplug.fun/school-biography): Profiles of EBSU leadership, notable staff and student figures.
 - [Market](https://ebsustudentsplug.fun/market): Verified-student marketplace — electronics, fashion, hostels/apartments, food, services.
 - [Games](https://ebsustudentsplug.fun/games): Trivia, puzzles, and riddles for study breaks.
 - [Tools](https://ebsustudentsplug.fun/tools): OCR scanner, calculator, dictionary, QR generator, vocal splitter, voice cloner, and more.

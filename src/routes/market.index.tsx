@@ -4,6 +4,7 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
+import { listMarketPublic } from "@/lib/seo-content.functions";
 import { SaveButton } from "@/components/SaveButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,7 @@ const spineFor = (id: string) => {
 
 export const Route = createFileRoute("/market/")({
   component: MarketPage,
+  loader: async () => ({ listings: await listMarketPublic() }),
   head: () => ({
     meta: [
       { title: "EBSU Market — Hostels, apartments, textbooks & student deals" },
@@ -125,6 +127,7 @@ function MarketPage() {
   const { data: listings, isLoading, isFetching } = useQuery({
     queryKey: ["market", kind, debouncedQ, showSold, listingLimit],
     placeholderData: keepPreviousData,
+    initialData: (Route.useLoaderData().listings as any) ?? undefined,
     enabled: kind !== "books",
     queryFn: async () => {
       let query = supabase

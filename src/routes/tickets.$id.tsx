@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { AppShell } from "@/components/AppShell";
+import { getTicketPublic } from "@/lib/seo-content.functions";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ArrowLeft, Ticket as TicketIcon, ShoppingCart, CheckCircle2, Download, Loader2, Trash2 } from "lucide-react";
@@ -17,12 +18,7 @@ import { confirm as confirmDialog } from "@/components/ConfirmProvider";
 export const Route = createFileRoute("/tickets/$id")({
   component: TicketDetail,
   loader: async ({ params }) => {
-    const { data } = await supabase
-      .from("tickets")
-      .select("id,title,description,price,photo_url,created_at,pay_mode")
-      .eq("id", params.id)
-      .maybeSingle();
-    return { ticket: data };
+    return { ticket: await getTicketPublic({ data: { id: params.id } }) };
   },
   head: ({ params, loaderData }) => {
     const url = `https://ebsustudentsplug.fun/tickets/${params.id}`;
@@ -99,6 +95,8 @@ function TicketDetail() {
 
   const { data: t, isLoading } = useQuery({
     queryKey: ["ticket", id],
+    // SSR seed → ticket text/image is in the crawlable HTML.
+    initialData: (Route.useLoaderData().ticket as any) ?? undefined,
     queryFn: async () => (await supabase.from("tickets").select("*, uploader:profiles!tickets_uploader_id_fkey(display_name)").eq("id", id).maybeSingle()).data,
   });
 

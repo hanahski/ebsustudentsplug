@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
+import { getNewsPublic } from "@/lib/seo-content.functions";
 import { ArrowLeft, ExternalLink, Calendar, Pencil, Trash2, Loader2, X, Save, ShieldAlert } from "lucide-react";
 import { renderArticleHtml } from "@/lib/render-article";
 import { useAuth } from "@/lib/auth";
@@ -48,22 +49,35 @@ export const Route = createFileRoute("/news_/$slug")({
           "@type": "NewsArticle",
           headline: a.title,
           description: a.summary ?? undefined,
-          image: a.image_url ?? undefined,
+          // Full body text so AI answer engines can cite the article itself.
+          articleBody: String(a.body ?? "")
+            .replace(/<[^>]+>/g, " ")
+            .replace(/\s+/g, " ")
+            .trim()
+            .slice(0, 5000) || undefined,
+          image: a.image_url
+            ? { "@type": "ImageObject", url: a.image_url, caption: a.title }
+            : undefined,
           datePublished: a.published_at ?? undefined,
-          author: { "@type": "Organization", name: "StudentsPlug" },
+          dateModified: a.updated_at ?? a.published_at ?? undefined,
+          inLanguage: "en-NG",
+          mainEntityOfPage: { "@type": "WebPage", "@id": url },
+          about: { "@type": "CollegeOrUniversity", name: "Ebonyi State University", alternateName: "EBSU" },
+          isAccessibleForFree: true,
+          author: { "@type": "Organization", name: "StudentsPlug", url: "https://ebsustudentsplug.fun" },
+          publisher: {
+            "@type": "Organization",
+            name: "StudentsPlug",
+            logo: { "@type": "ImageObject", url: "https://ebsustudentsplug.fun/brand-logo.png" },
+          },
         }),
       }],
     };
   },
   loader: async ({ params }) => {
-    const { data } = await supabase
-      .from("news_articles")
-      .select("*")
-      .eq("slug", params.slug)
-      .eq("status", "published")
-      .maybeSingle();
-    if (!data) throw notFound();
-    return { article: data };
+    const article = await getNewsPublic({ data: { slug: params.slug } });
+    if (!article) throw notFound();
+    return { article };
   },
   notFoundComponent: () => (
     <AppShell>
@@ -84,8 +98,12 @@ function NewsArticlePage() {
   const { isAdmin, profile, user } = useAuth();
   const canManage = isAdmin || !!(profile as any)?.is_legit || !!(profile as any)?.is_verified_source;
 
+  const { article: ssrArticle } = Route.useLoaderData();
   const { data: a, refetch } = useQuery({
     queryKey: ["news-article", slug],
+    // Seed with loader data so the article body + cover image are inside the
+    // server-rendered HTML (Google, Bing and AI crawlers don't run JS).
+    initialData: (ssrArticle as any) ?? undefined,
     queryFn: async () => {
       const { data } = await supabase.from("news_articles").select("*").eq("slug", slug).maybeSingle();
       return data;

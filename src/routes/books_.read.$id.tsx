@@ -7,6 +7,7 @@ import { purchaseLibraryBook } from "@/lib/library-purchase.functions";
 import { handleEmailNotVerified } from "@/components/VerifyEmailDialog";
 
 import { AppShell } from "@/components/AppShell";
+import { getBookPublic } from "@/lib/seo-content.functions";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Loader2, Download, ExternalLink, Coins, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -20,12 +21,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 export const Route = createFileRoute("/books_/read/$id")({
   component: ReadBookPage,
   loader: async ({ params }) => {
-    const { data } = await supabase
-      .from("library_books")
-      .select("id,title,author,description,cover_url,price_credits")
-      .eq("id", params.id)
-      .maybeSingle();
-    return { book: data };
+    return { book: await getBookPublic({ data: { id: params.id } }) };
   },
   head: ({ params, loaderData }) => {
     const url = `https://ebsustudentsplug.fun/books/read/${params.id}`;
@@ -140,6 +136,8 @@ function ReadBookPage() {
 
   const { data: book, isLoading } = useQuery({
     queryKey: ["library-book", id],
+    // SSR seed → book title/author/description/cover are crawlable.
+    initialData: (Route.useLoaderData().book as any) ?? undefined,
     queryFn: async () => {
       // Accept any source — market feed surfaces books from every provider
       // (openstax, obooko, gutenberg, freebookcentre, user…). Filtering by

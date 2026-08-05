@@ -5,6 +5,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { AppShell } from "@/components/AppShell";
+import { getListingPublic } from "@/lib/seo-content.functions";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ArrowLeft, Phone, MapPin, Trash2, CheckCircle2, ChevronLeft, ChevronRight, ImageOff, PlayCircle, X, ShieldCheck } from "lucide-react";
@@ -19,14 +20,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/market/$id")({
   component: ListingDetail,
-  loader: async ({ params }) => {
-    const { data } = await supabase
-      .from("market_listings")
-      .select("id,title,description,price,category,photos,is_sold,created_at,location")
-      .eq("id", params.id)
-      .maybeSingle();
-    return { listing: data };
-  },
+  loader: async ({ params }) => ({ listing: await getListingPublic({ data: { id: params.id } }) }),
   head: ({ params, loaderData }) => {
     const url = `https://ebsustudentsplug.fun/market/${params.id}`;
     const l = loaderData?.listing as any;
@@ -177,8 +171,12 @@ function ListingDetail() {
   const { id } = Route.useParams();
   const { user } = useAuth();
   const nav = useNavigate();
+  // Seed from the route loader so the FULL listing (title, description,
+  // photos) is present in the server-rendered HTML for Google/AI crawlers.
+  const { listing: ssrListing } = Route.useLoaderData();
   const { data: listing, refetch } = useQuery({
     queryKey: ["listing", id],
+    initialData: (ssrListing as any) ?? undefined,
     queryFn: async () => (await supabase.from("market_listings").select("*").eq("id", id).maybeSingle()).data,
   });
   const { data: seller } = useQuery({
@@ -213,8 +211,9 @@ function ListingDetail() {
   };
 
   const photos: string[] = Array.isArray(listing.photos)
-    ? (listing.photos.filter((p): p is string => typeof p === "string" && !!p))
+    ? ((listing.photos as unknown[]).filter((p): p is string => typeof p === "string" && !!p))
     : [];
+
 
   return (
     <AppShell>

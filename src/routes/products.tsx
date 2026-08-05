@@ -3,6 +3,7 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
+import { listProductsPublic } from "@/lib/seo-content.functions";
 import { SaveButton } from "@/components/SaveButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ import { extractProductSpecs, stripProductMarker } from "@/lib/product-specs";
 
 export const Route = createFileRoute("/products")({
   component: ProductsPage,
+  loader: async () => ({ products: await listProductsPublic() }),
   head: () => ({
     meta: [
       { title: "Products — StudentsPlug" },
@@ -75,6 +77,8 @@ function ProductsPage() {
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ["products", cat, debouncedQ, sort, showSold, limit],
     placeholderData: keepPreviousData,
+    // Seed the default view from the server loader → crawlable product HTML.
+    initialData: (Route.useLoaderData().products as any) ?? undefined,
     queryFn: async () => {
       let query = supabase
         .from("market_listings")
