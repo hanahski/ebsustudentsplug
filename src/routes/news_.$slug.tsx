@@ -49,9 +49,27 @@ export const Route = createFileRoute("/news_/$slug")({
           "@type": "NewsArticle",
           headline: a.title,
           description: a.summary ?? undefined,
-          image: a.image_url ?? undefined,
+          // Full body text so AI answer engines can cite the article itself.
+          articleBody: String(a.body ?? "")
+            .replace(/<[^>]+>/g, " ")
+            .replace(/\s+/g, " ")
+            .trim()
+            .slice(0, 5000) || undefined,
+          image: a.image_url
+            ? { "@type": "ImageObject", url: a.image_url, caption: a.title }
+            : undefined,
           datePublished: a.published_at ?? undefined,
-          author: { "@type": "Organization", name: "StudentsPlug" },
+          dateModified: a.updated_at ?? a.published_at ?? undefined,
+          inLanguage: "en-NG",
+          mainEntityOfPage: { "@type": "WebPage", "@id": url },
+          about: { "@type": "CollegeOrUniversity", name: "Ebonyi State University", alternateName: "EBSU" },
+          isAccessibleForFree: true,
+          author: { "@type": "Organization", name: "StudentsPlug", url: "https://ebsustudentsplug.fun" },
+          publisher: {
+            "@type": "Organization",
+            name: "StudentsPlug",
+            logo: { "@type": "ImageObject", url: "https://ebsustudentsplug.fun/brand-logo.png" },
+          },
         }),
       }],
     };
