@@ -19,7 +19,7 @@ export const Route = createFileRoute("/tickets/$id")({
   loader: async ({ params }) => {
     const { data } = await supabase
       .from("tickets")
-      .select("id,title,description,price,photo_url,created_at,pay_mode")
+      .select("*")
       .eq("id", params.id)
       .maybeSingle();
     return { ticket: data };

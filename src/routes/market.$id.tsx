@@ -22,7 +22,7 @@ export const Route = createFileRoute("/market/$id")({
   loader: async ({ params }) => {
     const { data } = await supabase
       .from("market_listings")
-      .select("id,title,description,price,category,photos,is_sold,created_at,location")
+      .select("*")
       .eq("id", params.id)
       .maybeSingle();
     return { listing: data };
@@ -177,8 +177,12 @@ function ListingDetail() {
   const { id } = Route.useParams();
   const { user } = useAuth();
   const nav = useNavigate();
+  // Seed from the route loader so the FULL listing (title, description,
+  // photos) is present in the server-rendered HTML for Google/AI crawlers.
+  const { listing: ssrListing } = Route.useLoaderData();
   const { data: listing, refetch } = useQuery({
     queryKey: ["listing", id],
+    initialData: (ssrListing as any) ?? undefined,
     queryFn: async () => (await supabase.from("market_listings").select("*").eq("id", id).maybeSingle()).data,
   });
   const { data: seller } = useQuery({
