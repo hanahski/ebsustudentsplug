@@ -22,7 +22,7 @@ export const Route = createFileRoute("/books_/read/$id")({
   loader: async ({ params }) => {
     const { data } = await supabase
       .from("library_books")
-      .select("id,title,author,description,cover_url,price_credits")
+      .select("*")
       .eq("id", params.id)
       .maybeSingle();
     return { book: data };
@@ -140,6 +140,8 @@ function ReadBookPage() {
 
   const { data: book, isLoading } = useQuery({
     queryKey: ["library-book", id],
+    // SSR seed → book title/author/description/cover are crawlable.
+    initialData: (Route.useLoaderData().book as any) ?? undefined,
     queryFn: async () => {
       // Accept any source — market feed surfaces books from every provider
       // (openstax, obooko, gutenberg, freebookcentre, user…). Filtering by

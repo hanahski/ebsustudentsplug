@@ -56,6 +56,8 @@ import {
 
 export const Route = createFileRoute("/school-biography")({
   component: SchoolBiographyPage,
+  // Server loader so the biography profiles render in the crawlable HTML.
+  loader: async () => ({ bios: await listSchoolBios({ data: {} } as any) }),
   head: () => ({
     meta: [
       { title: "School Biography — StudentsPlug" },
@@ -952,6 +954,7 @@ function SchoolBiographyPage() {
   const reorder = useServerFn(reorderSchoolBios);
   const { data = [], isLoading } = useQuery<TSchoolBio[]>({
     queryKey: ["school-bios"],
+    initialData: (Route.useLoaderData()?.bios as any) ?? undefined,
     queryFn: () => list({} as any) as any,
     staleTime: 60_000,
   });
