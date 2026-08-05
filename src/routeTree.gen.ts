@@ -127,6 +127,7 @@ import { Route as ApiPublicHooksGenerateNovelRouteImport } from './routes/api/pu
 import { Route as ApiPublicHooksGenerateBookCoversRouteImport } from './routes/api/public/hooks/generate-book-covers'
 import { Route as ApiPublicHooksCacheBookPdfRouteImport } from './routes/api/public/hooks/cache-book-pdf'
 import { Route as ApiPublicHooksBackfillObookoFormatsRouteImport } from './routes/api/public/hooks/backfill-obooko-formats'
+import { Route as ApiPublicHooksAutoIndexnowRouteImport } from './routes/api/public/hooks/auto-indexnow'
 import { Route as ApiPublicHooksAutoEbsuNewsRouteImport } from './routes/api/public/hooks/auto-ebsu-news'
 import { Route as ApiPublicHooksAdminResetPasswordRouteImport } from './routes/api/public/hooks/admin-reset-password'
 import { Route as ApiPublicHooksAdminAiPulseRouteImport } from './routes/api/public/hooks/admin-ai-pulse'
@@ -733,6 +734,12 @@ const ApiPublicHooksBackfillObookoFormatsRoute =
     path: '/api/public/hooks/backfill-obooko-formats',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksAutoIndexnowRoute =
+  ApiPublicHooksAutoIndexnowRouteImport.update({
+    id: '/api/public/hooks/auto-indexnow',
+    path: '/api/public/hooks/auto-indexnow',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksAutoEbsuNewsRoute =
   ApiPublicHooksAutoEbsuNewsRouteImport.update({
     id: '/api/public/hooks/auto-ebsu-news',
@@ -867,6 +874,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/admin-ai-pulse': typeof ApiPublicHooksAdminAiPulseRoute
   '/api/public/hooks/admin-reset-password': typeof ApiPublicHooksAdminResetPasswordRoute
   '/api/public/hooks/auto-ebsu-news': typeof ApiPublicHooksAutoEbsuNewsRoute
+  '/api/public/hooks/auto-indexnow': typeof ApiPublicHooksAutoIndexnowRoute
   '/api/public/hooks/backfill-obooko-formats': typeof ApiPublicHooksBackfillObookoFormatsRoute
   '/api/public/hooks/cache-book-pdf': typeof ApiPublicHooksCacheBookPdfRoute
   '/api/public/hooks/generate-book-covers': typeof ApiPublicHooksGenerateBookCoversRoute
@@ -988,6 +996,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/admin-ai-pulse': typeof ApiPublicHooksAdminAiPulseRoute
   '/api/public/hooks/admin-reset-password': typeof ApiPublicHooksAdminResetPasswordRoute
   '/api/public/hooks/auto-ebsu-news': typeof ApiPublicHooksAutoEbsuNewsRoute
+  '/api/public/hooks/auto-indexnow': typeof ApiPublicHooksAutoIndexnowRoute
   '/api/public/hooks/backfill-obooko-formats': typeof ApiPublicHooksBackfillObookoFormatsRoute
   '/api/public/hooks/cache-book-pdf': typeof ApiPublicHooksCacheBookPdfRoute
   '/api/public/hooks/generate-book-covers': typeof ApiPublicHooksGenerateBookCoversRoute
@@ -1113,6 +1122,7 @@ export interface FileRoutesById {
   '/api/public/hooks/admin-ai-pulse': typeof ApiPublicHooksAdminAiPulseRoute
   '/api/public/hooks/admin-reset-password': typeof ApiPublicHooksAdminResetPasswordRoute
   '/api/public/hooks/auto-ebsu-news': typeof ApiPublicHooksAutoEbsuNewsRoute
+  '/api/public/hooks/auto-indexnow': typeof ApiPublicHooksAutoIndexnowRoute
   '/api/public/hooks/backfill-obooko-formats': typeof ApiPublicHooksBackfillObookoFormatsRoute
   '/api/public/hooks/cache-book-pdf': typeof ApiPublicHooksCacheBookPdfRoute
   '/api/public/hooks/generate-book-covers': typeof ApiPublicHooksGenerateBookCoversRoute
@@ -1239,6 +1249,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/admin-ai-pulse'
     | '/api/public/hooks/admin-reset-password'
     | '/api/public/hooks/auto-ebsu-news'
+    | '/api/public/hooks/auto-indexnow'
     | '/api/public/hooks/backfill-obooko-formats'
     | '/api/public/hooks/cache-book-pdf'
     | '/api/public/hooks/generate-book-covers'
@@ -1360,6 +1371,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/admin-ai-pulse'
     | '/api/public/hooks/admin-reset-password'
     | '/api/public/hooks/auto-ebsu-news'
+    | '/api/public/hooks/auto-indexnow'
     | '/api/public/hooks/backfill-obooko-formats'
     | '/api/public/hooks/cache-book-pdf'
     | '/api/public/hooks/generate-book-covers'
@@ -1484,6 +1496,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/admin-ai-pulse'
     | '/api/public/hooks/admin-reset-password'
     | '/api/public/hooks/auto-ebsu-news'
+    | '/api/public/hooks/auto-indexnow'
     | '/api/public/hooks/backfill-obooko-formats'
     | '/api/public/hooks/cache-book-pdf'
     | '/api/public/hooks/generate-book-covers'
@@ -1579,6 +1592,7 @@ export interface RootRouteChildren {
   ApiPublicHooksAdminAiPulseRoute: typeof ApiPublicHooksAdminAiPulseRoute
   ApiPublicHooksAdminResetPasswordRoute: typeof ApiPublicHooksAdminResetPasswordRoute
   ApiPublicHooksAutoEbsuNewsRoute: typeof ApiPublicHooksAutoEbsuNewsRoute
+  ApiPublicHooksAutoIndexnowRoute: typeof ApiPublicHooksAutoIndexnowRoute
   ApiPublicHooksBackfillObookoFormatsRoute: typeof ApiPublicHooksBackfillObookoFormatsRoute
   ApiPublicHooksCacheBookPdfRoute: typeof ApiPublicHooksCacheBookPdfRoute
   ApiPublicHooksGenerateBookCoversRoute: typeof ApiPublicHooksGenerateBookCoversRoute
@@ -2421,6 +2435,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksBackfillObookoFormatsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/auto-indexnow': {
+      id: '/api/public/hooks/auto-indexnow'
+      path: '/api/public/hooks/auto-indexnow'
+      fullPath: '/api/public/hooks/auto-indexnow'
+      preLoaderRoute: typeof ApiPublicHooksAutoIndexnowRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/auto-ebsu-news': {
       id: '/api/public/hooks/auto-ebsu-news'
       path: '/api/public/hooks/auto-ebsu-news'
@@ -2656,6 +2677,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksAdminAiPulseRoute: ApiPublicHooksAdminAiPulseRoute,
   ApiPublicHooksAdminResetPasswordRoute: ApiPublicHooksAdminResetPasswordRoute,
   ApiPublicHooksAutoEbsuNewsRoute: ApiPublicHooksAutoEbsuNewsRoute,
+  ApiPublicHooksAutoIndexnowRoute: ApiPublicHooksAutoIndexnowRoute,
   ApiPublicHooksBackfillObookoFormatsRoute:
     ApiPublicHooksBackfillObookoFormatsRoute,
   ApiPublicHooksCacheBookPdfRoute: ApiPublicHooksCacheBookPdfRoute,
@@ -2673,3 +2695,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
