@@ -204,7 +204,7 @@ function BrowseTickets() {
   if (!data?.length) return <div className="text-center py-12 text-muted-foreground"><Ticket className="w-10 h-10 mx-auto mb-2 opacity-40" />No tickets for sale right now.</div>;
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-      {data.map((t) => (
+      {data.map((t: any) => (
         <div key={t.id} className="flex flex-col">
           <Link to="/tickets/$id" params={{ id: t.id }} className="block hover:-translate-y-0.5 transition-transform">
             <TicketShape className="flex bg-card border border-border/60 rounded-xl overflow-hidden h-40">
