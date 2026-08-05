@@ -5,6 +5,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { AppShell } from "@/components/AppShell";
+import { listTicketsPublic } from "@/lib/seo-content.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,7 +24,30 @@ import { adminDeleteTicket } from "@/lib/tickets-admin.functions";
 import { confirm as confirmDialog } from "@/components/ConfirmProvider";
 
 
-export const Route = createFileRoute("/tickets")({ component: TicketsPage });
+export const Route = createFileRoute("/tickets")({
+  component: TicketsPage,
+  // Server loader → ticket titles, prices and images are crawlable HTML.
+  loader: async () => ({ tickets: await listTicketsPublic() }),
+  head: () => ({
+    meta: [
+      { title: "EBSU Event Tickets — Parties, shows & campus events" },
+      {
+        name: "description",
+        content:
+          "Buy and sell tickets for EBSU parties, concerts, conferences and campus events. Verified student sellers on StudentsPlug.",
+      },
+      { property: "og:title", content: "EBSU Event Tickets — StudentsPlug" },
+      {
+        property: "og:description",
+        content: "Tickets for EBSU parties, concerts and campus events from verified student sellers.",
+      },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://ebsustudentsplug.fun/tickets" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+    links: [{ rel: "canonical", href: "https://ebsustudentsplug.fun/tickets" }],
+  }),
+});
 
 function TicketsPage() {
   const { user } = useAuth();
@@ -116,6 +140,7 @@ function BrowseTickets() {
   });
   const { data, isLoading } = useQuery({
     queryKey: ["tickets-browse"],
+    initialData: (Route.useLoaderData()?.tickets as any) ?? undefined,
     queryFn: async () => (await supabase.from("tickets").select("*").order("created_at", { ascending: false }).limit(60)).data ?? [],
   });
 
