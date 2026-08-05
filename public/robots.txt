@@ -2,14 +2,20 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /me
-Disallow: /tickets
 Disallow: /login
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Googlebot-News
+Allow: /
 
 User-agent: Mediapartners-Google
 Allow: /
 
 User-agent: AdsBot-Google
 Allow: /
+
 
 User-agent: GPTBot
 Allow: /
