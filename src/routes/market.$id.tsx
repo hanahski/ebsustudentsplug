@@ -217,8 +217,9 @@ function ListingDetail() {
   };
 
   const photos: string[] = Array.isArray(listing.photos)
-    ? (listing.photos.filter((p): p is string => typeof p === "string" && !!p))
+    ? ((listing.photos as unknown[]).filter((p): p is string => typeof p === "string" && !!p))
     : [];
+
 
   return (
     <AppShell>
