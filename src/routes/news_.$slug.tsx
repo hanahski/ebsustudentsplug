@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
+import { getNewsPublic } from "@/lib/seo-content.functions";
 import { ArrowLeft, ExternalLink, Calendar, Pencil, Trash2, Loader2, X, Save, ShieldAlert } from "lucide-react";
 import { renderArticleHtml } from "@/lib/render-article";
 import { useAuth } from "@/lib/auth";
@@ -56,14 +57,9 @@ export const Route = createFileRoute("/news_/$slug")({
     };
   },
   loader: async ({ params }) => {
-    const { data } = await supabase
-      .from("news_articles")
-      .select("*")
-      .eq("slug", params.slug)
-      .eq("status", "published")
-      .maybeSingle();
-    if (!data) throw notFound();
-    return { article: data };
+    const article = await getNewsPublic({ data: { slug: params.slug } });
+    if (!article) throw notFound();
+    return { article };
   },
   notFoundComponent: () => (
     <AppShell>

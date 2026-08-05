@@ -4,6 +4,7 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
+import { listMarketPublic } from "@/lib/seo-content.functions";
 import { SaveButton } from "@/components/SaveButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,16 +43,7 @@ const spineFor = (id: string) => {
 
 export const Route = createFileRoute("/market/")({
   component: MarketPage,
-  loader: async () => {
-    const { data } = await supabase
-      .from("market_listings")
-      .select("*")
-      .neq("listing_kind" as any, "advert")
-      .eq("is_sold", false)
-      .order("created_at", { ascending: false })
-      .limit(30);
-    return { listings: data ?? [] };
-  },
+  loader: async () => ({ listings: await listMarketPublic() }),
   head: () => ({
     meta: [
       { title: "EBSU Market — Hostels, apartments, textbooks & student deals" },

@@ -3,6 +3,7 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
+import { listProductsPublic } from "@/lib/seo-content.functions";
 import { SaveButton } from "@/components/SaveButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,17 +26,7 @@ import { extractProductSpecs, stripProductMarker } from "@/lib/product-specs";
 
 export const Route = createFileRoute("/products")({
   component: ProductsPage,
-  loader: async () => {
-    const { data, error: err } = await supabase
-      .from("market_listings")
-      .select("*")
-      .eq("listing_kind" as any, "products")
-      .eq("is_sold", false)
-      .order("created_at", { ascending: false })
-      .limit(30);
-    console.log("[ssr-products]", data?.length, JSON.stringify(err ?? null));
-    return { products: data ?? [] };
-  },
+  loader: async () => ({ products: await listProductsPublic() }),
   head: () => ({
     meta: [
       { title: "Products — StudentsPlug" },

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { AppShell } from "@/components/AppShell";
+import { getListingPublic } from "@/lib/seo-content.functions";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ArrowLeft, Phone, MapPin, Trash2, CheckCircle2, ChevronLeft, ChevronRight, ImageOff, PlayCircle, X, ShieldCheck } from "lucide-react";
@@ -19,14 +20,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/market/$id")({
   component: ListingDetail,
-  loader: async ({ params }) => {
-    const { data } = await supabase
-      .from("market_listings")
-      .select("*")
-      .eq("id", params.id)
-      .maybeSingle();
-    return { listing: data };
-  },
+  loader: async ({ params }) => ({ listing: await getListingPublic({ data: { id: params.id } }) }),
   head: ({ params, loaderData }) => {
     const url = `https://ebsustudentsplug.fun/market/${params.id}`;
     const l = loaderData?.listing as any;

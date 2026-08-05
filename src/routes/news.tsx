@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
+import { listNewsPublic } from "@/lib/seo-content.functions";
 import { Button } from "@/components/ui/button";
 import { Newspaper, RotateCw, GraduationCap, BadgeCheck, ExternalLink } from "lucide-react";
 import { EbsuNewsComposer } from "@/components/EbsuNewsComposer";
@@ -14,16 +15,7 @@ export const Route = createFileRoute("/news")({
   component: NewsPage,
   // Server loader → the news list (titles, summaries, cover images) is inside
   // the crawlable HTML instead of a client-only "Loading…" shell.
-  loader: async () => {
-    const { data } = await supabase
-      .from("news_articles")
-      .select("id, title, slug, summary, image_url, published_at, source_urls")
-      .eq("category", "ebsu")
-      .eq("status", "published")
-      .order("published_at", { ascending: false })
-      .limit(60);
-    return { articles: data ?? [] };
-  },
+  loader: async () => ({ articles: await listNewsPublic() }),
   head: () => ({
     meta: [
       { title: "EBSU News — Campus stories, announcements & updates" },

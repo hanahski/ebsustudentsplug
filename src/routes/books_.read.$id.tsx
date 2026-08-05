@@ -7,6 +7,7 @@ import { purchaseLibraryBook } from "@/lib/library-purchase.functions";
 import { handleEmailNotVerified } from "@/components/VerifyEmailDialog";
 
 import { AppShell } from "@/components/AppShell";
+import { getBookPublic } from "@/lib/seo-content.functions";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Loader2, Download, ExternalLink, Coins, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -20,12 +21,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 export const Route = createFileRoute("/books_/read/$id")({
   component: ReadBookPage,
   loader: async ({ params }) => {
-    const { data } = await supabase
-      .from("library_books")
-      .select("*")
-      .eq("id", params.id)
-      .maybeSingle();
-    return { book: data };
+    return { book: await getBookPublic({ data: { id: params.id } }) };
   },
   head: ({ params, loaderData }) => {
     const url = `https://ebsustudentsplug.fun/books/read/${params.id}`;
