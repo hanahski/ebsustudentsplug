@@ -71,7 +71,7 @@ const BADGES: Record<
 
 export const Route = createFileRoute("/apply-badge")({
   component: ApplyBadgePage,
-  validateSearch: (s) => ({ badge: (s.badge as BadgeKind) || "star" }),
+  validateSearch: (s): { badge?: BadgeKind } => ({ badge: (s.badge as BadgeKind) || "star" }),
 });
 
 function ApplyBadgePage() {

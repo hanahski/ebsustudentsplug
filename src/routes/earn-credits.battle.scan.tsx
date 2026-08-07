@@ -10,7 +10,7 @@ import { AvatarDisplay } from "@/components/AvatarDisplay";
 export const Route = createFileRoute("/earn-credits/battle/scan")({
   component: ScanPage,
   head: () => ({ meta: [{ title: "Scan for Battle" }] }),
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { game?: "mk" | "tictactoe" } => ({
     game: (s.game as string) === "mk" ? "mk" : "tictactoe",
   }),
 });

@@ -13,7 +13,7 @@ const SEED_ADMIN_EMAILS = new Set(["admin+qx162n@ebsuplug.app", "consequenceoct@
 const PENDING_JAMB_KEY = "studentsplug:pending-jamb";
 
 export const Route = createFileRoute("/verify-otp")({
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { email?: string; redirect?: string; mode?: "recovery" | "signup" } => ({
     email: (s.email as string | undefined) ?? "",
     redirect: (s.redirect as string | undefined) ?? "/",
     mode: ((s.mode as string | undefined) === "recovery" ? "recovery" : "signup") as "recovery" | "signup",

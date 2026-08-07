@@ -30,7 +30,7 @@ import { safeUserUpload, friendlyUploadError, resolveAuthUid } from "@/lib/safe-
 
 
 export const Route = createFileRoute("/post/new")({
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { course?: string; type?: string } => ({
     course: (s.course as string) || "",
     type: (s.type as string) || "",
   }),
