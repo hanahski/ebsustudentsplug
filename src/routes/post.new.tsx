@@ -62,7 +62,7 @@ function NewPostPage() {
   const [type, setType] = useState(presetType || "general");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [courseId, setCourseId] = useState(presetCourse);
+  const [courseId, setCourseId] = useState(presetCourse ?? "");
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);

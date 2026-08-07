@@ -34,7 +34,7 @@ function VerifyOtpPage() {
   // studentsplug@gmail.com), not Supabase's default sender.
   useEffect(() => {
     if (isRecovery) {
-      nav({ to: "/reset-password", search: { email: emailParam } });
+      nav({ to: "/reset-password", search: { email: emailParam ?? "" } });
     }
   }, [isRecovery, emailParam, nav]);
 

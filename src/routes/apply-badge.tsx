@@ -78,7 +78,7 @@ function ApplyBadgePage() {
   const { user, loading } = useAuth();
   const nav = useNavigate();
   const { badge: initialBadge } = Route.useSearch();
-  const [badge, setBadge] = useState<BadgeKind>(initialBadge);
+  const [badge, setBadge] = useState<BadgeKind>(initialBadge ?? "star");
   const [reason, setReason] = useState("");
   const [reg, setReg] = useState("");
   const [contact, setContact] = useState("");
