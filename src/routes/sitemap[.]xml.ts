@@ -37,26 +37,37 @@ export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const [
-          { data: newsRows },
-          { data: blogRows },
-          { data: listingRows },
-          { data: ticketRows },
-          { data: bookRows },
-        ] = await Promise.all([
-          supabaseAdmin
-            .from("news_articles")
-            .select("slug,title,summary,image_url,published_at,updated_at")
-            .eq("status", "published"),
-          supabaseAdmin.from("blog_posts").select("slug,title,cover_url,published_at").eq("published", true),
-          supabaseAdmin
-            .from("market_listings")
-            .select("id,title,category,photos,is_sold,created_at")
-            .eq("is_sold", false),
-          supabaseAdmin.from("tickets").select("id,title,photo_url,created_at"),
-          supabaseAdmin.from("library_books").select("id,title,cover_url"),
-        ]);
+        const { getPublicReadClient } = await import("@/lib/supabase-read.server");
+        let newsRows: any[] | null = null;
+        let blogRows: any[] | null = null;
+        let listingRows: any[] | null = null;
+        let ticketRows: any[] | null = null;
+        let bookRows: any[] | null = null;
+        try {
+          const db: any = await getPublicReadClient();
+          const [news, blog, listings, tickets, books] = await Promise.all([
+            db
+              .from("news_articles")
+              .select("slug,title,summary,image_url,published_at,updated_at")
+              .eq("status", "published"),
+            db.from("blog_posts").select("slug,title,cover_url,published_at").eq("published", true),
+            db
+              .from("market_listings")
+              .select("id,title,category,photos,is_sold,created_at")
+              .eq("is_sold", false),
+            db.from("tickets").select("id,title,photo_url,created_at"),
+            db.from("library_books").select("id,title,cover_url"),
+          ]);
+          newsRows = news.data;
+          blogRows = blog.data;
+          listingRows = listings.data;
+          ticketRows = tickets.data;
+          bookRows = books.data;
+        } catch (error) {
+          // Never 500 the sitemap — Search Console reports "Couldn't fetch".
+          console.error("[sitemap] dynamic content read failed", error);
+        }
+
 
         const entries: SitemapEntry[] = [
           {
