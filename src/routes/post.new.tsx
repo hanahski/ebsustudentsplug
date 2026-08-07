@@ -30,7 +30,7 @@ import { safeUserUpload, friendlyUploadError, resolveAuthUid } from "@/lib/safe-
 
 
 export const Route = createFileRoute("/post/new")({
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { course?: string; type?: string } => ({
     course: (s.course as string) || "",
     type: (s.type as string) || "",
   }),
@@ -62,7 +62,7 @@ function NewPostPage() {
   const [type, setType] = useState(presetType || "general");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [courseId, setCourseId] = useState(presetCourse);
+  const [courseId, setCourseId] = useState(presetCourse ?? "");
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);

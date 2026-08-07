@@ -59,7 +59,7 @@ function clearStoredGoogleRedirect() {
 }
 
 export const Route = createFileRoute("/login")({
-  validateSearch: (s: Record<string, unknown>) => ({ redirect: (s.redirect as string | undefined) ?? undefined }),
+  validateSearch: (s: Record<string, unknown>): { redirect?: string } => ({ redirect: (s.redirect as string | undefined) ?? undefined }),
   component: LoginPage,
 });
 

@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { sendRecoveryOtp, resetPasswordWithOtp } from "@/lib/password-reset-otp.functions";
 
 export const Route = createFileRoute("/reset-password")({
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { email?: string } => ({
     email: (s.email as string | undefined) ?? "",
   }),
   component: ResetPasswordPage,

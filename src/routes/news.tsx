@@ -162,7 +162,7 @@ function FeessaCard({ profile }: { profile: any | null | undefined }) {
       </div>
     </div>
   );
-  if (to) return <Link to={to} className="block w-fit">{Content}</Link>;
+  if (to) return <Link to={to as any} className="block w-fit">{Content}</Link>;
   return Content;
 }
 
