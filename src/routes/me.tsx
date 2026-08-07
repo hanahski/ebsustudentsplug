@@ -141,6 +141,12 @@ function MePage() {
       if (enhanced !== file) toast.success("Cover enhanced");
       const ext = (enhanced.name.split(".").pop() || "jpg").toLowerCase();
       try {
+        // Server relay first so every signed-in user can set a cover.
+        const { uploadProfileMedia } = await import("@/lib/upload-avatar.functions");
+        await uploadProfileMedia({
+          data: { base64: await fileToBase64(enhanced), contentType: enhanced.type || "image/jpeg", ext, kind: "cover" },
+        });
+      } catch {
         const { path } = await safeUserUpload({
           bucket: "covers", file: enhanced, filename: `cover-${Date.now()}.${ext}`,
           contentType: enhanced.type, upsert: true,
@@ -149,13 +155,8 @@ function MePage() {
         if (sErr) throw sErr;
         const { error: updErr } = await supabase.from("profiles").update({ cover_url: signed.signedUrl } as any).eq("id", profile.id);
         if (updErr) throw updErr;
-      } catch {
-        // Server-side relay so a stale client session can't block the upload.
-        const { uploadProfileMedia } = await import("@/lib/upload-avatar.functions");
-        await uploadProfileMedia({
-          data: { base64: await fileToBase64(enhanced), contentType: enhanced.type || "image/jpeg", ext, kind: "cover" },
-        });
       }
+
       toast.success("Cover updated");
       refreshProfile();
     } catch (e: any) {
@@ -237,6 +238,14 @@ function MePage() {
       if (enhanced !== file) toast.success("Photo enhanced");
       const ext = (enhanced.name.split(".").pop() || "jpg").toLowerCase();
       try {
+        // Server relay first — works for every signed-in user, even with a
+        // stale local session (client-side storage RLS would reject it).
+        const { uploadAvatar } = await import("@/lib/upload-avatar.functions");
+        const res = await uploadAvatar({
+          data: { base64: await fileToBase64(enhanced), contentType: enhanced.type || "image/jpeg", ext },
+        });
+        setAvatar(res.url);
+      } catch (serverErr: any) {
         const { path } = await safeUserUpload({
           bucket: "covers", file: enhanced, filename: `avatar-${Date.now()}.${ext}`,
           contentType: enhanced.type, upsert: true,
@@ -246,19 +255,8 @@ function MePage() {
         setAvatar(signed.signedUrl);
         const { error: updErr } = await supabase.from("profiles").update({ avatar_key: signed.signedUrl } as any).eq("id", profile.id);
         if (updErr) throw updErr;
-      } catch (clientErr: any) {
-        // Fallback: upload through the server so a stale client session
-        // doesn't block signed-in users from changing their picture.
-        const { uploadAvatar } = await import("@/lib/upload-avatar.functions");
-        const buf = await enhanced.arrayBuffer();
-        const bytes = new Uint8Array(buf);
-        let s = "";
-        for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
-        const res = await uploadAvatar({
-          data: { base64: btoa(s), contentType: enhanced.type || "image/jpeg", ext },
-        });
-        setAvatar(res.url);
       }
+
       toast.success("Photo updated");
       refreshProfile();
     } catch (e: any) {
