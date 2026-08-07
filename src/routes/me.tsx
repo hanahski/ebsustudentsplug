@@ -141,6 +141,12 @@ function MePage() {
       if (enhanced !== file) toast.success("Cover enhanced");
       const ext = (enhanced.name.split(".").pop() || "jpg").toLowerCase();
       try {
+        // Server relay first so every signed-in user can set a cover.
+        const { uploadProfileMedia } = await import("@/lib/upload-avatar.functions");
+        await uploadProfileMedia({
+          data: { base64: await fileToBase64(enhanced), contentType: enhanced.type || "image/jpeg", ext, kind: "cover" },
+        });
+      } catch {
         const { path } = await safeUserUpload({
           bucket: "covers", file: enhanced, filename: `cover-${Date.now()}.${ext}`,
           contentType: enhanced.type, upsert: true,
@@ -149,13 +155,8 @@ function MePage() {
         if (sErr) throw sErr;
         const { error: updErr } = await supabase.from("profiles").update({ cover_url: signed.signedUrl } as any).eq("id", profile.id);
         if (updErr) throw updErr;
-      } catch {
-        // Server-side relay so a stale client session can't block the upload.
-        const { uploadProfileMedia } = await import("@/lib/upload-avatar.functions");
-        await uploadProfileMedia({
-          data: { base64: await fileToBase64(enhanced), contentType: enhanced.type || "image/jpeg", ext, kind: "cover" },
-        });
       }
+
       toast.success("Cover updated");
       refreshProfile();
     } catch (e: any) {
