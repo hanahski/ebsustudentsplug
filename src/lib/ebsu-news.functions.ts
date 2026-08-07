@@ -352,7 +352,13 @@ If the editor told you to skip, or you truly have nothing to write about, return
     .select("id, slug")
     .single();
   if (error) throw error;
+  if (opts.publish && inserted?.slug) {
+    // Auto-submit the fresh article (plus the hub pages) for indexing.
+    const { pingIndexNowServer } = await import("@/lib/indexnow.server");
+    pingIndexNowServer([`/news/${inserted.slug}`, "/news", "/", "/sitemap.xml"]);
+  }
   return { id: inserted.id, slug: inserted.slug, image_url: imageUrl };
+
 }
 
 export const generateEbsuNews = createServerFn({ method: "POST" })
