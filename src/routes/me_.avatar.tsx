@@ -51,6 +51,16 @@ function AvatarPage() {
       const enhanced = await enhanceImageFile(file);
       const ext = (enhanced.name.split(".").pop() || "jpg").toLowerCase();
       try {
+        // Server-side relay first: works for EVERY signed-in user even when the
+        // local session is stale (client-side storage RLS would reject it).
+        const base64 = await fileToBase64(enhanced);
+        const res = await uploadAvatar({
+          data: { base64, contentType: enhanced.type || "image/jpeg", ext },
+        });
+        setAvatar(res.url);
+        toast.success("Avatar updated");
+        refreshProfile();
+      } catch (serverErr: any) {
         const { path } = await safeUserUpload({
           bucket: "covers",
           file: enhanced,
@@ -61,17 +71,8 @@ function AvatarPage() {
         const { data: signed, error: sErr } = await supabase.storage.from("covers").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
         if (sErr) throw sErr;
         await save(signed.signedUrl);
-      } catch (clientErr: any) {
-        // Fall back to server-side upload (admin client) so a stale client
-        // session doesn't block the user from changing their picture.
-        const base64 = await fileToBase64(enhanced);
-        const res = await uploadAvatar({
-          data: { base64, contentType: enhanced.type || "image/jpeg", ext },
-        });
-        setAvatar(res.url);
-        toast.success("Avatar updated");
-        refreshProfile();
       }
+
     } catch (e: any) { toast.error(friendlyUploadError(e)); }
     finally { setUploading(false); }
   };
